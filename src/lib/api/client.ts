@@ -9,6 +9,7 @@ export interface ApiRequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: HeadersInit;
   body?: JsonValue;
+  formData?: FormData;
   signal?: AbortSignal;
   /** Public endpoints (login/refresh/etc.) must opt out of Bearer and refresh. */
   auth?: "session" | "none";
@@ -93,14 +94,16 @@ export function createApiClient(options: ClientOptions) {
       headers.set("Accept", accept);
       const token = authenticated ? options.session.getSnapshot().accessToken : null;
       if (token) headers.set("Authorization", `Bearer ${token}`);
-      if (init.body !== undefined) headers.set("Content-Type", "application/json");
+      if (init.body !== undefined && init.formData) throw new Error("JSON과 multipart 본문은 함께 보낼 수 없습니다.");
+      if (init.formData) headers.delete("Content-Type");
+      else if (init.body !== undefined) headers.set("Content-Type", "application/json");
 
       let response: Response;
       try {
         response = await fetcher(url, {
           method: init.method ?? "GET",
           headers,
-          body: init.body === undefined ? undefined : JSON.stringify(init.body),
+          body: init.formData ?? (init.body === undefined ? undefined : JSON.stringify(init.body)),
           credentials: "include",
           cache: "no-store",
           redirect: "error",

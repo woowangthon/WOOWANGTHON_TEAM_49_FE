@@ -30,6 +30,7 @@ export function WorkplaceDetailScreen({ id }: { id: number }) {
       <section className={cardStyle} aria-label="근무지 정보 관리">
         {editing ? <WorkplaceForm initial={query.data} onSaved={() => { setEditing(false); setSaved(true); }} onCancel={() => setEditing(false)} /> : <div className="flex flex-wrap items-center justify-between gap-4"><p className="text-body">등록된 급여 사례 {workplace.caseCount}개</p><div className="flex flex-wrap gap-3"><button type="button" className={secondaryButton} onClick={() => { setEditing(true); setSaved(false); }}>근무지 수정</button><DeleteWorkplace id={id} /></div></div>}
       </section>
+      <Link href={`/workplaces/${id}/documents`} className={secondaryButton}>근무지 공유 자료함</Link>
       <h2 className="text-title font-extrabold">이 근무지의 급여 사례</h2>
       <CaseList workplaceId={id} />
     </div>

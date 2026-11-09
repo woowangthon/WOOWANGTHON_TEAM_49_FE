@@ -261,10 +261,10 @@ describe("dashboard and management user flows with MSW", () => {
     expect(mocks.requests.some((item) => item.method === "DELETE")).toBe(false);
   });
 
-  it("renders an honest upload notice without file submission controls", async () => {
+  it("links Case details to the document registration route", async () => {
     const { mount } = await setup();
-    mount(<CaseDetailScreen id={15} uploadStage />);
-    expect(await screen.findByText("문서 업로드는 준비 중입니다")).toBeVisible();
+    mount(<CaseDetailScreen id={15} />);
+    expect(await screen.findByRole("link", { name: "자료 등록·관리" })).toHaveAttribute("href", "/cases/15/upload");
     expect(document.querySelector('input[type="file"]')).toBeNull();
     expect(screen.queryByRole("button", { name: /업로드/ })).not.toBeInTheDocument();
   });

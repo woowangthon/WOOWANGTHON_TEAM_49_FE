@@ -12,7 +12,7 @@ import { caseCard } from "../view-models";
 import { CaseForm } from "./case-form";
 import { DeleteCase } from "./delete-case";
 
-export function CaseDetailScreen({ id, uploadStage = false }: { id: number; uploadStage?: boolean }) {
+export function CaseDetailScreen({ id }: { id: number }) {
   const query = useCase(id);
   const removal = useCaseRemoval(id);
   const [editing, setEditing] = useState(false);
@@ -25,8 +25,7 @@ export function CaseDetailScreen({ id, uploadStage = false }: { id: number; uplo
   return (
     <div className="space-y-6">
       <Link href="/cases" className="inline-flex min-h-11 items-center text-body underline">급여 사례 목록</Link>
-      <PageHeading title={uploadStage ? "자료 등록 단계" : `${item.workplaceName}의 급여 사례`} description={item.period} action={<Link href={`/workplaces/${dto.workplaceId}`} className={secondaryButton}>근무지 보기</Link>} />
-      {uploadStage && <section className={`${cardStyle} border border-border`}><h2 className="text-title font-bold">문서 업로드는 준비 중입니다</h2><p className="mt-3 text-body text-muted">사례는 저장되었습니다. 현재 파일을 제출하거나 문서 분석을 시작할 수 없습니다.</p><Link href={`/cases/${id}`} className={`mt-5 ${secondaryButton}`}>사례 정보로 돌아가기</Link></section>}
+      <PageHeading title={`${item.workplaceName}의 급여 사례`} description={item.period} action={<Link href={`/workplaces/${dto.workplaceId}`} className={secondaryButton}>근무지 보기</Link>} />
       <section className={cardStyle} aria-label="급여 사례 상세 정보">
         <dl className="grid min-w-0 gap-x-8 gap-y-4 text-body sm:grid-cols-2 xl:grid-cols-3">
           <div><dt className="font-bold">급여 형태</dt><dd className="mt-1 text-muted">{item.payType}</dd></div>
@@ -39,7 +38,7 @@ export function CaseDetailScreen({ id, uploadStage = false }: { id: number; uplo
         <p className="mt-6 rounded-control bg-neutral-soft p-4 text-body">사례 상태와 작업 단계는 검사 준비 여부나 계산·대조 완료를 의미하지 않습니다.</p>
       </section>
       {saved && <p role="status" className="rounded-control bg-success-soft p-4 text-body">사례 정보를 저장했습니다.</p>}
-      {!uploadStage && <section className={cardStyle} aria-label="급여 사례 관리">{editing ? <CaseForm initial={dto} onSaved={() => { setEditing(false); setSaved(true); }} onCancel={() => setEditing(false)} /> : <div className="flex flex-wrap gap-3"><Link href={`/cases/${id}/upload`} className={primaryButton}>자료 등록 단계 안내</Link><button type="button" className={secondaryButton} onClick={() => { setEditing(true); setSaved(false); }}>사례 수정</button><DeleteCase id={id} /></div>}</section>}
+      {<section className={cardStyle} aria-label="급여 사례 관리">{editing ? <CaseForm initial={dto} onSaved={() => { setEditing(false); setSaved(true); }} onCancel={() => setEditing(false)} /> : <div className="flex flex-wrap gap-3"><Link href={`/cases/${id}/upload`} className={primaryButton}>자료 등록·관리</Link><button type="button" className={secondaryButton} onClick={() => { setEditing(true); setSaved(false); }}>사례 수정</button><DeleteCase id={id} /></div>}</section>}
     </div>
   );
 }

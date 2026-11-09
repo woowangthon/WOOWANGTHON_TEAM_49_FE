@@ -101,7 +101,7 @@ export function CaseForm({ initial, defaultWorkplaceId = null, onSaved, onCancel
       </fieldset>
       {errors.root?.server?.message && <p ref={summary} tabIndex={-1} role="alert" className="rounded-control bg-danger-soft p-4 text-body">{errors.root.server.message}</p>}
       {conflict && <div className="space-y-3 rounded-control bg-warning-soft p-4 text-body"><p>작성 중인 입력을 유지했습니다. 저장하려면 최신 정보를 다시 확인해 주세요. 아래 버튼은 작성 중인 내용을 최신 값으로 교체합니다.</p><button type="button" className={secondaryButton} disabled={pending} onClick={() => { void reloadLatest(); }}>최신 정보 불러오기</button></div>}
-      {completed && <p role="status" className="text-body">사례를 만들었습니다. 자료 등록 단계 안내로 이동합니다.</p>}
+      {completed && <p role="status" className="text-body">사례를 만들었습니다. 자료 등록 화면으로 이동합니다.</p>}
       <div className="flex flex-wrap gap-3">
         <button type="submit" className={primaryButton} disabled={pending || conflict || (initial ? !isDirty : !workplace.isSuccess)}>{pending ? "저장 중…" : initial ? "변경 저장" : "사례 만들기"}</button>
         {onCancel && <button type="button" className={secondaryButton} disabled={pending} onClick={onCancel}>수정 취소</button>}

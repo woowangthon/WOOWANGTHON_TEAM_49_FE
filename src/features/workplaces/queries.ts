@@ -7,6 +7,8 @@ import { businessKeys as keys } from "@/lib/query/business-keys";
 import { useRemovalState } from "@/lib/query/use-removal-state";
 import { useSessionGeneration } from "@/hooks/use-app-services";
 
+import { revokeDocumentScope } from "@/features/documents/cache";
+
 import { workplaceApi } from "./api";
 import type { WorkplaceWrite } from "./schemas";
 
@@ -52,6 +54,7 @@ export function useDeleteWorkplace(id: number) {
       if (scope.session.getSnapshot().generation !== scope.generation) return;
       await scope.queryClient.cancelQueries({ queryKey: keys.workplace(scope.generation, id) });
       scope.queryClient.removeQueries({ queryKey: keys.workplace(scope.generation, id) });
+      await revokeDocumentScope(scope.queryClient, scope.generation, { kind: "workplace", id });
       await scope.queryClient.cancelQueries({ queryKey: keys.cases(scope.generation) });
       scope.queryClient.removeQueries({ queryKey: keys.cases(scope.generation) });
       await scope.queryClient.invalidateQueries({ queryKey: keys.workplaceLists(scope.generation) });

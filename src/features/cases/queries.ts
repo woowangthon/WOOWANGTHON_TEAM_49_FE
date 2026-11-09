@@ -7,6 +7,8 @@ import { businessKeys as keys } from "@/lib/query/business-keys";
 import { useRemovalState } from "@/lib/query/use-removal-state";
 import { useSessionGeneration } from "@/hooks/use-app-services";
 
+import { revokeDocumentScope } from "@/features/documents/cache";
+
 import { caseApi } from "./api";
 import type { CaseCreate, CasePatch } from "./schemas";
 
@@ -64,6 +66,7 @@ export function useDeleteCase(id: number) {
       if (scope.session.getSnapshot().generation !== scope.generation) return;
       await scope.queryClient.cancelQueries({ queryKey: keys.case(scope.generation, id) });
       scope.queryClient.removeQueries({ queryKey: keys.case(scope.generation, id) });
+      await revokeDocumentScope(scope.queryClient, scope.generation, { kind: "case", id });
       await Promise.all([
         scope.queryClient.invalidateQueries({ queryKey: keys.caseLists(scope.generation) }),
         scope.queryClient.invalidateQueries({ queryKey: keys.workplaces(scope.generation) }),

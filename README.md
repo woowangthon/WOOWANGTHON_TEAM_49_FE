@@ -1,8 +1,8 @@
 # 월급잇다 Frontend
 
 Next.js 16 App Router · React 19 · TypeScript strict · Tailwind CSS 4.
-3차 대시보드·근무지(Workplace)·급여 사례(Case) 관리를 구현했습니다.
-기존 인증·세션·Query 기반을 유지합니다. 문서 업로드·검사·임금 계산은 이번 범위에 포함하지 않습니다.
+4차 문서 등록·자료함·Case 문서 연결·처리 상태 관리를 구현했습니다.
+기존 인증·세션·Query 기반을 유지합니다. OCR 필드 검토·임금 계산은 이번 범위에 포함하지 않습니다.
 
 ## 실행
 
@@ -307,3 +307,114 @@ MSW 3에서 미등록 요청은 오류로 처리합니다. fixture는 테스트�
 기존 API 클라이언트·메모리 세션·Provider를 재작성하지 않았고 의존성·lockfile·AGENTS.md·참고문서는 변경하지 않았습니다.
 main 단일 브랜치를 유지하며 commit/push를 수행하지 않았습니다.
 다음 작업은 문서 업로드·검증·처리 상태 polling·Case 문서 연결입니다. 실제 서버 계약 대조는 별도 허용된 연동 단계에서 수행합니다.
+
+
+## 4차 문서 등록·관리
+
+백엔드 실행·접속·OpenAPI 조회 없이 P0 `백엔드_API_명세_v1.pdf`를 우선 적용했습니다.
+P1 관련 제품 흐름, P2 자료함·업로드 카드와 상태 표현, P3 §9.4~10·캐시 정책을 검토했습니다.
+설치된 Next.js의 Server/Client Components, Dynamic Routes, Route Groups 문서를 확인했습니다.
+기존 인증 single-flight·메모리 세션·Query·디자인 토큰·공통 입력·확인 dialog를 재사용했습니다.
+현재 프로젝트에는 shadcn/ui가 설치되어 있지 않아 별도 의존성을 추가하지 않았습니다.
+
+구현 범위:
+- `/library`: 사용자 전체 공유 원본, 근무지 선택(기존 페이지형 picker 재사용), 유형·처리 상태 서버 필터, 페이지 이동.
+- `/workplaces/[workplaceId]/documents`: 공유 원본 목록·업로드·연결 사례·삭제 영향. 근무지 상세와 양방향 이동.
+- `/cases/[caseId]/upload`: 기존 안내 화면을 업로드·연결 목록·기존 원본 연결 화면으로 교체.
+- 연결 목적·선택 적용기간 생성/수정, 현재 초안의 `expectedInputVersion`, 409 충돌 시 명시적 최신 버전 확인 후 재제출.
+- Case 연결 해제와 공유 원본 삭제를 다른 확인 흐름으로 제공. 원본 삭제는 영향 조회와 체크를 거친 `confirm=true` 요청.
+- 파일 선택·Drag & Drop, 한 파일씩 전송, 중복 제출 차단, 업로드 요청 대기 중단·명시적 재시도.
+- PDF/JPEG/PNG MIME·확장자, 빈 파일, 20MiB 검증. 지원 브라우저에서는 이미지 bitmap 크기 확인 후 해제.
+- PDF 페이지 수·암호화·손상·실제 MIME 검사는 서버 검증에 위임. 413/415/422 안내에 제한 명시.
+- UPLOADED/PROCESSING에서만 상세 API를 2초 간격 조회. READY/REVIEW_REQUIRED/FAILED 및 오류에서 중지.
+  unmount·사용자 변경 시 signal 취소. 서버 progress가 있을 때만 문서 처리 진행률 표시.
+- READY와 CONFIRMED 구분. 검토 상태·연결 사례·시각이 미제공이면 임의 값이나 0으로 채우지 않음.
+- 실패 문서 retry, 저장 이후 recompute-status 조회·작업 중 polling. 계산 API 자동 호출 없음.
+- 문서 변경 후 목록·문서 상태·Case·근무지 및 Case 하위 readiness/results/recompute 캐시 무효화.
+  기존 Case/근무지 삭제에서도 관련 문서 요청을 취소하고 권한을 잃은 문서 화면 캐시를 제거.
+- 빈 상태·로딩·오류·재시도, 모바일 단일 열과 PC 다중 열 카드, 긴 파일명 줄바꿈, 키보드 dialog 지원.
+
+제외 범위는 OCR 필드 조회/확인/수정, 원문 좌표 하이라이트, 수기 기록, 임금 계산,
+AI·상담·보고서, 문서 교체의 2단계 확인입니다. 이 기능의 API는 호출하지 않습니다.
+문서 link·원본 DTO와 표시 ViewModel, API·Query·관리 컴포넌트를 분리해 5차에서 확장할 수 있습니다.
+
+### 4차 API와 계약의 경계
+
+| API | 이번 사용 및 계약 기준 |
+|---|---|
+| `GET /documents` | P0 전체 자료함. `workplaceId`, `documentType`; `processingStatus`와 상세 목록 DTO는 P4 B-23 보완 |
+| `GET /workplaces/{w}/documents` | P0 공유 원본. pagination·유형 필터는 P4 B-24 보완 |
+| `POST /workplaces/{w}/documents` | P0 원본 업로드, multipart file/documentType, 202 상태 |
+| `GET /workplaces/{w}/documents/{d}` | P4 B-26의 원본 상세. 연결 Case 없는 원본의 상태도 조회하기 위한 보완 |
+| `GET /cases/{c}/documents` | Case 연결 목록, Page 및 link DTO는 P4 B-32 보완 |
+| `POST /cases/{c}/documents` | P0 파일 생성+자동 연결 편의 API. multipart file/documentType, 202 |
+| `GET /cases/{c}/documents/{d}` | P0 2초 처리 상태 조회. P0에 없는 필드·OCR API 호출 없음 |
+| `POST /cases/{c}/documents/{d}/retry` | P0 retry 흐름, 구체 경로·JSON `{}`·202는 P4 B-34 보완 |
+| `POST /cases/{c}/document-links` | P0 documentId/purpose/applicableFrom/applicableTo/expectedInputVersion. 응답 link DTO는 P4 보완 |
+| `PATCH /cases/{c}/document-links/{linkId}` | P4 B-37의 목적·적용기간·expectedInputVersion, JSON 응답 |
+| `DELETE /cases/{c}/document-links/{linkId}` | P4 B-38의 expectedInputVersion body, JSON 200 `{linkId,unlinked:true,...}`. 원본 삭제하지 않음 |
+| `GET /workplaces/{w}/documents/{d}/deletion-impact` | P0 삭제 영향 흐름, 상세 필드 linkedCaseIds/count/canDeleteOriginal/reasonCode는 P4 B-28 보완 |
+| `DELETE /workplaces/{w}/documents/{d}?confirm=true` | P0 공유 참조 영향 확인 정책. 응답 형식은 아래 미확정 사항 참조 |
+| `GET /cases/{c}/recompute-status` | P0 저장 후 갱신 상태. 작업 중 2초 간격은 FE 선택이며 계산 완료로 해석하지 않음 |
+
+미확정·제한 사항:
+1. **P0는 원본 DELETE의 성공 상태/본문을 명시하지 않습니다.** 현재 P4 B-27의 JSON 202를
+   전제로 공통 JSON 래퍼를 처리하며 영수증 필드를 요구하지 않습니다. 204로 임의 대체하지 않았습니다.
+   자동 물리 파기 예정일을 만들지 않으며 삭제 요청 접수와 물리 파기 완료를 구분합니다.
+2. Case link DELETE의 body와 JSON 200도 P0에 상세 설명이 없어 P4 B-38로 보완했습니다.
+   실제 서버와 대조되지 않은 계약입니다. P0의 Case 자체 DELETE 204와 구분합니다.
+3. P0 목록 상세가 생략되어 P4 DocumentItem/DocumentLink를 필요한 범위만 검증합니다.
+   reviewStatus/progress/linkedCaseIds/uploadedAt/workplaceName 등 미제공 metadata는 미제공으로 보존합니다.
+   연결 상태 enum은 정의되어 있지 않으므로 임의 `linkStatus`를 보내지 않고 연결 유무를 표시합니다.
+4. P0는 목적 전체 enum을 제시하지 않습니다. 임의 enum을 만들지 않고 목적 문자열을 입력받으며,
+   알려진 예시 `CONTRACT_FOR_PERIOD`만 안내합니다. 검증 실패는 422로 표시합니다.
+   실제 허용 값이 정리되면 사용자 친화적인 선택 UI로 변경해야 합니다.
+5. 서버 검색 파라미터는 명시되어 있지 않습니다. 검색은 **현재 페이지 파일명만** 대상으로 하며
+   범위를 UI에 명시합니다. 검색/정렬 파라미터를 만들어 보내지 않습니다.
+6. recompute-status의 정확한 P0 DTO가 생략되어 pending/running 수와 P4 activeJob.status를 읽습니다.
+   식별할 수 없는 구조는 오류로 처리하며 완료 상태를 추정하지 않습니다. 실제 계약 확인이 필요합니다.
+7. Case에 연결되지 않은 실패 원본의 retry API는 문서에 없습니다. 임의 Workplace retry를 만들지 않고
+   Case 연결 이후 문서 재처리를 안내합니다. 원본 상태 API는 P4 상세 경로로 보완했습니다.
+8. 업로드는 idempotency 보장이 없으므로 네트워크 오류·취소 시 자동 POST 재전송하지 않습니다.
+   요청 대기 중단이 서버 접수/처리의 취소를 보장하지 않음을 안내합니다.
+9. 필터·상세 DTO·삭제 영향 보완은 하위 문서에 근거하며 실제 백엔드 연동을 검증한 것이 아닙니다.
+   후속 연동 허용 단계에서 P0의 생략 부분을 확정해야 합니다. 이번 작업에서는 서버 접속을 시도하지 않았습니다.
+
+### 4차 생성·수정 파일
+
+- 신규 라우트: `src/app/(workspace)/library/page.tsx`, `src/app/(workspace)/workplaces/[workplaceId]/documents/page.tsx`.
+- 문서 계약·상태: `src/features/documents/{api,schemas,view-models,file-validation,query-keys,queries,cache}.ts`.
+- 문서 UI: `src/features/documents/components/{document-screens,document-list,document-card,upload-form,link-form,document-actions}.tsx`.
+- MSW·테스트: `src/test/document-handlers.ts`, `src/features/documents/documents.test.tsx`.
+- 기존 업로드 라우트, `src/features/cases/components/{case-detail-screen,case-form}.tsx`,
+  `src/features/workplaces/components/workplace-detail-screen.tsx`,
+  `src/features/auth/components/workspace-navigation.tsx`의 문서 탐색 연결.
+- `src/lib/api/client.ts`: 기존 인증·signal·refresh를 유지하면서 FormData를 지원.
+  Content-Type boundary는 브라우저에 맡기고 JSON과 동시 전송을 차단.
+- `src/features/{cases,workplaces}/queries.ts`: 기존 삭제 흐름과 문서 캐시 정리 연계.
+- `src/features/dashboard/management-flow.test.tsx`: 폐기된 업로드 준비 안내 검증을 실제 자료 등록 경로 검증으로 갱신.
+- `README.md`: 구현 범위·계약의 경계·검증 결과 기록.
+
+### 4차 검증
+
+`npm run lint`, `npm run typecheck`, `npm test`, `npm run build`로 검증합니다.
+최종 실행 결과는 아래 완료 기록에 남깁니다.
+MSW 3는 미등록 요청을 오류 처리합니다. jsdom multipart 테스트는 Node fetch와 일치하는
+WHATWG FormData와 File을 사용하며 제품 코드에 테스트 우회 처리를 넣지 않았습니다.
+
+Edge headless + 로컬 프론트엔드 프로덕션 서버에서 320/375/768/1280px 검증을 통과했습니다.
+Playwright가 모든 API 요청을 가로채 **MSW Node에 전달**하여 처리했습니다.
+실제 백엔드 프로세스 실행·네트워크 접속은 하지 않았습니다.
+자료함 필터·근무지·Case 화면, 실제 multipart 업로드, 처리 polling 종료, 기존 원본 연결/수정/해제,
+원본 보존, 삭제 영향 확인·명시적 체크, Esc 닫기·트리거 포커스 복귀가 통과했습니다.
+모든 폭에서 가로 넘침과 브라우저 JS 오류가 없었습니다. 실제 모바일 기기·터치 키보드 검증은 아닙니다.
+로컬 산출물 `test-results/documents-browser-report.json`, `documents-*.png`는 Git 제외입니다.
+검증 스크립트는 `%TEMP%/wageitda-browser/documents-browser-smoke.cjs`에 있습니다.
+Playwright는 기존 임시 경로의 설치를 사용했고 package.json/lockfile을 변경하지 않았습니다.
+
+5차에서는 문서 상세에 원문 Blob·필드 Query·Case override 편집·review.confirm을 연결하되,
+READY/CONFIRMED 구분과 서버 inputVersion·공유 원본 참조 모델을 유지해야 합니다.
+main 단일 브랜치를 유지하며 commit/push하지 않았습니다.
+
+최종 검증: lint·typecheck·build 통과, Vitest 10개 파일·182개 테스트 통과(기존 147개 + 문서 35개).
+Edge 4개 viewport의 문서 등록·관리 흐름은 MSW로 검증했으며 실제 백엔드 연동 성공을 뜻하지 않습니다.
