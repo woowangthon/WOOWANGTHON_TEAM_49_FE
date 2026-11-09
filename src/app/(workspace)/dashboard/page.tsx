@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { AccountOverview } from "@/features/auth/components/account-overview";
+import { DashboardScreen } from "@/features/dashboard/dashboard-screen";
 
-export const metadata: Metadata = { title: "내 계정" };
+export const metadata: Metadata = { title: "대시보드" };
 
 export default function DashboardPage() {
-  return <AccountOverview />;
+  return <DashboardScreen />;
 }

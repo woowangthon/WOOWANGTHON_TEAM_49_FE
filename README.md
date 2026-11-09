@@ -1,8 +1,8 @@
 # 월급잇다 Frontend
 
 Next.js 16 App Router · React 19 · TypeScript strict · Tailwind CSS 4.
-2차 인증 기능(회원가입·로그인·세션 복원·로그아웃·보호 경로)을 구현했습니다.
-`/dashboard`는 현재 사용자 정보만 표시하는 인증 진입 화면입니다. 업무 대시보드·임금 계산은 후속 범위입니다.
+3차 대시보드·근무지(Workplace)·급여 사례(Case) 관리를 구현했습니다.
+기존 인증·세션·Query 기반을 유지합니다. 문서 업로드·검사·임금 계산은 이번 범위에 포함하지 않습니다.
 
 ## 실행
 
@@ -43,13 +43,16 @@ src/
   app/                         라우트 구성과 전역 경계
     (marketing)/page.tsx        공개 홈: /
     (auth)/                    /login, /signup + 게스트 레이아웃
-    (workspace)/               보호 레이아웃 + /dashboard 인증 진입 화면
+    (workspace)/               보호 레이아웃 + 대시보드·근무지·급여 사례
     providers.tsx              QueryClient + 세션별 서비스 생성과 최초 복원
   components/
     layout/                    Server AppShell + Client MobileNavigation
     ui/                        업무 도메인에 의존하지 않는 표시 컴포넌트
   features/
     auth/                      인증 API·DTO 검증·수명주기·폼·경로 보호·사용자 Query
+    workplaces/                근무지 API·DTO·Query·ViewModel·CRUD 화면
+    cases/                     사례 API·DTO·Query·ViewModel·버전 수정·삭제 영향
+    dashboard/                 사용자 정보와 조회 범위가 명시된 집계·최근 사례
   hooks/                       공통 서비스 접근과 세션 범위 hook
   lib/
     api/                       HTTP·오류·JSON·파일·SSE 전송
@@ -66,7 +69,9 @@ src/
 DTO를 화면 ViewModel과 분리하고 `null`, `0`, `UNKNOWN`을 보존합니다.
 
 `(marketing)`, `(auth)`, `(workspace)`는 URL에 나타나지 않습니다.
-실제 페이지는 `/`, `/login`, `/signup`, `/dashboard`입니다. 미구현 업무 화면은 생성하지 않았습니다.
+실제 페이지는 `/`, `/login`, `/signup`, `/dashboard`, `/workplaces`, `/workplaces/new`,
+`/workplaces/[workplaceId]`, `/cases`, `/cases/new`, `/cases/[caseId]`, `/cases/[caseId]/upload`입니다.
+마지막 경로는 업로드 미구현 안내이며 파일 입력·전송 기능을 제공하지 않습니다.
 같은 실제 URL을 직접 경로와 Route Group 양쪽에 추가하지 않습니다.
 
 page/layout은 Server Component로 두고 페이지 조합만 담당합니다.
@@ -157,7 +162,8 @@ Drawer는 native modal dialog로 포커스 가두기·Esc·닫은 후 포커스 
 2026-11-09 기준 AGENTS.md와 P0→P3 순서로 공통 기반 관련 내용을 검토했습니다.
 P0의 실제 파일명은 `docs/references/백엔드_API_명세_v1.pdf`이며,
 안내된 `백엔드_API_명세서_v1.pdf`와 이름이 다릅니다. 기존 파일을 변경하지 않았습니다.
-로컬 `http://127.0.0.1:8000/openapi.json`에 연결되지 않아 실행 서버와 대조하지 못했습니다.
+1·2차 작업에서는 로컬 `http://127.0.0.1:8000/openapi.json`에 연결되지 않아 실행 서버와 대조하지 못했습니다.
+**3차 작업에서는 사용자 지시에 따라 백엔드·OpenAPI 연결 확인 및 실행을 시도하지 않았습니다.**
 
 - P0 우선: 쿠키 refresh 교체, 로그아웃/Case 삭제 204, 탈퇴 202,
   계산 재실행은 202 job 응답. 이전 문서의 상충하는 예시는 사용하지 않습니다.
@@ -170,7 +176,7 @@ P0의 실제 파일명은 `docs/references/백엔드_API_명세_v1.pdf`이며,
 - 쿠키 이름·SameSite·Secure·CSRF·CORS allow-origin/allow-credentials와 배포 origin은 미확인입니다.
   local 개발 시 localhost FE와 127.0.0.1 API의 쿠키 정책도 서버 설정에 맞춰 확인합니다.
 - 403/429는 일반 HTTP 처리 기반만 제공합니다. P0에서 확인하지 못한 상세 오류 DTO를 만들지 않습니다.
-- 계산·문서·결과·AI의 업무 DTO는 이번에 만들지 않았습니다. 다음 기능마다 OpenAPI와 P0를 대조합니다.
+- 계산·문서·결과·AI의 업무 DTO는 아직 만들지 않았습니다. 서버 대조는 향후 사용자가 허용한 연동 작업에서 진행합니다.
 
 Next.js 작성 전에 설치된 `node_modules/next/dist/docs/`의 Server/Client Components,
 Project Structure, Route Groups, CSS, Environment Variables, Vitest, CLI typegen 가이드를 확인했습니다.
@@ -220,3 +226,84 @@ Playwright 요청 가로채기를 사용해 테스트용 HttpOnly 쿠키로 새�
 
 다음 단계는 서버 실행 후 OpenAPI·비밀번호 정책·쿠키/CORS·서버 세션 무효화를 실제로 대조하고,
 사업장/Case 목록의 DTO·Query·로딩/오류/빈 상태를 붙이는 작업입니다.
+
+## 3차 관리 기능과 계약 기준
+
+이번 단계에서는 백엔드를 실행하거나 접속하지 않았습니다. 실제 API 연동 성공을 주장하지 않습니다.
+AGENTS.md, README, P0 PDF 전체와 P1 관련 흐름, P2 토큰, P3·P4 관련 계약을 검토했습니다.
+설치된 Next.js의 Server/Client Components, Route Groups, Dynamic Route Segments, useSearchParams/Suspense 가이드를 코드 작성 전에 확인했습니다.
+동적 page의 `params`는 Promise로 받고 양의 정수 ID를 검증한 뒤 화면에 전달합니다. 페이지에서 사용자 API를 서버 요청으로 미리 호출하지 않습니다.
+
+- 대시보드: 사용자 Query 재사용, `GET /workplaces`, `GET /cases`의 `total`로 전체 수를 표시합니다.
+  최근 업데이트와 확인 필요 목록은 **첫 페이지 최대 20건** 기준입니다. 전체 데이터의 최신순 정렬이나 전체 확인 필요 수라고 표시하지 않습니다.
+  목록에 `attentionRequired`가 없으면 미제공으로 남기고 false/0으로 바꾸지 않습니다.
+- 근무지: 목록/상세/생성/수정/삭제 요청과 `/workplaces/{id}/cases`를 구현했습니다.
+  `search`는 P4에서도 제안 사항이므로 전송하지 않습니다. 검색은 현재 서버 페이지의 이름·업종·지역을 대상으로 수행하며 UI에 범위를 명시합니다.
+  서버에는 문서화된 `page`, `size`만 보냅니다. 페이지·검색·폼 초안은 메모리에만 둡니다.
+- 근무지 생성: P0의 `{workplaceId}`만 소비합니다. P4의 전체 Workplace 생성 응답을 요구하지 않습니다.
+  수정은 변경 필드만 보냅니다. 업종/지역을 명시적으로 비우면 null이며 임의 기본값을 넣지 않습니다.
+- 근무지 삭제: 문서에 없는 `/workplaces/{id}/deletion-impact`를 만들지 않았습니다.
+  상세의 `caseCount`를 다시 조회해 안내하고 명시적 체크 후 DELETE합니다. 409 의존성 오류는 유지하며 자동 확인/연쇄 삭제하지 않습니다.
+  **P0는 근무지 DELETE의 정확한 응답을 생략합니다. 현재는 P4 B-14의 JSON 202를 따르며 receipt 필드를 추정하지 않습니다.**
+  실제 서버가 204 또는 다른 계약을 쓰는지는 미검증입니다. Case의 204를 근무지에 임의 적용하지 않았습니다.
+  JSON 성공은 삭제 요청 접수로 취급하고 목록으로 이동합니다. 문서 원본의 삭제·물리 파기 완료를 보장하지 않습니다.
+- Case: 전역/근무지별 목록, 생성, 상세, 수정, 삭제를 구현했습니다.
+  먼저 근무지를 선택·조회하고 HOURLY/MONTHLY와 임의 산정기간을 입력합니다. 달력 월 제약을 두지 않습니다.
+  선택 지급일의 빈 입력은 null로 보냅니다. 생성 후 `/cases/{id}/upload` 안내로 이동합니다.
+- Case 수정: 변경 필드 + 폼 초안의 `expectedInputVersion`만 PATCH합니다. workflow/status/workplaceId를 함께 보내지 않습니다.
+  409 `INPUT_VERSION_CONFLICT`에서는 입력을 유지하고 저장을 막습니다. 명시적 최신 정보 불러오기가 초안을 교체한 뒤 새 버전으로 다시 수정할 수 있습니다.
+  자동 재전송·자동 충돌 병합·공식 계산 요청은 하지 않습니다. 응답의 inputVersion/recompute를 받아도 계산 완료로 표시하지 않습니다.
+- Case 삭제: `/cases/{id}/deletion-impact`를 먼저 조회하고 문서/공유 문서/보고서 수와 접근 차단을 안내합니다.
+  조회 실패·불완전 DTO·원본 삭제/즉시 접근 차단이 P0와 충돌하는 응답은 삭제를 막습니다.
+  사용자 확인 후 DELETE 204를 처리하고 목록/근무지 수를 갱신하며 상세·영향 캐시를 제거합니다.
+- 상태 구분: COMPLETED는 '작업 완료'로 표시하고 검사 일치로 표현하지 않습니다. currentStep은 작업 단계이며 readiness를 만들거나 추정하지 않습니다.
+
+P0에 상세 정의가 없는 조회 Workplace, 경량 Case 목록, deletion-impact 필드와 근무지 삭제 응답은 P3/P4의 비충돌 부분으로 보완했습니다.
+필수 소비 필드는 Zod로 검증하며 미제공 선택 필드는 그대로 보존합니다. 실제 서버의 상세 DTO·제약·정렬은 미검증입니다.
+백엔드의 개인정보·소유권 검증은 계속 필수이며 클라이언트 가드는 이를 대체하지 않습니다.
+
+## 3차 Query·UI와 검증
+
+사용자별 `['session', generation, 'management', ...]` 아래에서 근무지/사례 목록·상세·삭제 영향 키를 분리합니다.
+생성/수정 후 관련 Query를 무효화하고 삭제 후 관련 진행 중 Query를 취소·제거합니다.
+삭제 중/성공 상태는 기존 TanStack Query mutation cache에서 파생해 삭제된 상세/영향의 재요청을 막습니다.
+별도 엔티티 저장소나 Zustand Store를 추가하지 않습니다. 인증 변경 시 기존 Query/Mutation 캐시 정리와 AbortSignal을 그대로 활용합니다.
+DTO는 schema/API 계층, 표시 문구는 ViewModel 계층에 두며 서버 데이터를 다른 영속 저장소에 복제하지 않습니다.
+
+기존 Tailwind 토큰·Sidebar·Drawer·입력 컴포넌트를 재사용했습니다.
+shadcn/ui는 현재 의존성에 없어 추가 설치하지 않고, 공통 native select·pagination·확인 dialog·로딩/오류 컴포넌트를 구성했습니다.
+다이얼로그는 취소를 기본 포커스로 삼고 Esc/취소 후 실제 트리거로 포커스를 복귀합니다.
+필드 오류는 입력에 연결하고 요청이 끝난 뒤 오류 필드/요약으로 포커스를 이동합니다.
+
+검증 결과: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` 통과.
+Vitest 9개 파일·147개 테스트: 기존 인증/전송 114개와 관리 계약·화면 33개입니다.
+MSW로 목록/페이지 이동, 근무지 CRUD, Case CRUD, 409 초안/최신 버전, 삭제 영향 실패/계약 충돌, 403/404/422, 빈 상태, 오류 재시도, 인증 해제 후 캐시 정리를 확인했습니다.
+MSW 3에서 미등록 요청은 오류로 처리합니다. fixture는 테스트에만 들어갑니다.
+
+별도로 headless Edge + 로컬 **프론트엔드** 프로덕션 서버에서 320/375/768/1280px를 검증했습니다.
+모든 API 요청을 Playwright로 가로채 응답했으며 백엔드 접속/실행은 하지 않았습니다.
+각 폭에서 가로 넘침 없음, 실제 페이지 이동, 근무지/Case CRUD, 페이지네이션, 충돌 복구, 삭제 확인·Esc·포커스 복귀, 빈 대시보드, 업로드 미구현 안내를 확인했습니다.
+브라우저 JS 오류는 없었습니다. 데스크톱 브라우저 viewport 검사이며 실제 모바일 기기·가상 키보드 검증은 남아 있습니다.
+`test-results/management-browser-report.json`, `management-*.png`는 Git 제외 로컬 산출물입니다. 스크린샷 데이터는 브라우저 테스트 fixture입니다.
+
+## 3차 생성·수정 파일
+
+| 구분 | 파일 |
+|---|---|
+| 문서 | `README.md` |
+| 대시보드 | `src/app/(workspace)/dashboard/page.tsx`, `src/features/dashboard/dashboard-screen.tsx`, `src/features/dashboard/management-flow.test.tsx` |
+| 기존 인증 UI 재사용 | `src/features/auth/components/account-overview.tsx`, `src/features/auth/components/workspace-navigation.tsx` |
+| 근무지 라우트 | `src/app/(workspace)/workplaces/page.tsx`, `src/app/(workspace)/workplaces/new/page.tsx`, `src/app/(workspace)/workplaces/[workplaceId]/page.tsx` |
+| Case 라우트 | `src/app/(workspace)/cases/page.tsx`, `src/app/(workspace)/cases/new/page.tsx`, `src/app/(workspace)/cases/[caseId]/page.tsx`, `src/app/(workspace)/cases/[caseId]/upload/page.tsx` |
+| 근무지 계층 | `src/features/workplaces/api.ts`, `src/features/workplaces/schemas.ts`, `src/features/workplaces/queries.ts`, `src/features/workplaces/view-models.ts` |
+| 근무지 UI | `src/features/workplaces/components/workplace-list-screen.tsx`, `src/features/workplaces/components/workplace-detail-screen.tsx`, `src/features/workplaces/components/workplace-form.tsx`, `src/features/workplaces/components/workplace-picker.tsx`, `src/features/workplaces/components/delete-workplace.tsx` |
+| Case 계층 | `src/features/cases/api.ts`, `src/features/cases/schemas.ts`, `src/features/cases/queries.ts`, `src/features/cases/view-models.ts`, `src/features/cases/contracts.test.ts` |
+| Case UI | `src/features/cases/components/case-cards.tsx`, `src/features/cases/components/case-list.tsx`, `src/features/cases/components/case-form.tsx`, `src/features/cases/components/case-create-screen.tsx`, `src/features/cases/components/case-detail-screen.tsx`, `src/features/cases/components/delete-case.tsx` |
+| 공통 UI | `src/components/ui/confirm-dialog.tsx`, `src/components/ui/page-heading.tsx`, `src/components/ui/pagination.tsx`, `src/components/ui/query-feedback.tsx`, `src/components/ui/select-field.tsx`, `src/components/ui/styles.ts` |
+| 공통 hook | `src/hooks/use-form-error-focus.ts`, `src/hooks/use-session-scope.ts` |
+| 공통 API·Query·ID | `src/lib/api/schema.ts`, `src/lib/api/form-errors.ts`, `src/lib/query/business-keys.ts`, `src/lib/query/use-removal-state.ts`, `src/lib/route-id.ts` |
+| MSW fixture | `src/test/management-handlers.ts` |
+
+기존 API 클라이언트·메모리 세션·Provider를 재작성하지 않았고 의존성·lockfile·AGENTS.md·참고문서는 변경하지 않았습니다.
+main 단일 브랜치를 유지하며 commit/push를 수행하지 않았습니다.
+다음 작업은 문서 업로드·검증·처리 상태 polling·Case 문서 연결입니다. 실제 서버 계약 대조는 별도 허용된 연동 단계에서 수행합니다.
