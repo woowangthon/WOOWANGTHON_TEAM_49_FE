@@ -67,7 +67,7 @@ export function managementMocks({ empty = false } = {}) {
       if (!item) return missing();
       if (item.caseCount) return apiResponse({ errorCode: "RESOURCE_HAS_DEPENDENCIES" }, 409);
       workplaces = workplaces.filter((row) => row.workplaceId !== item.workplaceId);
-      return apiResponse({}, 202);
+      return new HttpResponse(null, {status:204});
     }),
     http.get(`${testApiUrl}/workplaces/:id/cases`, ({ request, params }) => page(request, cases.filter((row) => row.workplaceId === Number(params.id)).map(caseDto))),
     http.get(`${testApiUrl}/cases`, ({ request }) => page(request, cases.map(caseDto))),

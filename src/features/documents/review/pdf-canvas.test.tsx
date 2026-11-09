@@ -1,0 +1,17 @@
+// @vitest-environment jsdom
+import "@testing-library/jest-dom/vitest";
+import {cleanup,render,screen,waitFor} from "@testing-library/react";
+import {afterEach,beforeEach,describe,expect,it,vi} from "vitest";
+import PdfCanvas from "./components/pdf-canvas";
+const mocks=vi.hoisted(()=>({getDocument:vi.fn(),worker:{workerSrc:""}}));
+vi.mock("pdfjs-dist",()=>({getDocument:mocks.getDocument,GlobalWorkerOptions:mocks.worker}));
+afterEach(()=>cleanup());
+beforeEach(()=>{vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue({} as CanvasRenderingContext2D);});
+function fixture(){const destroy=vi.fn().mockResolvedValue(undefined);const cancel=vi.fn();const renderPage=vi.fn(()=>({promise:Promise.resolve(),cancel}));const getViewport=vi.fn(()=>({width:600,height:800}));const getPage=vi.fn().mockResolvedValue({rotate:0,getViewport,render:renderPage});const pdf={numPages:2,getPage};mocks.getDocument.mockReturnValue({promise:Promise.resolve(pdf),destroy});return {destroy,cancel,renderPage,getViewport,getPage};}
+describe("client-only PDF renderer resource lifecycle",()=>{
+ it("loads a local worker, renders requested page and releases the loading task",async()=>{const f=fixture();const rendered=vi.fn();const v=render(<PdfCanvas url="blob:local-pdf" page={1} pageCount={2} rotation={0} onRendered={rendered} />);expect(screen.getByRole("status")).toHaveTextContent("PDF 페이지를 그리는 중");await waitFor(()=>expect(rendered).toHaveBeenCalledWith(1,0));expect(mocks.getDocument).toHaveBeenCalledWith({url:"blob:local-pdf",enableXfa:false});expect(mocks.worker.workerSrc).toContain("pdf.worker.min.mjs");expect(mocks.worker.workerSrc).not.toMatch(/^https:/);expect(f.renderPage).toHaveBeenCalled();v.unmount();expect(f.destroy).toHaveBeenCalled();});
+ it("renders later pages at the supplied rotation and reports intrinsic rotation",async()=>{const f=fixture();const rendered=vi.fn();const v=render(<PdfCanvas url="blob:local-pdf" page={1} pageCount={2} rotation={0} onRendered={rendered} />);await waitFor(()=>expect(rendered).toHaveBeenCalledWith(1,0));v.rerender(<PdfCanvas url="blob:local-pdf" page={2} pageCount={2} rotation={90} onRendered={rendered} />);await waitFor(()=>expect(rendered).toHaveBeenCalledWith(2,0));expect(f.getPage).toHaveBeenLastCalledWith(2);expect(f.getViewport).toHaveBeenLastCalledWith({scale:1.5,rotation:90});});
+ it("rejects mismatched server and actual PDF page counts",async()=>{fixture();render(<PdfCanvas url="blob:local-pdf" page={1} pageCount={3} rotation={0} onRendered={vi.fn()} />);expect(await screen.findByRole("alert")).toHaveTextContent("페이지 정보를 확인");});
+ it("displays PDF decoding errors without exposing private paths",async()=>{mocks.getDocument.mockReturnValue({promise:Promise.reject(new Error("private-url-must-not-appear")),destroy:vi.fn()});render(<PdfCanvas url="blob:local-pdf" page={1} pageCount={2} rotation={0} onRendered={vi.fn()} />);expect(await screen.findByRole("alert")).toHaveTextContent("PDF를 표시할 수 없습니다");expect(document.body.innerHTML).not.toContain("private-url-must-not-appear");});
+ it("cancels an unfinished render before unmount",async()=>{const f=fixture();let finish:()=>void=()=>{};f.renderPage.mockReturnValue({promise:new Promise<void>(resolve=>{finish=resolve;}),cancel:f.cancel});const v=render(<PdfCanvas url="blob:local-pdf" page={1} pageCount={2} rotation={0} onRendered={vi.fn()} />);await waitFor(()=>expect(f.renderPage).toHaveBeenCalled());v.unmount();expect(f.cancel).toHaveBeenCalled();finish();});
+});

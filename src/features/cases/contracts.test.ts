@@ -30,7 +30,7 @@ describe("P0-first management contracts with MSW", () => {
     expect(mocks.requests.at(-1)?.path).toBe("/api/v1/workplaces?page=2&size=20");
   });
 
-  it("creates a workplace from ID-only response, patches explicit null, and accepts the documented deletion receipt transport", async () => {
+  it("creates a workplace from ID-only response, patches explicit null, and accepts P0 API_ENDPOINTS 204 deletion without a body", async () => {
     const { workplaces, mocks } = await setup();
     const created = await workplaces.create({ name: "새 근무지", industry: null, region: null, employmentStatus: "FORMER" });
     expect(created).toEqual({ workplaceId: 24 });

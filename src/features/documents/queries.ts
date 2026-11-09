@@ -76,11 +76,12 @@ export function useDocumentAction() {
       // Mutation failures can have reached the server, so refresh authoritative state too.
       if (action.type === "remove" || action.type === "unlink") {
         await s.queryClient.cancelQueries({ queryKey: documentKeys.root(s.generation) });
-        s.queryClient.removeQueries({ queryKey: documentKeys.root(s.generation), predicate: q => q.queryKey[3] === "status" });
+        s.queryClient.removeQueries({ queryKey: documentKeys.root(s.generation), predicate: q => q.queryKey[3] === "status" || (!_error && action.type === "remove" && q.queryKey[3] !== "lists" && q.queryKey[5] === action.documentId) });
       }
       await Promise.all([
         s.queryClient.invalidateQueries({ queryKey: documentKeys.root(s.generation), predicate: q => {
           // Do not refetch revoked detail/impact URLs while their dialog/card unmounts.
+          if (["preview", "file"].includes(String(q.queryKey[3]))) return false;
           if (!_error && action.type === "remove" && q.queryKey[3] !== "lists") return false;
           if (!_error && action.type === "unlink" && q.queryKey[3] === "status") return false;
           return true;

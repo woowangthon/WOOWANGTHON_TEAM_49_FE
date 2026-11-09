@@ -34,12 +34,11 @@ export function documentApi(api: ApiClient) {
     },
     connect: (caseId: number, documentId: number, body: LinkInput) => api.requestJson(`/cases/${caseId}/document-links`, decodeWith(linkSchema.extend(mutationSchema.shape)), { method: "POST", body: { documentId, ...body } }),
     updateLink: (caseId: number, linkId: number, body: LinkInput) => api.requestJson(`/cases/${caseId}/document-links/${linkId}`, decodeWith(linkSchema.extend(mutationSchema.shape)), { method: "PATCH", body: { ...body } }),
-    unlink: (caseId: number, linkId: number, expectedInputVersion: number) => api.requestJson(`/cases/${caseId}/document-links/${linkId}`, decodeWith(mutationSchema.extend({ linkId: z.number().int().positive(), unlinked: z.literal(true) })), { method: "DELETE", body: { expectedInputVersion } }),
+    unlink: (caseId: number, linkId: number, expectedInputVersion: number) => api.requestNoContent(`/cases/${caseId}/document-links/${linkId}`, { method: "DELETE", body: { expectedInputVersion } }),
     retry: (caseId: number, documentId: number) => api.requestJson(`/cases/${caseId}/documents/${documentId}/retry`, decodeWith(statusSchema), { method: "POST", body: {} }),
     impact: (workplaceId: number, documentId: number, signal?: AbortSignal) => api.requestJson(`/workplaces/${workplaceId}/documents/${documentId}/deletion-impact`, decodeWith(impactSchema), { signal }),
-    // P0 does not specify this DELETE response. P4 B-27 supplies JSON 202;
-    // never require the obsolete physical-purge receipt or interpret acceptance as physical erasure.
-    remove: (workplaceId: number, documentId: number) => api.requestJson(`/workplaces/${workplaceId}/documents/${documentId}?confirm=true`, () => undefined, { method: "DELETE" }),
+    // P0 API_ENDPOINTS explicitly specifies 204; no JSON envelope or purge receipt.
+    remove: (workplaceId: number, documentId: number) => api.requestNoContent(`/workplaces/${workplaceId}/documents/${documentId}?confirm=true`, { method: "DELETE" }),
     recompute: (caseId: number, signal?: AbortSignal) => api.requestJson(`/cases/${caseId}/recompute-status`, decodeWith(recomputeSchema), { signal }),
   };
 }

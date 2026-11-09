@@ -1,8 +1,8 @@
 # 월급잇다 Frontend
 
 Next.js 16 App Router · React 19 · TypeScript strict · Tailwind CSS 4.
-4차 문서 등록·자료함·Case 문서 연결·처리 상태 관리를 구현했습니다.
-기존 인증·세션·Query 기반을 유지합니다. OCR 필드 검토·임금 계산은 이번 범위에 포함하지 않습니다.
+5차 문서 원문·OCR 필드 검토·공유 기본값·Case 재정의·안전한 교체를 구현했습니다.
+기존 1~4차 기반을 유지합니다. 실제 OCR 실행·임금 계산·최종 결과·AI 기능은 이번 범위에 포함하지 않습니다.
 
 ## 실행
 
@@ -311,6 +311,8 @@ main 단일 브랜치를 유지하며 commit/push를 수행하지 않았습니�
 
 ## 4차 문서 등록·관리
 
+이 절은 4차 당시 기록입니다. 5차 중 추가된 P0 `API_ENDPOINTS.md`에 따라 근무지·원본 삭제와 Case 연결 해제의 성공 응답은 **204**로 확정해 수정했습니다. 아래 JSON 202/200 보완 기록은 현재 계약이 아닙니다.
+
 백엔드 실행·접속·OpenAPI 조회 없이 P0 `백엔드_API_명세_v1.pdf`를 우선 적용했습니다.
 P1 관련 제품 흐름, P2 자료함·업로드 카드와 상태 표현, P3 §9.4~10·캐시 정책을 검토했습니다.
 설치된 Next.js의 Server/Client Components, Dynamic Routes, Route Groups 문서를 확인했습니다.
@@ -418,3 +420,149 @@ main 단일 브랜치를 유지하며 commit/push하지 않았습니다.
 
 최종 검증: lint·typecheck·build 통과, Vitest 10개 파일·182개 테스트 통과(기존 147개 + 문서 35개).
 Edge 4개 viewport의 문서 등록·관리 흐름은 MSW로 검증했으며 실제 백엔드 연동 성공을 뜻하지 않습니다.
+
+
+## 5차 문서 원문·필드 검토와 원본 교체
+
+AGENTS.md, 기존 README·소스, P0 `백엔드_API_명세_v1.pdf`의 업로드·확인·교체 정책과 `API_ENDPOINTS.md`,
+P1 관련 제품 흐름, P2 원문/추출 필드 비교 디자인, P3 §10, P4 필드·검토·미리보기 계약을 확인했습니다.
+코드 작성 전 설치된 Next.js의 Server/Client Components, Dynamic Routes, Lazy Loading 문서를 읽었습니다.
+**백엔드 실행·접속·OpenAPI 확인은 하지 않았습니다.** 아래 검증은 MSW와 합성 문서 fixture 기준입니다.
+
+### 5차 구현 범위
+
+- `/cases/[caseId]/review`: 기존 Case 상세·업로드·문서 카드에서 연결.
+  Case 연결 문서를 선택해 원문과 필드를 비교하며 데스크톱은 양열, 작은 화면은 원문/필드 탭을 사용합니다.
+- Bearer가 포함된 공통 API의 `requestBlob`으로 PDF/JPEG/PNG 원문을 가져옵니다.
+  응답의 private `previewUrl`을 따라가거나 화면·Query key에 보관하지 않습니다.
+- PDF.js 6.5.438만 새 직접 의존성으로 추가했습니다. 기존 의존성 버전은 바꾸지 않았습니다.
+  PDF.js의 Node 요구사항은 22.13 이상 또는 24 이상이며 기존 문서와 같은 Node 24 환경에서 검증했습니다.
+  Client Component를 `ssr:false`로 지연 로딩하고 PDF.js와 worker를 로컬 Next asset으로 로딩합니다.
+  CDN은 사용하지 않습니다. [PDF.js 공식 예제](https://mozilla.github.io/pdf.js/examples/)와 설치된 타입 정의를 참고했습니다.
+- 페이지 이동·확대/축소·이미지/PDF 로딩·실패·재시도. PDF 실제 페이지 수가 서버 pageCount와 다르면 표시 오류로 처리합니다.
+  canvas render는 직렬화하고 페이지 전환/unmount에서 render 취소 및 loading task/worker 정리를 수행합니다.
+- Object URL은 현재 Blob 수명에 맞춰 생성·해제합니다. 파일 Query는 비활성화 시 즉시 GC하며 사용자 변경에서도 해제합니다.
+- `RELATIVE_0_1`의 유효한 `[x,y,width,height]`, 일치하는 documentId/page, supportsHighlight를 모두 확인해 강조합니다.
+  같은 원문 컨테이너에 상대좌표 오버레이를 두어 확대와 반응형 크기 변경을 따라갑니다.
+  좌표 미제공·잘못된 좌표·서로 다른 출처 문서는 위치를 만들지 않고 페이지·근거 문구를 표시합니다.
+- 필드 상태 UNCONFIRMED/CONFIRMED/MISSING/UNREADABLE/CONFLICTED, 적용값 출처, 단위/형식, 사용자 수정 여부와 확인 시각 표시.
+  null은 값 없음, 숫자 0은 0으로 유지합니다. processingStatus와 reviewStatus를 합치지 않습니다.
+- 값 수정, 값만 확인(`confirmed:true`만), 명시적 미확인(`confirmed:false`)을 다른 동작으로 제공합니다.
+  값 저장 시 확인을 선택하지 않으면 confirmed를 생략하며, 서버의 미확인 복귀 정책을 따릅니다.
+  null 확인은 막고 422를 수정값·확인 필드에 매핑합니다. 중복 제출은 요청 상태와 동기 lock으로 막습니다.
+- Case 수정은 편집 초안의 expectedInputVersion을 사용합니다. 409에서는 초안을 보존하고 자동 재전송을 막으며,
+  최신 Case·필드를 조회한 후 사용자가 명시적으로 최신 값으로 초안을 다시 불러올 수 있습니다.
+- 공유 기본값 편집은 별도 범위·영향 dialog를 제공하고 Case용 expectedInputVersion을 보내지 않습니다.
+  현재 값이 Case override라면 이를 공유 기본값인 것처럼 채우지 않고 새 공유값을 직접 입력받습니다.
+  실제 영향 Case와 새 버전은 서버 affectedCaseIds/caseUpdates로 표시·갱신합니다.
+- override 제거는 별도 확인 후 해당 Case만 공유 기본값으로 복귀시킵니다. 다른 Case override를 변경하지 않습니다.
+- 수정 이력은 서버 페이지로 조회하며 이전/변경 값·일시·주체·범위, 빈 상태·실패·재시도를 제공합니다.
+  클라이언트가 가상 이력을 만들지 않습니다.
+- 문서 검토 완료는 GET review와 POST review/confirm 응답으로 판정합니다.
+  P0의 unconfirmedFieldIds를 표시하고 IN_PROGRESS를 CONFIRMED로 바꾸지 않습니다.
+  미완료 상태가 다른 기능을 차단하지 않으며 검토 완료를 진위·법적 검증 완료로 표현하지 않습니다.
+- 원본 교체 1단계: 기존 multipart·파일 검증으로 새 파일만 접수하고 originalLinkRetained:true를 확인합니다.
+  replacementId와 documentId를 구분하며 기존 Case 연결을 직접 해제하거나 새 원본에 미리 연결하지 않습니다.
+- 원본 교체 2단계: replacement 전용 GET에서 새 처리 상태·읽기 전용 필드를 확인합니다.
+  처리 중 2초 polling, 종결/오류 시 중단. 인증 원문이 실제 표시되고 필드 응답을 확인할 수 있을 때만
+  사용자가 대조 체크와 최종 dialog를 거쳐 현재 버전으로 확정합니다.
+  REPLACEMENT_OVERRIDE_CONFLICT와 버전 충돌은 기존 연결을 유지하며 다시 확인하도록 안내합니다.
+  확정 전 후보 필드는 일반 Case fields API로 접근하지 않습니다. 확정 후 적용된 필드를 다시 검토합니다.
+- `?documentId=...&replacementId=...`로 교체 후보 확인을 재개할 수 있습니다. URL에는 식별자만 넣습니다.
+  교체 취소/후보 목록 API는 명세에 없어서 만들지 않았으며 요청 대기 중단이 서버 처리 취소라고 안내하지 않습니다.
+- 문서·필드·이력·검토·관련 Case/readiness/results/recompute 캐시를 무효화합니다.
+  결과 스냅샷은 삭제·덮어쓰지 않고, 기존 recompute-status hook으로 실행 중에만 상태를 조회합니다.
+  계산 API를 중복 실행하지 않습니다. 교체로 권한이 사라지는 기존 Case 문서 Query는 취소·제거합니다.
+- 미저장 변경 표시, 문서/편집 범위 전환·링크 이동·새로고침 경고,
+  모바일 탭 방향키/Home/End, 오류 필드/요약 포커스, 공통 native dialog를 재사용합니다.
+
+범위 제외: 실제 OCR 또는 모델 개발, 임금 공식·조건·결과/대조 화면, AI 채팅, 상담기관·보고서,
+백엔드 실행/접속/OpenAPI 조회, Git commit/push.
+
+### 5차 API 계약과 보완 근거
+
+| API | 적용 계약 |
+|---|---|
+| `GET /workplaces/{w}/documents/{d}/preview` | P0 경로. 미리보기 DTO는 P4 B-29/§5.3의 documentId/mediaType/pageCount/coordinateSystem/rotationDegrees/supportsHighlight 보완 |
+| `GET /workplaces/{w}/documents/{d}/file` | P0 원문. Bearer fetch Blob, 외부 previewUrl 미사용 |
+| `GET /cases/{c}/documents/{d}/fields` | P0 fields·상태·valueType·출처·Case override DTO. 요청 Case/document 식별자 일치 검증 |
+| `PATCH /cases/{c}/documents/{d}/fields/{f}` | P0 value/confirmed 의미·expectedInputVersion·null 정책. 반환 value/status/inputVersion/affectedCaseIds/caseUpdates/recompute 사용 |
+| `PATCH /workplaces/{w}/documents/{d}/fields/{f}` | P0 공유 기본값. Case expectedInputVersion을 요구하는 P4 예시는 적용하지 않음 |
+| `DELETE /cases/{c}/documents/{d}/field-overrides/{f}` | P0 공유값 복귀·200. body의 expectedInputVersion과 최소 응답 DTO는 P4 B-43 보완 |
+| `GET /cases/{c}/documents/{d}/fields/{f}/history` | P0 경로. P4 B-41의 Page/변경 전후·주체·범위 DTO 및 page/size 보완 |
+| `GET /cases/{c}/documents/{d}/review` | P0 Case 연결 검토 상태. 선택 count 필드는 P4 B-44 보완 |
+| `POST /cases/{c}/documents/{d}/review/confirm` | P0 서버 판정과 unconfirmedFieldIds 우선. expectedInputVersion body는 P4 B-45 보완 |
+| `POST /cases/{c}/documents/{old}/replace` | P0 multipart file/선택 expectedInputVersion, 202 documentId/replacementId/originalLinkRetained:true. 구버전 즉시 교체 예시 미사용 |
+| `GET /cases/{c}/document-replacements/{replacementId}` | P0 새 원문 처리·필드 확인. 아래 DTO 가정 참조 |
+| `POST /cases/{c}/document-replacements/{replacementId}/confirm` | P0 confirmed:true/expectedInputVersion. 다른 Case/기존 원본 보존, override 매핑은 서버 책임 |
+| `GET /cases/{c}/recompute-status` | 기존 4차 hook 재사용. pending/running 동안만 상태 조회, 종결 상태에서 중단 |
+
+미확정 사항과 안전한 처리:
+1. P0는 replacement GET의 전체 JSON 구조를 생략했습니다. 명시된 이름으로 된 **평면
+   replacementId/documentId/processingStatus와 선택 fields 배열**을 현재 MSW 계약으로 사용합니다.
+   실제 서버가 다른 구조이면 해당 decoder를 조정해야 합니다. 필드가 미제공이면 확정을 막으며
+   다른 Case fields API로 대체하거나 링크를 미리 생성하지 않습니다.
+2. replacementId의 scalar 타입도 생략되어 양의 정수 또는 불투명 문자열을 보존·인코딩합니다.
+   교체 확정 응답 전체 DTO는 미정이므로 문서/교체 ID와 버전 metadata를 제공된 경우만 소비하고
+   이후 연결 목록·Case를 서버에서 다시 조회합니다. 가상 성공 필드나 버전을 만들지 않습니다.
+3. caseUpdates는 caseId/inputVersion 및 선택 recompute의 배열로 보완했습니다.
+   preview/history/review의 생략 필드와 override DELETE·review confirm body도 하위 문서 보완이며
+   실제 OpenAPI로 확정된 계약이라고 주장하지 않습니다.
+4. P4의 unresolvedFieldIds 대신 P0의 **unconfirmedFieldIds**를 사용합니다.
+   P4의 confirmed:false 미확정 문구보다 P0의 명시적 미확인 정책을 우선합니다.
+5. 좌표 `[x,y,width,height]` 의미는 P4 §5.3 보완입니다. P0는 회전 전/후 좌표 기준과 PDF 자체 회전의
+   합성 규칙을 정의하지 않았습니다. 서버 rotationDegrees 또는 PDF 내장 rotation이 0이 아닌 경우에는
+   잘못된 위치를 만들지 않고 근거 페이지·문구로 대체합니다. 원문 자체는 회전 metadata에 따라 렌더링합니다.
+   회전된 문서의 좌표 강조는 좌표 기준 계약 확정 후 확장해야 합니다.
+6. P0의 명확한 단위는 MONEY_KRW입니다. 다른 valueType은 임의 단위 변환 없이 서버 형식을 보존합니다.
+   값이 null이어서 scalar 타입을 추론할 수 없으면 문자/숫자/예·아니요 입력 형식을 사용자가 선택하고
+   실제 허용 타입·업무 제약은 서버 422로 처리합니다. carry-forward의 추가 metadata 이름은 정의되어
+   있지 않아 생성하지 않고 알려진 source.documentId/page/text를 그대로 표시합니다.
+7. 작업 중 AGENTS.md에 추가된 P0 `API_ENDPOINTS.md`가 원본·근무지 삭제와 Case 연결 해제의 성공 응답을
+   204로 명시하므로 과거 P4의 JSON 202/200 가정을 폐기하고 `requestNoContent`로 수정했습니다.
+   새 표는 자세한 요청 파라미터/응답 DTO를 생략하므로 unlink·override 제거·review confirm의
+   expectedInputVersion body 등 보완된 요청 형태와 recompute-status 상세 DTO는 여전히 확인이 필요합니다.
+8. AGENTS.md의 `데이터베이스_스키마.md`는 없고 PDF만 제공되어 해당 PDF를 텍스트 추출과 렌더링으로 확인했습니다.
+   내용은 표지와 링크뿐이며 실제 테이블·컬럼·DTO는 포함하지 않습니다. 없는 DB 스키마를 추정하지 않았습니다.
+   API_ENDPOINTS가 참조하는 OpenAPI는 사용자 제약에 따라 조회하지 않았고 서버 접속도 하지 않았습니다.
+
+### 5차 생성·수정 파일
+
+| 구분 | 파일 |
+|---|---|
+| 신규 라우트 | `src/app/(workspace)/cases/[caseId]/review/page.tsx` |
+| 리뷰 계약·상태 | `src/features/documents/review/{api,schemas,query-keys,queries,view-models,use-object-url,use-unsaved}.ts` |
+| 리뷰 UI | `src/features/documents/review/components/{review-screen,original-viewer,pdf-canvas,fields-panel,field-editor,field-history,review-confirmation,replacement-panel}.tsx` |
+| 신규 테스트·fixture | `src/features/documents/review/{review,pdf-canvas}.test.tsx`, `src/test/review-handlers.ts` |
+| 기존 문서 기능 연결 | `src/features/documents/components/{document-card,document-screens}.tsx`, `src/features/cases/components/case-detail-screen.tsx` |
+| 권한·캐시 정리 확장 | `src/features/documents/{queries,cache}.ts` |
+| 새 P0의 204 계약 정정 | `src/features/documents/api.ts`, `src/features/workplaces/api.ts`, `src/test/{document-handlers,management-handlers}.ts`, `src/features/cases/contracts.test.ts` |
+| 의존성·문서 | `package.json`, `package-lock.json`, `README.md` |
+
+기존 API 클라이언트·세션·Query Provider·폴링·multipart·에러 처리·공통 UI는 재작성하지 않았습니다.
+main 단일 브랜치를 유지하며 commit/push하지 않았습니다.
+
+### 5차 검증과 다음 단계
+
+MSW는 미등록 요청을 오류 처리합니다. 테스트는 실제 OCR 분석이 아닌 합성 응답과 파일을 사용합니다.
+최종 lint/typecheck/test/build 결과는 아래 완료 기록에 기재합니다.
+
+Edge headless와 로컬 **프론트엔드** 프로덕션 서버에서 320/375/768/1280px를 확인했습니다.
+모든 API 요청은 Playwright가 가로채 MSW Node로 전달했고 실제 백엔드로 전달하지 않았습니다.
+이미지 원문·좌표 강조·확대, 로컬 PDF worker·2페이지 PDF 이동·좌표 강조,
+필드 수정/확인, 공유값과 override 분리·복귀, 이력 페이지네이션, 검토 완료, 교체의 양 단계가 통과했습니다.
+각 폭에서 가로 넘침과 JS 오류가 없었습니다. 실제 모바일 기기·터치 키보드 검증은 아닙니다.
+`test-results/review-browser-report.json`, `review-*.png`는 Git 제외 로컬 산출물이며,
+스크립트는 `%TEMP%/wageitda-browser/review-browser-smoke.cjs`와 `review-fixtures.cjs`에 있습니다.
+Playwright는 기존 임시 설치를 재사용했습니다.
+
+다음 단계는 허용된 연동 시점에 생략된 DTO·회전 좌표 기준을 확정하고, 계산 조건·서버 결과 화면을
+기존 readiness/result version·freshness 계약에 맞춰 연결하는 것입니다. 프론트에서 임금 공식을 만들지 않습니다.
+
+5차 최종 검증: lint·typecheck·build 통과. Vitest 12개 파일·224개 테스트 통과(기존 182개 + 신규 42개).
+Edge 네 폭의 합성 PDF/이미지·필드·공유값·교체 흐름은 MSW 검증이며 실제 서버 연동 성공을 의미하지 않습니다.
+
+작업 중 외부에서 추가된 AGENTS.md의 P0 참조 변경을 보존했습니다. 해당 파일은 이번 구현 코드가 수정한 파일이 아닙니다.
+
+새 P0 204 계약을 반영한 최신 빌드에서 기존 자료함의 업로드·연결·해제·원본 삭제 흐름도 Edge 네 폭으로 재검증했습니다.
+`test-results/documents-browser-report.json`과 `review-browser-report.json` 모두 오류·가로 넘침 없이 통과했습니다.

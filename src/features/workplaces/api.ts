@@ -11,8 +11,7 @@ export function workplaceApi(api: ApiClient) {
     detail: (id: number, signal?: AbortSignal) => api.requestJson(`/workplaces/${id}`, decodeWith(workplaceSchema), { signal }),
     create: (body: WorkplaceWrite) => api.requestJson("/workplaces", decodeWith(z.object({ workplaceId: z.number().int().positive() })), { method: "POST", body: { ...body } }),
     update: (id: number, body: Partial<WorkplaceWrite>) => api.requestJson(`/workplaces/${id}`, () => undefined, { method: "PATCH", body: { ...body } }),
-    // P0 has no Workplace DELETE body/status detail; P4 B-14 specifies JSON 202.
-    // Do not assume it is a 204 just because Case deletion is.
-    remove: (id: number) => api.requestJson(`/workplaces/${id}`, () => undefined, { method: "DELETE" }),
+    // P0 API_ENDPOINTS supplies the status omitted from the narrative PDF.
+    remove: (id: number) => api.requestNoContent(`/workplaces/${id}`, { method: "DELETE" }),
   };
 }

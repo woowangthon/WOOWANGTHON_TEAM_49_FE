@@ -13,7 +13,7 @@ export function LibraryScreen() {
   return <div className="min-w-0 space-y-6"><PageHeading title="전체 자료함" description="근무지별 공유 원본과 연결된 급여 사례를 확인합니다." action={<Link className={secondaryButton} href="/workplaces">근무지에서 자료 등록</Link>} /><DocumentNotice /><DocumentList context={{kind: "library"}} /></div>;
 }
 function DocumentNotice() {
-  return <p className="rounded-control bg-neutral-soft p-4 text-body">처리 완료(READY)는 사용자 검토 확인(CONFIRMED)과 다릅니다. 추출값 확인·수정은 5차 개발에서 제공됩니다.</p>;
+  return <p className="rounded-control bg-neutral-soft p-4 text-body">처리 완료(READY)는 사용자 검토 확인(CONFIRMED)과 다릅니다. 연결된 사례의 검토 화면에서 원문과 추출값을 확인해 주세요.</p>;
 }
 export function WorkplaceDocumentsScreen({ id }: { id: number }) {
   const query = useWorkplace(id);
@@ -43,6 +43,7 @@ function CaseDocuments({ id, workplaceId, workplaceName, inputVersion }: { id: n
   return <div className="min-w-0 space-y-6">
     <PageHeading title={`${workplaceName} 자료 등록`} description="파일을 새로 올리거나 같은 근무지의 기존 원본을 연결하세요." action={<Link href={`/cases/${id}`} className={secondaryButton}>사례 상세</Link>} />
     <div className="flex flex-wrap gap-3"><Link className={secondaryButton} href={`/workplaces/${workplaceId}/documents`}>근무지 공유 자료함</Link><Link className={secondaryButton} href="/library">전체 자료함</Link></div>
+    <Link href={`/cases/${id}/review`} className={secondaryButton}>원문·추출값 검토</Link>
     <DocumentNotice /><RecomputeNotice id={id} />
     {docs.data && docs.data.total >= 20 && <p role="alert" className={cardStyle}>사례에는 문서를 최대 20개 연결할 수 있습니다. 기존 연결을 해제한 뒤 등록해 주세요.</p>}
     <UploadForm context={{ kind: "case", id }} disabled={!canAdd} />

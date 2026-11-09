@@ -9,6 +9,6 @@ export async function revokeDocumentScope(client: QueryClient, generation: numbe
     return typeof context === "object" && context !== null && "kind" in context && "id" in context && context.kind === scope.kind && context.id === scope.id;
   };
   await client.cancelQueries({ queryKey: root });
-  client.removeQueries({ queryKey: root, predicate: q => belongs(q.queryKey) || (scope.kind === "workplace" && q.queryKey[3] === "impact" && q.queryKey[4] === scope.id) });
+  client.removeQueries({ queryKey: root, predicate: q => belongs(q.queryKey) || (scope.kind === "workplace" && q.queryKey[3] !== "lists") });
   await client.invalidateQueries({ queryKey: documentKeys.lists(generation), predicate: q => !belongs(q.queryKey) });
 }

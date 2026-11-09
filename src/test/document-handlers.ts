@@ -1,4 +1,4 @@
-import { http } from "msw";
+import { http, HttpResponse } from "msw";
 import type { DocumentDto } from "@/features/documents/schemas";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 import { apiResponse, testApiUrl } from "./server";
@@ -39,9 +39,9 @@ export function documentMocks(cases: CaseDetailDto[]) {
       return apiResponse({...link, inputVersion: bump(c)}, 201);
     }),
     http.patch(`${testApiUrl}/cases/:c/document-links/:l`, async ({request, params}) => { const body = await request.json() as Record<string, unknown>; record(request, body); const c = Number(params.c); if (conflict(c, body)) return error("INPUT_VERSION_CONFLICT"); const link = links.find(l => l.linkId === Number(params.l))!; Object.assign(link, {purpose: body.purpose, applicableFrom: body.applicableFrom, applicableTo: body.applicableTo}); return apiResponse({...link, inputVersion: bump(c)}); }),
-    http.delete(`${testApiUrl}/cases/:c/document-links/:l`, async ({request, params}) => { const body = await request.json() as Record<string, unknown>; record(request, body); const c = Number(params.c); if (conflict(c, body)) return error("INPUT_VERSION_CONFLICT"); const link = links.find(l => l.linkId === Number(params.l))!; links = links.filter(l => l !== link); const dto = documents.find(d => d.documentId === link.documentId)!; dto.linkedCaseIds = dto.linkedCaseIds!.filter(id => id !== c); return apiResponse({linkId: link.linkId, unlinked: true, inputVersion: bump(c)}); }),
+    http.delete(`${testApiUrl}/cases/:c/document-links/:l`, async ({request, params}) => { const body = await request.json() as Record<string, unknown>; record(request, body); const c = Number(params.c); if (conflict(c, body)) return error("INPUT_VERSION_CONFLICT"); const link = links.find(l => l.linkId === Number(params.l))!; links = links.filter(l => l !== link); const dto = documents.find(d => d.documentId === link.documentId)!; dto.linkedCaseIds = dto.linkedCaseIds!.filter(id => id !== c); bump(c); return new HttpResponse(null, {status:204}); }),
     http.get(`${testApiUrl}/workplaces/:w/documents/:d/deletion-impact`, ({request, params}) => { record(request); const dto = documents.find(d => d.documentId === Number(params.d)); if (!dto) return error("RESOURCE_NOT_FOUND", 404); return apiResponse({documentId: dto.documentId, linkedCaseIds: dto.linkedCaseIds, linkedCaseCount: dto.linkedCaseIds!.length, canDeleteOriginal: true, reasonCode: null}); }),
-    http.delete(`${testApiUrl}/workplaces/:w/documents/:d`, ({request, params}) => { record(request); if (new URL(request.url).searchParams.get("confirm") !== "true") return error("DOCUMENT_SHARED_REFERENCES_EXIST"); documents = documents.filter(d => d.documentId !== Number(params.d)); links = links.filter(l => l.documentId !== Number(params.d)); return apiResponse({}, 202); }),
+    http.delete(`${testApiUrl}/workplaces/:w/documents/:d`, ({request, params}) => { record(request); if (new URL(request.url).searchParams.get("confirm") !== "true") return error("DOCUMENT_SHARED_REFERENCES_EXIST"); documents = documents.filter(d => d.documentId !== Number(params.d)); links = links.filter(l => l.documentId !== Number(params.d)); return new HttpResponse(null, {status:204}); }),
     http.get(`${testApiUrl}/cases/:c/recompute-status`, ({request, params}) => { record(request); return apiResponse({caseId: Number(params.c), pending: 0, running: 0, latestJob: {status: "PARTIAL"}}); }),
   ];
   return {handlers, requests, getDocuments: () => documents, getLinks: () => links};
