@@ -1,5 +1,7 @@
 import { createRefreshAccessToken } from "@/features/auth/api/refresh";
 import { createMemorySession } from "@/features/auth/session";
+import { createAuthApi } from "@/features/auth/api/auth";
+import { createAuthController } from "@/features/auth/controller";
 import { createApiClient } from "@/lib/api/client";
 import { getApiBaseUrl } from "@/lib/config/env";
 import { createQueryClient } from "@/lib/query/client";
@@ -19,7 +21,9 @@ export function createAppServices(baseUrl = getApiBaseUrl()) {
     queryClient.clear();
   });
 
-  return { api, session, queryClient };
+  const authApi = createAuthApi(api, baseUrl);
+  const auth = createAuthController({ api, authApi, session, queryClient });
+  return { api, session, queryClient, authApi, auth };
 }
 
 export type AppServices = ReturnType<typeof createAppServices>;

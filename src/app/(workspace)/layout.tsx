@@ -1,8 +1,16 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { AuthGate } from "@/features/auth/components/auth-gate";
+import { AuthPending } from "@/features/auth/components/auth-pending";
+import { WorkspaceNavigation } from "@/features/auth/components/workspace-navigation";
 
-// Layout only: business pages and authentication guards belong to later features.
 export default function WorkspaceLayout({ children }: { children: ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <Suspense fallback={<AuthPending fullPage />}>
+      <AuthGate mode="protected">
+        <AppShell navigation={<WorkspaceNavigation />}>{children}</AppShell>
+      </AuthGate>
+    </Suspense>
+  );
 }

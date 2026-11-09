@@ -12,6 +12,8 @@ export interface ApiRequestOptions {
   signal?: AbortSignal;
   /** Public endpoints (login/refresh/etc.) must opt out of Bearer and refresh. */
   auth?: "session" | "none";
+  /** For session termination: a 401 must not rotate a cookie and recreate a session. */
+  refresh?: boolean;
 }
 
 interface ClientOptions {
@@ -114,7 +116,7 @@ export function createApiClient(options: ClientOptions) {
     };
 
     let { response, token } = await send();
-    if (response.status === 401 && authenticated && options.refreshAccessToken) {
+    if (response.status === 401 && authenticated && init.refresh !== false && options.refreshAccessToken) {
       await response.body?.cancel();
       // A delayed 401 for an old token must reuse the already refreshed token.
       if (options.session.getSnapshot().accessToken === token) {
@@ -138,6 +140,12 @@ export function createApiClient(options: ClientOptions) {
   }
 
   return {
+    /** Startup restoration and reactive 401s share the same per-session flight. */
+    refreshSession(): Promise<void> {
+      if (!options.refreshAccessToken) return Promise.reject(protocolError());
+      const snapshot = options.session.getSnapshot();
+      return refresh(snapshot.generation, snapshot.signal);
+    },
     /** A feature-level schema validates data; no unchecked requestJson<T> assertion. */
     requestJson<T>(path: string, decode: (data: unknown) => T, init: ApiRequestOptions = {}) {
       return request(path, init, "application/json", async (response) => decode(await readJsonData(response)));
