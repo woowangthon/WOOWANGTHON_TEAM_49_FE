@@ -1,3 +1,4 @@
+import { chatMocks } from './shared/chat-handlers';
 import { http, HttpResponse } from "msw";
 import { getApiBaseUrl } from "@/lib/config/env";
 import { managementMocks } from "./shared/management-handlers";
@@ -120,7 +121,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       const linked = docs.getLinks().filter(l => l.caseId === Number(params.c));
       return apiResponse({ linkedDocumentCount: linked.length, sharedDocumentCount: linked.filter(l => documents.find(d => d.documentId === l.documentId)!.linkedCaseIds!.length > 1).length, reportCount: 0, willUnlinkSharedDocuments: true, willDeleteSharedOriginals: false, willRevokeCaseAccessImmediately: true });
     }),
-    ...inputs.handlers, ...review.handlers, ...docs.handlers, ...management.handlers,
+    ...chatMocks(baseUrl, management.getCases).handlers, ...inputs.handlers, ...review.handlers, ...docs.handlers, ...management.handlers,
     http.all(`${baseUrl}/*`, () => {
       window.dispatchEvent(new Event("wageitda:mock-unhandled"));
       return apiResponse({ errorCode: "MOCK_NOT_IMPLEMENTED" }, 501);

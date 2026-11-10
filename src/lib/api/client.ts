@@ -163,6 +163,13 @@ export function createApiClient(options: ClientOptions) {
         if (response.status !== 204) throw protocolError();
       });
     },
+    /** An accepted operation whose P0 contract does not specify a response DTO. */
+    requestAccepted(path: string, init: ApiRequestOptions = {}): Promise<void> {
+      return request(path, init, "application/json", async (response) => {
+        if (response.status !== 202) throw protocolError();
+        await response.body?.cancel();
+      });
+    },
     requestBlob(path: string, init: ApiRequestOptions = {}): Promise<Blob> {
       return request(path, init, "application/octet-stream, application/pdf, application/zip, image/*", async (response) => {
         const mediaType = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
@@ -176,7 +183,7 @@ export function createApiClient(options: ClientOptions) {
     },
     requestSse(path: string, init: ApiRequestOptions = {}): Promise<ReadableStream<Uint8Array>> {
       return request(path, init, "text/event-stream", async (response) => {
-        if (!hasMediaType(response, "text/event-stream") || !response.body) throw protocolError();
+        if (response.status !== (init.expectedStatus ?? 200) || !hasMediaType(response, "text/event-stream") || !response.body) throw protocolError();
         return response.body;
       });
     },

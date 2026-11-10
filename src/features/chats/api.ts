@@ -1,0 +1,23 @@
+﻿import { z } from 'zod';
+import { decodeWith, pageSchema } from '@/lib/api/schema';
+import type { ApiClient } from '@/lib/api/client';
+export const scopeSchema=z.discriminatedUnion('scopeType',[z.object({scopeType:z.literal('CASE'),caseId:z.number().int().positive()}),z.object({scopeType:z.literal('WORKPLACE_ALL')})]);
+export type ChatScope=z.infer<typeof scopeSchema>;
+export const sourceSchema=z.object({documentId:z.number().int().positive(),caseId:z.number().int().positive().optional(),page:z.number().int().positive().nullable(),fieldId:z.number().int().positive().optional(),text:z.string().optional()}).passthrough();
+export const refSchema=z.object({caseId:z.number().int().positive().optional(),type:z.string(),snapshotId:z.number().int().positive(),version:z.number().int().positive()});
+export const messageSchema=z.object({messageId:z.number().int().positive(),role:z.enum(['USER','ASSISTANT']),content:z.string(),status:z.enum(['PENDING','STREAMING','COMPLETED','FAILED','CANCELLED']),scope:scopeSchema,sources:z.array(sourceSchema),resultRefs:z.array(refSchema),sourceMayBeOutdated:z.boolean(),runId:z.string().nullable(),errorCode:z.string().nullable()}).passthrough();
+export const sessionSchema=z.object({chatId:z.number().int().positive(),workplaceId:z.number().int().positive(),title:z.string(),defaultScope:scopeSchema,updatedAt:z.string(),lastMessagePreview:z.string().nullable().optional()}).passthrough();
+export const detailSchema=z.object({session:sessionSchema,messages:pageSchema(messageSchema)});
+export type Message=z.infer<typeof messageSchema>;
+export function chatApi(api:ApiClient,w:number){
+ const root=`/workplaces/${w}/chats`;
+ return {
+ list:(page:number,signal?:AbortSignal)=>api.requestJson(`${root}?page=${page}&size=20`,decodeWith(pageSchema(sessionSchema)),{signal,expectedStatus:200}),
+ detail:(id:number,page:number,signal?:AbortSignal)=>api.requestJson(`${root}/${id}?page=${page}&size=20`,decodeWith(detailSchema),{signal,expectedStatus:200}),
+ create:(title:string,caseId:number)=>api.requestJson(root,decodeWith(z.object({chatId:z.number().int().positive()})),{method:'POST',body:{title,defaultScope:{scopeType:'CASE',caseId}},expectedStatus:201}),
+ rename:(id:number,title:string)=>api.requestJson(`${root}/${id}`,decodeWith(z.unknown()),{method:'PATCH',body:{title},expectedStatus:200}),
+ remove:(id:number)=>api.requestNoContent(`${root}/${id}`,{method:'DELETE'}),
+ stream:(id:number,signal:AbortSignal,content:string,scope?:ChatScope,retry?:number)=>api.requestSse(`${root}/${id}/messages${retry?`/${retry}/retry`:''}`,{method:'POST',signal,refresh:false,...(!retry?{body:{content,...(scope?{scope}: {})}}:{})}),
+ cancel:(id:number,run:string)=>api.requestAccepted(`${root}/${id}/runs/${encodeURIComponent(run)}/cancel`,{method:'POST',expectedStatus:202,refresh:false}),
+ };
+}
