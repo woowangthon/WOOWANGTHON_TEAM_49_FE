@@ -66,9 +66,10 @@ describe("document flows with MSW, never a live backend", () => {
     expect(mocks.requests.every(r => !r.path.includes("search="))).toBe(true);
   });
   it("renders workplace shared originals and its upload form", async () => {
-    const {mount} = await setup(); mount(<WorkplaceDocumentsScreen id={3} />);
+    const {mount, user} = await setup(); mount(<WorkplaceDocumentsScreen id={3} />);
     expect(await screen.findByRole("heading", {name: "카페 나무 자료함"})).toBeVisible();
     expect(await screen.findByRole("article", {name: "근로계약서.pdf"})).toHaveTextContent("연결 사례 2개");
+    await user.click(screen.getByText("자료 추가",{exact:true}));
     expect(screen.getByRole("form", {name: "새 파일 업로드"})).toBeVisible();
   });
   it.each(["case", "workplace"] as const)("uploads one multipart file to %s, invalidates dependent caches", async kind => {
@@ -156,7 +157,7 @@ describe("document flows with MSW, never a live backend", () => {
   });
   it("requires fresh impact and explicit acknowledgement before original deletion", async () => {
     const {mount,user,mocks} = await setup(); mount(<DocumentCard dto={mocks.getDocuments()[0]} context={{kind:"library"}} />);
-    await user.click(screen.getByRole("button",{name:"공유 원본 삭제"}));
+    await user.click(screen.getByText("자료 관리 상세",{exact:true})); await user.click(screen.getByRole("button",{name:"공유 원본 삭제"}));
     const dialog=screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 사례: 2개");
     expect(within(dialog).getByRole("button",{name:"공유 원본 삭제 요청"})).toBeDisabled();
     await user.click(within(dialog).getByRole("checkbox")); await user.click(within(dialog).getByRole("button",{name:"공유 원본 삭제 요청"}));
@@ -165,7 +166,7 @@ describe("document flows with MSW, never a live backend", () => {
   });
   it("blocks deletion when impact lookup fails", async () => {
     const {mount,user,mocks} = await setup(); server.use(http.get(`${testApiUrl}/workplaces/3/documents/101/deletion-impact`,()=>apiResponse({},403)));
-    mount(<DocumentCard dto={mocks.getDocuments()[0]} context={{kind:"library"}} />); await user.click(screen.getByRole("button",{name:"공유 원본 삭제"}));
+    mount(<DocumentCard dto={mocks.getDocuments()[0]} context={{kind:"library"}} />); await user.click(screen.getByText("자료 관리 상세",{exact:true})); await user.click(screen.getByRole("button",{name:"공유 원본 삭제"}));
     await within(screen.getByRole("dialog")).findByRole("alert"); expect(screen.getByRole("button",{name:"공유 원본 삭제 요청"})).toBeDisabled();
     expect(mocks.requests.some(r=>r.method==="DELETE")).toBe(false);
   });
@@ -186,8 +187,9 @@ describe("document flows with MSW, never a live backend", () => {
     expect(app.queryClient.getQueryCache().findAll({queryKey:documentKeys.root(1)})).toHaveLength(0);
   });
   it("renders Case upload, linked and existing-original sections", async () => {
-    const {mount} = await setup(); mount(<CaseUploadScreen id={15} />);
+    const {mount,user} = await setup(); mount(<CaseUploadScreen id={15} />);
     expect(await screen.findByRole("heading",{name:"카페 나무 자료 등록"})).toBeVisible();
+    await user.click(screen.getByRole("button",{name:"기존 자료 연결"}));
     expect(await screen.findByRole("region",{name:"근무지 기존 원본 연결"})).toBeVisible();
     expect(await screen.findByText(/작업 종료는 모든 계산의 완료나 일치를 뜻하지 않습니다/)).toBeVisible();
   });
@@ -211,7 +213,7 @@ describe("document flows with MSW, never a live backend", () => {
     const {mount,user,mocks}=await setup(); let deletes=0;
     server.use(http.delete(`${testApiUrl}/workplaces/3/documents/101`,()=>{deletes++;return apiResponse({errorCode:"DOCUMENT_SHARED_REFERENCES_EXIST"},409);}));
     mount(<DocumentCard dto={mocks.getDocuments()[0]} context={{kind:"library"}} />);
-    await user.click(screen.getByRole("button",{name:"공유 원본 삭제"})); await screen.findByRole("checkbox");
+    await user.click(screen.getByText("자료 관리 상세",{exact:true})); await user.click(screen.getByRole("button",{name:"공유 원본 삭제"})); await screen.findByRole("checkbox");
     await user.click(screen.getByRole("checkbox")); await user.click(screen.getByRole("button",{name:"공유 원본 삭제 요청"}));
     expect(await screen.findByText(/다른 사례의 참조가 변경되었습니다/)).toBeVisible();
     expect(screen.getByRole("button",{name:"공유 원본 삭제 요청"})).toBeDisabled();
@@ -219,10 +221,11 @@ describe("document flows with MSW, never a live backend", () => {
     expect(screen.getByRole("checkbox")).not.toBeChecked(); expect(deletes).toBe(1);
   });
   it("disables Case additions at the 20-link limit", async () => {
-    const {mount,mocks}=await setup();
+    const {mount,mocks,user}=await setup();
     server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:[{...mocks.getDocuments()[0],link:mocks.getLinks()[0]}],page:1,size:20,total:20})));
     mount(<CaseUploadScreen id={15} />); await screen.findByText(/사례에는 문서를 최대 20개/);
     expect(screen.getByRole("button",{name:"파일 업로드"})).toBeDisabled();
+    await user.click(screen.getByRole("button",{name:"기존 자료 연결"}));
     await waitFor(()=>expect(screen.getAllByRole("button",{name:"기존 원본 선택"}).every(button=>button.hasAttribute("disabled"))).toBe(true));
   });
   it("prevents duplicate upload submits and permits cancelling the request wait", async () => {
@@ -265,4 +268,17 @@ describe("document flows with MSW, never a live backend", () => {
     expect(mocks.requests.some(r=>/calculations|comparisons/.test(r.path))).toBe(false);
   },8000);
 
+});
+
+it("preserves the upload selection across all three modes without mutations", async()=>{
+ const {mount,user,mocks}=await setup();mount(<CaseUploadScreen id={15}/>);
+ await screen.findByRole("heading",{name:"카페 나무 자료 등록"});
+ const file=screen.getByLabelText("파일 선택 또는 이곳에 끌어 놓기") as HTMLInputElement;
+ await waitFor(()=>expect(file).toBeEnabled()); await user.upload(file,pdf());
+ await user.click(screen.getByRole("button",{name:"기존 자료 연결"}));
+ await user.click(screen.getByRole("button",{name:"직접 입력"}));
+ expect(within(screen.getByRole("region",{name:"직접 입력"})).getByRole("link")).toHaveAttribute("href","/cases/15/manual-records");
+ await user.click(screen.getByRole("button",{name:"새 파일 업로드"}));
+ expect(screen.getByText("새자료.pdf",{exact:true})).toBeVisible();
+ expect(mocks.requests.filter(r=>r.method!=="GET")).toHaveLength(0);
 });

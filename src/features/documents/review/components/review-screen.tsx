@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import { safeChatReturn } from "@/features/results/snapshot-link";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { PageHeading } from "@/components/ui/page-heading";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { cardStyle, secondaryButton } from "@/components/ui/styles";
@@ -44,20 +44,22 @@ function ReviewDocument({dto,caseId,version,dirty,onDirty,onFileDirty,replacemen
   const status=useDocumentStatus({kind:"case",id:caseId},dto);const processing=status.data?.processingStatus??dto.processingStatus;
   const fields=useFields(caseId,dto.documentId,!isProcessing(processing));const recompute=useRecomputeStatus(caseId);
   const [source,setSource]=useState<SourceDto|null>();const [tab,setTab]=useState<"original"|"fields">("fields");
+  const sourceTrigger=useRef<HTMLElement|null>(null);
   const context={caseId,documentId:dto.documentId,workplaceId:dto.workplaceId};
   return <>
     <p className="text-body">문서 처리: {statusLabels[processing]} · 사용자 검토: {(fields.data?.reviewStatus??status.data?.reviewStatus??dto.reviewStatus)?reviewLabels[(fields.data?.reviewStatus??status.data?.reviewStatus??dto.reviewStatus)!]:"미제공"}</p>
     {status.isError&&<QueryFeedback error={status.error} retry={()=>{void status.refetch();}} />}
     {recompute.isError?<QueryFeedback error={recompute.error} retry={()=>{void recompute.refetch();}} />:<p role="status" className="text-body text-muted">{!recompute.data?"서버 갱신 상태를 불러오는 중…":recomputeActive(recompute.data)?"입력 변경에 따른 서버 결과 갱신 중입니다. 과거 결과는 유지됩니다.":`서버 갱신: ${recomputeJobLabel(recompute.data.latestJob?.status??recompute.data.activeJob?.status)}. 작업 종료가 모든 계산의 완료를 뜻하지는 않습니다.`}</p>}
     {processing==="FAILED"&&<div className={`${cardStyle} space-y-3`}><p>문서 처리에 실패했습니다. 원문 확인이나 교체는 계속 사용할 수 있습니다.</p>{retryError&&<p role="alert">{retryError}</p>}<button className={secondaryButton} disabled={retry.isPending||dirty} onClick={async()=>{setRetryError("");try{await retry.mutateAsync({type:"retry",caseId,documentId:dto.documentId});}catch(error){setRetryError(reviewError(error));}}}>문서 재처리</button></div>}
-    <div onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const next=event.key==="Home"?"original":event.key==="End"?"fields":tab==="original"?"fields":"original";setTab(next);document.getElementById(`${next}-tab`)?.focus();}} role="tablist" aria-label="원문과 필드 보기" className="flex flex-wrap gap-2 xl:hidden"><button id="original-tab" role="tab" tabIndex={tab==="original"?0:-1} aria-selected={tab==="original"} aria-controls="original-panel" className={secondaryButton} onClick={()=>setTab("original")}>원문</button><button id="fields-tab" role="tab" tabIndex={tab==="fields"?0:-1} aria-selected={tab==="fields"} aria-controls="fields-panel" className={secondaryButton} onClick={()=>setTab("fields")}>추출 필드</button></div>
-    <div className="grid min-w-0 items-start gap-6 xl:grid-cols-2">
-      <div id="original-panel" role="tabpanel" aria-labelledby="original-tab" className={`min-w-0 ${tab==="original"?"block":"hidden xl:block"}`}><OriginalViewer workplaceId={dto.workplaceId} documentId={dto.documentId} source={source} /></div>
-      <div id="fields-panel" role="tabpanel" aria-labelledby="fields-tab" className={`min-w-0 ${tab==="fields"?"block":"hidden xl:block"}`}>
-        {isProcessing(processing)?<p role="status" className={cardStyle}>문서를 처리 중입니다. 원문은 볼 수 있으며 추출 필드는 처리 후 확인할 수 있습니다.</p>:fields.isPending?<QueryFeedback pending />:fields.isError?<QueryFeedback error={fields.error} retry={()=>{void fields.refetch();}} />:<FieldsPanel fields={fields.data.fields} context={context} inputVersion={version} onSource={s=>{setSource(s);setTab("original");}} dirty={dirty} onDirty={onDirty} linkedCaseIds={dto.linkedCaseIds} />}
+    <div onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const next=event.key==="Home"?"original":event.key==="End"?"fields":tab==="original"?"fields":"original";setTab(next);document.getElementById(`${next}-tab`)?.focus();}} role="tablist" aria-label="원문과 필드 보기" className="review-tabs flex flex-wrap gap-2"><button id="original-tab" role="tab" tabIndex={tab==="original"?0:-1} aria-selected={tab==="original"} aria-controls="original-panel" className={secondaryButton} onClick={()=>setTab("original")}>원문</button><button id="fields-tab" role="tab" tabIndex={tab==="fields"?0:-1} aria-selected={tab==="fields"} aria-controls="fields-panel" className={secondaryButton} onClick={()=>setTab("fields")}>추출 필드</button></div>
+    <div className="review-comparison grid min-w-0 items-start gap-6">
+      <div id="original-panel" tabIndex={-1} role="tabpanel" aria-labelledby="original-tab" className={`min-w-0 ${tab==="original"?"block":"review-inactive"}`}><button className={`${secondaryButton} mb-3`} onClick={()=>{setTab("fields");requestAnimationFrame(()=>sourceTrigger.current?.focus());}}>추출 필드로 돌아가기</button><OriginalViewer workplaceId={dto.workplaceId} documentId={dto.documentId} source={source} /></div>
+      <div id="fields-panel" role="tabpanel" aria-labelledby="fields-tab" className={`min-w-0 ${tab==="fields"?"block":"review-inactive"}`}>
+        {isProcessing(processing)?<p role="status" className={cardStyle}>문서를 처리 중입니다. 원문은 볼 수 있으며 추출 필드는 처리 후 확인할 수 있습니다.</p>:fields.isPending?<QueryFeedback pending />:fields.isError?<QueryFeedback error={fields.error} retry={()=>{void fields.refetch();}} />:<FieldsPanel fields={fields.data.fields} context={context} inputVersion={version} onSource={s=>{sourceTrigger.current=document.activeElement as HTMLElement;setSource(s);setTab("original");requestAnimationFrame(()=>document.getElementById("original-panel")?.focus());}} dirty={dirty} onDirty={onDirty} linkedCaseIds={dto.linkedCaseIds} />}
       </div>
     </div>
     {!isProcessing(processing)&&fields.data&&<ReviewConfirmation context={context} version={version} fields={fields.data.fields} disabled={dirty} />}
-    <ReplacementPanel context={context} version={version} replacementId={replacementId} onCreated={onCreated} onReset={onReset} onConfirmed={onConfirmed} onDirty={onFileDirty} disabled={dirty} />
+    <Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>계산 조건 확인으로 이동</Link>
+    <details className={cardStyle} open={!!replacementId}><summary className="cursor-pointer font-bold">문서 교체 관리</summary><ReplacementPanel context={context} version={version} replacementId={replacementId} onCreated={onCreated} onReset={onReset} onConfirmed={onConfirmed} onDirty={onFileDirty} disabled={dirty} /></details>
   </>;
 }

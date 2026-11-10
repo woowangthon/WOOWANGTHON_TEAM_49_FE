@@ -22,7 +22,7 @@ export function FieldsPanel({fields,context,inputVersion,onSource,onDirty,dirty,
   };
   const edit=(fieldId:number,scope:"case"|"shared")=>{if(dirty&&!discardChanges())return;setEditor({fieldId,scope});};
   return <section aria-label="OCR 추출 필드" className="min-w-0 space-y-4"><h2 className="text-title font-bold">추출 필드 확인·수정</h2>
-    <p className="text-body text-muted">필드 확인과 문서 전체 검토는 별개입니다. 값 없음·판독 불가·상충을 0으로 바꾸지 않습니다.</p>
+    <p className="text-body text-muted">공유 기본값은 여러 사례에 적용되며 사례 값 수정은 이 사례에만 적용됩니다. 필드 확인과 문서 전체 검토는 별개입니다. 값 없음·판독 불가·상충을 0으로 바꾸지 않습니다.</p>
     {!fields.length&&<p className="text-body">추출된 필드가 없습니다. 원문과 문서 검토 상태를 확인해 주세요.</p>}
     {error&&<p role="alert" tabIndex={-1}>{error}</p>}
     {conflict&&<button className={secondaryButton} onClick={async()=>{const result=await Promise.all([latestCase.refetch(),latestFields.refetch()]);if(result.every(v=>!v.isError)){setConflict(false);setError("");}}}>최신 필드와 버전 확인</button>}
@@ -36,9 +36,11 @@ export function FieldsPanel({fields,context,inputVersion,onSource,onDirty,dirty,
         <button className={primaryButton} disabled={field.value===null||mutation.isPending||conflict||dirty} onClick={()=>{void perform(field,true);}}>값만 확인</button>
         <button className={secondaryButton} disabled={mutation.isPending||conflict||dirty} onClick={()=>{void perform(field,false);}}>미확인으로 표시</button>
         <button className={secondaryButton} disabled={mutation.isPending} onClick={()=>edit(field.fieldId,"case")}>이 사례 값 수정</button>
+        <details className="w-full"><summary className="cursor-pointer text-caption font-bold">공유 설정·수정 이력</summary><div className="flex flex-wrap gap-2">
         <button className={secondaryButton} disabled={mutation.isPending} onClick={()=>edit(field.fieldId,"shared")}>공유 기본값 수정</button>
         {field.hasCaseOverride&&<button className={secondaryButton} disabled={mutation.isPending||dirty} onClick={()=>setRemove(field)}>재정의 제거</button>}
         <button className={secondaryButton} onClick={()=>setHistory(history===field.fieldId?undefined:field.fieldId)}>{history===field.fieldId?"이력 닫기":"수정 이력"}</button>
+        </div></details>
       </div>
       {editor?.fieldId===field.fieldId&&<FieldEditor key={`${field.fieldId}-${editor.scope}`} field={field} scope={editor.scope} context={context} version={inputVersion} onClose={()=>setEditor(undefined)} onDirty={onDirty} onSaved={setReceipt} linkedCaseIds={linkedCaseIds} />}
       {history===field.fieldId&&<FieldHistory caseId={context.caseId} documentId={context.documentId} fieldId={field.fieldId} />}
