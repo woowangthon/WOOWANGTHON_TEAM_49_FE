@@ -30,6 +30,13 @@ async function setup() {
   return { app, api: caseInputsApi(app.api), m, mock, mount, user: userEvent.setup() };
 }
 describe("manual record forms with real API client and MSW", () => {
+  it.each([409,500])("preserves manual draft after save failure %s and supports explicit cancel", async status => {
+    const {mount,user,mock}=await setup(); server.use(http.post(`${testApiUrl}/cases/15/manual-records`,()=>apiResponse({errorCode:status===409?"INPUT_VERSION_CONFLICT":"INTERNAL_ERROR"},status)));
+    mount(<ManualScreen caseId={15}/>); const input=await screen.findByLabelText("시급 (원) · 선택·미확인 가능"); await user.type(input,"0");
+    await user.click(screen.getByRole("button",{name:"수기 자료 저장"})); await screen.findByRole("alert"); expect(input).toHaveValue("0"); expect(mock.requests).toHaveLength(0);
+    await user.click(screen.getByRole("button",{name:"입력 취소·되돌리기"})); expect(input).toHaveValue("");
+  });
+
   it.each([
     { type: "ATTENDANCE", fields: { "근무일 · 필수": "2026-10-10", "출근 시각 (한국시간) · 필수": "2026-10-10T09:00", "퇴근 시각 (한국시간) · 필수": "2026-10-10T18:00", "휴게시간 (분) · 필수": "0" }, expected: { workDate: "2026-10-10", clockIn: "2026-10-10T09:00:00+09:00", clockOut: "2026-10-10T18:00:00+09:00", breakMinutes: 0 } },
     { type: "PAYSLIP", fields: { "지급총액 (원) · 선택·미확인 가능": "0", "개별 지급액 목록 (원) · 선택·미확인 가능": "0, 100" }, expected: { grossPay: 0, paymentItems: [0, 100] } },
@@ -90,6 +97,39 @@ describe("manual record forms with real API client and MSW", () => {
   });
 });
 describe("server-driven conditions", () => {
+  it("retains the screen form when background conditions refetch fails after saving", async () => {
+    const { mount, user, api } = await setup(); const data = await api.conditions(15); let reads=0;
+    server.use(http.get(`${testApiUrl}/cases/15/conditions`, () => ++reads === 1 ? apiResponse(data) : apiResponse({errorCode:"INTERNAL_ERROR"},500)));
+    mount(<ConditionsScreen caseId={15} />);
+    const input=await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.type(input,"123");
+    await user.click(screen.getByRole("button",{name:"변경된 조건 저장"}));
+    await screen.findByText(/조건은 저장했지만 최신 질문 조회에 실패/);
+    expect(input).toBeVisible(); expect(input).toHaveValue("123");
+    expect(screen.getByRole("button",{name:"변경된 조건 저장"})).toBeDisabled();
+  });
+
+  it("keeps server question order and sends zero and false independently from unanswered", async () => {
+    const { mount, user, mock } = await setup(); mount(<ConditionsScreen caseId={15} />);
+    const minutes = await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?");
+    await user.type(minutes, "0");
+    await user.selectOptions(screen.getByLabelText("임금의 기본 적용 범위를 확인했나요?"), "false");
+    const regions = screen.getAllByRole("region").filter(r => r.getAttribute("aria-label")?.endsWith(" 조건"));
+    expect(regions[0]).toHaveAccessibleName("상시 근로자 수를 알고 있나요? 조건");
+    expect(within(regions[0]).getAllByRole("option").map(o => (o as HTMLOptionElement).value)).toEqual(["", "LESS_THAN_5", "AT_LEAST_5", "UNKNOWN"]);
+    await user.click(screen.getByRole("button", { name: "변경된 조건 저장" }));
+    await screen.findByText("변경된 조건을 저장했습니다. 서버가 관련 검사 상태를 자동 갱신합니다.");
+    expect(mock.requests.find(r => r.method === "PUT")?.body).toEqual({answers: [{conditionId:"regular_minutes",value:0},{conditionId:"base_scope_confirmed",value:false}],expectedInputVersion:7});
+  });
+  it("blocks duplicate saving after accepted mutation when reload fails and preserves draft", async () => {
+    const { mount, user, api, mock } = await setup();
+    mount(<ConditionsForm caseId={15} initial={await api.conditions(15)} reload={async () => { throw new Error("reload failed"); }} />);
+    const input = screen.getByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.type(input,"0");
+    await user.click(screen.getByRole("button",{name:"변경된 조건 저장"}));
+    await screen.findByText(/조건은 저장했지만 최신 질문 조회에 실패/);
+    expect(input).toHaveValue("0"); expect(screen.getByRole("button",{name:"변경된 조건 저장"})).toBeDisabled();
+    expect(mock.requests.filter(r => r.method === "PUT")).toHaveLength(1);
+  });
+
   it("renders actual SELECT NUMBER BOOLEAN, UNKNOWN and saves only changed answers", async () => {
     const { mount, user, mock } = await setup(); mount(<ConditionsScreen caseId={15} />);
     await user.selectOptions(await screen.findByLabelText("상시 근로자 수를 알고 있나요?"), "UNKNOWN");
@@ -123,7 +163,7 @@ describe("server-driven conditions", () => {
   });
   it("displays NOT_APPLICABLE and unsupported TEXT without inventing an allowed condition", async () => {
     const { mount } = await setup(); mount(<ConditionsForm caseId={15} initial={{ inputVersion: 7, conditions: [{ conditionId: "future_text", question: "새 질문", type: "TEXT", requiredFor: [], value: null, status: "NOT_APPLICABLE", source: null }] }} reload={async () => ({ inputVersion: 7, conditions: [] })} />);
-    expect(screen.getByLabelText("새 질문")).toBeDisabled(); expect(screen.getByText(/현재 P0의 허용 조건 ID/)).toBeVisible(); expect(screen.getByText(/해당 없음 · TEXT/)).toBeVisible();
+    expect(screen.getByLabelText("새 질문")).toBeDisabled(); expect(screen.getByText(/현재 P0의 허용 조건 ID/)).toBeVisible(); expect(screen.getByText("해당 없음", {exact:true})).toBeVisible(); fireEvent.click(screen.getByText("조건 출처·기술 상세")); expect(screen.getByText(/해당 없음 · TEXT/)).toBeVisible();
   });
 });
 describe("independent readiness and authoritative freshness", () => {
