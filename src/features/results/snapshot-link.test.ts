@@ -1,0 +1,6 @@
+﻿import { it,expect } from 'vitest';
+import { parseSnapshot,snapshotHref,safeChatReturn } from './snapshot-link';
+it('validates snapshot URL identity without accepting invalid numbers or unknown kinds',()=>{expect(parseSnapshot({snapshotType:'calculation',snapshotId:'1',snapshotVersion:'2'})).toEqual({kind:'calculation',id:1,version:2});for(const id of ['0','-1','NaN','1.5','9007199254740992'])expect(parseSnapshot({snapshotType:'calculation',snapshotId:id,snapshotVersion:'1'})).toBeNull();expect(parseSnapshot({snapshotType:'legal',snapshotId:'1',snapshotVersion:'1'})).toBeNull();});
+it('restricts return URLs to internal chat detail routes',()=>{expect(safeChatReturn('https://evil.test')).toBeUndefined();expect(safeChatReturn('//evil.test')).toBeUndefined();expect(safeChatReturn('/workplaces/3/chats/61')).toBe('/workplaces/3/chats/61');expect(snapshotHref(15,{type:'comparison',snapshotId:1,version:1},'https://evil.test')).not.toContain('returnTo');});
+
+it("rejects inherited object property names as result types",()=>{expect(parseSnapshot({snapshotType:"__proto__",snapshotId:"1",snapshotVersion:"1"})).toBeNull();expect(parseSnapshot({snapshotType:"toString",snapshotId:"1",snapshotVersion:"1"})).toBeNull();});

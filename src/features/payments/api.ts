@@ -7,7 +7,7 @@ export function paymentsApi(api:ApiClient) {
  return {
  duplicates:(w:number)=>api.requestJson(`${t(w)}/duplicate-candidates`,decodeWith(duplicateSchema)),
  comparison:(c:number)=>api.requestJson(`/cases/${c}/deposit-comparison`,decodeWith(depositComparisonSchema.nullable())),
- history:(c:number,page=1)=>api.requestJson(`/cases/${c}/deposit-comparisons?page=${page}&size=20`,decodeWith(pageSchema(depositComparisonSchema))),
+ history:(c:number,page=1,signal?:AbortSignal)=>api.requestJson(`/cases/${c}/deposit-comparisons?page=${page}&size=20`,decodeWith(pageSchema(depositComparisonSchema)),{signal,expectedStatus:200}),
  list:(w:number,page=1)=>api.requestJson(`${t(w)}?page=${page}&size=20`,decodeWith(pageSchema(transaction))),
  detail:(w:number,id:number)=>api.requestJson(`${t(w)}/${id}`,decodeWith(transaction)),
  create:(w:number,body:TransactionInput)=>api.requestJson(t(w),decodeWith(transaction),{method:"POST",body}),

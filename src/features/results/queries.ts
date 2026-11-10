@@ -7,9 +7,9 @@ import { documentKeys } from "@/features/documents/query-keys";
 import { documentApi } from "@/features/documents/api";
 import type { CalculationDto, HistoryDto } from "./schemas";
 import { resultsApi } from "./api";
-export function useResults(c: number) {
+export function useResults(c: number, fresh=false) {
  const s = useSessionScope(); const removal = useCaseRemoval(c);
- return useQuery({ queryKey: [...businessKeys.case(s.generation, c), "results"], queryFn: ({ signal }) => resultsApi(s.api).results(c, signal), enabled: s.enabled && !removal.pending && !removal.removed });
+ return useQuery({ queryKey: [...businessKeys.case(s.generation, c), "results"], staleTime:fresh?0:30_000, queryFn: ({ signal }) => resultsApi(s.api).results(c, signal), enabled: s.enabled && !removal.pending && !removal.removed });
 }
 
 // P0: execution receipt only, never a synchronous calculation snapshot.

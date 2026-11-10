@@ -181,5 +181,5 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
       return apiResponse({caseId:c.caseId,currentInputVersion:c.inputVersion,pending:s.job?.status==="PENDING"?1:0,running:s.job?.status==="RUNNING"?1:0,activeJob:active?s.job:null,latestJob:s.job,results:refs.versions});
     }),
   ];
-  return { handlers, requests, state, notifyInputChange(c:number) {const owner=current(c);if(!owner)throw new Error("Unknown mock Case");return schedule(owner,false).recompute;}, setJobStatus(c: number, status: string) { const owner = current(c); if (!owner) return; const s = state(owner); if (!s.job) schedule(owner, false); s.job!.status = status; if(["PARTIAL","SUCCEEDED"].includes(status))publish(owner); } };
+  return { handlers, requests, state, getResult(caseId:number) { const c=current(caseId); return c?structuredClone(result(c)):undefined; }, notifyInputChange(c:number) {const owner=current(c);if(!owner)throw new Error("Unknown mock Case");return schedule(owner,false).recompute;}, setJobStatus(c: number, status: string) { const owner = current(c); if (!owner) return; const s = state(owner); if (!s.job) schedule(owner, false); s.job!.status = status; if(["PARTIAL","SUCCEEDED"].includes(status))publish(owner); } };
 }

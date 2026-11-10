@@ -30,6 +30,8 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   }, c => inputs.notifyInputChange(c));
   review.histories.splice(0);
   const inputs = inputMocks(management.getCases, baseUrl, c => docs.getLinks().filter(l=>l.caseId===c).flatMap(l=>documents.some(d=>d.documentId===l.documentId && d.documentType==="PAYSLIP")?[{documentId:l.documentId,fields:review.fields(c,l.documentId)}]:[]));
+  // Seed real positive-ID snapshots through the existing synthetic publish pipeline.
+  cases.forEach(c=>{inputs.getResult(c.caseId);inputs.notifyInputChange(c.caseId);inputs.setJobStatus(c.caseId,"PARTIAL");});
   const users = new Map([[demoAccount.email, { ...demoAccount, userId: 7 }]]);
   let activeUser = users.get(demoAccount.email)!;
   let token = "";
@@ -121,7 +123,16 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       const linked = docs.getLinks().filter(l => l.caseId === Number(params.c));
       return apiResponse({ linkedDocumentCount: linked.length, sharedDocumentCount: linked.filter(l => documents.find(d => d.documentId === l.documentId)!.linkedCaseIds!.length > 1).length, reportCount: 0, willUnlinkSharedDocuments: true, willDeleteSharedOriginals: false, willRevokeCaseAccessImmediately: true });
     }),
-    ...chatMocks(baseUrl, management.getCases).handlers, ...inputs.handlers, ...review.handlers, ...docs.handlers, ...management.handlers,
+    ...chatMocks(baseUrl, management.getCases, caseId=>{
+      const result=inputs.getResult(caseId);if(!result)return;
+      const sources=docs.getLinks().filter(l=>l.caseId===caseId).flatMap(l=>{
+        if(!documents.some(d=>d.documentId===l.documentId))return [];
+        const field=review.fields(caseId,l.documentId).find(f=>!!f.source);
+        return field?.source?[{...field.source,text:field.source.text??undefined,documentId:l.documentId,caseId,fieldId:field.fieldId}]:[];
+      });
+      const resultRefs=Object.entries(result.versions).flatMap(([type,v])=>v?.snapshotId&&v.version?[{caseId,type,snapshotId:v.snapshotId,version:v.version}]:[]);
+      return {sources,resultRefs,inputVersion:result.currentInputVersion};
+    }).handlers, ...inputs.handlers, ...review.handlers, ...docs.handlers, ...management.handlers,
     http.all(`${baseUrl}/*`, () => {
       window.dispatchEvent(new Event("wageitda:mock-unhandled"));
       return apiResponse({ errorCode: "MOCK_NOT_IMPLEMENTED" }, 501);

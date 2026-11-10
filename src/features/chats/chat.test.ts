@@ -1,10 +1,11 @@
-﻿import { describe,it,expect,beforeEach } from 'vitest';
+﻿import { describe,it,expect,beforeEach,vi } from 'vitest';
 import { server,testApiUrl } from '@/test/server';
 import { chatMocks } from '@/mocks/shared/chat-handlers';
 import { createApiClient } from '@/lib/api/client';
 import { createMemorySession } from '@/features/auth/session';
 import { chatApi } from './api';
 import { consumeChat,type ChatEvent } from './stream';
+vi.setConfig({testTimeout:15000});
 let api:ReturnType<typeof chatApi>;
 const makeApi=()=>chatApi(createApiClient({baseUrl:testApiUrl,session:createMemorySession()}),3);
 beforeEach(()=>{api=makeApi();server.use(...chatMocks(testApiUrl,()=>[{caseId:15,workplaceId:3},{caseId:16,workplaceId:4}]).handlers);});

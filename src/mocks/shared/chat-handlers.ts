@@ -2,21 +2,22 @@
 import { apiResponse } from './response';
 import { scopeSchema,type Message } from '@/features/chats/api';
 type Case={caseId:number;workplaceId:number};
-export function chatMocks(base:string,getCases:()=>Case[]){
+export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:number)=>{sources:Message["sources"];resultRefs:Message["resultRefs"];inputVersion:number}|undefined){
  let seq=100;
+ const inputVersions=new Map<number,number>();
  const chats=new Map<number,{chatId:number;workplaceId:number;title:string;defaultScope:Message['scope'];updatedAt:string;lastMessagePreview:string;messages:Message[]}>();
  const active=new Map<number,{runId:string;message:Message;cancelled:boolean}>();
  const root=`${base}/workplaces/:w/chats`;
  const fail=(errorCode:string,status:number)=>apiResponse({errorCode},status);
  const find=(w:unknown,c:unknown)=>{const chat=chats.get(Number(c));return chat?.workplaceId===Number(w)?chat:undefined;};
  const page=(items:unknown[],request:Request)=>{const q=new URL(request.url).searchParams,p=Math.max(1,Number(q.get('page')??1)),size=20;return {items:items.slice((p-1)*size,p*size),page:p,size,total:items.length};};
- const summary=(c:NonNullable<ReturnType<typeof find>>)=>{const {messages,...rest}=c;return {...rest,messageCount:messages.length};};
+ const summary=(c:NonNullable<ReturnType<typeof find>>)=>{for(const m of c.messages){if(m.scope.scopeType==='CASE'&&m.resultRefs.length){const now=references?.(m.scope.caseId);m.sourceMayBeOutdated=!!now&&(inputVersions.get(m.messageId)!==now.inputVersion||!m.resultRefs.every(r=>now.resultRefs.some(n=>n.type===r.type&&n.snapshotId===r.snapshotId&&n.version===r.version)));}}const {messages,...rest}=c;return {...rest,messageCount:messages.length};};
  async function execute(w:unknown,c:unknown,request:Request,retry?:number){
   const chat=find(w,c);if(!chat)return fail('RESOURCE_NOT_FOUND',404);
   if(active.has(chat.chatId))return fail('CHAT_RUN_ALREADY_ACTIVE',409);
   const previous=retry?chat.messages.find(m=>m.messageId===retry&&m.role==='ASSISTANT'):undefined;
   if(retry&&(!previous||!['FAILED','CANCELLED'].includes(previous.status)))return fail('MESSAGE_NOT_RETRYABLE',409);
-  const body=retry?{content:chat.messages.filter(m=>m.role==='USER').at(-1)?.content??'',scope:previous!.scope}:await request.json() as {content:string;scope?:unknown};
+  const body=retry?{content:chat.messages.slice(0,chat.messages.indexOf(previous!)).findLast(m=>m.role==='USER')?.content??'',scope:previous!.scope}:await request.json() as {content:string;scope?:unknown};
   if(!body.content?.trim())return fail('VALIDATION_ERROR',422);
   if(body.content==='JSON 오류')return fail('CHAT_RUN_ALREADY_ACTIVE',409);
   const scope=scopeSchema.safeParse(body.scope??chat.defaultScope);if(!scope.success)return fail('VALIDATION_ERROR',422);
@@ -24,6 +25,8 @@ export function chatMocks(base:string,getCases:()=>Case[]){
   const message=(role:Message['role']):Message=>({messageId:++seq,role,content:'',status:'COMPLETED',scope:scope.data,sources:[],resultRefs:[],sourceMayBeOutdated:false,runId:null,errorCode:null});
   if(!retry)chat.messages.push({...message('USER'),content:body.content});
   const answer=message('ASSISTANT');answer.status='STREAMING';answer.runId=`run-${++seq}`;chat.messages.push(answer);
+  const caseRef=answer.scope.scopeType==='CASE'?references?.(answer.scope.caseId):undefined;
+  const captured=caseRef?structuredClone(caseRef):undefined;if(captured)inputVersions.set(answer.messageId,captured.inputVersion);
   const run={runId:answer.runId,message:answer,cancelled:false};active.set(chat.chatId,run);
   return new HttpResponse(new ReadableStream<Uint8Array>({async start(controller){
    const enc=new TextEncoder();let connected=true;
@@ -31,12 +34,12 @@ export function chatMocks(base:string,getCases:()=>Case[]){
    const identity={runId:run.runId,messageId:answer.messageId};
    try{
     emit('message_start',{...identity,role:'ASSISTANT',scope:answer.scope,aiMode:'mock'});
-    const text='개발용 사전 작성 답변입니다. 자료가 부족해 임금 차이를 확정할 수 없습니다. 공식 결과와 확인된 자료를 검토해 주세요.\n\n- AI 설명은 공식 계산이 아닙니다.\n- 문서 확인이 필요합니다.';
-    for(let i=0;i<text.length;i+=5){await new Promise(r=>setTimeout(r,40));if(run.cancelled)break;answer.content+=text.slice(i,i+5);emit('content_delta',{delta:text.slice(i,i+5)});
-     if(body.content==='생성 실패'&&i>15){answer.status='FAILED';answer.errorCode='AI_GENERATION_FAILED';emit('error',{...identity,errorCode:answer.errorCode,retryable:true});return;}
+    const text='개발용 사전 작성 답변입니다. 자료가 부족해 임금 차이를 확정할 수 없습니다. 공식 결과와 확인된 자료를 검토해 주세요.\n\n- AI 설명은 공식 계산이 아닙니다.\n- 문서 확인이 필요합니다.\n\n## 자료 설명\n**확인 필요** · *개발 예시* · `null`\n\n1. 문서 검토\n2. 공식 결과 확인\n\n> AI 답변은 공식 계산이 아닙니다.\n\n```text\n'+('long_code_'.repeat(25))+'\n```\n\n[참고 링크](https://example.com/)\n\n| 항목 | 상태 |\n| --- | --- |\n| 자료 | 검토 필요 |\n| '+('긴파일명'.repeat(25))+'.pdf | 확인 필요 |\n\n[https://example.com/'+('long-url-'.repeat(20))+'](https://example.com/)';
+    for(let i=0;i<text.length;i+=10){await new Promise(r=>setTimeout(r,40));if(run.cancelled)break;answer.content+=text.slice(i,i+10);emit('content_delta',{delta:text.slice(i,i+10)});
+     if(!retry&&body.content==='생성 실패'&&i>15){answer.status='FAILED';answer.errorCode='AI_GENERATION_FAILED';emit('error',{...identity,errorCode:answer.errorCode,retryable:true});return;}
      if(body.content==='연결 중단'&&i>15){answer.status='FAILED';answer.errorCode='STREAM_INTERRUPTED';return;}
     }
-    if(!run.cancelled){answer.sources=answer.scope.scopeType==='CASE'?[{documentId:body.content==='삭제 출처'?99999:101,page:1,caseId:answer.scope.caseId}]:[];emit('sources',{sources:answer.sources,resultRefs:[]});}
+    if(!run.cancelled){answer.sources=body.content==='삭제 출처'?[{documentId:99999,page:1}]:captured?.sources??(answer.scope.scopeType==='CASE'?[{documentId:101,page:1,caseId:answer.scope.caseId}]:[]);answer.resultRefs=captured?.resultRefs??[];if(body.content==='없는 스냅샷')answer.resultRefs=[{type:'calculation',snapshotId:99999,version:1,...(answer.scope.scopeType==='CASE'?{caseId:answer.scope.caseId}:{})}];emit('sources',{sources:answer.sources,resultRefs:answer.resultRefs});}
     answer.status=run.cancelled?'CANCELLED':'COMPLETED';emit('message_done',{...identity,status:answer.status});
    }finally{chat.updatedAt=new Date().toISOString();chat.lastMessagePreview=answer.content;active.delete(chat.chatId);try{controller.close();}catch{connected=false;}}
   }}),{headers:{'Content-Type':'text/event-stream'}});
