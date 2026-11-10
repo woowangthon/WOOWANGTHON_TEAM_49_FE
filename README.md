@@ -739,3 +739,5 @@ Edge headless 개발 MSW: 수기 입력 → 조건 저장 → 부분 소계/시�
 백엔드 실행·접속·OpenAPI 조회 및 commit/push는 하지 않았습니다. 8차 입금 관리·배분 개발은 진행할 수 있으나 새 기능의 P0 상세 계약도 같은 방식으로 미확정 사항을 구분해야 합니다.
 
 최종 검증: `npm run lint` 경고 없이 통과, `npm run typecheck` 통과, `npm test` 19개 파일·323개 테스트 통과(기존 293개 + 신규 30개), `npm run build` 통과. `git diff --check` 통과. main 유지. 실제 백엔드 연동은 검증하지 않았습니다.
+
+8차 거래·배분 기능은 부분 구현 상태입니다. 적용 계약과 미완료 항목은 DEVELOPMENT_8.md를 확인하세요.

@@ -1,0 +1,26 @@
+﻿"use client";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { transactionInput,type Transaction,type TransactionInput } from "./schemas";
+import { usePayments } from "./queries";
+import { QueryFeedback } from "@/components/ui/query-feedback";
+import { cardStyle,secondaryButton } from "@/components/ui/styles";
+export function PaymentScreen({workplaceId,caseId,inputVersion}:{workplaceId:number;caseId?:number;inputVersion?:number}) {
+ const [page,setPage]=useState(1);const {api,transactions:q,allocations,action}=usePayments(workplaceId,page,caseId);const [edit,setEdit]=useState<Transaction>();
+ const form=useForm<TransactionInput>({resolver:zodResolver(transactionInput),defaultValues:{paymentMethod:"BANK_TRANSFER",transactionDate:"",amount:0,source:"USER_INPUT",confirmationStatus:"USER_REPORTED"}});
+ const run=(f:()=>Promise<unknown>)=>action.mutate(f);
+ return <section className="min-w-0 space-y-4 [overflow-wrap:anywhere]" aria-label="지급 거래 관리"><h2 className="text-title font-bold">입금·현금 지급 거래</h2><p>원거래는 근무지 전체에서 공유됩니다. 배분 해제와 원거래 삭제는 다릅니다. 다른 사례의 지급액에도 영향을 줄 수 있습니다.</p>
+ <form className={`${cardStyle} grid min-w-0 gap-3 sm:grid-cols-2`} onSubmit={form.handleSubmit(v=>run(async()=>{if(edit && v.amount < edit.totalAllocatedAcrossCases){form.setError("amount",{message:"?? ??? ?? ???? ?? ? ????."});return;}if(edit)await api.update(workplaceId,edit.transactionId,v);else await api.create(workplaceId,v);setEdit(undefined);form.reset();}))}>
+ <label>지급 수단<select className="block w-full" {...form.register("paymentMethod")}><option value="BANK_TRANSFER">계좌 입금</option><option value="CASH">현금 지급</option></select></label>
+ <label>거래일<input className="block w-full min-w-0" type="date" {...form.register("transactionDate")}/></label><label>금액 (원, 0원 허용)<input className="block w-full min-w-0" type="number" min="0" step="1" {...form.register("amount",{valueAsNumber:true})}/></label>
+ <label>입금자<input className="block w-full min-w-0" {...form.register("sender")}/></label><label>적요<input className="block w-full min-w-0" {...form.register("memo")}/></label>
+ {Object.entries(form.formState.errors).map(([k,e])=><p role="alert" key={k}>{k}: {e.message}</p>)}<button className={secondaryButton} disabled={action.isPending}>{edit?"거래 수정 저장":"거래 등록"}</button>{edit&&<button type="button" onClick={()=>{setEdit(undefined);form.reset();}}>수정 취소</button>}</form>
+ {action.isError&&<><p role="alert">충돌 시 최신 거래와 배분을 확인한 후 입력을 재검토해 주세요.</p><QueryFeedback error={action.error}/></>}{action.isSuccess&&<p role="status">변경을 저장했습니다.</p>}
+ {q.isPending?<QueryFeedback pending/>:q.isError?<QueryFeedback error={q.error} retry={()=>void q.refetch()}/>:<>{!q.data.items.length&&<p>등록된 거래가 없습니다. 지급액이 0원이라는 뜻은 아닙니다.</p>}{q.data.items.map(t=><article className={`${cardStyle} space-y-3`} key={t.transactionId}><h3>{t.transactionDate} · {t.paymentMethod==="CASH"?"현금 지급":"계좌 입금"} · {t.amount.toLocaleString()}원</h3><p>전체 배분 {t.totalAllocatedAcrossCases.toLocaleString()}원 · 잔여 {t.remainingUnallocated.toLocaleString()}원</p><p>{t.sender??"입금자 미제공"} · {t.memo??"적요 미제공"}</p><p>{t.source} · {t.confirmationStatus} · 거래 #{t.transactionId}</p>
+ <button className={secondaryButton} disabled={action.isPending || t.source!=="USER_INPUT" || t.confirmationStatus!=="USER_REPORTED"} onClick={()=>run(async()=>{const detail=await api.detail(workplaceId,t.transactionId);setEdit(detail);form.reset({...detail,source:"USER_INPUT",confirmationStatus:"USER_REPORTED"});})}>상세·수정</button>
+ <button className={secondaryButton} disabled={action.isPending} onClick={()=>{if(window.confirm("근무지 원거래를 삭제할까요? 배분이 있으면 서버가 삭제를 차단합니다."))run(()=>api.remove(workplaceId,t.transactionId));}}>원거래 삭제</button>
+ {caseId&&inputVersion!==undefined&&<form onSubmit={e=>{e.preventDefault();const amount=Number(new FormData(e.currentTarget).get("amount"));const old=allocations.data?.items.find(a=>a.transactionId===t.transactionId);run(()=>old?api.updateAllocation(caseId,old.allocationId,{allocatedAmount:amount,expectedInputVersion:inputVersion}):api.allocate(caseId,{transactionId:t.transactionId,allocatedAmount:amount,expectedInputVersion:inputVersion}));}}><label>이 사례 배분액<input required name="amount" className="block w-full min-w-0" type="number" min="0" step="1" defaultValue={allocations.data?.items.find(a=>a.transactionId===t.transactionId)?.allocatedAmount}/></label><button disabled={action.isPending||!allocations.data} className={secondaryButton}>배분 저장</button></form>}</article>)}<nav className="flex gap-3"><button disabled={page===1} onClick={()=>setPage(p=>p-1)}>이전</button><span>{page}페이지</span><button disabled={page*20>=q.data.total} onClick={()=>setPage(p=>p+1)}>다음</button></nav></>}
+ {caseId&&(allocations.isPending?<QueryFeedback pending/>:allocations.isError?<QueryFeedback error={allocations.error}/>:allocations.data.items.map(a=><p key={a.allocationId}>배분 #{a.allocationId} · 원거래 #{a.transactionId} · {a.allocatedAmount.toLocaleString()}원 <button className={secondaryButton} disabled={action.isPending} onClick={()=>{if(window.confirm("이 사례의 배분만 해제할까요?"))run(()=>api.release(caseId,a.allocationId));}}>배분 해제</button></p>))}
+ </section>;
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentScreen } from "@/features/payments/payment-screen";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -32,7 +33,7 @@ export function WorkplaceDetailScreen({ id }: { id: number }) {
       </section>
       <Link href={`/workplaces/${id}/documents`} className={secondaryButton}>근무지 공유 자료함</Link>
       <h2 className="text-title font-extrabold">이 근무지의 급여 사례</h2>
-      <CaseList workplaceId={id} />
+      <CaseList workplaceId={id} /><PaymentScreen workplaceId={id}/>
     </div>
   );
 }

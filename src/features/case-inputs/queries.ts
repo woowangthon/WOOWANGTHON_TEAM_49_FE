@@ -61,6 +61,7 @@ export function useInputAction(c: number) {
       await Promise.all([
         s.queryClient.invalidateQueries({ queryKey: businessKeys.case(s.generation, c) }),
         s.queryClient.invalidateQueries({ queryKey: businessKeys.caseLists(s.generation) }),
+        ...(action.type === "create" && action.body.recordType === "DEPOSIT" ? [s.queryClient.invalidateQueries({queryKey:businessKeys.workplaces(s.generation)})] : []),
         s.queryClient.invalidateQueries({ queryKey: documentKeys.recompute(s.generation, c) }),
       ]);
     },

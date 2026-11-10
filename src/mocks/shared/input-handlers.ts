@@ -1,3 +1,4 @@
+import { paymentMocks } from "./payment-handlers";
 import { http, HttpResponse } from "msw";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 import { conditionsPutSchema, manualInputSchema, checkTypes, type Condition, type ManualRecord, type RecordType } from "@/features/case-inputs/schemas";
@@ -9,7 +10,7 @@ import { apiResponse } from "./response";
 /** Synthetic readiness policy for development/tests only; never an official wage engine. */
 export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://127.0.0.1:8000/api/v1", getEvidence: (c:number)=>MockEvidence[] = ()=>[]) {
   const states = new WeakMap<CaseDetailDto, ReturnType<typeof initialState>>();
-  let nextRecord = 1, nextTransaction = 1, nextJob = 1;
+  let nextRecord = 1, nextJob = 1;
   const jobs = new Map<string, NonNullable<ReturnType<typeof initialState>["job"]>>();
   const requests: { method: string; path: string; body?: unknown }[] = [];
   const definitions: Pick<Condition, "conditionId" | "question" | "type" | "options" | "requiredFor">[] = [
@@ -48,7 +49,7 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
     const fields = manualFormSchema(body.recordType, c.periodStart, c.periodEnd).safeParse(manualDefaults(body.recordType, body.data));
     if (!fields.success) return apiResponse({ errorCode: "VALIDATION_ERROR", errors: fields.error.issues.map(i => ({ field: `data.${String(i.path.at(-1))}`, reason: i.message })) }, 422);
     if (body.recordType === "DEPOSIT") {
-      const transaction = { transactionId: nextTransaction++, allocationId: nextTransaction++, data: structuredClone(body.data) }; s.transactions.push(transaction);
+      const transaction = { ...payments.manual(c,body.data), data: structuredClone(body.data) }; s.transactions.push(transaction);
       return apiResponse({ recordId: null, canonicalResource: "PAYMENT_TRANSACTION", transactionId: transaction.transactionId, allocationId: transaction.allocationId, ...schedule(c) }, 201);
     }
     const now = new Date().toISOString();
@@ -90,7 +91,8 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
     const s=state(c);const p=buildResultScenario(c,s.resultVersion,s.records,s.conditions,getEvidence(c.caseId)).payslipValidation;
     return s.target==="payslip-validations" && [p?.paymentTotal.status,p?.deductionTotal.status,p?.netPay.status].every(v=>v==="MATCH"||v==="DIFFERENCE")?"SUCCEEDED":"PARTIAL";
   }
-  const handlers = [
+  const payments=paymentMocks(getCases,baseUrl,c=>schedule(c));
+  const handlers = [...payments.handlers,
     http.get(`${baseUrl}/cases/:c/recompute-jobs/:jobId`,({params})=>{const c=current(params.c);if(!c)return missing();const job=jobs.get(String(params.jobId));return job && job.jobId.startsWith(`case-${c.caseId}-`)?apiResponse(job):missing();}),
 
     ...(["calculations","comparisons","payslip-validations"] as const).map(endpoint=>http.get(`${baseUrl}/cases/:c/${endpoint}`,({params,request})=>{const c=current(params.c);if(!c)return missing();result(c);const key={calculations:"calculation",comparisons:"comparison","payslip-validations":"payslipValidation"}[endpoint];const items=(snapshots.get(c)??[]).map(v=>v[key as "calculation"|"comparison"|"payslipValidation"]).filter(v=>v!==null).filter((v,i,list)=>list.findIndex(other=>other?.version===v?.version)===i);const q=new URL(request.url).searchParams;const page=Math.max(1,Number(q.get("page")??1)),size=Math.min(100,Math.max(1,Number(q.get("size")??20)));return apiResponse({items:items.slice((page-1)*size,page*size),page,size,total:items.length});})),
