@@ -2,9 +2,12 @@
 
 ## 11차 개발 — 부분 완료
 
-계정 설정(`/settings`), 비밀번호 찾기·재설정, 명시적 회원 탈퇴 요청 및 영수증 상태 조회를 추가했습니다. 기존 인증·Query·MSW 구조를 유지합니다. 복구는 LOCAL_OUTBOX_ONLY로 실제 이메일을 보내지 않습니다.
+계정 설정(`/settings`), 비밀번호 찾기·재설정, 명시적 회원 탈퇴 요청 및 영수증 상태 조회를 추가했습니다. 기존 인증·Query·MSW 구조를 유지합니다. 복구는 LOCAL_OUTBOX_ONLY로 실제
+이메일을 보내지 않습니다.
 
-삭제 상세 DTO·enum이 P0에 없어 상태 수신 안내만 제공하며 polling·삭제 완료 표시는 보류했습니다. 새 계정은 샘플 자료 접근을 차단하지만 독립 업무 저장소는 아직 없습니다. 기존 410개를 유지하고 총 34파일·424개 테스트가 통과했습니다. 전체 여정/Edge 검증과 계약·보안·실기기 잔여 항목은 [DEVELOPMENT_11.md](DEVELOPMENT_11.md)를 확인하세요. Mock 성공은 실제 백엔드 연동·이메일 전송·완전 삭제 검증을 의미하지 않습니다.
+삭제 상세 DTO·enum이 P0에 없어 상태 수신 안내만 제공하며 polling·삭제 완료 표시는 보류했습니다. 새 계정은 샘플 자료 접근을 차단하지만 독립 업무 저장소는 아직 없습니다. 기존 410개를 유지하고
+총 34파일·424개 테스트가 통과했습니다. 전체 여정/Edge 검증과 계약·보안·실기기 잔여 항목은 [DEVELOPMENT_11.md](docs/DEVELOPMENT_11.md)를 확인하세요. Mock 성공은 실제
+백엔드 연동·이메일 전송·완전 삭제 검증을 의미하지 않습니다.
 
 Next.js 16 App Router · React 19 · TypeScript strict · Tailwind CSS 4.
 6차 수기 자료·계산 조건·기능별 실행 가능성·자동 갱신 상태를 구현했습니다.
@@ -33,33 +36,44 @@ npm run dev
 NEXT_PUBLIC_MOCK_API=true
 ```
 
-기본값은 OFF입니다. `false`로 바꾸거나 설정을 제거한 뒤 개발 서버를 재시작하고 브라우저를 새로고침하면 기존 실제 API 동작으로 돌아갑니다. `NODE_ENV=development`에서만 활성화되며, `npm run build` / `npm start`에서는 이 값이 true여도 비활성입니다. localhost 또는 HTTPS와 Service Worker 사용이 가능한 브라우저가 필요합니다.
+기본값은 OFF입니다. `false`로 바꾸거나 설정을 제거한 뒤 개발 서버를 재시작하고 브라우저를 새로고침하면 기존 실제 API 동작으로 돌아갑니다. `NODE_ENV=development`에서만 활성화되며,
+`npm run build` / `npm start`에서는 이 값이 true여도 비활성입니다. localhost 또는 HTTPS와 Service Worker 사용이 가능한 브라우저가 필요합니다.
 
-테스트 계정은 **worker@example.com / password1234**입니다. 상단 `개발 전용 MOCK ON` 배지와 로그인 안내가 보이면 가상 인증·가상 OCR을 사용 중입니다. 실제 개인정보를 입력하지 마세요. 잘못된 비밀번호는 401, 이미 가입된 이메일로 가입하면 409가 반환됩니다. 다른 가상 이메일로 가입하고 로그인하는 것도 가능합니다.
+테스트 계정은 **worker@example.com / password1234**입니다. 상단 `개발 전용 MOCK ON` 배지와 로그인 안내가 보이면 가상 인증·가상 OCR을 사용 중입니다. 실제 개인정보를
+입력하지 마세요. 잘못된 비밀번호는 401, 이미 가입된 이메일로 가입하면 409가 반환됩니다. 다른 가상 이메일로 가입하고 로그인하는 것도 가능합니다.
 
-MSW가 준비되기 전에는 인증 복원과 자식 화면을 시작하지 않습니다. 초기화 실패 시 오류 화면과 재시도 버튼을 표시합니다. 등록되지 않은 API는 501 `MOCK_NOT_IMPLEMENTED`로 차단하며 실제 서버에 전달하지 않습니다. Next.js 페이지·정적 파일·HMR 요청은 정상 통과합니다. 처리 로그에는 인증 토큰이나 원문을 출력하지 않습니다.
+MSW가 준비되기 전에는 인증 복원과 자식 화면을 시작하지 않습니다. 초기화 실패 시 오류 화면과 재시도 버튼을 표시합니다. 등록되지 않은 API는 501 `MOCK_NOT_IMPLEMENTED`로 차단하며 실제
+서버에 전달하지 않습니다. Next.js 페이지·정적 파일·HMR 요청은 정상 통과합니다. 처리 로그에는 인증 토큰이나 원문을 출력하지 않습니다.
 
-accessToken은 기존 메모리 세션에만 보관합니다. 개발 전용 `wageitda_mock_session` 쿠키는 가상 이메일을 담는 비인증 표시이며 HttpOnly refresh cookie를 재현하지 않습니다. 실제 인증·보안 테스트에 사용할 수 없습니다. localStorage/sessionStorage에는 토큰·자료를 저장하지 않습니다. 기본 계정은 새로고침 시 표시 쿠키로 세션을 복원합니다. 추가 계정, 수정 데이터, 업로드 파일은 탭 메모리에만 존재하므로 **전체 새로고침·새 탭에서는 샘플로 초기화**됩니다. 추가 가입 계정은 새로고침 후 재가입이 필요합니다. 클라이언트 라우팅 중에는 변경 상태가 유지됩니다. 상단 `샘플 데이터 초기화`는 세션과 샘플을 초기화하고 로그인 화면으로 이동합니다.
+accessToken은 기존 메모리 세션에만 보관합니다. 개발 전용 `wageitda_mock_session` 쿠키는 가상 이메일을 담는 비인증 표시이며 HttpOnly refresh cookie를 재현하지
+않습니다. 실제 인증·보안 테스트에 사용할 수 없습니다. localStorage/sessionStorage에는 토큰·자료를 저장하지 않습니다. 기본 계정은 새로고침 시 표시 쿠키로 세션을 복원합니다. 추가 계정,
+수정 데이터, 업로드 파일은 탭 메모리에만 존재하므로 **전체 새로고침·새 탭에서는 샘플로 초기화**됩니다. 추가 가입 계정은 새로고침 후 재가입이 필요합니다. 클라이언트 라우팅 중에는 변경 상태가 유지됩니다. 상단
+`샘플 데이터 초기화`는 세션과 샘플을 초기화하고 로그인 화면으로 이동합니다.
 
 ### 지원 API와 화면 시나리오
 
-아래 경로는 모두 기존 P0 `/api/v1` 계약입니다. 테스트 핸들러는 `src/test/server.ts`의 테스트 수명주기를 사용하며, 공유 상태 시나리오는 `src/mocks/shared`, 브라우저 전용 인증·파일·차단 정책은 `src/mocks/development.ts`에 있습니다.
+아래 경로는 모두 기존 P0 `/api/v1` 계약입니다. 테스트 핸들러는 `src/test/server.ts`의 테스트 수명주기를 사용하며, 공유 상태 시나리오는 `src/mocks/shared`, 브라우저 전용
+인증·파일·차단 정책은 `src/mocks/development.ts`에 있습니다.
 
-| 화면 | 지원 시나리오 / API |
-| --- | --- |
-| 가입·로그인 | POST `/auth/signup`, `/auth/login`, `/auth/refresh`, `/auth/logout`; GET `/users/me`. 가입 중복·잘못된 비밀번호·익명 요청 실패, 로그인 복원·로그아웃 |
-| 대시보드·근무지 | GET/POST `/workplaces`; GET/PATCH/DELETE `/workplaces/{w}`; GET `/workplaces/{w}/cases`. 목록 페이지, 생성·수정·빈 근무지 삭제, 사례가 있으면 삭제 409 |
-| Case | GET/POST `/cases`; GET/PATCH/DELETE `/cases/{c}`; GET `/cases/{c}/deletion-impact`. 생성·수정·버전 충돌·삭제 영향, 삭제 후 Case 접근 404와 공유 원본 보존 |
-| 자료함·업로드 | GET `/documents`; GET/POST `/workplaces/{w}/documents`, `/cases/{c}/documents`; GET 두 문서 상세 경로; POST `/cases/{c}/documents/{d}/retry`. 필터·페이지·파일 업로드 후 UPLOADED → PROCESSING → READY polling |
-| 연결·삭제 | POST `/cases/{c}/document-links`; PATCH/DELETE `/cases/{c}/document-links/{l}`; GET `/workplaces/{w}/documents/{d}/deletion-impact`; DELETE 같은 문서 경로의 `?confirm=true`. 공유 원본 연결·기간·목적 수정·연결 해제·확인 후 삭제 |
-| 원문·필드 | GET `/workplaces/{w}/documents/{d}/preview`, `/file`; GET `/cases/{c}/documents/{d}/fields`; PATCH 같은 경로의 `/fields/{f}` 및 공유 원본 `/fields/{f}`; DELETE Case 문서 `/field-overrides/{f}`; GET Case 문서 `/fields/{f}/history`. PDF 샘플 원문·실제 업로드 파일 Blob, null/0 구분, 필드 확인·Case override·공유값 수정·재정의 제거·수정 이력 |
-| 검토·교체 | GET `/cases/{c}/documents/{d}/review`; POST `/review/confirm`, `/replace`; GET `/cases/{c}/document-replacements/{r}`; POST 같은 경로의 `/confirm`. 미완료 검토 안내, 전체 필드 확인 후 검토 완료, 새 파일 대조 후 해당 연결만 교체·override 이관 |
-| 수기·조건·준비 상태 (6차) | 수기 기록 CRUD, GET/PUT `/cases/{c}/conditions`, GET `/cases/{c}/readiness`. 변경 후 조회와 독립 준비 상태 반영 |
-| 갱신 상태 | GET `/cases/{c}/recompute-status`. 6차 저장 후 PENDING → RUNNING → PARTIAL, 서버 역할의 합성 freshness 참조. 공식 임금 결과를 계산하지 않음 |
+| 화면                      | 지원 시나리오 / API                                                                                                                                                                                                                                                                                                                                |
+|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 가입·로그인               | POST `/auth/signup`, `/auth/login`, `/auth/refresh`, `/auth/logout`; GET `/users/me`. 가입 중복·잘못된 비밀번호·익명 요청 실패, 로그인 복원·로그아웃                                                                                                                                                                                               |
+| 대시보드·근무지           | GET/POST `/workplaces`; GET/PATCH/DELETE `/workplaces/{w}`; GET `/workplaces/{w}/cases`. 목록 페이지, 생성·수정·빈 근무지 삭제, 사례가 있으면 삭제 409                                                                                                                                                                                             |
+| Case                      | GET/POST `/cases`; GET/PATCH/DELETE `/cases/{c}`; GET `/cases/{c}/deletion-impact`. 생성·수정·버전 충돌·삭제 영향, 삭제 후 Case 접근 404와 공유 원본 보존                                                                                                                                                                                          |
+| 자료함·업로드             | GET `/documents`; GET/POST `/workplaces/{w}/documents`, `/cases/{c}/documents`; GET 두 문서 상세 경로; POST `/cases/{c}/documents/{d}/retry`. 필터·페이지·파일 업로드 후 UPLOADED → PROCESSING → READY polling                                                                                                                                     |
+| 연결·삭제                 | POST `/cases/{c}/document-links`; PATCH/DELETE `/cases/{c}/document-links/{l}`; GET `/workplaces/{w}/documents/{d}/deletion-impact`; DELETE 같은 문서 경로의 `?confirm=true`. 공유 원본 연결·기간·목적 수정·연결 해제·확인 후 삭제                                                                                                                 |
+| 원문·필드                 | GET `/workplaces/{w}/documents/{d}/preview`, `/file`; GET `/cases/{c}/documents/{d}/fields`; PATCH 같은 경로의 `/fields/{f}` 및 공유 원본 `/fields/{f}`; DELETE Case 문서 `/field-overrides/{f}`; GET Case 문서 `/fields/{f}/history`. PDF 샘플 원문·실제 업로드 파일 Blob, null/0 구분, 필드 확인·Case override·공유값 수정·재정의 제거·수정 이력 |
+| 검토·교체                 | GET `/cases/{c}/documents/{d}/review`; POST `/review/confirm`, `/replace`; GET `/cases/{c}/document-replacements/{r}`; POST 같은 경로의 `/confirm`. 미완료 검토 안내, 전체 필드 확인 후 검토 완료, 새 파일 대조 후 해당 연결만 교체·override 이관                                                                                                  |
+| 수기·조건·준비 상태 (6차) | 수기 기록 CRUD, GET/PUT `/cases/{c}/conditions`, GET `/cases/{c}/readiness`. 변경 후 조회와 독립 준비 상태 반영                                                                                                                                                                                                                                    |
+| 갱신 상태                 | GET `/cases/{c}/recompute-status`. 6차 저장 후 PENDING → RUNNING → PARTIAL, 서버 역할의 합성 freshness 참조. 공식 임금 결과를 계산하지 않음                                                                                                                                                                                                        |
 
-시작 경로: 로그인 → 대시보드 → 카페 나무 → 사례 #15 → 자료 등록·관리 → 파일 업로드 → 원문·추출값 검토. 문서 #101은 사례 #15/#16에서 공유합니다. 공유값과 Case 전용 수정의 차이를 확인할 수 있습니다. 공제액은 null, 추가 지급액은 0으로 시작합니다. 공제액을 입력·확인하고 지급총액도 확인한 뒤 문서 검토 완료를 요청하세요. 교체는 새 파일 등록 후 원문·필드를 확인하고 체크박스와 확인 대화상자를 거쳐 확정합니다.
+시작 경로: 로그인 → 대시보드 → 카페 나무 → 사례 #15 → 자료 등록·관리 → 파일 업로드 → 원문·추출값 검토. 문서 #101은 사례 #15/#16에서 공유합니다. 공유값과 Case 전용 수정의 차이를
+확인할 수 있습니다. 공제액은 null, 추가 지급액은 0으로 시작합니다. 공제액을 입력·확인하고 지급총액도 확인한 뒤 문서 검토 완료를 요청하세요. 교체는 새 파일 등록 후 원문·필드를 확인하고 체크박스와 확인
+대화상자를 거쳐 확정합니다.
 
-일반 JSON은 `{code,message,data}`, 목록은 `{items,page,size,total}`, 삭제·로그아웃 204는 빈 body, 파일은 JSON 래퍼 없는 Blob입니다. OCR은 업로드 내용과 무관한 합성 필드입니다. 파일 크기·MIME 기본 검증만 모사하며 손상·암호화·위장 파일·PDF 페이지 수 등 실제 서버 검증을 대신하지 않습니다. 업로드 PDF 미리보기 메타데이터는 1페이지로 제한합니다. 공유 검토 상태는 Case 연결별로 관리합니다. 가상 토큰은 실제 서버에서 사용할 수 없습니다.
+일반 JSON은 `{code,message,data}`, 목록은 `{items,page,size,total}`, 삭제·로그아웃 204는 빈 body, 파일은 JSON 래퍼 없는 Blob입니다. OCR은 업로드 내용과
+무관한 합성 필드입니다. 파일 크기·MIME 기본 검증만 모사하며 손상·암호화·위장 파일·PDF 페이지 수 등 실제 서버 검증을 대신하지 않습니다. 업로드 PDF 미리보기 메타데이터는 1페이지로 제한합니다. 공유
+검토 상태는 Case 연결별로 관리합니다. 가상 토큰은 실제 서버에서 사용할 수 없습니다.
 
 ### 6차 당시 미지원 API (이후 변경은 아래 차수별 기록 참조)
 
@@ -75,15 +89,18 @@ accessToken은 기존 메모리 세션에만 보관합니다. 개발 전용 `wag
 - `/workplaces/{w}/chats` 및 상세·메시지·재시도·실행 취소(SSE 포함)
 - `/cases/{c}/reports` 및 상세·PDF·원본 ZIP
 
-`/health`도 Mock 실행 중 실제 백엔드 origin으로 요청하면 차단됩니다. 위 목록의 `/health` 이외 경로는 `/api/v1` 기준입니다. 이 모드는 브라우저 개발 시나리오이며 실제 서버 계약 검증이나 동시 탭 세션·실제 OCR·공식 임금 계산을 보장하지 않습니다.
+`/health`도 Mock 실행 중 실제 백엔드 origin으로 요청하면 차단됩니다. 위 목록의 `/health` 이외 경로는 `/api/v1` 기준입니다. 이 모드는 브라우저 개발 시나리오이며 실제 서버 계약
+검증이나 동시 탭 세션·실제 OCR·공식 임금 계산을 보장하지 않습니다.
 
 ### Mock Mode 검증 기록 (2026-11-10)
 
 - `npm run lint`, `npm run typecheck`, `npm test` (13개 파일, 230개 테스트), `npm run build` 통과.
-- 실제 Microsoft Edge(headless)에서 로그인 → 대시보드 → 근무지 → Case → 이미지 업로드 → PROCESSING/READY polling → 필드 수정·확인 → 전체 검토 완료 → 2단계 원본 교체 → 로그아웃 확인. 새로고침 기본 계정 복원, 데이터 초기화, 미등록 API 501도 확인.
+- 실제 Microsoft Edge(headless)에서 로그인 → 대시보드 → 근무지 → Case → 이미지 업로드 → PROCESSING/READY polling → 필드 수정·확인 → 전체 검토 완료 → 2단계
+  원본 교체 → 로그아웃 확인. 새로고침 기본 계정 복원, 데이터 초기화, 미등록 API 501도 확인.
 - 로그인·대시보드·근무지 상세·Case 상세·업로드·검토 화면의 320/375/768/1280px 가로 넘침 없음.
 - Service Worker를 사용할 수 없는 환경을 모사해 초기화 실패 오류 화면 확인. Mock ON 검증 동안 실제 백엔드 네트워크 요청 0건.
-- Mock OFF 개발 서버와 `NEXT_PUBLIC_MOCK_API=true`로 빌드한 production 서버에서 테스트 계정·배지 비노출, Service Worker 미등록 확인. 기존 클라이언트의 refresh 요청은 브라우저 테스트 도구에서 중단했으며 백엔드에는 접속하지 않음.
+- Mock OFF 개발 서버와 `NEXT_PUBLIC_MOCK_API=true`로 빌드한 production 서버에서 테스트 계정·배지 비노출, Service Worker 미등록 확인. 기존 클라이언트의
+  refresh 요청은 브라우저 테스트 도구에서 중단했으며 백엔드에는 접속하지 않음.
 - production JS에서 테스트 비밀번호·Mock 세션 표시·가상 토큰 문자열 제외 확인. production에서는 MSW 시작 모듈이 연결되지 않음.
 
 실제 백엔드/OpenAPI에 접속하지 않고 로컬 P0 문서와 기존 DTO 파서 기준으로 검증했습니다. 터치 조작·실기기·실제 인증 쿠키·다중 페이지 업로드 PDF 검증은 포함하지 않습니다.
@@ -95,7 +112,8 @@ accessToken은 기존 메모리 세션에만 보관합니다. 개발 전용 `wag
 - 브라우저: `public/mockServiceWorker.js`, `src/mocks/browser.ts`, `src/mocks/mock-boundary.tsx`
 - 개발 시나리오: `src/mocks/development.ts`, `src/mocks/sample.ts`, `src/mocks/development.test.ts`
 - 공유 핸들러: `src/mocks/shared/management-handlers.ts`, `document-handlers.ts`, `review-handlers.ts`, `response.ts`
-- 기존 테스트 연결: `src/test/server.ts`, `src/test/management-handlers.ts`, `src/test/document-handlers.ts`, `src/test/review-handlers.ts`
+- 기존 테스트 연결: `src/test/server.ts`, `src/test/management-handlers.ts`, `src/test/document-handlers.ts`,
+  `src/test/review-handlers.ts`
 - `AGENTS.md`: `next dev`가 상단 안내 블록의 줄바꿈을 자동 갱신. 개발 규칙 본문은 동일
 
 ## 검증
@@ -157,8 +175,7 @@ page/layout은 Server Component로 두고 페이지 조합만 담당합니다.
 Provider·인증 폼/가드·계정 표시·브라우저 hook·Drawer·error 경계는 Client Component입니다.
 AppShell의 `navigation` 슬롯에는 실제 구현된 경로만 연결합니다.
 업무 레이아웃의 `AuthGate`는 복원 완료 및 인증 확인 전 children을 렌더링하지 않습니다.
-`useSearchParams`를 사용하는 게이트는 Suspense로 감싸 정적 빌드도 지원합니다.
-**클라이언트 게이트는 보안 경계가 아닙니다.** 모든 API는 서버에서 토큰·소유권을 검증해야 합니다.
+`useSearchParams`를 사용하는 게이트는 Suspense로 감싸 정적 빌드도 지원합니다. **클라이언트 게이트는 보안 경계가 아닙니다.** 모든 API는 서버에서 토큰·소유권을 검증해야 합니다.
 보호 게이트 아래에 민감 데이터를 미리 가져오는 Server Component를 추가하지 않습니다.
 현재 `/dashboard`는 서버에서 개인정보를 조회하거나 HTML/RSC에 삽입하지 않습니다.
 
@@ -241,8 +258,8 @@ Drawer는 native modal dialog로 포커스 가두기·Esc·닫은 후 포커스 
 2026-11-09 기준 AGENTS.md와 P0→P3 순서로 공통 기반 관련 내용을 검토했습니다.
 P0의 실제 파일명은 `docs/references/백엔드_API_명세_v1.pdf`이며,
 안내된 `백엔드_API_명세서_v1.pdf`와 이름이 다릅니다. 기존 파일을 변경하지 않았습니다.
-1·2차 작업에서는 로컬 `http://127.0.0.1:8000/openapi.json`에 연결되지 않아 실행 서버와 대조하지 못했습니다.
-**3차 작업에서는 사용자 지시에 따라 백엔드·OpenAPI 연결 확인 및 실행을 시도하지 않았습니다.**
+1·2차 작업에서는 로컬 `http://127.0.0.1:8000/openapi.json`에 연결되지 않아 실행 서버와 대조하지 못했습니다. **3차 작업에서는 사용자 지시에 따라 백엔드·OpenAPI 연결 확인 및
+실행을 시도하지 않았습니다.**
 
 - P0 우선: 쿠키 refresh 교체, 로그아웃/Case 삭제 204, 탈퇴 202,
   계산 재실행은 202 job 응답. 이전 문서의 상충하는 예시는 사용하지 않습니다.
@@ -264,32 +281,32 @@ Project Structure, Route Groups, CSS, Environment Variables, Vitest, CLI typegen
 
 ## 1차 기반 변경 파일
 
-| 구분 | 생성·수정한 파일 |
-|---|---|
-| 실행·문서 | `.env.example`, `package.json`, `vitest.config.mts`, `README.md` |
-| 앱 기반 | `src/app/layout.tsx`, `src/app/providers.tsx`, `src/app/globals.css`, `src/app/loading.tsx`, `src/app/error.tsx`, `src/app/not-found.tsx` |
-| 라우트 | `src/app/page.tsx` 삭제 → `src/app/(marketing)/page.tsx`, `src/app/(workspace)/layout.tsx` 생성 |
-| 공통 UI | `src/components/layout/app-shell.tsx`, `src/components/layout/mobile-navigation.tsx`, `src/components/ui/state-panel.tsx` |
-| 세션·인증 기반 | `src/features/auth/session.ts`, `src/features/auth/api/refresh.ts`, `src/hooks/use-app-services.ts` |
-| API 전송 | `src/lib/api/client.ts`, `src/lib/api/error.ts`, `src/lib/api/response.ts`, `src/lib/api/sse.ts`, `src/types/api.ts` |
-| 서비스·환경·Query | `src/lib/app-services.ts`, `src/lib/config/env.ts`, `src/lib/query/client.ts`, `src/lib/query/keys.ts` |
-| 단위 테스트 | `src/lib/api/client.test.ts`, `src/lib/api/sse.test.ts`, `src/lib/app-services.test.ts`, `src/lib/config/env.test.ts` |
+| 구분              | 생성·수정한 파일                                                                                                                          |
+|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| 실행·문서         | `.env.example`, `package.json`, `vitest.config.mts`, `README.md`                                                                          |
+| 앱 기반           | `src/app/layout.tsx`, `src/app/providers.tsx`, `src/app/globals.css`, `src/app/loading.tsx`, `src/app/error.tsx`, `src/app/not-found.tsx` |
+| 라우트            | `src/app/page.tsx` 삭제 → `src/app/(marketing)/page.tsx`, `src/app/(workspace)/layout.tsx` 생성                                           |
+| 공통 UI           | `src/components/layout/app-shell.tsx`, `src/components/layout/mobile-navigation.tsx`, `src/components/ui/state-panel.tsx`                 |
+| 세션·인증 기반    | `src/features/auth/session.ts`, `src/features/auth/api/refresh.ts`, `src/hooks/use-app-services.ts`                                       |
+| API 전송          | `src/lib/api/client.ts`, `src/lib/api/error.ts`, `src/lib/api/response.ts`, `src/lib/api/sse.ts`, `src/types/api.ts`                      |
+| 서비스·환경·Query | `src/lib/app-services.ts`, `src/lib/config/env.ts`, `src/lib/query/client.ts`, `src/lib/query/keys.ts`                                    |
+| 단위 테스트       | `src/lib/api/client.test.ts`, `src/lib/api/sse.test.ts`, `src/lib/app-services.test.ts`, `src/lib/config/env.test.ts`                     |
 
 참고문서와 AGENTS.md, package-lock.json, Next.js 설정, TypeScript 설정은 변경하지 않았습니다.
 
 ## 2차 인증 변경 파일과 검증
 
-| 구분 | 생성·수정한 파일 |
-|---|---|
-| 문서·테스트 설정 | `README.md`, `vitest.config.mts` |
-| 앱 연결 | `src/app/providers.tsx`, `src/app/(marketing)/page.tsx`, `src/app/(workspace)/layout.tsx` |
-| 인증 라우트 | `src/app/(auth)/layout.tsx`, `src/app/(auth)/login/page.tsx`, `src/app/(auth)/signup/page.tsx`, `src/app/(workspace)/dashboard/page.tsx` |
-| 공통 필드 | `src/components/ui/text-field.tsx` |
-| 인증 API·타입 | `src/features/auth/api/auth.ts`, `src/features/auth/schemas.ts`, `src/features/auth/types.ts` |
-| 인증 상태·Query·오류 | `src/features/auth/controller.ts`, `src/features/auth/hooks/use-auth.ts`, `src/features/auth/query-keys.ts`, `src/features/auth/form-errors.ts`, `src/features/auth/redirect.ts` |
-| 인증 UI | `src/features/auth/components/auth-form.tsx`, `src/features/auth/components/auth-gate.tsx`, `src/features/auth/components/auth-pending.tsx`, `src/features/auth/components/account-overview.tsx`, `src/features/auth/components/workspace-navigation.tsx` |
-| 기존 기반 확장 | `src/lib/api/client.ts`, `src/lib/app-services.ts` |
-| 테스트 | `src/test/server.ts`, `src/features/auth/controller.test.ts`, `src/features/auth/redirect.test.ts`, `src/features/auth/components/auth-flow.test.tsx` |
+| 구분                 | 생성·수정한 파일                                                                                                                                                                                                                                          |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 문서·테스트 설정     | `README.md`, `vitest.config.mts`                                                                                                                                                                                                                          |
+| 앱 연결              | `src/app/providers.tsx`, `src/app/(marketing)/page.tsx`, `src/app/(workspace)/layout.tsx`                                                                                                                                                                 |
+| 인증 라우트          | `src/app/(auth)/layout.tsx`, `src/app/(auth)/login/page.tsx`, `src/app/(auth)/signup/page.tsx`, `src/app/(workspace)/dashboard/page.tsx`                                                                                                                  |
+| 공통 필드            | `src/components/ui/text-field.tsx`                                                                                                                                                                                                                        |
+| 인증 API·타입        | `src/features/auth/api/auth.ts`, `src/features/auth/schemas.ts`, `src/features/auth/types.ts`                                                                                                                                                             |
+| 인증 상태·Query·오류 | `src/features/auth/controller.ts`, `src/features/auth/hooks/use-auth.ts`, `src/features/auth/query-keys.ts`, `src/features/auth/form-errors.ts`, `src/features/auth/redirect.ts`                                                                          |
+| 인증 UI              | `src/features/auth/components/auth-form.tsx`, `src/features/auth/components/auth-gate.tsx`, `src/features/auth/components/auth-pending.tsx`, `src/features/auth/components/account-overview.tsx`, `src/features/auth/components/workspace-navigation.tsx` |
+| 기존 기반 확장       | `src/lib/api/client.ts`, `src/lib/app-services.ts`                                                                                                                                                                                                        |
+| 테스트               | `src/test/server.ts`, `src/features/auth/controller.test.ts`, `src/features/auth/redirect.test.ts`, `src/features/auth/components/auth-flow.test.tsx`                                                                                                     |
 
 2026-11-09 검증: lint, typecheck, test, build 통과. Vitest 7개 파일·114개 테스트 통과.
 MSW로 가입/로그인 성공·중복 이메일·422·401·429·500·복원·동시 refresh·늦은 응답·로그아웃과 캐시 정리를 확인했습니다.
@@ -310,7 +327,8 @@ Playwright 요청 가로채기를 사용해 테스트용 HttpOnly 쿠키로 새�
 
 이번 단계에서는 백엔드를 실행하거나 접속하지 않았습니다. 실제 API 연동 성공을 주장하지 않습니다.
 AGENTS.md, README, P0 PDF 전체와 P1 관련 흐름, P2 토큰, P3·P4 관련 계약을 검토했습니다.
-설치된 Next.js의 Server/Client Components, Route Groups, Dynamic Route Segments, useSearchParams/Suspense 가이드를 코드 작성 전에 확인했습니다.
+설치된 Next.js의 Server/Client Components, Route Groups, Dynamic Route Segments, useSearchParams/Suspense 가이드를 코드 작성 전에
+확인했습니다.
 동적 page의 `params`는 Promise로 받고 양의 정수 ID를 검증한 뒤 화면에 전달합니다. 페이지에서 사용자 API를 서버 요청으로 미리 호출하지 않습니다.
 
 - 대시보드: 사용자 Query 재사용, `GET /workplaces`, `GET /cases`의 `total`로 전체 수를 표시합니다.
@@ -322,8 +340,8 @@ AGENTS.md, README, P0 PDF 전체와 P1 관련 흐름, P2 토큰, P3·P4 관련 �
 - 근무지 생성: P0의 `{workplaceId}`만 소비합니다. P4의 전체 Workplace 생성 응답을 요구하지 않습니다.
   수정은 변경 필드만 보냅니다. 업종/지역을 명시적으로 비우면 null이며 임의 기본값을 넣지 않습니다.
 - 근무지 삭제: 문서에 없는 `/workplaces/{id}/deletion-impact`를 만들지 않았습니다.
-  상세의 `caseCount`를 다시 조회해 안내하고 명시적 체크 후 DELETE합니다. 409 의존성 오류는 유지하며 자동 확인/연쇄 삭제하지 않습니다.
-  **P0는 근무지 DELETE의 정확한 응답을 생략합니다. 현재는 P4 B-14의 JSON 202를 따르며 receipt 필드를 추정하지 않습니다.**
+  상세의 `caseCount`를 다시 조회해 안내하고 명시적 체크 후 DELETE합니다. 409 의존성 오류는 유지하며 자동 확인/연쇄 삭제하지 않습니다. **P0는 근무지 DELETE의 정확한 응답을 생략합니다.
+  현재는 P4 B-14의 JSON 202를 따르며 receipt 필드를 추정하지 않습니다.**
   실제 서버가 204 또는 다른 계약을 쓰는지는 미검증입니다. Case의 204를 근무지에 임의 적용하지 않았습니다.
   JSON 성공은 삭제 요청 접수로 취급하고 목록으로 이동합니다. 문서 원본의 삭제·물리 파기 완료를 보장하지 않습니다.
 - Case: 전역/근무지별 목록, 생성, 상세, 수정, 삭제를 구현했습니다.
@@ -367,30 +385,30 @@ MSW 3에서 미등록 요청은 오류로 처리합니다. fixture는 테스트�
 
 ## 3차 생성·수정 파일
 
-| 구분 | 파일 |
-|---|---|
-| 문서 | `README.md` |
-| 대시보드 | `src/app/(workspace)/dashboard/page.tsx`, `src/features/dashboard/dashboard-screen.tsx`, `src/features/dashboard/management-flow.test.tsx` |
-| 기존 인증 UI 재사용 | `src/features/auth/components/account-overview.tsx`, `src/features/auth/components/workspace-navigation.tsx` |
-| 근무지 라우트 | `src/app/(workspace)/workplaces/page.tsx`, `src/app/(workspace)/workplaces/new/page.tsx`, `src/app/(workspace)/workplaces/[workplaceId]/page.tsx` |
-| Case 라우트 | `src/app/(workspace)/cases/page.tsx`, `src/app/(workspace)/cases/new/page.tsx`, `src/app/(workspace)/cases/[caseId]/page.tsx`, `src/app/(workspace)/cases/[caseId]/upload/page.tsx` |
-| 근무지 계층 | `src/features/workplaces/api.ts`, `src/features/workplaces/schemas.ts`, `src/features/workplaces/queries.ts`, `src/features/workplaces/view-models.ts` |
-| 근무지 UI | `src/features/workplaces/components/workplace-list-screen.tsx`, `src/features/workplaces/components/workplace-detail-screen.tsx`, `src/features/workplaces/components/workplace-form.tsx`, `src/features/workplaces/components/workplace-picker.tsx`, `src/features/workplaces/components/delete-workplace.tsx` |
-| Case 계층 | `src/features/cases/api.ts`, `src/features/cases/schemas.ts`, `src/features/cases/queries.ts`, `src/features/cases/view-models.ts`, `src/features/cases/contracts.test.ts` |
-| Case UI | `src/features/cases/components/case-cards.tsx`, `src/features/cases/components/case-list.tsx`, `src/features/cases/components/case-form.tsx`, `src/features/cases/components/case-create-screen.tsx`, `src/features/cases/components/case-detail-screen.tsx`, `src/features/cases/components/delete-case.tsx` |
-| 공통 UI | `src/components/ui/confirm-dialog.tsx`, `src/components/ui/page-heading.tsx`, `src/components/ui/pagination.tsx`, `src/components/ui/query-feedback.tsx`, `src/components/ui/select-field.tsx`, `src/components/ui/styles.ts` |
-| 공통 hook | `src/hooks/use-form-error-focus.ts`, `src/hooks/use-session-scope.ts` |
-| 공통 API·Query·ID | `src/lib/api/schema.ts`, `src/lib/api/form-errors.ts`, `src/lib/query/business-keys.ts`, `src/lib/query/use-removal-state.ts`, `src/lib/route-id.ts` |
-| MSW fixture | `src/test/management-handlers.ts` |
+| 구분                | 파일                                                                                                                                                                                                                                                                                                            |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 문서                | `README.md`                                                                                                                                                                                                                                                                                                     |
+| 대시보드            | `src/app/(workspace)/dashboard/page.tsx`, `src/features/dashboard/dashboard-screen.tsx`, `src/features/dashboard/management-flow.test.tsx`                                                                                                                                                                      |
+| 기존 인증 UI 재사용 | `src/features/auth/components/account-overview.tsx`, `src/features/auth/components/workspace-navigation.tsx`                                                                                                                                                                                                    |
+| 근무지 라우트       | `src/app/(workspace)/workplaces/page.tsx`, `src/app/(workspace)/workplaces/new/page.tsx`, `src/app/(workspace)/workplaces/[workplaceId]/page.tsx`                                                                                                                                                               |
+| Case 라우트         | `src/app/(workspace)/cases/page.tsx`, `src/app/(workspace)/cases/new/page.tsx`, `src/app/(workspace)/cases/[caseId]/page.tsx`, `src/app/(workspace)/cases/[caseId]/upload/page.tsx`                                                                                                                             |
+| 근무지 계층         | `src/features/workplaces/api.ts`, `src/features/workplaces/schemas.ts`, `src/features/workplaces/queries.ts`, `src/features/workplaces/view-models.ts`                                                                                                                                                          |
+| 근무지 UI           | `src/features/workplaces/components/workplace-list-screen.tsx`, `src/features/workplaces/components/workplace-detail-screen.tsx`, `src/features/workplaces/components/workplace-form.tsx`, `src/features/workplaces/components/workplace-picker.tsx`, `src/features/workplaces/components/delete-workplace.tsx` |
+| Case 계층           | `src/features/cases/api.ts`, `src/features/cases/schemas.ts`, `src/features/cases/queries.ts`, `src/features/cases/view-models.ts`, `src/features/cases/contracts.test.ts`                                                                                                                                      |
+| Case UI             | `src/features/cases/components/case-cards.tsx`, `src/features/cases/components/case-list.tsx`, `src/features/cases/components/case-form.tsx`, `src/features/cases/components/case-create-screen.tsx`, `src/features/cases/components/case-detail-screen.tsx`, `src/features/cases/components/delete-case.tsx`   |
+| 공통 UI             | `src/components/ui/confirm-dialog.tsx`, `src/components/ui/page-heading.tsx`, `src/components/ui/pagination.tsx`, `src/components/ui/query-feedback.tsx`, `src/components/ui/select-field.tsx`, `src/components/ui/styles.ts`                                                                                   |
+| 공통 hook           | `src/hooks/use-form-error-focus.ts`, `src/hooks/use-session-scope.ts`                                                                                                                                                                                                                                           |
+| 공통 API·Query·ID   | `src/lib/api/schema.ts`, `src/lib/api/form-errors.ts`, `src/lib/query/business-keys.ts`, `src/lib/query/use-removal-state.ts`, `src/lib/route-id.ts`                                                                                                                                                            |
+| MSW fixture         | `src/test/management-handlers.ts`                                                                                                                                                                                                                                                                               |
 
 기존 API 클라이언트·메모리 세션·Provider를 재작성하지 않았고 의존성·lockfile·AGENTS.md·참고문서는 변경하지 않았습니다.
 main 단일 브랜치를 유지하며 commit/push를 수행하지 않았습니다.
 다음 작업은 문서 업로드·검증·처리 상태 polling·Case 문서 연결입니다. 실제 서버 계약 대조는 별도 허용된 연동 단계에서 수행합니다.
 
-
 ## 4차 문서 등록·관리
 
-이 절은 4차 당시 기록입니다. 5차 중 추가된 P0 `API_ENDPOINTS.md`에 따라 근무지·원본 삭제와 Case 연결 해제의 성공 응답은 **204**로 확정해 수정했습니다. 아래 JSON 202/200 보완 기록은 현재 계약이 아닙니다.
+이 절은 4차 당시 기록입니다. 5차 중 추가된 P0 `API_ENDPOINTS.md`에 따라 근무지·원본 삭제와 Case 연결 해제의 성공 응답은 **204**로 확정해 수정했습니다. 아래 JSON 202/200
+보완 기록은 현재 계약이 아닙니다.
 
 백엔드 실행·접속·OpenAPI 조회 없이 P0 `백엔드_API_명세_v1.pdf`를 우선 적용했습니다.
 P1 관련 제품 흐름, P2 자료함·업로드 카드와 상태 표현, P3 §9.4~10·캐시 정책을 검토했습니다.
@@ -399,6 +417,7 @@ P1 관련 제품 흐름, P2 자료함·업로드 카드와 상태 표현, P3 §9
 현재 프로젝트에는 shadcn/ui가 설치되어 있지 않아 별도 의존성을 추가하지 않았습니다.
 
 구현 범위:
+
 - `/library`: 사용자 전체 공유 원본, 근무지 선택(기존 페이지형 picker 재사용), 유형·처리 상태 서버 필터, 페이지 이동.
 - `/workplaces/[workplaceId]/documents`: 공유 원본 목록·업로드·연결 사례·삭제 영향. 근무지 상세와 양방향 이동.
 - `/cases/[caseId]/upload`: 기존 안내 화면을 업로드·연결 목록·기존 원본 연결 화면으로 교체.
@@ -421,24 +440,25 @@ AI·상담·보고서, 문서 교체의 2단계 확인입니다. 이 기능의 A
 
 ### 4차 API와 계약의 경계
 
-| API | 이번 사용 및 계약 기준 |
-|---|---|
-| `GET /documents` | P0 전체 자료함. `workplaceId`, `documentType`; `processingStatus`와 상세 목록 DTO는 P4 B-23 보완 |
-| `GET /workplaces/{w}/documents` | P0 공유 원본. pagination·유형 필터는 P4 B-24 보완 |
-| `POST /workplaces/{w}/documents` | P0 원본 업로드, multipart file/documentType, 202 상태 |
-| `GET /workplaces/{w}/documents/{d}` | P4 B-26의 원본 상세. 연결 Case 없는 원본의 상태도 조회하기 위한 보완 |
-| `GET /cases/{c}/documents` | Case 연결 목록, Page 및 link DTO는 P4 B-32 보완 |
-| `POST /cases/{c}/documents` | P0 파일 생성+자동 연결 편의 API. multipart file/documentType, 202 |
-| `GET /cases/{c}/documents/{d}` | P0 2초 처리 상태 조회. P0에 없는 필드·OCR API 호출 없음 |
-| `POST /cases/{c}/documents/{d}/retry` | P0 retry 흐름, 구체 경로·JSON `{}`·202는 P4 B-34 보완 |
-| `POST /cases/{c}/document-links` | P0 documentId/purpose/applicableFrom/applicableTo/expectedInputVersion. 응답 link DTO는 P4 보완 |
-| `PATCH /cases/{c}/document-links/{linkId}` | P4 B-37의 목적·적용기간·expectedInputVersion, JSON 응답 |
-| `DELETE /cases/{c}/document-links/{linkId}` | P4 B-38의 expectedInputVersion body, JSON 200 `{linkId,unlinked:true,...}`. 원본 삭제하지 않음 |
-| `GET /workplaces/{w}/documents/{d}/deletion-impact` | P0 삭제 영향 흐름, 상세 필드 linkedCaseIds/count/canDeleteOriginal/reasonCode는 P4 B-28 보완 |
-| `DELETE /workplaces/{w}/documents/{d}?confirm=true` | P0 공유 참조 영향 확인 정책. 응답 형식은 아래 미확정 사항 참조 |
-| `GET /cases/{c}/recompute-status` | P0 저장 후 갱신 상태. 작업 중 2초 간격은 FE 선택이며 계산 완료로 해석하지 않음 |
+| API                                                 | 이번 사용 및 계약 기준                                                                           |
+|-----------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `GET /documents`                                    | P0 전체 자료함. `workplaceId`, `documentType`; `processingStatus`와 상세 목록 DTO는 P4 B-23 보완 |
+| `GET /workplaces/{w}/documents`                     | P0 공유 원본. pagination·유형 필터는 P4 B-24 보완                                                |
+| `POST /workplaces/{w}/documents`                    | P0 원본 업로드, multipart file/documentType, 202 상태                                            |
+| `GET /workplaces/{w}/documents/{d}`                 | P4 B-26의 원본 상세. 연결 Case 없는 원본의 상태도 조회하기 위한 보완                             |
+| `GET /cases/{c}/documents`                          | Case 연결 목록, Page 및 link DTO는 P4 B-32 보완                                                  |
+| `POST /cases/{c}/documents`                         | P0 파일 생성+자동 연결 편의 API. multipart file/documentType, 202                                |
+| `GET /cases/{c}/documents/{d}`                      | P0 2초 처리 상태 조회. P0에 없는 필드·OCR API 호출 없음                                          |
+| `POST /cases/{c}/documents/{d}/retry`               | P0 retry 흐름, 구체 경로·JSON `{}`·202는 P4 B-34 보완                                            |
+| `POST /cases/{c}/document-links`                    | P0 documentId/purpose/applicableFrom/applicableTo/expectedInputVersion. 응답 link DTO는 P4 보완  |
+| `PATCH /cases/{c}/document-links/{linkId}`          | P4 B-37의 목적·적용기간·expectedInputVersion, JSON 응답                                          |
+| `DELETE /cases/{c}/document-links/{linkId}`         | P4 B-38의 expectedInputVersion body, JSON 200 `{linkId,unlinked:true,...}`. 원본 삭제하지 않음   |
+| `GET /workplaces/{w}/documents/{d}/deletion-impact` | P0 삭제 영향 흐름, 상세 필드 linkedCaseIds/count/canDeleteOriginal/reasonCode는 P4 B-28 보완     |
+| `DELETE /workplaces/{w}/documents/{d}?confirm=true` | P0 공유 참조 영향 확인 정책. 응답 형식은 아래 미확정 사항 참조                                   |
+| `GET /cases/{c}/recompute-status`                   | P0 저장 후 갱신 상태. 작업 중 2초 간격은 FE 선택이며 계산 완료로 해석하지 않음                   |
 
 미확정·제한 사항:
+
 1. **P0는 원본 DELETE의 성공 상태/본문을 명시하지 않습니다.** 현재 P4 B-27의 JSON 202를
    전제로 공통 JSON 래퍼를 처리하며 영수증 필드를 요구하지 않습니다. 204로 임의 대체하지 않았습니다.
    자동 물리 파기 예정일을 만들지 않으며 삭제 요청 접수와 물리 파기 완료를 구분합니다.
@@ -465,7 +485,8 @@ AI·상담·보고서, 문서 교체의 2단계 확인입니다. 이 기능의 A
 
 - 신규 라우트: `src/app/(workspace)/library/page.tsx`, `src/app/(workspace)/workplaces/[workplaceId]/documents/page.tsx`.
 - 문서 계약·상태: `src/features/documents/{api,schemas,view-models,file-validation,query-keys,queries,cache}.ts`.
-- 문서 UI: `src/features/documents/components/{document-screens,document-list,document-card,upload-form,link-form,document-actions}.tsx`.
+- 문서 UI:
+  `src/features/documents/components/{document-screens,document-list,document-card,upload-form,link-form,document-actions}.tsx`.
 - MSW·테스트: `src/test/document-handlers.ts`, `src/features/documents/documents.test.tsx`.
 - 기존 업로드 라우트, `src/features/cases/components/{case-detail-screen,case-form}.tsx`,
   `src/features/workplaces/components/workplace-detail-screen.tsx`,
@@ -499,42 +520,64 @@ main 단일 브랜치를 유지하며 commit/push하지 않았습니다.
 
 ## 6차: 수기 자료·계산 조건·Readiness·자동 갱신
 
-`/cases/[caseId]/manual-records`와 `/cases/[caseId]/conditions`를 추가했습니다. Case 상세와 기존 업로드 화면에서 진입할 수 있으며 기존 인증 보호·Sidebar·Drawer·API 클라이언트를 사용합니다. 페이지는 Server Component로 ID를 검증하고 feature 화면만 Client Component입니다.
+`/cases/[caseId]/manual-records`와 `/cases/[caseId]/conditions`를 추가했습니다. Case 상세와 기존 업로드 화면에서 진입할 수 있으며 기존 인증
+보호·Sidebar·Drawer·API 클라이언트를 사용합니다. 페이지는 Server Component로 ID를 검증하고 feature 화면만 Client Component입니다.
 
-- CONTRACT: 시급·월 기본급. PAYSLIP: 지급총액·공제총액·실수령액·개별 지급/공제 목록·시급·기본급·실근로시간. 빈 선택 항목은 누락/null, 실제 0은 숫자 0입니다. 목록은 확인한 개별 금액만 쉼표/줄바꿈으로 입력하며 소계·합계를 중복 입력하지 않습니다.
-- ATTENDANCE: 근무일·출퇴근·휴게 분 필수. 근무일의 Case 기간, 실제 날짜·시각, 시간 역전·음수/과도한 휴게를 검증합니다. 입력은 한국시간 UTC+09:00이며 기존 timezone-bearing 시각도 같은 순간으로 표시합니다. 서버의 업무 검증을 대체하지 않습니다.
-- DEPOSIT: 수단(BANK_TRANSFER/CASH)·날짜·0 이상 정수 금액, 선택 보낸 사람·메모. `source:USER_INPUT`, `confirmationStatus:USER_REPORTED`를 명시합니다. 서버 거래/전액 배분 응답 `recordId:null, canonicalResource:PAYMENT_TRANSACTION, transactionId, allocationId`를 별도 수신하고 일반 수기 목록에 추가하지 않습니다. 거래 전체 수정·삭제 UI는 후속 단계입니다.
-- 일반 수기 목록·상세·수정·삭제를 지원합니다. 출처 USER_INPUT과 원본 없음 표시, 422 필드 오류·포커스, 204 삭제, 목록 페이지·빈 상태·실패 재조회가 있습니다. PATCH는 같은 recordType·source와 **전체 data**를 보내며 서버의 알려지지 않은 기존 data 키, 미변경 빈 배열/UTC 시각도 보존합니다. 선택 값을 명시적으로 지우면 null로 전송합니다.
-- 조건은 서버 question/type/options/requiredFor/status/source/value로 렌더링합니다. SELECT·NUMBER·BOOLEAN과 UNKNOWN을 지원하며, 실제 0·false·미응답을 구분합니다. ANSWERED/UNKNOWN/NOT_APPLICABLE을 표시하고 질문 바로가기·readiness 이동을 제공합니다. TEXT는 표시할 수 있지만 현 P0에는 허용 TEXT 조건 ID가 없어 저장을 막습니다. 임의 텍스트 조건을 생성하지 않습니다.
-- 조건은 변경 답변만 `answers`에 담고 편집 기준 expectedInputVersion을 전송합니다. 백그라운드 refetch가 초안을 덮어쓰지 않습니다. 409에서는 초안을 보존하고 저장을 잠근 뒤 명시적으로 최신 질문·답변을 불러와 재검토합니다. 422 answers 인덱스/필드 오류를 입력에 표시합니다. 저장 성공 뒤 최신 조회가 실패하면 재저장 대신 재조회를 안내합니다.
-- 네 검사(WAGE_CALCULATION / CONTRACT_ATTENDANCE_COMPARISON / PAYSLIP_VALIDATION / DEPOSIT_COMPARISON)의 available·FULL/PARTIAL/NONE·missingInputs·reasonCode를 독립적으로 표시합니다. 누락된 검사 응답은 미제공으로 표시합니다. currentStep, 검토 완료, 실행 가능, 결과 일치를 합치지 않습니다. 검사 실행·결과 화면은 구현 범위 밖이므로 실행되는 것처럼 보이는 버튼을 추가하지 않았습니다.
-- 수기/조건 변경 후 관련 Case·목록·상세·조건·readiness·recompute 캐시를 무효화합니다. 제공된 inputVersion을 기존 Case 캐시에 반영하고 기존 recompute hook/API를 재사용합니다. 서버 PENDING/RUNNING 동안 2초 polling, PARTIAL/SUCCEEDED/FAILED/SUPERSEDED 등 종결·오류 시 중단합니다. 실패 후 상태 재조회는 작업 재실행이 아닙니다. 계산 POST를 자동 호출하지 않습니다.
-- `recompute.scheduled:true`와 jobId가 있으면 메모리 Query 캐시에 접수 정보만 보관합니다. 상태 API에 해당 job이 아직 없을 때는 최대 15초 추가 조회하고 미관측 안내를 남깁니다. 2초/15초는 FE 조회 정책이지 서버 debounce·처리시간 보장이 아닙니다. 접수 정보로 가짜 PENDING/freshness를 만들지 않습니다.
-- 결과별 CURRENT/STALE/UPDATING/FAILED와 버전은 서버 results 참조를 그대로 표시합니다. 입력 버전 비교로 최신성을 계산하지 않습니다. 기존 결과 Query를 삭제하거나 임금 계산을 수행하지 않습니다.
+- CONTRACT: 시급·월 기본급. PAYSLIP: 지급총액·공제총액·실수령액·개별 지급/공제 목록·시급·기본급·실근로시간. 빈 선택 항목은 누락/null, 실제 0은 숫자 0입니다. 목록은 확인한 개별 금액만
+  쉼표/줄바꿈으로 입력하며 소계·합계를 중복 입력하지 않습니다.
+- ATTENDANCE: 근무일·출퇴근·휴게 분 필수. 근무일의 Case 기간, 실제 날짜·시각, 시간 역전·음수/과도한 휴게를 검증합니다. 입력은 한국시간 UTC+09:00이며 기존 timezone-bearing
+  시각도 같은 순간으로 표시합니다. 서버의 업무 검증을 대체하지 않습니다.
+- DEPOSIT: 수단(BANK_TRANSFER/CASH)·날짜·0 이상 정수 금액, 선택 보낸 사람·메모. `source:USER_INPUT`, `confirmationStatus:USER_REPORTED`를
+  명시합니다. 서버 거래/전액 배분 응답 `recordId:null, canonicalResource:PAYMENT_TRANSACTION, transactionId, allocationId`를 별도 수신하고 일반
+  수기 목록에 추가하지 않습니다. 거래 전체 수정·삭제 UI는 후속 단계입니다.
+- 일반 수기 목록·상세·수정·삭제를 지원합니다. 출처 USER_INPUT과 원본 없음 표시, 422 필드 오류·포커스, 204 삭제, 목록 페이지·빈 상태·실패 재조회가 있습니다. PATCH는 같은
+  recordType·source와 **전체 data**를 보내며 서버의 알려지지 않은 기존 data 키, 미변경 빈 배열/UTC 시각도 보존합니다. 선택 값을 명시적으로 지우면 null로 전송합니다.
+- 조건은 서버 question/type/options/requiredFor/status/source/value로 렌더링합니다. SELECT·NUMBER·BOOLEAN과 UNKNOWN을 지원하며, 실제
+  0·false·미응답을 구분합니다. ANSWERED/UNKNOWN/NOT_APPLICABLE을 표시하고 질문 바로가기·readiness 이동을 제공합니다. TEXT는 표시할 수 있지만 현 P0에는 허용 TEXT
+  조건 ID가 없어 저장을 막습니다. 임의 텍스트 조건을 생성하지 않습니다.
+- 조건은 변경 답변만 `answers`에 담고 편집 기준 expectedInputVersion을 전송합니다. 백그라운드 refetch가 초안을 덮어쓰지 않습니다. 409에서는 초안을 보존하고 저장을 잠근 뒤
+  명시적으로 최신 질문·답변을 불러와 재검토합니다. 422 answers 인덱스/필드 오류를 입력에 표시합니다. 저장 성공 뒤 최신 조회가 실패하면 재저장 대신 재조회를 안내합니다.
+- 네 검사(WAGE_CALCULATION / CONTRACT_ATTENDANCE_COMPARISON / PAYSLIP_VALIDATION / DEPOSIT_COMPARISON)의
+  available·FULL/PARTIAL/NONE·missingInputs·reasonCode를 독립적으로 표시합니다. 누락된 검사 응답은 미제공으로 표시합니다. currentStep, 검토 완료, 실행 가능,
+  결과 일치를 합치지 않습니다. 검사 실행·결과 화면은 구현 범위 밖이므로 실행되는 것처럼 보이는 버튼을 추가하지 않았습니다.
+- 수기/조건 변경 후 관련 Case·목록·상세·조건·readiness·recompute 캐시를 무효화합니다. 제공된 inputVersion을 기존 Case 캐시에 반영하고 기존 recompute hook/API를
+  재사용합니다. 서버 PENDING/RUNNING 동안 2초 polling, PARTIAL/SUCCEEDED/FAILED/SUPERSEDED 등 종결·오류 시 중단합니다. 실패 후 상태 재조회는 작업 재실행이
+  아닙니다. 계산 POST를 자동 호출하지 않습니다.
+- `recompute.scheduled:true`와 jobId가 있으면 메모리 Query 캐시에 접수 정보만 보관합니다. 상태 API에 해당 job이 아직 없을 때는 최대 15초 추가 조회하고 미관측 안내를
+  남깁니다. 2초/15초는 FE 조회 정책이지 서버 debounce·처리시간 보장이 아닙니다. 접수 정보로 가짜 PENDING/freshness를 만들지 않습니다.
+- 결과별 CURRENT/STALE/UPDATING/FAILED와 버전은 서버 results 참조를 그대로 표시합니다. 입력 버전 비교로 최신성을 계산하지 않습니다. 기존 결과 Query를 삭제하거나 임금 계산을
+  수행하지 않습니다.
 
 ### 6차 P0 계약 및 문서 누락·충돌
 
-실제 파일명은 `백엔드_API_명세_v1.pdf`입니다(`명세서`라는 파일은 없음). `데이터베이스_스키마.pdf`는 표지·링크만 있어 테이블/컬럼 정의를 제공하지 않습니다. 로컬 PDF·참고 문서만 확인했으며 사용자 제약에 따라 서버 실행·접속·OpenAPI 조회는 하지 않았습니다.
+실제 파일명은 `백엔드_API_명세_v1.pdf`입니다(`명세서`라는 파일은 없음). `데이터베이스_스키마.pdf`는 표지·링크만 있어 테이블/컬럼 정의를 제공하지 않습니다. 로컬 PDF·참고 문서만 확인했으며
+사용자 제약에 따라 서버 실행·접속·OpenAPI 조회는 하지 않았습니다.
 
-| 대상 | 적용 계약과 보완 근거 |
-| --- | --- |
-| 수기 POST/GET/PATCH/DELETE | P0 API_ENDPOINTS의 201/200/200/204 우선. v1 p3의 유형별 data, USER_INPUT, 같은 recordType·data 전체 교체 사용. P4 B-49의 `data + expectedInputVersion` PATCH 예시는 사용하지 않고 API_ENDPOINTS의 ManualCreate 요청 및 v1 전체 교체를 우선 |
-| 수기 조회·일반 생성 응답 | P0가 전체 DTO를 생략. P4 ManualRecord(recordId/caseId/recordType/data/source, 선택 시각), Page 목록으로 decoder를 보완. mutation은 recordId와 선택 inputVersion/recompute만 소비. 실제 서버 확정 DTO라고 주장하지 않음 |
-| DEPOSIT | P0 v1 p3·p5의 거래 필드와 canonicalResource 응답을 우선. 수기 recordId를 임의 발급하거나 거래 목록 API로 조용히 대체하지 않음 |
-| 조건 PUT | P0 v1 p3의 여섯 conditionId와 값 범위: workplace_size=LESS_THAN_5/AT_LEAST_5/UNKNOWN, regular_minutes=0~1000000 정수 분/UNKNOWN, 나머지 네 항목=boolean/UNKNOWN. 변경 답변만 병합. 임의 ID/타입은 저장 불가 |
-| 조건 GET·Readiness | P0는 경로와 정책만 정의하고 전체 JSON은 생략. P4 §7.1/§7.2 및 Condition/CheckReadiness DTO의 conditions/inputVersion, checks/caseId/inputVersion, source/options 구조를 보완 사용. P4 프로토타입의 연장수당 포함 여부 등 추가 질문은 P0 허용 ID가 아니므로 생성하지 않음 |
-| 조건 성공 응답 | P4가 예시한 remainingQuestions/calculationAvailable로 실행 가능성을 추론하지 않고 inputVersion·선택 recompute만 사용한 뒤 readiness 재조회 |
-| recompute-status | P0 v1 p3~4의 pending/running·latestJob·PARTIAL/SUPERSEDED/freshness 정책 우선. P4 RecomputeStatus/§8.5의 activeJob/results(결과별 VersionRef) 구조로 보완. P0의 `/results` 예시에 있는 freshness.overall을 recompute 응답으로 임의 복제하지 않음. 필드 미제공은 최신성 미제공 표시 |
+| 대상                       | 적용 계약과 보완 근거                                                                                                                                                                                                                                                              |
+|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 수기 POST/GET/PATCH/DELETE | P0 API_ENDPOINTS의 201/200/200/204 우선. v1 p3의 유형별 data, USER_INPUT, 같은 recordType·data 전체 교체 사용. P4 B-49의 `data + expectedInputVersion` PATCH 예시는 사용하지 않고 API_ENDPOINTS의 ManualCreate 요청 및 v1 전체 교체를 우선                                         |
+| 수기 조회·일반 생성 응답   | P0가 전체 DTO를 생략. P4 ManualRecord(recordId/caseId/recordType/data/source, 선택 시각), Page 목록으로 decoder를 보완. mutation은 recordId와 선택 inputVersion/recompute만 소비. 실제 서버 확정 DTO라고 주장하지 않음                                                             |
+| DEPOSIT                    | P0 v1 p3·p5의 거래 필드와 canonicalResource 응답을 우선. 수기 recordId를 임의 발급하거나 거래 목록 API로 조용히 대체하지 않음                                                                                                                                                      |
+| 조건 PUT                   | P0 v1 p3의 여섯 conditionId와 값 범위: workplace_size=LESS_THAN_5/AT_LEAST_5/UNKNOWN, regular_minutes=0~1000000 정수 분/UNKNOWN, 나머지 네 항목=boolean/UNKNOWN. 변경 답변만 병합. 임의 ID/타입은 저장 불가                                                                        |
+| 조건 GET·Readiness         | P0는 경로와 정책만 정의하고 전체 JSON은 생략. P4 §7.1/§7.2 및 Condition/CheckReadiness DTO의 conditions/inputVersion, checks/caseId/inputVersion, source/options 구조를 보완 사용. P4 프로토타입의 연장수당 포함 여부 등 추가 질문은 P0 허용 ID가 아니므로 생성하지 않음           |
+| 조건 성공 응답             | P4가 예시한 remainingQuestions/calculationAvailable로 실행 가능성을 추론하지 않고 inputVersion·선택 recompute만 사용한 뒤 readiness 재조회                                                                                                                                         |
+| recompute-status           | P0 v1 p3~4의 pending/running·latestJob·PARTIAL/SUPERSEDED/freshness 정책 우선. P4 RecomputeStatus/§8.5의 activeJob/results(결과별 VersionRef) 구조로 보완. P0의 `/results` 예시에 있는 freshness.overall을 recompute 응답으로 임의 복제하지 않음. 필드 미제공은 최신성 미제공 표시 |
 
-P0는 수기 일반 금액의 상세 범위·일부 선택 필드와 nullable 조합·수기 동시성 제어·전체 오류 DTO를 완전히 정의하지 않습니다. FE는 정수 표현 안전성, 문서에 명시한 단위/기간·필수 항목을 검사하고, 미확정 업무 규칙은 서버 422 처리로 남깁니다. P4 보완 DTO와 실제 서버 구조가 다르면 해당 decoder/DTO를 조정해야 합니다. 실제 서버 연동 검증은 하지 않았습니다.
+P0는 수기 일반 금액의 상세 범위·일부 선택 필드와 nullable 조합·수기 동시성 제어·전체 오류 DTO를 완전히 정의하지 않습니다. FE는 정수 표현 안전성, 문서에 명시한 단위/기간·필수 항목을 검사하고,
+미확정 업무 규칙은 서버 422 처리로 남깁니다. P4 보완 DTO와 실제 서버 구조가 다르면 해당 decoder/DTO를 조정해야 합니다. 실제 서버 연동 검증은 하지 않았습니다.
 
 ### 6차 개발 Mock 사용
 
-기존 `.env.local`의 `NEXT_PUBLIC_MOCK_API=true`, `npm run dev`, `worker@example.com / password1234`를 그대로 사용합니다. 추가 의존성은 없습니다. `src/mocks/shared/input-handlers.ts`를 브라우저 개발 handlers와 Vitest MSW에서 공유하고 실제 API 클라이언트에 Mock 분기를 넣지 않았습니다. 인증·근무지·Case·문서 handlers의 우선순위를 유지합니다.
+기존 `.env.local`의 `NEXT_PUBLIC_MOCK_API=true`, `npm run dev`, `worker@example.com / password1234`를 그대로 사용합니다. 추가 의존성은
+없습니다. `src/mocks/shared/input-handlers.ts`를 브라우저 개발 handlers와 Vitest MSW에서 공유하고 실제 API 클라이언트에 Mock 분기를 넣지 않았습니다.
+인증·근무지·Case·문서 handlers의 우선순위를 유지합니다.
 
-체험: 로그인 → 대시보드의 카페 나무 사례 #15 → 수기 자료 입력·관리 → 시급 0 또는 임의 가상 금액 저장 → 계산 조건 확인 → 소정근로시간 0 또는 가상 분 입력·사업장 규모 UNKNOWN → 변경된 조건 저장 → 임금 readiness NONE → PARTIAL과 자동 갱신 상태 확인.
+체험: 로그인 → 대시보드의 카페 나무 사례 #15 → 수기 자료 입력·관리 → 시급 0 또는 임의 가상 금액 저장 → 계산 조건 확인 → 소정근로시간 0 또는 가상 분 입력·사업장 규모 UNKNOWN → 변경된
+조건 저장 → 임금 readiness NONE → PARTIAL과 자동 갱신 상태 확인.
 
-PAYSLIP에 확인한 총액·목록을 추가하면 명세서 검사가 독립적으로 FULL/PARTIAL, DEPOSIT을 추가하면 입금 준비 상태가 바뀝니다. 계약·근태 및 비교 기준 답변을 준비하면 대응 검사도 바뀝니다. 이는 **개발용 합성 준비 상태 시나리오**이며 법정 임금 공식·공식 준비 상태 정책을 구현한 것이 아닙니다. 샘플은 문서 OCR 결과를 자동 계산 입력으로 병합하지 않습니다. 법정수당 미검증을 반영해 전체 자동 job은 PARTIAL로 끝납니다. 생성·수정·삭제·조건 답변은 클라이언트 라우팅 동안 후속 조회에 반영되며 기존 Mock 정책대로 전체 새로고침 시 샘플로 초기화됩니다.
+PAYSLIP에 확인한 총액·목록을 추가하면 명세서 검사가 독립적으로 FULL/PARTIAL, DEPOSIT을 추가하면 입금 준비 상태가 바뀝니다. 계약·근태 및 비교 기준 답변을 준비하면 대응 검사도 바뀝니다.
+이는 **개발용 합성 준비 상태 시나리오**이며 법정 임금 공식·공식 준비 상태 정책을 구현한 것이 아닙니다. 샘플은 문서 OCR 결과를 자동 계산 입력으로 병합하지 않습니다. 법정수당 미검증을 반영해 전체 자동
+job은 PARTIAL로 끝납니다. 생성·수정·삭제·조건 답변은 클라이언트 라우팅 동안 후속 조회에 반영되며 기존 Mock 정책대로 전체 새로고침 시 샘플로 초기화됩니다.
 
 ### 6차 변경 파일
 
@@ -542,30 +585,37 @@ PAYSLIP에 확인한 총액·목록을 추가하면 명세서 검사가 독립�
 - 신규 feature: `src/features/case-inputs/{schemas,api,manual-fields,queries,contracts.test}.ts`, `inputs.test.tsx`
 - 신규 UI: `src/features/case-inputs/components/{manual-form,manual-screen,conditions-screen,input-status}.tsx`
 - 신규 공유 Mock: `src/mocks/shared/input-handlers.ts`
-- 기존 연결: `src/mocks/development.ts`, `src/features/cases/components/case-detail-screen.tsx`, `src/features/documents/components/document-screens.tsx`
+- 기존 연결: `src/mocks/development.ts`, `src/features/cases/components/case-detail-screen.tsx`,
+  `src/features/documents/components/document-screens.tsx`
 - 기존 polling·DTO 확장: `src/features/documents/{api,queries,query-keys}.ts`
 - 사용 방법·계약·검증 기록: `README.md`
 
 ### 6차 최종 검증 (2026-11-10)
 
-`npm run lint`, `npm run typecheck`, `npm test`, `npm run build` 모두 통과했습니다. Vitest 15개 파일·278개 테스트(기존 230개 + 신규 48개)이며 기존 1~5차 회귀 테스트를 포함합니다. 신규 검증은 네 유형 생성, 목록·상세·전체 data 수정·204 삭제, DEPOSIT 거래 매핑, 필수 날짜·시간·정수·null/0, UNKNOWN·부분 병합, 409 초안 보존, 422 필드 포커스, 독립 FULL/PARTIAL/NONE, 서버 freshness, active/terminal 및 접수 지연 polling을 포함합니다.
+`npm run lint`, `npm run typecheck`, `npm test`, `npm run build` 모두 통과했습니다. Vitest 15개 파일·278개 테스트(기존 230개 + 신규 48개)이며
+기존 1~5차 회귀 테스트를 포함합니다. 신규 검증은 네 유형 생성, 목록·상세·전체 data 수정·204 삭제, DEPOSIT 거래 매핑, 필수 날짜·시간·정수·null/0, UNKNOWN·부분 병합, 409 초안
+보존, 422 필드 포커스, 독립 FULL/PARTIAL/NONE, 서버 freshness, active/terminal 및 접수 지연 polling을 포함합니다.
 
-실제 Microsoft Edge(headless)와 브라우저 MSW Service Worker로 320/375/768/1280px에서 로그인 → Case 선택 → 수기 계약(시급 0) 저장 → 계산 조건 UNKNOWN/분 0 저장 → readiness NONE에서 PARTIAL 전환 → 자동 갱신 종결을 확인했습니다. 네 유형 폼과 조건·readiness 레이아웃에 가로 넘침·JS 오류가 없었고 실제 백엔드 네트워크 요청은 0건이었습니다. 실제 모바일 기기·터치 키보드 테스트는 아닙니다.
+실제 Microsoft Edge(headless)와 브라우저 MSW Service Worker로 320/375/768/1280px에서 로그인 → Case 선택 → 수기 계약(시급 0) 저장 → 계산 조건
+UNKNOWN/분 0 저장 → readiness NONE에서 PARTIAL 전환 → 자동 갱신 종결을 확인했습니다. 네 유형 폼과 조건·readiness 레이아웃에 가로 넘침·JS 오류가 없었고 실제 백엔드 네트워크
+요청은 0건이었습니다. 실제 모바일 기기·터치 키보드 테스트는 아닙니다.
 
-로컬 산출물은 Git 제외 `test-results/phase6-browser-report.json`, `test-results/phase6-{320,375,768,1280}.png`이며 재현 스크립트는 기존 임시 Playwright 설치를 사용한 `%TEMP%/wageitda-browser-check/phase6.cjs`입니다. API 테스트는 MSW 합성 계약 검증이며 실제 백엔드 연동 성공을 의미하지 않습니다. production 빌드에서는 기존 규칙대로 Mock Mode가 활성화되지 않습니다.
+로컬 산출물은 Git 제외 `test-results/phase6-browser-report.json`, `test-results/phase6-{320,375,768,1280}.png`이며 재현 스크립트는 기존 임시
+Playwright 설치를 사용한 `%TEMP%/wageitda-browser-check/phase6.cjs`입니다. API 테스트는 MSW 합성 계약 검증이며 실제 백엔드 연동 성공을 의미하지 않습니다.
+production 빌드에서는 기존 규칙대로 Mock Mode가 활성화되지 않습니다.
 
-남은 사항: 생략된 실제 DTO/오류·동시성 상세는 연동이 허용되는 시점에 확인해야 합니다. TEXT 조건은 현 P0 허용 ID가 없어 읽기 전용입니다. 검사 실행·실제 결과·거래 전체 관리·배분 UI·명시적 갱신 재실행은 범위 밖으로 유지했습니다. 다음 단계는 서버 권위의 결과/버전/freshness 화면과 입금 거래·배분 관리를 연결하는 것입니다. main을 유지하며 commit/push하지 않았습니다.
+남은 사항: 생략된 실제 DTO/오류·동시성 상세는 연동이 허용되는 시점에 확인해야 합니다. TEXT 조건은 현 P0 허용 ID가 없어 읽기 전용입니다. 검사 실행·실제 결과·거래 전체 관리·배분 UI·명시적 갱신
+재실행은 범위 밖으로 유지했습니다. 다음 단계는 서버 권위의 결과/버전/freshness 화면과 입금 거래·배분 관리를 연결하는 것입니다. main을 유지하며 commit/push하지 않았습니다.
 
 최종 검증: lint·typecheck·build 통과, Vitest 10개 파일·182개 테스트 통과(기존 147개 + 문서 35개).
 Edge 4개 viewport의 문서 등록·관리 흐름은 MSW로 검증했으며 실제 백엔드 연동 성공을 뜻하지 않습니다.
-
 
 ## 5차 문서 원문·필드 검토와 원본 교체
 
 AGENTS.md, 기존 README·소스, P0 `백엔드_API_명세_v1.pdf`의 업로드·확인·교체 정책과 `API_ENDPOINTS.md`,
 P1 관련 제품 흐름, P2 원문/추출 필드 비교 디자인, P3 §10, P4 필드·검토·미리보기 계약을 확인했습니다.
-코드 작성 전 설치된 Next.js의 Server/Client Components, Dynamic Routes, Lazy Loading 문서를 읽었습니다.
-**백엔드 실행·접속·OpenAPI 확인은 하지 않았습니다.** 아래 검증은 MSW와 합성 문서 fixture 기준입니다.
+코드 작성 전 설치된 Next.js의 Server/Client Components, Dynamic Routes, Lazy Loading 문서를 읽었습니다. **백엔드 실행·접속·OpenAPI 확인은 하지
+않았습니다.** 아래 검증은 MSW와 합성 문서 fixture 기준입니다.
 
 ### 5차 구현 범위
 
@@ -619,23 +669,24 @@ P1 관련 제품 흐름, P2 원문/추출 필드 비교 디자인, P3 §10, P4 �
 
 ### 5차 API 계약과 보완 근거
 
-| API | 적용 계약 |
-|---|---|
-| `GET /workplaces/{w}/documents/{d}/preview` | P0 경로. 미리보기 DTO는 P4 B-29/§5.3의 documentId/mediaType/pageCount/coordinateSystem/rotationDegrees/supportsHighlight 보완 |
-| `GET /workplaces/{w}/documents/{d}/file` | P0 원문. Bearer fetch Blob, 외부 previewUrl 미사용 |
-| `GET /cases/{c}/documents/{d}/fields` | P0 fields·상태·valueType·출처·Case override DTO. 요청 Case/document 식별자 일치 검증 |
-| `PATCH /cases/{c}/documents/{d}/fields/{f}` | P0 value/confirmed 의미·expectedInputVersion·null 정책. 반환 value/status/inputVersion/affectedCaseIds/caseUpdates/recompute 사용 |
-| `PATCH /workplaces/{w}/documents/{d}/fields/{f}` | P0 공유 기본값. Case expectedInputVersion을 요구하는 P4 예시는 적용하지 않음 |
-| `DELETE /cases/{c}/documents/{d}/field-overrides/{f}` | P0 공유값 복귀·200. body의 expectedInputVersion과 최소 응답 DTO는 P4 B-43 보완 |
-| `GET /cases/{c}/documents/{d}/fields/{f}/history` | P0 경로. P4 B-41의 Page/변경 전후·주체·범위 DTO 및 page/size 보완 |
-| `GET /cases/{c}/documents/{d}/review` | P0 Case 연결 검토 상태. 선택 count 필드는 P4 B-44 보완 |
-| `POST /cases/{c}/documents/{d}/review/confirm` | P0 서버 판정과 unconfirmedFieldIds 우선. expectedInputVersion body는 P4 B-45 보완 |
-| `POST /cases/{c}/documents/{old}/replace` | P0 multipart file/선택 expectedInputVersion, 202 documentId/replacementId/originalLinkRetained:true. 구버전 즉시 교체 예시 미사용 |
-| `GET /cases/{c}/document-replacements/{replacementId}` | P0 새 원문 처리·필드 확인. 아래 DTO 가정 참조 |
-| `POST /cases/{c}/document-replacements/{replacementId}/confirm` | P0 confirmed:true/expectedInputVersion. 다른 Case/기존 원본 보존, override 매핑은 서버 책임 |
-| `GET /cases/{c}/recompute-status` | 기존 4차 hook 재사용. pending/running 동안만 상태 조회, 종결 상태에서 중단 |
+| API                                                             | 적용 계약                                                                                                                         |
+|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `GET /workplaces/{w}/documents/{d}/preview`                     | P0 경로. 미리보기 DTO는 P4 B-29/§5.3의 documentId/mediaType/pageCount/coordinateSystem/rotationDegrees/supportsHighlight 보완     |
+| `GET /workplaces/{w}/documents/{d}/file`                        | P0 원문. Bearer fetch Blob, 외부 previewUrl 미사용                                                                                |
+| `GET /cases/{c}/documents/{d}/fields`                           | P0 fields·상태·valueType·출처·Case override DTO. 요청 Case/document 식별자 일치 검증                                              |
+| `PATCH /cases/{c}/documents/{d}/fields/{f}`                     | P0 value/confirmed 의미·expectedInputVersion·null 정책. 반환 value/status/inputVersion/affectedCaseIds/caseUpdates/recompute 사용 |
+| `PATCH /workplaces/{w}/documents/{d}/fields/{f}`                | P0 공유 기본값. Case expectedInputVersion을 요구하는 P4 예시는 적용하지 않음                                                      |
+| `DELETE /cases/{c}/documents/{d}/field-overrides/{f}`           | P0 공유값 복귀·200. body의 expectedInputVersion과 최소 응답 DTO는 P4 B-43 보완                                                    |
+| `GET /cases/{c}/documents/{d}/fields/{f}/history`               | P0 경로. P4 B-41의 Page/변경 전후·주체·범위 DTO 및 page/size 보완                                                                 |
+| `GET /cases/{c}/documents/{d}/review`                           | P0 Case 연결 검토 상태. 선택 count 필드는 P4 B-44 보완                                                                            |
+| `POST /cases/{c}/documents/{d}/review/confirm`                  | P0 서버 판정과 unconfirmedFieldIds 우선. expectedInputVersion body는 P4 B-45 보완                                                 |
+| `POST /cases/{c}/documents/{old}/replace`                       | P0 multipart file/선택 expectedInputVersion, 202 documentId/replacementId/originalLinkRetained:true. 구버전 즉시 교체 예시 미사용 |
+| `GET /cases/{c}/document-replacements/{replacementId}`          | P0 새 원문 처리·필드 확인. 아래 DTO 가정 참조                                                                                     |
+| `POST /cases/{c}/document-replacements/{replacementId}/confirm` | P0 confirmed:true/expectedInputVersion. 다른 Case/기존 원본 보존, override 매핑은 서버 책임                                       |
+| `GET /cases/{c}/recompute-status`                               | 기존 4차 hook 재사용. pending/running 동안만 상태 조회, 종결 상태에서 중단                                                        |
 
 미확정 사항과 안전한 처리:
+
 1. P0는 replacement GET의 전체 JSON 구조를 생략했습니다. 명시된 이름으로 된 **평면
    replacementId/documentId/processingStatus와 선택 fields 배열**을 현재 MSW 계약으로 사용합니다.
    실제 서버가 다른 구조이면 해당 decoder를 조정해야 합니다. 필드가 미제공이면 확정을 막으며
@@ -666,16 +717,16 @@ P1 관련 제품 흐름, P2 원문/추출 필드 비교 디자인, P3 §10, P4 �
 
 ### 5차 생성·수정 파일
 
-| 구분 | 파일 |
-|---|---|
-| 신규 라우트 | `src/app/(workspace)/cases/[caseId]/review/page.tsx` |
-| 리뷰 계약·상태 | `src/features/documents/review/{api,schemas,query-keys,queries,view-models,use-object-url,use-unsaved}.ts` |
-| 리뷰 UI | `src/features/documents/review/components/{review-screen,original-viewer,pdf-canvas,fields-panel,field-editor,field-history,review-confirmation,replacement-panel}.tsx` |
-| 신규 테스트·fixture | `src/features/documents/review/{review,pdf-canvas}.test.tsx`, `src/test/review-handlers.ts` |
-| 기존 문서 기능 연결 | `src/features/documents/components/{document-card,document-screens}.tsx`, `src/features/cases/components/case-detail-screen.tsx` |
-| 권한·캐시 정리 확장 | `src/features/documents/{queries,cache}.ts` |
-| 새 P0의 204 계약 정정 | `src/features/documents/api.ts`, `src/features/workplaces/api.ts`, `src/test/{document-handlers,management-handlers}.ts`, `src/features/cases/contracts.test.ts` |
-| 의존성·문서 | `package.json`, `package-lock.json`, `README.md` |
+| 구분                  | 파일                                                                                                                                                                    |
+|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 신규 라우트           | `src/app/(workspace)/cases/[caseId]/review/page.tsx`                                                                                                                    |
+| 리뷰 계약·상태        | `src/features/documents/review/{api,schemas,query-keys,queries,view-models,use-object-url,use-unsaved}.ts`                                                              |
+| 리뷰 UI               | `src/features/documents/review/components/{review-screen,original-viewer,pdf-canvas,fields-panel,field-editor,field-history,review-confirmation,replacement-panel}.tsx` |
+| 신규 테스트·fixture   | `src/features/documents/review/{review,pdf-canvas}.test.tsx`, `src/test/review-handlers.ts`                                                                             |
+| 기존 문서 기능 연결   | `src/features/documents/components/{document-card,document-screens}.tsx`, `src/features/cases/components/case-detail-screen.tsx`                                        |
+| 권한·캐시 정리 확장   | `src/features/documents/{queries,cache}.ts`                                                                                                                             |
+| 새 P0의 204 계약 정정 | `src/features/documents/api.ts`, `src/features/workplaces/api.ts`, `src/test/{document-handlers,management-handlers}.ts`, `src/features/cases/contracts.test.ts`        |
+| 의존성·문서           | `package.json`, `package-lock.json`, `README.md`                                                                                                                        |
 
 기존 API 클라이언트·세션·Query Provider·폴링·multipart·에러 처리·공통 UI는 재작성하지 않았습니다.
 main 단일 브랜치를 유지하며 commit/push하지 않았습니다.
@@ -705,71 +756,94 @@ Edge 네 폭의 합성 PDF/이미지·필드·공유값·교체 흐름은 MSW �
 새 P0 204 계약을 반영한 최신 빌드에서 기존 자료함의 업로드·연결·해제·원본 삭제 흐름도 Edge 네 폭으로 재검증했습니다.
 `test-results/documents-browser-report.json`과 `review-browser-report.json` 모두 오류·가로 넘침 없이 통과했습니다.
 
-
 ## 7차 결과 화면 및 잔여 작업 보완
 
-`/cases/[caseId]/result`, `/cases/[caseId]/compare`에서 서버 결과, 종류별 스냅샷, 작업 상태와 원문 근거를 확인합니다. 기존 인증·API 클라이언트·TanStack Query·readiness·recompute polling·원문 뷰어를 재사용합니다. Case 작업 단계는 결과를 잠그지 않습니다. 공식 임금·법정수당·세금·보험료를 프론트에서 계산하지 않습니다.
+`/cases/[caseId]/result`, `/cases/[caseId]/compare`에서 서버 결과, 종류별 스냅샷, 작업 상태와 원문 근거를 확인합니다. 기존 인증·API 클라이언트·TanStack
+Query·readiness·recompute polling·원문 뷰어를 재사용합니다. Case 작업 단계는 결과를 잠그지 않습니다. 공식 임금·법정수당·세금·보험료를 프론트에서 계산하지 않습니다.
 
 ### 기존 미완료 항목의 개선
 
-| 항목 | 개선 내용 |
-| --- | --- |
-| DTO 검증 | P0 필수 필드·nullable·상태·원화 정수·날짜/시각 검증. P0에 생략된 내부 필드는 P4를 참고하되 optional로 검증. 잘못된 응답은 protocol 오류로 표시하며 기본값을 생성하지 않음 |
-| API 처리 | 기존 data 래퍼 유지. 수동 실행은 HTTP 202와 jobId/status 검증. GET 200 검증. 기존 204·Blob 처리 유지. API/DTO와 표시 변환 분리 |
-| Mock 입력 일관성 | 조건·수기 입력 및 확인된 문서 필드를 참조. 입력 버전 변경 시 이전 결과 보존, STALE → UPDATING → CURRENT. 실패 시 FAILED, 대체된 작업은 SUPERSEDED. 문서 저장 응답과 polling의 jobId 연결 |
-| 스냅샷 | 종료 시점에 결과를 고정. 종류별 수동 실행은 해당 스냅샷만 갱신. 이전 버전·근거 보존, 서버 순서 이력과 페이지 이동. 닫힌 이력은 조회하지 않음 |
-| 원문 근거 | 실제 Case 문서 상세와 필드 조회로 문서명·유형·페이지·필드명·사용자 수정/문서 추출·확인 상태 제공. 현재 필드와 과거 결과 근거를 구별. 403/404·필드 유실 안내. 기존 뷰어에 스냅샷 좌표 전달, 좌표/회전 불명확 시 기존 강조 제한 유지 |
-| 금액·단위 | 공통 포맷터로 정수 원화·원/시간·분·시간·날짜 표시. null=미확정, undefined=미제공, 0=실제 0. 소계에 전체 세전 임금이 아님을 명시. 차이는 서버 제공값만 표시 |
-| 오류·재실행 | 409 시 최신 입력·실행 가능성 재확인 안내. 중복 제출 방지. 기존 polling으로 종료 후 결과 무효화. 잘못된 refetch에도 직전 결과 보존 및 최신성 미확인 안내 |
+| 항목             | 개선 내용                                                                                                                                                                                                                          |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| DTO 검증         | P0 필수 필드·nullable·상태·원화 정수·날짜/시각 검증. P0에 생략된 내부 필드는 P4를 참고하되 optional로 검증. 잘못된 응답은 protocol 오류로 표시하며 기본값을 생성하지 않음                                                          |
+| API 처리         | 기존 data 래퍼 유지. 수동 실행은 HTTP 202와 jobId/status 검증. GET 200 검증. 기존 204·Blob 처리 유지. API/DTO와 표시 변환 분리                                                                                                     |
+| Mock 입력 일관성 | 조건·수기 입력 및 확인된 문서 필드를 참조. 입력 버전 변경 시 이전 결과 보존, STALE → UPDATING → CURRENT. 실패 시 FAILED, 대체된 작업은 SUPERSEDED. 문서 저장 응답과 polling의 jobId 연결                                           |
+| 스냅샷           | 종료 시점에 결과를 고정. 종류별 수동 실행은 해당 스냅샷만 갱신. 이전 버전·근거 보존, 서버 순서 이력과 페이지 이동. 닫힌 이력은 조회하지 않음                                                                                       |
+| 원문 근거        | 실제 Case 문서 상세와 필드 조회로 문서명·유형·페이지·필드명·사용자 수정/문서 추출·확인 상태 제공. 현재 필드와 과거 결과 근거를 구별. 403/404·필드 유실 안내. 기존 뷰어에 스냅샷 좌표 전달, 좌표/회전 불명확 시 기존 강조 제한 유지 |
+| 금액·단위        | 공통 포맷터로 정수 원화·원/시간·분·시간·날짜 표시. null=미확정, undefined=미제공, 0=실제 0. 소계에 전체 세전 임금이 아님을 명시. 차이는 서버 제공값만 표시                                                                         |
+| 오류·재실행      | 409 시 최신 입력·실행 가능성 재확인 안내. 중복 제출 방지. 기존 polling으로 종료 후 결과 무효화. 잘못된 refetch에도 직전 결과 보존 및 최신성 미확인 안내                                                                            |
 
 ### 계약 확정 범위와 미확정 범위
 
-P0 `백엔드_API_명세_v1.pdf`(실제 저장소 파일명), `API_ENDPOINTS.md`를 우선 적용했습니다. DB PDF는 상세 테이블이 없는 표지입니다. P1 기획과 P2/P3의 독립 검사·출처·반응형 원칙을 적용했습니다.
+P0 `백엔드_API_명세_v1.pdf`(실제 저장소 파일명), `API_ENDPOINTS.md`를 우선 적용했습니다. DB PDF는 상세 테이블이 없는 표지입니다. P1 기획과 P2/P3의 독립 검사·출처·반응형
+원칙을 적용했습니다.
 
-- P0 명시: 공통 `{code,message,data}`, 목록 `{items,page,size,total}`, GET/POST 경로·200/202, 수동 confirmed/expectedInputVersion, 통합 summary/counts/versions/freshness/items와 세 결과 섹션의 주요 필드, 원화 정수·nullable·시간 분 단위.
-- P0 생략: 계산 항목·formula.inputs·rule.verified·comparisonBasis·합계 검사 내부 필드와 작업 상세의 전체 DTO. P4에 나온 필드는 제공 시 타입을 검사하되 누락을 임의 필수 처리하지 않습니다. nextAction은 P0 PDF의 필드 목록이 잘려 있어 optional로 유지합니다. 알려지지 않은 추가 필드는 보존합니다.
+- P0 명시: 공통 `{code,message,data}`, 목록 `{items,page,size,total}`, GET/POST 경로·200/202, 수동 confirmed/expectedInputVersion,
+  통합 summary/counts/versions/freshness/items와 세 결과 섹션의 주요 필드, 원화 정수·nullable·시간 분 단위.
+- P0 생략: 계산 항목·formula.inputs·rule.verified·comparisonBasis·합계 검사 내부 필드와 작업 상세의 전체 DTO. P4에 나온 필드는 제공 시 타입을 검사하되 누락을 임의
+  필수 처리하지 않습니다. nextAction은 P0 PDF의 필드 목록이 잘려 있어 optional로 유지합니다. 알려지지 않은 추가 필드는 보존합니다.
 - Source의 fieldId는 P0가 확정하지 않아 optional입니다. 실제 필드 ID 또는 유일하게 일치하는 원문 근거를 통해 조회한 필드명만 표시합니다. 매칭되지 않으면 필드명을 추정하지 않습니다.
-- P4의 동기 POST 200 예시는 사용하지 않습니다. 실행 준비 부족은 P4의 CALCULATION_NOT_READY/409 시나리오를 사용하며 실제 백엔드의 전체 오류 코드 목록이 검증됐다는 의미가 아닙니다. 중복 작업은 Mock에서 409만 모의합니다.
+- P4의 동기 POST 200 예시는 사용하지 않습니다. 실행 준비 부족은 P4의 CALCULATION_NOT_READY/409 시나리오를 사용하며 실제 백엔드의 전체 오류 코드 목록이 검증됐다는 의미가 아닙니다.
+  중복 작업은 Mock에서 409만 모의합니다.
 - 문서로 확인할 수 없는 상세 필드의 실제 서버 필수성·추가 상태·법률 규칙 검증 여부는 연동 허용 시 확인 대상입니다. 이 문서 검증은 실제 서버 계약 검증 성공이 아닙니다.
 
 ### Mock 범위
 
-`src/mocks/shared/result-scenario.ts`는 개발·테스트 전용 시나리오입니다. 확인 월 기본급을 입력 그대로 소계에 반영하며 법정수당은 검토 필요, grossPay는 null로 둡니다. 시급 대응은 확인된 동일 기준에서만 대조합니다. 명세서 지급·공제·실수령액 합계는 각각 확인된 자료만 사용합니다. 수기 자료가 없으면 확인된 문서 필드만 참조하며 미확인 추출값은 결과 금액으로 사용하지 않습니다. 차이는 미지급임금 확정이 아닙니다. 새로고침 초기화와 미등록 API 차단 정책을 유지합니다.
+`src/mocks/shared/result-scenario.ts`는 개발·테스트 전용 시나리오입니다. 확인 월 기본급을 입력 그대로 소계에 반영하며 법정수당은 검토 필요, grossPay는 null로 둡니다. 시급
+대응은 확인된 동일 기준에서만 대조합니다. 명세서 지급·공제·실수령액 합계는 각각 확인된 자료만 사용합니다. 수기 자료가 없으면 확인된 문서 필드만 참조하며 미확인 추출값은 결과 금액으로 사용하지 않습니다. 차이는
+미지급임금 확정이 아닙니다. 새로고침 초기화와 미등록 API 차단 정책을 유지합니다.
 
 ### 파일과 검증
 
-결과 기능: `src/features/results/{schemas,api,queries,view-models,result-screen,source-evidence}`. 공통 포맷: `src/lib/format.ts`. 기존 API 클라이언트의 선택적 성공 상태 검증, 문서 상세 조회, protocol 오류 안내를 보강했습니다. Mock: development/input-handlers/review-handlers/result-scenario. 신규 테스트: accuracy/evidence, 기존 results/contracts 테스트 갱신.
+결과 기능: `src/features/results/{schemas,api,queries,view-models,result-screen,source-evidence}`. 공통 포맷:
+`src/lib/format.ts`. 기존 API 클라이언트의 선택적 성공 상태 검증, 문서 상세 조회, protocol 오류 안내를 보강했습니다. Mock:
+development/input-handlers/review-handlers/result-scenario. 신규 테스트: accuracy/evidence, 기존 results/contracts 테스트 갱신.
 
-Edge headless 개발 MSW: 수기 입력 → 조건 저장 → 부분 소계/시급 차이 → 수동 재실행 → 대조 → 원문 검토 통과. 320/375/768/1280px에서 원문 상세 펼침·키보드 포커스·가로 넘침을 확인했습니다. JS 오류·미처리 Mock 요청·실제 백엔드 전달 요청 없음. 산출물은 Git 제외 `test-results/results-final-browser-report.json`, `results-final-*.png`, 실행 스크립트는 `%TEMP%/wageitda-browser/results-final.cjs`입니다. 실제 모바일 기기 테스트가 아닙니다.
+Edge headless 개발 MSW: 수기 입력 → 조건 저장 → 부분 소계/시급 차이 → 수동 재실행 → 대조 → 원문 검토 통과. 320/375/768/1280px에서 원문 상세 펼침·키보드 포커스·가로 넘침을
+확인했습니다. JS 오류·미처리 Mock 요청·실제 백엔드 전달 요청 없음. 산출물은 Git 제외 `test-results/results-final-browser-report.json`,
+`results-final-*.png`, 실행 스크립트는 `%TEMP%/wageitda-browser/results-final.cjs`입니다. 실제 모바일 기기 테스트가 아닙니다.
 
 백엔드 실행·접속·OpenAPI 조회 및 commit/push는 하지 않았습니다. 8차 입금 관리·배분 개발은 진행할 수 있으나 새 기능의 P0 상세 계약도 같은 방식으로 미확정 사항을 구분해야 합니다.
 
-최종 검증: `npm run lint` 경고 없이 통과, `npm run typecheck` 통과, `npm test` 19개 파일·323개 테스트 통과(기존 293개 + 신규 30개), `npm run build` 통과. `git diff --check` 통과. main 유지. 실제 백엔드 연동은 검증하지 않았습니다.
+최종 검증: `npm run lint` 경고 없이 통과, `npm run typecheck` 통과, `npm test` 19개 파일·323개 테스트 통과(기존 293개 + 신규 30개), `npm run build`
+통과. `git diff --check` 통과. main 유지. 실제 백엔드 연동은 검증하지 않았습니다.
 
 8차 거래·배분 기능은 부분 구현 상태입니다. 적용 계약과 미완료 항목은 DEVELOPMENT_8.md를 확인하세요.
 
-8차 보완: 중복 후보(지원 DTO는 계약 확인 대상), Case 입금 대조·이력, 결과 최신성 연결, 삭제 영향 확인 UI를 추가했습니다. Edge 320/375/768/1280px의 개발 MSW 흐름을 확인했습니다. 상세 파일·계약 제한·검증 결과는 DEVELOPMENT_8.md를 참고하세요. 실제 백엔드 연동은 검증하지 않았습니다.
+8차 보완: 중복 후보(지원 DTO는 계약 확인 대상), Case 입금 대조·이력, 결과 최신성 연결, 삭제 영향 확인 UI를 추가했습니다. Edge 320/375/768/1280px의 개발 MSW 흐름을
+확인했습니다. 상세 파일·계약 제한·검증 결과는 DEVELOPMENT_8.md를 참고하세요. 실제 백엔드 연동은 검증하지 않았습니다.
 
 8차 보완 최종 검증: lint/typecheck/build 통과, Vitest 21파일·342테스트 통과. Edge 네 너비에서 가로 넘침·JS 오류·미처리 Mock·실제 백엔드 전달 요청 없음.
 
 ## 9차 AI 자료 도우미 보완
-근무지별 채팅 CRUD·CASE/명시적 전체 범위·SSE·취소/재시도·서버 기록 조회에 모바일 Drawer, 안전한 Markdown, 특정 결과 스냅샷 선택을 추가했습니다. 계산 상세는 기존 상세 API, 나머지 세 종류는 기존 이력 목록에서 ID/버전 일치로 조회합니다. Mock 답변은 실제 Mock 결과 저장소와 공유 문서 #101을 참조하며 과거 참조를 보존합니다.
 
-개발 질문 `생성 실패`, `연결 중단`, `JSON 오류`, `삭제 출처`, `없는 스냅샷`으로 시나리오를 확인할 수 있습니다. 실제 LLM 호출은 없습니다. raw HTML·위험한 링크·외부 이미지 자동 로드는 차단합니다.
+근무지별 채팅 CRUD·CASE/명시적 전체 범위·SSE·취소/재시도·서버 기록 조회에 모바일 Drawer, 안전한 Markdown, 특정 결과 스냅샷 선택을 추가했습니다. 계산 상세는 기존 상세 API, 나머지 세
+종류는 기존 이력 목록에서 ID/버전 일치로 조회합니다. Mock 답변은 실제 Mock 결과 저장소와 공유 문서 #101을 참조하며 과거 참조를 보존합니다.
 
-기존 채팅 API 미지원/501 설명은 지원 경로에 한해 대체됩니다. 채팅 목록·상세 DTO는 P0 생략으로 기존 예시 형태의 조건부 지원입니다. 전체 새로고침은 기존 정책대로 개발 데이터를 초기화하므로 실제 서버 영속 복원 검증과 구별합니다. Mock OFF/production 비활성과 미처리 API 차단 정책을 유지합니다.
+개발 질문 `생성 실패`, `연결 중단`, `JSON 오류`, `삭제 출처`, `없는 스냅샷`으로 시나리오를 확인할 수 있습니다. 실제 LLM 호출은 없습니다. raw HTML·위험한 링크·외부 이미지 자동 로드는
+차단합니다.
 
-Edge MSW의 주요 사용자 여정과 320/375/768/1280px를 검증했습니다. 실제 모바일 키보드·터치·스크린리더와 실제 서버는 검증하지 않았습니다. 파일 목록·최종 테스트 수·API 적용 범위·잔여 제한은 [DEVELOPMENT_9.md](DEVELOPMENT_9.md)를 확인하세요.
+기존 채팅 API 미지원/501 설명은 지원 경로에 한해 대체됩니다. 채팅 목록·상세 DTO는 P0 생략으로 기존 예시 형태의 조건부 지원입니다. 전체 새로고침은 기존 정책대로 개발 데이터를 초기화하므로 실제 서버
+영속 복원 검증과 구별합니다. Mock OFF/production 비활성과 미처리 API 차단 정책을 유지합니다.
 
-9차 보완 최종 검증: lint/typecheck/build 통과, Vitest 28파일·367테스트 통과(기존 358개 회귀 유지). Edge 주요 여정과 네 너비에서 가로 넘침·JS 오류·미처리 Mock·실제 백엔드 전달 요청 0건 확인.
+Edge MSW의 주요 사용자 여정과 320/375/768/1280px를 검증했습니다. 실제 모바일 키보드·터치·스크린리더와 실제 서버는 검증하지 않았습니다. 파일 목록·최종 테스트 수·API 적용 범위·잔여
+제한은 [DEVELOPMENT_9.md](docs/DEVELOPMENT_9.md)를 확인하세요.
 
+9차 보완 최종 검증: lint/typecheck/build 통과, Vitest 28파일·367테스트 통과(기존 358개 회귀 유지). Edge 주요 여정과 네 너비에서 가로 넘침·JS 오류·미처리 Mock·실제
+백엔드 전달 요청 0건 확인.
 
 ## 10차 개발 보완
 
-Case 질문·직접 작성·보고서 흐름을 유지하면서 서버 문의 초안, 상담기관 지역/임금 분야 조회와 페이지 내 검색, 선택 원본 ZIP, 안전한 Content-Disposition 파일명을 추가했습니다. 문의의 원문과 사용자 작성본은 분리하며, PDF/ZIP은 READY에서만 인증 다운로드합니다. Mock ZIP은 접수 당시 선택 원본 바이트와 참조 스냅샷을 고정합니다.
+Case 질문·직접 작성·보고서 흐름을 유지하면서 서버 문의 초안, 상담기관 지역/임금 분야 조회와 페이지 내 검색, 선택 원본 ZIP, 안전한 Content-Disposition 파일명을 추가했습니다. 문의의
+원문과 사용자 작성본은 분리하며, PDF/ZIP은 READY에서만 인증 다운로드합니다. Mock ZIP은 접수 당시 선택 원본 바이트와 참조 스냅샷을 고정합니다.
 
-P0에 생략된 Inquiry 요청 DTO는 추가 필드 없는 `{}` 최소 요청으로 **조건부 연결**했습니다. 문의·기관의 응답 adapter도 실제 서버 확정 계약이 아닙니다. tone/resultItemIds 등 제안 필드나 서버 검색 파라미터는 추가하지 않았습니다. 실제 백엔드 연동은 검증하지 않았습니다.
+P0에 생략된 Inquiry 요청 DTO는 추가 필드 없는 `{}` 최소 요청으로 **조건부 연결**했습니다. 문의·기관의 응답 adapter도 실제 서버 확정 계약이 아닙니다. tone/resultItemIds 등
+제안 필드나 서버 검색 파라미터는 추가하지 않았습니다. 실제 백엔드 연동은 검증하지 않았습니다.
 
-Vitest 32파일·410테스트 통과(기존 372개 유지). Edge headless + MSW에서 320/375/768/1280px 전체 여정, 편집·복사, PDF 열기·ZIP CRC/압축 해제, 변경 이후 과거 스냅샷을 확인했습니다. 가로 넘침·JS 실행 오류·미처리 Mock·실제 백엔드 전달 요청은 0건이며, 의도적인 HTTP 오류 로그는 별도로 기록했습니다.
+Vitest 32파일·410테스트 통과(기존 372개 유지). Edge headless + MSW에서 320/375/768/1280px 전체 여정, 편집·복사, PDF 열기·ZIP CRC/압축 해제, 변경 이후 과거
+스냅샷을 확인했습니다. 가로 넘침·JS 실행 오류·미처리 Mock·실제 백엔드 전달 요청은 0건이며, 의도적인 HTTP 오류 로그는 별도로 기록했습니다.
 
-계약 구분, 변경 파일, 검증 산출물과 제한은 [DEVELOPMENT_10.md](DEVELOPMENT_10.md)를 확인하세요. Mock 시나리오는 테스트 전용 `X-Wageitda-Mock-Scenario` 헤더로 inquiry-409/inquiry-503, centers-error/centers-empty, report-stale/report-failed, download-not-ready, filename-invalid/filename-absent를 선택할 수 있습니다. 일반 UI 요청에는 이 헤더를 추가하지 않습니다. Mock OFF/production 비활성·미처리 API 차단 정책을 유지합니다.
+계약 구분, 변경 파일, 검증 산출물과 제한은 [DEVELOPMENT_10.md](docs/DEVELOPMENT_10.md)를 확인하세요. Mock 시나리오는 테스트 전용
+`X-Wageitda-Mock-Scenario` 헤더로 inquiry-409/inquiry-503, centers-error/centers-empty, report-stale/report-failed,
+download-not-ready, filename-invalid/filename-absent를 선택할 수 있습니다. 일반 UI 요청에는 이 헤더를 추가하지 않습니다. Mock OFF/production
+비활성·미처리 API 차단 정책을 유지합니다.
