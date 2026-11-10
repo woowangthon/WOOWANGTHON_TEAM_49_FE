@@ -19,6 +19,78 @@ npm run dev
 미설정 시 이 로컬 주소를 사용합니다. 공개 환경변수는 빌드에 포함되므로 변경 후 재빌드해야 합니다.
 비밀키는 넣지 않습니다. `.env.local`과 `docs/`는 Git에서 제외됩니다.
 
+## 개발 전용 브라우저 Mock Mode
+
+백엔드 없이 기존 API 클라이언트·인증 보호·Query Hook을 그대로 체험하려면 `.env.local`에 아래를 설정하고 `npm run dev`를 실행합니다.
+
+```dotenv
+NEXT_PUBLIC_MOCK_API=true
+```
+
+기본값은 OFF입니다. `false`로 바꾸거나 설정을 제거한 뒤 개발 서버를 재시작하고 브라우저를 새로고침하면 기존 실제 API 동작으로 돌아갑니다. `NODE_ENV=development`에서만 활성화되며, `npm run build` / `npm start`에서는 이 값이 true여도 비활성입니다. localhost 또는 HTTPS와 Service Worker 사용이 가능한 브라우저가 필요합니다.
+
+테스트 계정은 **worker@example.com / password1234**입니다. 상단 `개발 전용 MOCK ON` 배지와 로그인 안내가 보이면 가상 인증·가상 OCR을 사용 중입니다. 실제 개인정보를 입력하지 마세요. 잘못된 비밀번호는 401, 이미 가입된 이메일로 가입하면 409가 반환됩니다. 다른 가상 이메일로 가입하고 로그인하는 것도 가능합니다.
+
+MSW가 준비되기 전에는 인증 복원과 자식 화면을 시작하지 않습니다. 초기화 실패 시 오류 화면과 재시도 버튼을 표시합니다. 등록되지 않은 API는 501 `MOCK_NOT_IMPLEMENTED`로 차단하며 실제 서버에 전달하지 않습니다. Next.js 페이지·정적 파일·HMR 요청은 정상 통과합니다. 처리 로그에는 인증 토큰이나 원문을 출력하지 않습니다.
+
+accessToken은 기존 메모리 세션에만 보관합니다. 개발 전용 `wageitda_mock_session` 쿠키는 가상 이메일을 담는 비인증 표시이며 HttpOnly refresh cookie를 재현하지 않습니다. 실제 인증·보안 테스트에 사용할 수 없습니다. localStorage/sessionStorage에는 토큰·자료를 저장하지 않습니다. 기본 계정은 새로고침 시 표시 쿠키로 세션을 복원합니다. 추가 계정, 수정 데이터, 업로드 파일은 탭 메모리에만 존재하므로 **전체 새로고침·새 탭에서는 샘플로 초기화**됩니다. 추가 가입 계정은 새로고침 후 재가입이 필요합니다. 클라이언트 라우팅 중에는 변경 상태가 유지됩니다. 상단 `샘플 데이터 초기화`는 세션과 샘플을 초기화하고 로그인 화면으로 이동합니다.
+
+### 지원 API와 화면 시나리오
+
+아래 경로는 모두 기존 P0 `/api/v1` 계약입니다. 테스트 핸들러는 `src/test/server.ts`의 테스트 수명주기를 사용하며, 공유 상태 시나리오는 `src/mocks/shared`, 브라우저 전용 인증·파일·차단 정책은 `src/mocks/development.ts`에 있습니다.
+
+| 화면 | 지원 시나리오 / API |
+| --- | --- |
+| 가입·로그인 | POST `/auth/signup`, `/auth/login`, `/auth/refresh`, `/auth/logout`; GET `/users/me`. 가입 중복·잘못된 비밀번호·익명 요청 실패, 로그인 복원·로그아웃 |
+| 대시보드·근무지 | GET/POST `/workplaces`; GET/PATCH/DELETE `/workplaces/{w}`; GET `/workplaces/{w}/cases`. 목록 페이지, 생성·수정·빈 근무지 삭제, 사례가 있으면 삭제 409 |
+| Case | GET/POST `/cases`; GET/PATCH/DELETE `/cases/{c}`; GET `/cases/{c}/deletion-impact`. 생성·수정·버전 충돌·삭제 영향, 삭제 후 Case 접근 404와 공유 원본 보존 |
+| 자료함·업로드 | GET `/documents`; GET/POST `/workplaces/{w}/documents`, `/cases/{c}/documents`; GET 두 문서 상세 경로; POST `/cases/{c}/documents/{d}/retry`. 필터·페이지·파일 업로드 후 UPLOADED → PROCESSING → READY polling |
+| 연결·삭제 | POST `/cases/{c}/document-links`; PATCH/DELETE `/cases/{c}/document-links/{l}`; GET `/workplaces/{w}/documents/{d}/deletion-impact`; DELETE 같은 문서 경로의 `?confirm=true`. 공유 원본 연결·기간·목적 수정·연결 해제·확인 후 삭제 |
+| 원문·필드 | GET `/workplaces/{w}/documents/{d}/preview`, `/file`; GET `/cases/{c}/documents/{d}/fields`; PATCH 같은 경로의 `/fields/{f}` 및 공유 원본 `/fields/{f}`; DELETE Case 문서 `/field-overrides/{f}`; GET Case 문서 `/fields/{f}/history`. PDF 샘플 원문·실제 업로드 파일 Blob, null/0 구분, 필드 확인·Case override·공유값 수정·재정의 제거·수정 이력 |
+| 검토·교체 | GET `/cases/{c}/documents/{d}/review`; POST `/review/confirm`, `/replace`; GET `/cases/{c}/document-replacements/{r}`; POST 같은 경로의 `/confirm`. 미완료 검토 안내, 전체 필드 확인 후 검토 완료, 새 파일 대조 후 해당 연결만 교체·override 이관 |
+| 갱신 상태 | GET `/cases/{c}/recompute-status`. 비활성 상태의 PARTIAL 샘플이며 공식 임금 결과를 계산하지 않음 |
+
+시작 경로: 로그인 → 대시보드 → 카페 나무 → 사례 #15 → 자료 등록·관리 → 파일 업로드 → 원문·추출값 검토. 문서 #101은 사례 #15/#16에서 공유합니다. 공유값과 Case 전용 수정의 차이를 확인할 수 있습니다. 공제액은 null, 추가 지급액은 0으로 시작합니다. 공제액을 입력·확인하고 지급총액도 확인한 뒤 문서 검토 완료를 요청하세요. 교체는 새 파일 등록 후 원문·필드를 확인하고 체크박스와 확인 대화상자를 거쳐 확정합니다.
+
+일반 JSON은 `{code,message,data}`, 목록은 `{items,page,size,total}`, 삭제·로그아웃 204는 빈 body, 파일은 JSON 래퍼 없는 Blob입니다. OCR은 업로드 내용과 무관한 합성 필드입니다. 파일 크기·MIME 기본 검증만 모사하며 손상·암호화·위장 파일·PDF 페이지 수 등 실제 서버 검증을 대신하지 않습니다. 업로드 PDF 미리보기 메타데이터는 1페이지로 제한합니다. 공유 검토 상태는 Case 연결별로 관리합니다. 가상 토큰은 실제 서버에서 사용할 수 없습니다.
+
+### 미지원 API
+
+현재 화면에서 구현하지 않은 다음 P0 API는 501로 차단합니다. 성공 응답이나 임의 DTO를 만들지 않습니다. SSE도 현재 채팅 UI가 없어 모사하지 않습니다.
+
+- `/health`, `/consultation-centers`
+- `/auth/forgot-password`, `/auth/reset-password`, DELETE `/users/me`, `/users/me/deletion`
+- `/cases/{c}/workflow`, `/conditions`, `/readiness`, `/manual-records` 및 개별 수기 기록
+- `/cases/{c}/results`, `/recompute-jobs/{j}`, POST `/recompute`
+- 계산·대조·검증 생성/목록/상세: `/calculations`, `/comparisons`, `/payslip-validations`, `/deposit-comparisons`
+- `/questions`, `/company-inquiry`
+- `/workplaces/{w}/payment-transactions` 및 상세·중복 후보, `/cases/{c}/deposits` 및 상세
+- `/workplaces/{w}/chats` 및 상세·메시지·재시도·실행 취소(SSE 포함)
+- `/cases/{c}/reports` 및 상세·PDF·원본 ZIP
+
+`/health`도 Mock 실행 중 실제 백엔드 origin으로 요청하면 차단됩니다. 위 목록의 `/health` 이외 경로는 `/api/v1` 기준입니다. 이 모드는 브라우저 개발 시나리오이며 실제 서버 계약 검증이나 동시 탭 세션·실제 OCR·공식 임금 계산을 보장하지 않습니다.
+
+### Mock Mode 검증 기록 (2026-11-10)
+
+- `npm run lint`, `npm run typecheck`, `npm test` (13개 파일, 230개 테스트), `npm run build` 통과.
+- 실제 Microsoft Edge(headless)에서 로그인 → 대시보드 → 근무지 → Case → 이미지 업로드 → PROCESSING/READY polling → 필드 수정·확인 → 전체 검토 완료 → 2단계 원본 교체 → 로그아웃 확인. 새로고침 기본 계정 복원, 데이터 초기화, 미등록 API 501도 확인.
+- 로그인·대시보드·근무지 상세·Case 상세·업로드·검토 화면의 320/375/768/1280px 가로 넘침 없음.
+- Service Worker를 사용할 수 없는 환경을 모사해 초기화 실패 오류 화면 확인. Mock ON 검증 동안 실제 백엔드 네트워크 요청 0건.
+- Mock OFF 개발 서버와 `NEXT_PUBLIC_MOCK_API=true`로 빌드한 production 서버에서 테스트 계정·배지 비노출, Service Worker 미등록 확인. 기존 클라이언트의 refresh 요청은 브라우저 테스트 도구에서 중단했으며 백엔드에는 접속하지 않음.
+- production JS에서 테스트 비밀번호·Mock 세션 표시·가상 토큰 문자열 제외 확인. production에서는 MSW 시작 모듈이 연결되지 않음.
+
+실제 백엔드/OpenAPI에 접속하지 않고 로컬 P0 문서와 기존 DTO 파서 기준으로 검증했습니다. 터치 조작·실기기·실제 인증 쿠키·다중 페이지 업로드 PDF 검증은 포함하지 않습니다.
+
+### 변경 파일
+
+- 설정·설명: `.env.example`, `.env.local`(Git 제외, 로컬 ON), `README.md`, `eslint.config.mjs`
+- 연결: `src/app/providers.tsx`, `src/lib/config/mock.ts`, `src/features/auth/components/auth-form.tsx`
+- 브라우저: `public/mockServiceWorker.js`, `src/mocks/browser.ts`, `src/mocks/mock-boundary.tsx`
+- 개발 시나리오: `src/mocks/development.ts`, `src/mocks/sample.ts`, `src/mocks/development.test.ts`
+- 공유 핸들러: `src/mocks/shared/management-handlers.ts`, `document-handlers.ts`, `review-handlers.ts`, `response.ts`
+- 기존 테스트 연결: `src/test/server.ts`, `src/test/management-handlers.ts`, `src/test/document-handlers.ts`, `src/test/review-handlers.ts`
+- `AGENTS.md`: `next dev`가 상단 안내 블록의 줄바꿈을 자동 갱신. 개발 규칙 본문은 동일
+
 ## 검증
 
 ```powershell

@@ -6,9 +6,8 @@ export const testApiUrl = "http://127.0.0.1:8000/api/v1";
 export const testUser = { userId: 7, email: "worker@example.com", name: "테스트 근로자" };
 export const testLogin = { accessToken: "msw-access-token", tokenType: "Bearer", expiresIn: 1800, user: testUser };
 
-export function apiResponse(data: unknown, status = 200) {
-  return HttpResponse.json({ code: status, message: "MSW test fixture", data }, { status });
-}
+export { apiResponse } from "@/mocks/shared/response";
+import { apiResponse } from "@/mocks/shared/response";
 
 // Test-only handlers. Never loaded into the application or a service worker.
 export const server = setupServer(
