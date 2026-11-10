@@ -6,6 +6,8 @@ import { ApiError } from "./error";
 import { hasMediaType, protocolError, readApiError, readJsonData } from "./response";
 
 export interface ApiRequestOptions {
+  /** A documented success status, checked after HTTP error handling. */
+  expectedStatus?: number;
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: HeadersInit;
   body?: JsonValue;
@@ -151,7 +153,10 @@ export function createApiClient(options: ClientOptions) {
     },
     /** A feature-level schema validates data; no unchecked requestJson<T> assertion. */
     requestJson<T>(path: string, decode: (data: unknown) => T, init: ApiRequestOptions = {}) {
-      return request(path, init, "application/json", async (response) => decode(await readJsonData(response)));
+      return request(path, init, "application/json", async (response) => {
+        if (init.expectedStatus !== undefined && response.status !== init.expectedStatus) throw protocolError();
+        return decode(await readJsonData(response));
+      });
     },
     requestNoContent(path: string, init: ApiRequestOptions = {}): Promise<void> {
       return request(path, init, "application/json", async (response) => {

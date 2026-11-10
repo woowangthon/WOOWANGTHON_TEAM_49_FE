@@ -31,6 +31,7 @@ export function documentApi(api: ApiClient) {
       if (context.kind === "library" && filters.processingStatus) params.set("processingStatus", filters.processingStatus);
       return api.requestJson(`${documentPath(context)}?${params}`, decodeWith(pageSchema(context.kind === "case" ? caseDocumentSchema : documentSchema)), { signal });
     },
+    detail: (c: number, d: number, signal?: AbortSignal) => api.requestJson(`/cases/${c}/documents/${d}`, decodeWith(documentSchema.refine(v=>v.documentId===d)), {signal}),
     status: (context: Exclude<DocumentContext, {kind: "library"}>, id: number, signal?: AbortSignal) => api.requestJson(`${documentPath(context)}/${id}`, decodeWith(statusSchema), { signal }),
     upload: (context: Exclude<DocumentContext, {kind: "library"}>, file: File, documentType: string, signal?: AbortSignal) => {
       const formData = new FormData();

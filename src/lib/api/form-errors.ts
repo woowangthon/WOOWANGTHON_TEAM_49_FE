@@ -4,6 +4,7 @@ import { ApiError } from "./error";
 
 export function businessErrorMessage(error: unknown): string {
   if (!(error instanceof ApiError)) return "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+  if (error.kind === "protocol") return "서버 응답 형식이 문서 계약과 일치하지 않습니다. 값을 임의로 보완하지 않았습니다. 다시 조회해 주세요.";
   if (error.status === 403) return "이 자료에 접근할 권한이 없습니다.";
   if (error.status === 404) return "자료를 찾을 수 없습니다. 삭제되었거나 접근할 수 없는 자료입니다.";
   if (error.errorCode === "INPUT_VERSION_CONFLICT") return "다른 변경이 먼저 저장되었습니다. 최신 정보를 확인한 뒤 다시 수정해 주세요.";

@@ -15,13 +15,13 @@ describe("result contracts over MSW",()=>{
   const {app}=await setup(); const api=resultsApi(app.api);const before=await api.results(15);
   await caseInputsApi(app.api).saveConditions(15,{expectedInputVersion:7,answers:[{conditionId:"regular_minutes",value:60}]});
   expect((await documentApi(app.api).recompute(15)).activeJob?.status).toBe("PENDING");
-  const during=await api.results(15);expect(during.freshness.overall).toBe("UPDATING");expect(during.calculation).toEqual(before.calculation);
+  const during=await api.results(15);expect(during.freshness.overall).toBe("STALE");expect(during.calculation).toEqual(before.calculation);
   expect((await documentApi(app.api).recompute(15)).activeJob?.status).toBe("RUNNING");
   expect((await documentApi(app.api).recompute(15)).latestJob?.status).toBe("PARTIAL");
   const after=await api.results(15);expect(after.freshness.overall).toBe("CURRENT");expect(after.resultVersion).toBe(1);expect(after.calculation?.grossPay).toBeNull();
  });
  it("accepts asynchronous 202 and prevents duplicate work and stale version requests",async()=>{
-  await setup();const request=(version:number)=>fetch(`${testApiUrl}/cases/15/calculations`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({confirmed:true,expectedInputVersion:version})});
+  await setup();const request=(version:number)=>fetch(`${testApiUrl}/cases/15/recompute`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({confirmed:true,expectedInputVersion:version})});
   expect((await request(6)).status).toBe(409);const accepted=await request(7);expect(accepted.status).toBe(202);expect((await accepted.json()).data.status).toBe("PENDING");expect((await request(7)).status).toBe(409);
  });
  it("serves snapshot history and immutable calculation detail",async()=>{const {app}=await setup();await resultsApi(app.api).results(15);const page=await app.api.requestJson("/cases/15/calculations",v=>v);expect(page).toMatchObject({page:1,total:1});const detail=await app.api.requestJson("/cases/15/calculations/0",v=>v);expect(detail).toMatchObject({version:0,grossPay:null});});

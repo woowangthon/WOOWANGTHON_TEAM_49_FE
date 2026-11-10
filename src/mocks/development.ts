@@ -26,9 +26,9 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   const review = reviewMocks(cases, documents, baseUrl, true, (c, old, next) => {
     const link = docs.getLinks().find(l => l.caseId === c && l.documentId === old);
     if (link) link.documentId = next;
-  });
+  }, c => inputs.notifyInputChange(c));
   review.histories.splice(0);
-  const inputs = inputMocks(management.getCases, baseUrl);
+  const inputs = inputMocks(management.getCases, baseUrl, c => docs.getLinks().filter(l=>l.caseId===c).flatMap(l=>documents.some(d=>d.documentId===l.documentId && d.documentType==="PAYSLIP")?[{documentId:l.documentId,fields:review.fields(c,l.documentId)}]:[]));
   const users = new Map([[demoAccount.email, { ...demoAccount, userId: 7 }]]);
   let activeUser = users.get(demoAccount.email)!;
   let token = "";

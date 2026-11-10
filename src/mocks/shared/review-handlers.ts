@@ -4,7 +4,7 @@ import type { ExtractedField, FieldValue } from "@/features/documents/review/sch
 import type { DocumentDto } from "@/features/documents/schemas";
 import { apiResponse } from "./response";
 export const testPng=Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jSnkAAAAASUVORK5CYII="),c=>c.charCodeAt(0));
-export function reviewMocks(cases:CaseDetailDto[],documents:DocumentDto[], testApiUrl = "http://127.0.0.1:8000/api/v1", development = false, onReplace?: (c:number, old:number, next:number)=>void){
+export function reviewMocks(cases:CaseDetailDto[],documents:DocumentDto[], testApiUrl = "http://127.0.0.1:8000/api/v1", development = false, onReplace?: (c:number, old:number, next:number)=>void,onInputChanged?: (c:number)=>{jobId:string|null|undefined}){
   const originals=new Map<number,ExtractedField[]>();
   const baseFields=(documentId:number):ExtractedField[]=>[
     {fieldId:501,key:"grossPay",label:"지급총액",value:2300000,valueType:"MONEY_KRW",status:"UNCONFIRMED",editedByUser:false,effectiveValueOrigin:"SHARED_DEFAULT",hasCaseOverride:false,confirmedAt:null,source:{documentId,page:1,text:"지급총액 2,300,000원",boundingBox:[0.1,0.2,0.3,0.1],coordinateSystem:"RELATIVE_0_1"}},
@@ -23,7 +23,7 @@ export function reviewMocks(cases:CaseDetailDto[],documents:DocumentDto[], testA
   const record=(request:Request,body?:Record<string,unknown>)=>!development&&requests.push({method:request.method,path:new URL(request.url).pathname+new URL(request.url).search,body,authorization:request.headers.get("Authorization")});
   const current=(c:number)=>cases.find(v=>v.caseId===c)!;
   const error=(code:string,status=409)=>apiResponse({errorCode:code},status);
-  const bump=(ids:number[])=>ids.map(caseId=>({caseId,inputVersion:++current(caseId).inputVersion,recompute:{scheduled:true,jobId:"review-job"}}));
+  const bump=(ids:number[])=>ids.map(caseId=>{const inputVersion=++current(caseId).inputVersion;return {caseId,inputVersion,recompute:{scheduled:true,jobId:onInputChanged?.(caseId).jobId ?? "review-job"}};});
   const review=(c:number,d:number)=>{const fs=fields(c,d);const unconfirmedFieldIds=fs.filter(f=>f.status!=="CONFIRMED").map(f=>f.fieldId);return {documentId:d,caseId:c,processingStatus:"READY",reviewStatus:reviewStates.get(`${c}:${d}`)??"NOT_STARTED",confirmedFieldCount:fs.length-unconfirmedFieldIds.length,totalFieldCount:fs.length,unconfirmedFieldIds};};
   const patch=async(request:Request,c:number|undefined,d:number,fid:number)=>{
     const body=await request.json() as Record<string,unknown>;record(request,body);
@@ -39,7 +39,7 @@ export function reviewMocks(cases:CaseDetailDto[],documents:DocumentDto[], testA
     affected.forEach(id=>reviewStates.set(`${id}:${d}`,"IN_PROGRESS"));
     historyContexts.set(histories.length+1,`${c??"shared"}:${d}`);
     histories.unshift({historyId:histories.length+1,fieldId:fid,previousValue,newValue:value,changedAt:"2026-11-09T00:00:00+00:00",changedBy:"USER",scope:c?"CASE_OVERRIDE":"SHARED_DEFAULT"});
-    return apiResponse({...updated,affectedCaseIds:affected,caseUpdates,...(c?{inputVersion:current(c).inputVersion}:{}),recompute:{scheduled:true,jobId:"review-job"}});
+    return apiResponse({...updated,affectedCaseIds:affected,caseUpdates,...(c?{inputVersion:current(c).inputVersion}:{}),recompute:c?caseUpdates.find(v=>v.caseId===c)?.recompute:{scheduled:true,jobId:"review-job"}});
   };
   const handlers=[
     http.get(`${testApiUrl}/workplaces/:w/documents/:d/preview`,({request,params})=>{record(request);return apiResponse({documentId:Number(params.d),mediaType:"image/png",pageCount:1,previewUrl:"https://must-not-follow.invalid/private-original",coordinateSystem:"RELATIVE_0_1",rotationDegrees:0,supportsHighlight:true});}),

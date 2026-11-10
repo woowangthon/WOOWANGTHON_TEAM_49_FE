@@ -2,12 +2,15 @@ import { http, HttpResponse } from "msw";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 import { conditionsPutSchema, manualInputSchema, checkTypes, type Condition, type ManualRecord, type RecordType } from "@/features/case-inputs/schemas";
 import { manualDefaults, manualFormSchema } from "@/features/case-inputs/manual-fields";
+import { buildResultScenario, type MockEvidence } from "./result-scenario";
+import type { Results } from "@/features/results/schemas";
 import { apiResponse } from "./response";
 
 /** Synthetic readiness policy for development/tests only; never an official wage engine. */
-export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://127.0.0.1:8000/api/v1") {
+export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://127.0.0.1:8000/api/v1", getEvidence: (c:number)=>MockEvidence[] = ()=>[]) {
   const states = new WeakMap<CaseDetailDto, ReturnType<typeof initialState>>();
   let nextRecord = 1, nextTransaction = 1, nextJob = 1;
+  const jobs = new Map<string, NonNullable<ReturnType<typeof initialState>["job"]>>();
   const requests: { method: string; path: string; body?: unknown }[] = [];
   const definitions: Pick<Condition, "conditionId" | "question" | "type" | "options" | "requiredFor">[] = [
     { conditionId: "workplace_size", question: "상시 근로자 수를 알고 있나요?", type: "SELECT", options: ["LESS_THAN_5", "AT_LEAST_5", "UNKNOWN"], requiredFor: ["WAGE_CALCULATION"] },
@@ -18,7 +21,7 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
     { conditionId: "base_pay_basis_confirmed", question: "기본급의 기간과 의미가 일치하나요?", type: "BOOLEAN", requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
   ];
   function initialState(c: CaseDetailDto) {
-    return { records: [] as ManualRecord[], transactions: [] as { transactionId: number; allocationId: number; data: ManualRecord["data"] }[], conditions: definitions.map(d => ({ ...d, value: null, status: "REQUIRED", source: null } as Condition)), observedVersion: c.inputVersion, job: null as null | { jobId: string; status: string; requestedInputVersion: number; errorCode: string | null }, polls: 0, resultVersion: 0 };
+    return { records: [] as ManualRecord[], transactions: [] as { transactionId: number; allocationId: number; data: ManualRecord["data"] }[], conditions: definitions.map(d => ({ ...d, value: null, status: "REQUIRED", source: null } as Condition)), observedVersion: c.inputVersion, job: null as null | { jobId: string; status: string; requestedInputVersion: number; errorCode: string | null }, polls: 0, resultVersion: 0, snapshotInputVersion:c.inputVersion, target:"recompute" };
   }
   function state(c: CaseDetailDto) { if (!states.has(c)) states.set(c, initialState(c)); return states.get(c)!; }
   getCases().forEach(c => state(c));
@@ -26,9 +29,11 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
   const missing = () => apiResponse({ errorCode: "RESOURCE_NOT_FOUND" }, 404);
   const error = (code: string, status: number) => apiResponse({ errorCode: code }, status);
   function schedule(c: CaseDetailDto, increment = true) {
-    const s = state(c); if (increment) c.inputVersion++;
-    s.observedVersion = c.inputVersion; s.polls = 0;
-    s.job = { jobId: `input-job-${nextJob++}`, requestedInputVersion: c.inputVersion, status: "PENDING", errorCode: null };
+    const s = state(c); result(c); if (increment) c.inputVersion++;
+    if(s.job && ["PENDING","RUNNING"].includes(s.job.status))s.job.status="SUPERSEDED";
+    s.observedVersion = c.inputVersion; s.polls = 0;s.target="recompute";
+    s.job = { jobId: `case-${c.caseId}-input-job-${nextJob++}`, requestedInputVersion: c.inputVersion, status: "PENDING", errorCode: null };
+    jobs.set(s.job.jobId,s.job);
     return { inputVersion: c.inputVersion, recompute: { scheduled: true, jobId: s.job.jobId, affectedChecks: [...checkTypes] } };
   }
   const parseManual = async (request: Request, c: CaseDetailDto, recordId?: number) => {
@@ -37,7 +42,7 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
     const payload = manualInputSchema.safeParse(body);
     if (!payload.success) return apiResponse({ errorCode: "VALIDATION_ERROR", errors: payload.error.issues.map(i => ({ field: i.path.join("."), reason: i.message })) }, 422);
     if (!body.data || !["CONTRACT", "ATTENDANCE", "PAYSLIP", "DEPOSIT"].includes(body.recordType) || body.source !== "USER_INPUT") return error("VALIDATION_ERROR", 422);
-    const s = state(c); const old = s.records.find(r => r.recordId === recordId);
+    result(c); const s = state(c); const old = s.records.find(r => r.recordId === recordId);
     if (recordId && !old) return missing();
     if (old && old.recordType !== body.recordType) return error("VALIDATION_ERROR", 422);
     const fields = manualFormSchema(body.recordType, c.periodStart, c.periodEnd).safeParse(manualDefaults(body.recordType, body.data));
@@ -51,30 +56,51 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
     if (old) Object.assign(old, record); else s.records.push(record);
     return apiResponse({ ...record, ...schedule(c) }, old ? 200 : 201);
   };
-  const snapshots = new WeakMap<CaseDetailDto, Record<string, unknown>[]>();
-  function result(c: CaseDetailDto) {
-    const s = state(c); const history = snapshots.get(c) ?? []; snapshots.set(c, history);
-    const active = s.job && ["PENDING", "RUNNING"].includes(s.job.status);
-    const freshness = s.observedVersion !== c.inputVersion ? "STALE" : s.job?.status === "FAILED" ? "FAILED" : active ? "UPDATING" : "CURRENT";
-    if (!history.length || (!active && s.resultVersion > Number(history[0].resultVersion))) {
-      const version = s.resultVersion;
-      history.unshift({ caseId:c.caseId, currentInputVersion:c.inputVersion, resultVersion:version,
-        summary:{ calculationStatus:"PARTIAL", comparisonStatus:"INSUFFICIENT_INFORMATION", counts:{match:1,difference:1,insufficientInformation:1,reviewRequired:1} },
-        versions:Object.fromEntries(["calculation","comparison","payslipValidation"].map(k=>[k,{snapshotId:version,version,inputVersion:c.inputVersion,createdAt:"2026-11-08T00:00:00Z",freshness}])),
-        items:[{id:"sample-review",title:"가상 자료 검토 예시",status:"REVIEW_REQUIRED",calculatedValue:null,documentValue:null,difference:null,unit:null,periodStart:c.periodStart,periodEnd:c.periodEnd,formula:null,rule:null,comparisonBasis:null,sources:[{documentId:101,page:1,text:"가상 명세서",boundingBox:null,coordinateSystem:"RELATIVE_0_1"}],confirmedAt:null,nextAction:"원문과 계산 조건을 확인해 주세요"}],
-        calculation:{calculationId:version,version,basedOnInputVersion:c.inputVersion,status:"PARTIAL",items:[{type:"BASE_PAY",label:"기본급 (가상 예시)",status:"CALCULATED",amount:2000000,currency:"KRW"},{type:"OVERTIME_PAY",label:"연장수당",status:"REVIEW_REQUIRED",amount:null}],calculatedSubtotal:2000000,grossPay:null},
-        comparison:{comparisonId:version,version,basedOnInputVersion:c.inputVersion,items:[{type:"HOURLY_WAGE",status:"INSUFFICIENT_INFORMATION",contractValue:null,payslipValue:null,difference:null,comparisonBasis:{unit:"KRW_PER_HOUR",semanticMatch:false}}]},
-        payslipValidation:{validationId:version,version,paymentTotal:{status:"MATCH",itemSum:2300000,statedTotal:2300000,difference:0},deductionTotal:{status:"INSUFFICIENT_INFORMATION",itemSum:null,statedTotal:200000,difference:null},netPay:{status:"DIFFERENCE",calculated:2100000,stated:2090000,difference:10000}},depositComparison:null });
+  const snapshots = new WeakMap<CaseDetailDto, Results[]>();
+  const history = (c:CaseDetailDto) => {if(!snapshots.has(c))snapshots.set(c,[]);return snapshots.get(c)!;};
+  function freshness(c:CaseDetailDto):"CURRENT"|"STALE"|"UPDATING"|"FAILED" {
+    const s=state(c);
+    if(s.observedVersion!==c.inputVersion)return "STALE";
+    if(s.job?.status==="FAILED")return "FAILED";
+    if(s.job?.status==="PENDING" || s.job?.status==="SUPERSEDED")return "STALE";
+    if(s.job?.status==="RUNNING")return "UPDATING";
+    return "CURRENT";
+  }
+  function publish(c:CaseDetailDto) {
+    const s=state(c);s.resultVersion++;s.snapshotInputVersion=c.inputVersion;
+    const next=buildResultScenario(c,s.resultVersion,s.records,s.conditions,getEvidence(c.caseId));
+    const previous=history(c)[0];
+    if(previous && s.target!=="recompute") {
+      const target={calculations:"calculation",comparisons:"comparison","payslip-validations":"payslipValidation"}[s.target];
+      if(target!=="calculation")next.calculation=previous.calculation;
+      if(target!=="comparison")next.comparison=previous.comparison;
+      if(target!=="payslipValidation")next.payslipValidation=previous.payslipValidation;
+      for(const key of ["calculation","comparison","payslipValidation"] as const)if(key!==target)next.versions[key]=previous.versions[key];
     }
-    return {...history[0], currentInputVersion:c.inputVersion, freshness:{overall:freshness,hasOutdatedResults:freshness!=="CURRENT",activeJobId:active?s.job?.jobId:null},versions:Object.fromEntries(Object.entries(history[0].versions as Record<string,object>).map(([k,v])=>[k,{...v,freshness}]))};
+    history(c).unshift(structuredClone(next));
+  }
+  function result(c:CaseDetailDto) {
+    const s=state(c);const list=history(c);
+    if(!list.length){const initial=freshness(c)==="CURRENT";
+      list.push(buildResultScenario({...c,inputVersion:s.snapshotInputVersion},s.resultVersion,initial?s.records:[],initial?s.conditions:[],initial?getEvidence(c.caseId):[]));}
+    const current=freshness(c),active=s.job && ["PENDING","RUNNING"].includes(s.job.status);
+    return {...list[0],currentInputVersion:c.inputVersion,freshness:{overall:current,hasOutdatedResults:current!=="CURRENT",activeJobId:active?s.job!.jobId:null},versions:Object.fromEntries(Object.entries(list[0].versions).map(([k,v])=>[k,v?{...v,freshness:current}:null]))};
+  }
+  function completion(c:CaseDetailDto) {
+    const s=state(c);const p=buildResultScenario(c,s.resultVersion,s.records,s.conditions,getEvidence(c.caseId)).payslipValidation;
+    return s.target==="payslip-validations" && [p?.paymentTotal.status,p?.deductionTotal.status,p?.netPay.status].every(v=>v==="MATCH"||v==="DIFFERENCE")?"SUCCEEDED":"PARTIAL";
   }
   const handlers = [
-    http.get(`${baseUrl}/cases/:c/recompute-jobs/:jobId`,({params})=>{const c=current(params.c);if(!c)return missing();const job=state(c).job;return job?.jobId===params.jobId?apiResponse(job):missing();}),
+    http.get(`${baseUrl}/cases/:c/recompute-jobs/:jobId`,({params})=>{const c=current(params.c);if(!c)return missing();const job=jobs.get(String(params.jobId));return job && job.jobId.startsWith(`case-${c.caseId}-`)?apiResponse(job):missing();}),
 
-    ...(["calculations","comparisons","payslip-validations"] as const).map(endpoint=>http.get(`${baseUrl}/cases/:c/${endpoint}`,({params})=>{const c=current(params.c);if(!c)return missing();result(c);const key={calculations:"calculation",comparisons:"comparison","payslip-validations":"payslipValidation"}[endpoint];const items=(snapshots.get(c)??[]).map(v=>v[key]);return apiResponse({items,page:1,size:20,total:items.length});})),
-    http.get(`${baseUrl}/cases/:c/calculations/:id`,({params})=>{const c=current(params.c);if(!c)return missing();result(c);const found=(snapshots.get(c)??[]).map(v=>v.calculation as Record<string,unknown>).find(v=>v.calculationId===Number(params.id));return found?apiResponse(found):missing();}),
+    ...(["calculations","comparisons","payslip-validations"] as const).map(endpoint=>http.get(`${baseUrl}/cases/:c/${endpoint}`,({params,request})=>{const c=current(params.c);if(!c)return missing();result(c);const key={calculations:"calculation",comparisons:"comparison","payslip-validations":"payslipValidation"}[endpoint];const items=(snapshots.get(c)??[]).map(v=>v[key as "calculation"|"comparison"|"payslipValidation"]).filter(v=>v!==null).filter((v,i,list)=>list.findIndex(other=>other?.version===v?.version)===i);const q=new URL(request.url).searchParams;const page=Math.max(1,Number(q.get("page")??1)),size=Math.min(100,Math.max(1,Number(q.get("size")??20)));return apiResponse({items:items.slice((page-1)*size,page*size),page,size,total:items.length});})),
+    http.get(`${baseUrl}/cases/:c/calculations/:id`,({params})=>{const c=current(params.c);if(!c)return missing();result(c);const found=(snapshots.get(c)??[]).flatMap(v=>v.calculation?[v.calculation]:[]).find(v=>v.calculationId===Number(params.id));return found?apiResponse(found):missing();}),
 
-    ...["recompute","calculations","comparisons","payslip-validations"].map(endpoint=>http.post(`${baseUrl}/cases/:c/${endpoint}`,async({params,request})=>{const c=current(params.c);if(!c)return missing();const body=await request.json() as {expectedInputVersion?:number};if(body.expectedInputVersion!==c.inputVersion)return error("INPUT_VERSION_CONFLICT",409);const s=state(c);if(s.job && ["PENDING","RUNNING"].includes(s.job.status))return error("RECOMPUTE_IN_PROGRESS",409);schedule(c,false);return apiResponse({...s.job},202);})),
+    ...["recompute","calculations","comparisons","payslip-validations"].map(endpoint=>http.post(`${baseUrl}/cases/:c/${endpoint}`,async({params,request})=>{const c=current(params.c);if(!c)return missing();const body=await request.json() as {expectedInputVersion?:number};if(body.expectedInputVersion!==c.inputVersion)return error("INPUT_VERSION_CONFLICT",409);const s=state(c);if(s.job && ["PENDING","RUNNING"].includes(s.job.status))return apiResponse({},409);const scenario=buildResultScenario(c,s.resultVersion,s.records,s.conditions,getEvidence(c.caseId));
+      if(endpoint==="calculations" && scenario.calculation?.calculatedSubtotal===null)return error("CALCULATION_NOT_READY",409);
+      if(endpoint==="comparisons" && scenario.summary.comparisonStatus==="INSUFFICIENT_INFORMATION")return error("CALCULATION_NOT_READY",409);
+      if(endpoint==="payslip-validations" && [scenario.payslipValidation?.paymentTotal,scenario.payslipValidation?.deductionTotal,scenario.payslipValidation?.netPay].every(v=>v?.status==="INSUFFICIENT_INFORMATION"))return error("CALCULATION_NOT_READY",409);
+      result(c);schedule(c,false);s.target=endpoint;return apiResponse({...s.job},202);})),
 
     http.get(`${baseUrl}/cases/:c/results`, ({params})=> { const c=current(params.c); return c?apiResponse(result(c)):missing(); }),
 
@@ -91,14 +117,14 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
     http.patch(`${baseUrl}/cases/:c/manual-records/:r`, ({ request, params }) => { const c = current(params.c); return c ? parseManual(request, c, Number(params.r)) : missing(); }),
     http.delete(`${baseUrl}/cases/:c/manual-records/:r`, ({ params, request }) => {
       const c = current(params.c); if (!c) return missing(); const s = state(c); const index = s.records.findIndex(r => r.recordId === Number(params.r)); if (index < 0) return missing();
-      requests.push({ method: request.method, path: new URL(request.url).pathname }); s.records.splice(index, 1); schedule(c); return new HttpResponse(null, { status: 204 });
+      result(c); requests.push({ method: request.method, path: new URL(request.url).pathname }); s.records.splice(index, 1); schedule(c); return new HttpResponse(null, { status: 204 });
     }),
     http.get(`${baseUrl}/cases/:c/conditions`, ({ params }) => { const c = current(params.c); return c ? apiResponse({ conditions: state(c).conditions, inputVersion: c.inputVersion }) : missing(); }),
     http.put(`${baseUrl}/cases/:c/conditions`, async ({ request, params }) => {
       const c = current(params.c); if (!c) return missing(); const body = await request.json(); requests.push({ method: request.method, path: new URL(request.url).pathname, body });
       const parsed = conditionsPutSchema.safeParse(body); if (!parsed.success) return apiResponse({ errorCode: "VALIDATION_ERROR", errors: parsed.error.issues.map(i => ({ field: i.path.join("."), reason: i.message })) }, 422);
       if (parsed.data.expectedInputVersion !== c.inputVersion) return apiResponse({ errorCode: "INPUT_VERSION_CONFLICT", details: { currentInputVersion: c.inputVersion, expectedInputVersion: parsed.data.expectedInputVersion } }, 409);
-      const s = state(c); parsed.data.answers.forEach(a => { const condition = s.conditions.find(v => v.conditionId === a.conditionId)!; condition.value = a.value; condition.status = a.value === "UNKNOWN" ? "UNKNOWN" : "ANSWERED"; });
+      result(c); const s = state(c); parsed.data.answers.forEach(a => { const condition = s.conditions.find(v => v.conditionId === a.conditionId)!; condition.value = a.value; condition.status = a.value === "UNKNOWN" ? "UNKNOWN" : "ANSWERED"; });
       return apiResponse(schedule(c));
     }),
     http.get(`${baseUrl}/cases/:c/readiness`, ({ params }) => {
@@ -123,14 +149,13 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
       const c = current(params.c); if (!c) return missing(); const s = state(c);
       if (s.observedVersion !== c.inputVersion) schedule(c, false);
       if (s.job && ["PENDING", "RUNNING"].includes(s.job.status)) {
-        s.job.status = s.polls === 0 ? "PENDING" : s.polls === 1 ? "RUNNING" : "PARTIAL";
-        if (s.job.status === "PARTIAL") s.resultVersion++; s.polls++;
+        s.job.status = s.polls === 0 ? "PENDING" : s.polls === 1 ? "RUNNING" : completion(c);
+        if (["PARTIAL","SUCCEEDED"].includes(s.job.status))publish(c);s.polls++;
       }
       const active = s.job && ["PENDING", "RUNNING"].includes(s.job.status);
-      const freshness = s.job?.status === "FAILED" ? "FAILED" : s.job?.status === "PENDING" ? "STALE" : active ? "UPDATING" : "CURRENT";
-      return apiResponse({ caseId: c.caseId, currentInputVersion: c.inputVersion, pending: s.job?.status === "PENDING" ? 1 : 0, running: s.job?.status === "RUNNING" ? 1 : 0, activeJob: active ? s.job : null, latestJob: s.job,
-        results: Object.fromEntries(["calculation", "comparison", "payslipValidation", "depositComparison"].map(key => [key, { snapshotId: s.resultVersion || null, version: s.resultVersion || null, inputVersion: c.inputVersion, freshness }])) });
+      const refs=result(c);
+      return apiResponse({caseId:c.caseId,currentInputVersion:c.inputVersion,pending:s.job?.status==="PENDING"?1:0,running:s.job?.status==="RUNNING"?1:0,activeJob:active?s.job:null,latestJob:s.job,results:refs.versions});
     }),
   ];
-  return { handlers, requests, state, setJobStatus(c: number, status: string) { const owner = current(c); if (!owner) return; const s = state(owner); if (!s.job) schedule(owner, false); s.job!.status = status; } };
+  return { handlers, requests, state, notifyInputChange(c:number) {const owner=current(c);if(!owner)throw new Error("Unknown mock Case");return schedule(owner,false).recompute;}, setJobStatus(c: number, status: string) { const owner = current(c); if (!owner) return; const s = state(owner); if (!s.job) schedule(owner, false); s.job!.status = status; if(["PARTIAL","SUCCEEDED"].includes(status))publish(owner); } };
 }

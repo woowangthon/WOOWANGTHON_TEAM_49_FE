@@ -700,16 +700,42 @@ Edge 네 폭의 합성 PDF/이미지·필드·공유값·교체 흐름은 MSW �
 `test-results/documents-browser-report.json`과 `review-browser-report.json` 모두 오류·가로 넘침 없이 통과했습니다.
 
 
-## 7차 개발 — 현재 구현 및 미완료 범위
+## 7차 결과 화면 및 잔여 작업 보완
 
-`/cases/[caseId]/result`, `/cases/[caseId]/compare`에서 통합 결과, 계산/대조/합계 검사 상세, 서버 최신성 및 버전을 표시합니다. 기존 세션·API 클라이언트·Query 캐시·readiness·recompute polling을 재사용합니다. null은 미제공으로 유지하고 클라이언트 임금 계산은 수행하지 않습니다. 수동 실행은 confirmed/expectedInputVersion으로 요청하고 접수 jobId를 기존 polling에 연결합니다.
+`/cases/[caseId]/result`, `/cases/[caseId]/compare`에서 서버 결과, 종류별 스냅샷, 작업 상태와 원문 근거를 확인합니다. 기존 인증·API 클라이언트·TanStack Query·readiness·recompute polling·원문 뷰어를 재사용합니다. Case 작업 단계는 결과를 잠그지 않습니다. 공식 임금·법정수당·세금·보험료를 프론트에서 계산하지 않습니다.
 
-P0 적용: API_ENDPOINTS의 경로·202 상태, 백엔드 API v1의 summary/versions/freshness/items 및 세 상세 섹션을 우선 적용했습니다. P4의 동기 POST 200 예시는 사용하지 않았습니다. 실제 백엔드·OpenAPI는 접속하지 않았습니다. 저장소의 PDF 파일명은 `백엔드_API_명세_v1.pdf`입니다. DB PDF는 상세 테이블이 없는 표지입니다.
+### 기존 미완료 항목의 개선
 
-계약 미확정: P0는 목록·작업 상세 DTO 전체를 생략했습니다. 이력 응답은 opaque 서버 데이터로 보존하여 표시하며, Mock 목록은 P4의 명시된 Page<CalculationSnapshot>/Page<ComparisonSnapshot>/Page<PayslipValidation>을 참고합니다. P0의 실제 페이지 응답 형태, 실행 receipt의 전체 필드와 작업 상세 DTO는 실제 연동 시 확인이 필요합니다. 하위 상세 필드는 일부 P4 예시를 참고한 개발용 fixture이며 실제 서버 스키마 검증을 의미하지 않습니다.
+| 항목 | 개선 내용 |
+| --- | --- |
+| DTO 검증 | P0 필수 필드·nullable·상태·원화 정수·날짜/시각 검증. P0에 생략된 내부 필드는 P4를 참고하되 optional로 검증. 잘못된 응답은 protocol 오류로 표시하며 기본값을 생성하지 않음 |
+| API 처리 | 기존 data 래퍼 유지. 수동 실행은 HTTP 202와 jobId/status 검증. GET 200 검증. 기존 204·Blob 처리 유지. API/DTO와 표시 변환 분리 |
+| Mock 입력 일관성 | 조건·수기 입력 및 확인된 문서 필드를 참조. 입력 버전 변경 시 이전 결과 보존, STALE → UPDATING → CURRENT. 실패 시 FAILED, 대체된 작업은 SUPERSEDED. 문서 저장 응답과 polling의 jobId 연결 |
+| 스냅샷 | 종료 시점에 결과를 고정. 종류별 수동 실행은 해당 스냅샷만 갱신. 이전 버전·근거 보존, 서버 순서 이력과 페이지 이동. 닫힌 이력은 조회하지 않음 |
+| 원문 근거 | 실제 Case 문서 상세와 필드 조회로 문서명·유형·페이지·필드명·사용자 수정/문서 추출·확인 상태 제공. 현재 필드와 과거 결과 근거를 구별. 403/404·필드 유실 안내. 기존 뷰어에 스냅샷 좌표 전달, 좌표/회전 불명확 시 기존 강조 제한 유지 |
+| 금액·단위 | 공통 포맷터로 정수 원화·원/시간·분·시간·날짜 표시. null=미확정, undefined=미제공, 0=실제 0. 소계에 전체 세전 임금이 아님을 명시. 차이는 서버 제공값만 표시 |
+| 오류·재실행 | 409 시 최신 입력·실행 가능성 재확인 안내. 중복 제출 방지. 기존 polling으로 종료 후 결과 무효화. 잘못된 refetch에도 직전 결과 보존 및 최신성 미확인 안내 |
 
-남은 작업: 문서명·필드 기준 근거 UI 정리, 단위별 금액 표시, 엄격한 상세 DTO 검증, 전체 시나리오 및 입력별 Mock 결과의 정밀한 일관성 구현이 필요합니다. 현재 Mock은 합성 결과를 제공하며 입력값에서 공식 임금을 계산하지 않습니다. 이 단계 전체 완료로 간주하지 않습니다.
+### 계약 확정 범위와 미확정 범위
 
-추가 파일: `src/features/results/{api,schemas,queries,result-screen,results.test,contracts.test}`와 result/compare 페이지. 기존 Case 탐색, shared input Mock 및 미지원 API 회귀 테스트를 확장했습니다. 개발 새로고침 초기화와 미등록 API 차단 정책을 유지합니다.
+P0 `백엔드_API_명세_v1.pdf`(실제 저장소 파일명), `API_ENDPOINTS.md`를 우선 적용했습니다. DB PDF는 상세 테이블이 없는 표지입니다. P1 기획과 P2/P3의 독립 검사·출처·반응형 원칙을 적용했습니다.
 
-검증: 신규 UI 테스트 10개 및 MSW 계약 테스트 5개. 전체 17개 파일 293개 테스트 통과. lint/typecheck/build 통과. 작업 상세는 기존 polling의 상태 전환에 맞춰 조회하며, 출처 펼치기는 기존 OriginalViewer로 서버 좌표를 전달합니다. Edge 브라우저 MSW 로그인 후 결과 화면 320/375/768/1280px에서 가로 넘침·JS 오류·백엔드 전달 요청 없음. 추가 Edge 검증에서 조건 확인 → 결과 → 전체 수동 재실행 → 작업 종료 → 원문 근거 펼치기 → 문서 검토 이동을 통과했습니다. 모든 오류·재시도 시나리오를 브라우저에서 검증한 것은 아닙니다. 실제 서버 연동 성공을 의미하지 않습니다. 브라우저 산출물은 Git 제외 `test-results/results-browser-report.json`, `results-*.png`입니다.
+- P0 명시: 공통 `{code,message,data}`, 목록 `{items,page,size,total}`, GET/POST 경로·200/202, 수동 confirmed/expectedInputVersion, 통합 summary/counts/versions/freshness/items와 세 결과 섹션의 주요 필드, 원화 정수·nullable·시간 분 단위.
+- P0 생략: 계산 항목·formula.inputs·rule.verified·comparisonBasis·합계 검사 내부 필드와 작업 상세의 전체 DTO. P4에 나온 필드는 제공 시 타입을 검사하되 누락을 임의 필수 처리하지 않습니다. nextAction은 P0 PDF의 필드 목록이 잘려 있어 optional로 유지합니다. 알려지지 않은 추가 필드는 보존합니다.
+- Source의 fieldId는 P0가 확정하지 않아 optional입니다. 실제 필드 ID 또는 유일하게 일치하는 원문 근거를 통해 조회한 필드명만 표시합니다. 매칭되지 않으면 필드명을 추정하지 않습니다.
+- P4의 동기 POST 200 예시는 사용하지 않습니다. 실행 준비 부족은 P4의 CALCULATION_NOT_READY/409 시나리오를 사용하며 실제 백엔드의 전체 오류 코드 목록이 검증됐다는 의미가 아닙니다. 중복 작업은 Mock에서 409만 모의합니다.
+- 문서로 확인할 수 없는 상세 필드의 실제 서버 필수성·추가 상태·법률 규칙 검증 여부는 연동 허용 시 확인 대상입니다. 이 문서 검증은 실제 서버 계약 검증 성공이 아닙니다.
+
+### Mock 범위
+
+`src/mocks/shared/result-scenario.ts`는 개발·테스트 전용 시나리오입니다. 확인 월 기본급을 입력 그대로 소계에 반영하며 법정수당은 검토 필요, grossPay는 null로 둡니다. 시급 대응은 확인된 동일 기준에서만 대조합니다. 명세서 지급·공제·실수령액 합계는 각각 확인된 자료만 사용합니다. 수기 자료가 없으면 확인된 문서 필드만 참조하며 미확인 추출값은 결과 금액으로 사용하지 않습니다. 차이는 미지급임금 확정이 아닙니다. 새로고침 초기화와 미등록 API 차단 정책을 유지합니다.
+
+### 파일과 검증
+
+결과 기능: `src/features/results/{schemas,api,queries,view-models,result-screen,source-evidence}`. 공통 포맷: `src/lib/format.ts`. 기존 API 클라이언트의 선택적 성공 상태 검증, 문서 상세 조회, protocol 오류 안내를 보강했습니다. Mock: development/input-handlers/review-handlers/result-scenario. 신규 테스트: accuracy/evidence, 기존 results/contracts 테스트 갱신.
+
+Edge headless 개발 MSW: 수기 입력 → 조건 저장 → 부분 소계/시급 차이 → 수동 재실행 → 대조 → 원문 검토 통과. 320/375/768/1280px에서 원문 상세 펼침·키보드 포커스·가로 넘침을 확인했습니다. JS 오류·미처리 Mock 요청·실제 백엔드 전달 요청 없음. 산출물은 Git 제외 `test-results/results-final-browser-report.json`, `results-final-*.png`, 실행 스크립트는 `%TEMP%/wageitda-browser/results-final.cjs`입니다. 실제 모바일 기기 테스트가 아닙니다.
+
+백엔드 실행·접속·OpenAPI 조회 및 commit/push는 하지 않았습니다. 8차 입금 관리·배분 개발은 진행할 수 있으나 새 기능의 P0 상세 계약도 같은 방식으로 미확정 사항을 구분해야 합니다.
+
+최종 검증: `npm run lint` 경고 없이 통과, `npm run typecheck` 통과, `npm test` 19개 파일·323개 테스트 통과(기존 293개 + 신규 30개), `npm run build` 통과. `git diff --check` 통과. main 유지. 실제 백엔드 연동은 검증하지 않았습니다.
