@@ -12,6 +12,8 @@ import { inputMocks } from "./shared/input-handlers";
 export const demoAccount = { email: "worker@example.com", password: "password1234", name: "가상 근로자" };
 // This cookie is an inert development marker, never an authentication credential.
 const marker = "wageitda_mock_session";
+let latestResetToken = "";
+export function readDevelopmentResetToken() { return latestResetToken; }
 export function clearMockSession() { document.cookie = `${marker}=; Path=/; Max-Age=0; SameSite=Lax`; }
 export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   const management = managementMocks({ baseUrl, count: 2 });
@@ -36,6 +38,10 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   const users = new Map([[demoAccount.email, { ...demoAccount, userId: 7 }]]);
   let activeUser = users.get(demoAccount.email)!;
   let token = "";
+  latestResetToken = "";
+  const resets = new Map<string, { email: string; expires: number; used: boolean }>();
+  const deleted = new Set<string>();
+  let receipt = false;
   const files = new Map<number, Blob>();
   const polls = new Map<number, number>();
   const fail = (errorCode: string, status: number) => apiResponse({ errorCode }, status);
@@ -48,6 +54,25 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     cases.forEach(c => { c.documentCount = links.filter(l => l.caseId === c.caseId).length; });
   };
   const handlers = [
+    http.post(`${baseUrl}/auth/forgot-password`, async ({ request }) => {
+      const body = await request.json() as { email?: string };
+      if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return fail("VALIDATION_ERROR", 422);
+      if (users.has(body.email) && !deleted.has(body.email)) {
+        latestResetToken = crypto.randomUUID();
+        resets.set(latestResetToken, { email: body.email, expires: Date.now() + 30 * 60_000, used: false });
+      }
+      return apiResponse({ deliveryMode: "LOCAL_OUTBOX_ONLY" }, 202);
+    }),
+    http.post(`${baseUrl}/auth/reset-password`, async ({ request }) => {
+      const body = await request.json() as { token?: string; newPassword?: string };
+      const reset = body.token && resets.get(body.token);
+      if (!reset || reset.used || reset.expires <= Date.now() || !body.newPassword || deleted.has(reset.email)) return fail("VALIDATION_ERROR", 422);
+      users.get(reset.email)!.password = body.newPassword;
+      reset.used = true;
+      token = ""; clearMockSession();
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.get(`${baseUrl}/users/me/deletion`, () => receipt ? apiResponse({}) : fail("AUTH_REQUIRED", 401)),
     http.post(`${baseUrl}/auth/signup`, async ({ request }) => {
       const body = await request.json() as typeof demoAccount;
       if (!body.email || !body.password || !body.name) return fail("VALIDATION_ERROR", 422);
@@ -58,7 +83,8 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     http.post(`${baseUrl}/auth/login`, async ({ request }) => {
       const body = await request.json() as typeof demoAccount;
       const user = users.get(body.email);
-      if (!user || user.password !== body.password) return fail("INVALID_CREDENTIALS", 401);
+      if (!user || deleted.has(user.email) || user.password !== body.password) return fail("INVALID_CREDENTIALS", 401);
+      receipt = false;
       activeUser = user;
       document.cookie = `${marker}=${encodeURIComponent(user.email)}; Path=/; SameSite=Lax`;
       return apiResponse(issue());
@@ -66,7 +92,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     http.post(`${baseUrl}/auth/refresh`, () => {
       const email = document.cookie.split("; ").find(v => v.startsWith(`${marker}=`))?.slice(marker.length + 1);
       const user = email && users.get(decodeURIComponent(email));
-      if (!user) return fail("AUTH_REQUIRED", 401);
+      if (!user || deleted.has(user.email)) return fail("AUTH_REQUIRED", 401);
       activeUser = user;
       return apiResponse(issue());
     }),
@@ -74,6 +100,8 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     // Guard every supported resource before resolving shared handlers. Never bypass an API request.
     http.all(`${baseUrl}/*`, async ({ request }) => {
       if (!token || request.headers.get("Authorization") !== `Bearer ${token}`) return fail("AUTH_REQUIRED", 401);
+      // Shared synthetic stores belong to the seed user. Other users cannot mutate or read them.
+      if (activeUser.userId !== 7 && !new URL(request.url).pathname.endsWith("/users/me")) return fail("RESOURCE_NOT_FOUND", 404);
       sync();
       const path = new URL(request.url).pathname;
       const c = path.match(/\/cases\/(\d+)/)?.[1];
@@ -105,6 +133,12 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       }
     }),
     http.get(`${baseUrl}/users/me`, () => apiResponse({ userId: activeUser.userId, email: activeUser.email, name: activeUser.name })),
+    http.delete(`${baseUrl}/users/me`, async ({ request }) => {
+      const body = await request.json() as { confirmation?: string };
+      if (body.confirmation !== "DELETE_ACCOUNT") return fail("VALIDATION_ERROR", 422);
+      deleted.add(activeUser.email); receipt = true; token = ""; clearMockSession();
+      return apiResponse({}, 202);
+    }),
     http.get(`${baseUrl}/cases/:c/documents`, ({ request, params }) => {
       const caseId = Number(params.c);
       const q = new URL(request.url).searchParams;

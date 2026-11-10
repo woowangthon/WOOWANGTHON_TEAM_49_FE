@@ -76,6 +76,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           {busy ? (signup ? "가입 처리 중…" : "로그인 중…") : (signup ? "가입하기" : "로그인")}
         </button>
       </form>
+      {!signup && <Link href="/forgot-password" className="inline-flex min-h-11 items-center underline">비밀번호 찾기</Link>}
       <p className="mt-6 text-center text-body text-muted">
         {signup ? "이미 계정이 있으신가요?" : "아직 계정이 없으신가요?"}{" "}
         <Link href={signup ? loginHref(returnTo) : `/signup?${new URLSearchParams({ next: returnTo })}`} className="inline-flex min-h-11 items-center font-bold text-primary underline underline-offset-4">

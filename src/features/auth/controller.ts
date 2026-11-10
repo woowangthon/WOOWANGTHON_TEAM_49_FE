@@ -40,6 +40,12 @@ export function createAuthController({ api, authApi, session, queryClient }: {
 
   return {
     getSnapshot: () => snapshot,
+    acceptDeletion() {
+      ++operation;
+      initialized = true;
+      session.clear();
+      update({ status: "deletion-accepted", notice: null });
+    },
     getServerSnapshot: () => initial,
     subscribe(listener: () => void) {
       listeners.add(listener);

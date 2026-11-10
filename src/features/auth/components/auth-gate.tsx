@@ -17,14 +17,16 @@ export function AuthGate({ mode, children }: { mode: "guest" | "protected"; chil
   const returnTo = safeReturnTo(params.get("next"));
 
   useEffect(() => {
-    if (mode === "protected" && status === "anonymous") {
+    if (mode === "protected" && status === "deletion-accepted") {
+      router.replace("/account-deletion");
+    } else if (mode === "protected" && status === "anonymous") {
       router.replace(loginHref(`${pathname}${search ? `?${search}` : ""}`));
     } else if (mode === "guest" && status === "authenticated") {
       router.replace(returnTo);
     }
   }, [mode, status, router, pathname, search, returnTo]);
 
-  const allowed = mode === "protected" ? status === "authenticated" : status === "anonymous";
+  const allowed = mode === "protected" ? status === "authenticated" : status === "anonymous" || status === "deletion-accepted";
   if (!allowed) {
     const title = status === "signing-out" ? "로그아웃하는 중입니다"
       : status === "authenticated" ? "로그인되었습니다"
