@@ -16,12 +16,12 @@ export function AppShell({
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[var(--spacing-sidebar)_minmax(0,1fr)]">
       <aside aria-label="사이드바" className="sticky top-0 hidden h-dvh min-w-0 flex-col gap-8 overflow-y-auto border-r border-border bg-surface p-6 lg:flex">
-        <Link href="/" className="text-lg font-extrabold tracking-tight text-primary">월급잇다</Link>
+        <Link href="/" className="inline-flex min-h-11 min-w-11 items-center text-lg font-extrabold tracking-tight text-primary">월급잇다</Link>
         <nav aria-label="주 메뉴">{menu}</nav>
       </aside>
       <div className="min-w-0">
         <header className="flex h-16 items-center justify-between gap-4 border-b border-border bg-surface px-4 sm:px-6 lg:hidden">
-          <Link href="/" className="text-lg font-extrabold tracking-tight text-primary">월급잇다</Link>
+          <Link href="/" className="inline-flex min-h-11 min-w-11 items-center text-lg font-extrabold tracking-tight text-primary">월급잇다</Link>
           <MobileNavigation><nav aria-label="주 메뉴">{menu}</nav></MobileNavigation>
         </header>
         <main id="main-content" className="mx-auto w-full max-w-content p-4 sm:p-6 lg:p-8">

@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { afterEach,describe,it,expect } from "vitest";
 import { cleanup,render,screen,fireEvent,renderHook,act,waitFor } from "@testing-library/react";
@@ -33,7 +33,20 @@ describe("deposit completion",()=>{
  it("server duplicate candidates link detail without merging",async()=>{const {api,c,mount}=await setup();await api.create(c.workplaceId,input);await api.create(c.workplaceId,input);mount(<PaymentScreen workplaceId={c.workplaceId}/>);fireEvent.click(await screen.findByRole("button",{name:"후보 상세 확인 #1"}));expect(await screen.findByRole("button",{name:"거래 수정 저장"})).toBeVisible();expect((await api.list(c.workplaceId)).total).toBe(2);});
  it("deletion cancellation preserves transaction, conflict permits explicit confirmed 204",async()=>{const {api,c,mount}=await setup();const t=await api.create(c.workplaceId,input);await api.allocate(15,{transactionId:t.transactionId,allocatedAmount:10,expectedInputVersion:c.inputVersion});mount(<PaymentScreen workplaceId={c.workplaceId}/>);fireEvent.click(await screen.findByRole("button",{name:"원거래 삭제"}));fireEvent.click(screen.getByRole("button",{name:"삭제 취소"}));expect((await api.list(c.workplaceId)).total).toBe(1);fireEvent.click(screen.getByRole("button",{name:"원거래 삭제"}));fireEvent.click(screen.getByRole("button",{name:"삭제 요청·서버 영향 확인"}));expect(await screen.findByText(/서버가 반환한 영향 사례: #15/)).toBeVisible();await waitFor(()=>expect(screen.getByRole("button",{name:"영향을 확인했으며 전체 삭제"})).toBeEnabled());fireEvent.click(screen.getByRole("button",{name:"영향을 확인했으며 전체 삭제"}));expect(await screen.findByText("등록된 거래가 없습니다. 지급액이 0원이라는 뜻은 아닙니다.")).toBeVisible();expect((await api.allocations(15)).total).toBe(0);});
  it("comparison panel loads history",async()=>{const {mount}=await setup();mount(<DepositComparisonPanel caseId={15}/>);expect(await screen.findByText(/정보 부족/)).toBeVisible();fireEvent.click(screen.getByText("입금 대조 스냅샷 이력"));expect(await screen.findByText(/과거 스냅샷/)).toBeVisible();});
+ it("keeps payment pagination active and returns to page one",async()=>{
+  const {api,c,mount}=await setup();
+  for(let i=0;i<21;i++) await api.create(c.workplaceId,{...input,amount:i+1});
+  mount(<PaymentScreen workplaceId={c.workplaceId}/>);
+  const next=await screen.findByRole("button",{name:"\uB2E4\uC74C"});
+  await waitFor(()=>expect(next).toBeEnabled());
+  fireEvent.click(next);
+  const previous=await screen.findByRole("button",{name:"\uC774\uC804"});
+  await waitFor(()=>expect(previous).toBeEnabled());
+  await waitFor(()=>expect(screen.getByRole("button",{name:"\uB2E4\uC74C"})).toBeDisabled());
+  expect(screen.getAllByRole("button",{name:"\uC0C1\uC138\u00B7\uC218\uC815"})).toHaveLength(1);
+  fireEvent.click(previous);
+  await waitFor(()=>expect(screen.getByRole("button",{name:"\uC774\uC804"})).toBeDisabled());
+  await waitFor(()=>expect(screen.getByRole("button",{name:"\uB2E4\uC74C"})).toBeEnabled());
+ });
+
 });
-
-
-

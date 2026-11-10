@@ -58,7 +58,7 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
  <div><button type="button" disabled={casePage===1||cases.isFetching} onClick={()=>{setCaseId('');setCasePage(p=>p-1);}}>이전 Case 목록</button><span>{casePage}페이지</span><button type="button" disabled={!cases.data||cases.isFetching||casePage*100>=cases.data.total} onClick={()=>{setCaseId('');setCasePage(p=>p+1);}}>다음 Case 목록</button></div>
  <button className={secondaryButton} disabled={busy||!caseId||cases.isError||cases.isFetching}>새 채팅</button></form></div>);
  return <div className="min-w-0 space-y-4 [overflow-wrap:anywhere]">
- <Link href={`/workplaces/${w}`} className="underline">근무지로 돌아가기</Link><h1 className="text-2xl font-bold">AI 자료 도우미</h1>
+ <Link href={`/workplaces/${w}`} className="inline-flex min-h-11 min-w-11 items-center underline">근무지로 돌아가기</Link><h1 className="text-2xl font-bold">AI 자료 도우미</h1>
  <p>AI 설명은 공식 임금 계산 결과와 구분됩니다. 저장된 모든 과거 대화가 모델에 전달된다는 의미는 아닙니다.</p>
  <MobileNavigation label="채팅 목록" title="대화 목록">{chatList}</MobileNavigation>
  {error&&<p role="alert">{error}</p>}

@@ -35,7 +35,7 @@ function InquiryEditor({ caseId }: { caseId: number }) {
   const error = mutation.error;
   return <div className="min-w-0 space-y-5 [overflow-wrap:anywhere]">
     <h1 className="text-title font-bold">회사 문의 문장 검토</h1>
-    <nav className="flex flex-wrap gap-3"><Link href={`/cases/${caseId}/questions`}>확인 질문</Link><Link href={`/cases/${caseId}/result`}>계산 결과</Link><Link href="/consultation-centers">상담기관</Link><Link href={`/cases/${caseId}/reports`}>보고서</Link></nav>
+    <nav className="flex flex-wrap gap-3"><Link className={secondaryButton} href={`/cases/${caseId}/questions`}>확인 질문</Link><Link className={secondaryButton} href={`/cases/${caseId}/result`}>계산 결과</Link><Link className={secondaryButton} href="/consultation-centers">상담기관</Link><Link className={secondaryButton} href={`/cases/${caseId}/reports`}>보고서</Link></nav>
     <p>서버 초안은 검토용이며 법률적 확정 의견이 아닙니다. 문장을 수정·복사하여 직접 전달하세요. 이 화면에서는 회사로 발송하지 않습니다.</p>
     <button className={secondaryButton} disabled={mutation.isPending || !s.enabled || removal.pending || removal.removed} onClick={() => { if (text || mutation.data) setConfirm(true); else void generate(); }}>{mutation.isPending ? "초안 생성 중" : mutation.data ? "서버 초안 재생성" : "서버 초안 생성"}</button>
     {confirm && <ConfirmDialog title="초안을 다시 생성할까요?" onClose={() => setConfirm(false)} action={<button className={secondaryButton} onClick={() => void generate()}>재생성</button>}><p>이전 서버 초안이 교체됩니다. 작성 중인 문장은 유지되며 새 초안 적용 시에만 바뀝니다. 필요한 내용은 먼저 복사해 주세요.</p></ConfirmDialog>}

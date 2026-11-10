@@ -115,3 +115,8 @@
     .heading-landing { font-size: 2.75rem; }
   }
 }
+
+/* Native disclosures retain their marker and keyboard behavior. */
+@layer base {
+  summary { min-height: 2.75rem; padding-block: .625rem; }
+}
