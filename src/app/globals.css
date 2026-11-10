@@ -158,3 +158,15 @@
  .review-inactive { display:block; }
  .review-tabs { display:none; }
 }
+
+/* T6: task-first dashboard and shared compact case rows. */
+.dashboard-screen { max-width:1130px; }
+.dashboard-panels { display:grid; gap:20px; }
+.dashboard-panel { min-width:0; padding:24px; border:1px solid var(--color-border); border-radius:24px; background:var(--color-surface); overflow-wrap:anywhere; }
+.case-rows { min-width:0; border:1px solid var(--color-border); border-radius:22px; background:var(--color-surface); overflow:hidden; }
+.case-row { display:grid; gap:12px; padding:18px 20px; overflow-wrap:anywhere; }
+.case-row + .case-row { border-top:1px solid var(--color-border); }
+.case-rows-compact .case-row { border-left:4px solid var(--color-warning); }
+@container (min-width:760px) { .case-row { grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1fr); align-items:center; } }
+@media (min-width:1100px) { .dashboard-panels { grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); } }
+.case-rows-compact .case-row { grid-template-columns:minmax(0,1fr); }

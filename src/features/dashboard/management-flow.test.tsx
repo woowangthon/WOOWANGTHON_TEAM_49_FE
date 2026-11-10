@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 
 import "@testing-library/jest-dom/vitest";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -51,13 +51,13 @@ describe("dashboard and management user flows with MSW", () => {
   it("shows only response-derived totals and attention scope on the dashboard", async () => {
     const { mount } = await setup();
     mount(<DashboardScreen />);
-    expect(await screen.findByText("테스트 근로자님, 반갑습니다")).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "내 급여, 이어서 살펴볼까요" })).toBeVisible();
     await screen.findByText("확인 필요 여부가 제공된 20건 기준");
     const heading = screen.getByRole("heading", { name: "전체 근무지" });
     expect(within(heading.parentElement!).getByText("21개")).toBeVisible();
     expect(screen.getByText("작업 완료", { exact: true })).toBeVisible();
     expect(screen.getByText(/첫 페이지에 조회된 최대 20건/)).toBeVisible();
-    expect(screen.queryByText(/검사 완료/)).not.toBeInTheDocument();
+    expect(screen.getByText(/작업 단계는 검사 완료나 결과 일치를 의미하지 않습니다/)).toBeVisible();
   });
 
   it("offers first-workplace and first-Case CTAs for empty dashboard data", async () => {
@@ -326,4 +326,27 @@ it("provides all case tasks without workflow locks and preserves workplace route
   expect(screen.getByRole("link", { name: "급여 사례 전체 목록" })).toHaveAttribute("href", "/cases");
   await screen.findByText("카페 나무", { selector: "summary" });
   expect(screen.getAllByRole("link", { hidden: true }).some(link => link.getAttribute("href") === "/workplaces/3/documents")).toBe(true);
+});
+
+it("keeps overlapping attention/recent cases and server totals distinct", async () => {
+  const { mount } = await setup();
+  mount(<DashboardScreen />);
+  await screen.findByText("확인 필요 여부가 제공된 20건 기준");
+  expect(screen.getByRole("heading", { name: "현재 검토" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "확인할 작업" })).toBeVisible();
+  const total = screen.getByRole("heading", { name: "전체 급여 사례" });
+  expect(within(total.parentElement!).getByText("21개")).toBeVisible();
+  expect(screen.getByRole("link", { name: "현재 사례 이어가기" })).toHaveAttribute("href", expect.stringMatching(/^\/cases\/\d+\//));
+  expect(screen.queryByText(/원$/)).not.toBeInTheDocument();
+});
+it("renders one case with omitted attention and step without inventing results", async () => {
+  const { mount, mocks } = await setup();
+  const item: import("@/features/cases/schemas").CaseListDto = { ...mocks.getCases()[1], caseId: 15 };
+  delete item.currentStep;
+  delete item.attentionRequired;
+  server.use(http.get(`${testApiUrl}/cases`, () => apiResponse({ items: [item], page: 1, size: 20, total: 1 })));
+  mount(<DashboardScreen />);
+  await screen.findByText("확인 필요 정보가 제공되지 않았습니다.");
+  expect(screen.getByText("정보 없음", { exact: true })).toBeVisible();
+  expect(await screen.findByRole("link", { name: "현재 사례 이어가기" })).toHaveAttribute("href", "/cases/15");
 });
