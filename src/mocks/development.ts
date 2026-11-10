@@ -1,6 +1,6 @@
+import { getResponse, http, HttpResponse } from "msw";
 import { supportMocks } from "./shared/support-handlers";
 import { chatMocks } from './shared/chat-handlers';
-import { http, HttpResponse } from "msw";
 import { getApiBaseUrl } from "@/lib/config/env";
 import { managementMocks } from "./shared/management-handlers";
 import { documentMocks } from "./shared/document-handlers";
@@ -15,18 +15,20 @@ const marker = "wageitda_mock_session";
 let latestResetToken = "";
 export function readDevelopmentResetToken() { return latestResetToken; }
 export function clearMockSession() { document.cookie = `${marker}=; Path=/; Max-Age=0; SameSite=Lax`; }
-export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
-  const management = managementMocks({ baseUrl, count: 2 });
+
+function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number) {
+  const management = managementMocks({ baseUrl, count: 2, empty: !seed, idOffset });
   const cases = management.getCases();
   cases.splice(2);
-  const docs = documentMocks(cases, baseUrl, true);
+  const docs = documentMocks(cases, baseUrl, true, idOffset);
   const documents = docs.getDocuments();
-  documents.splice(2);
-  documents[0].documentType = "PAYSLIP";
-  documents[0].fileName = "가상_급여명세서.pdf";
-  documents[1].fileName = "가상_공유자료.pdf";
+  documents.splice(seed ? 2 : 0);
+  if (!seed) docs.getLinks().splice(0);
+  if (seed) documents[0].documentType = "PAYSLIP";
+  if (seed) documents[0].fileName = "가상_급여명세서.pdf";
+  if (seed) documents[1].fileName = "가상_공유자료.pdf";
   cases.forEach(c => { c.status = "IN_PROGRESS"; c.currentStep = "REVIEW"; });
-  docs.getLinks().push({ ...docs.getLinks()[0], linkId: 778, caseId: 16 });
+  if (seed) docs.getLinks().push({ ...docs.getLinks()[0], linkId: 778, caseId: 16 });
   const review = reviewMocks(cases, documents, baseUrl, true, (c, old, next) => {
     const link = docs.getLinks().find(l => l.caseId === c && l.documentId === old);
     if (link) link.documentId = next;
@@ -35,17 +37,9 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   const inputs = inputMocks(management.getCases, baseUrl, c => docs.getLinks().filter(l=>l.caseId===c).flatMap(l=>documents.some(d=>d.documentId===l.documentId && d.documentType==="PAYSLIP")?[{documentId:l.documentId,fields:review.fields(c,l.documentId)}]:[]));
   // Seed real positive-ID snapshots through the existing synthetic publish pipeline.
   cases.forEach(c=>{inputs.getResult(c.caseId);inputs.notifyInputChange(c.caseId);inputs.setJobStatus(c.caseId,"PARTIAL");});
-  const users = new Map([[demoAccount.email, { ...demoAccount, userId: 7 }]]);
-  let activeUser = users.get(demoAccount.email)!;
-  let token = "";
-  latestResetToken = "";
-  const resets = new Map<string, { email: string; expires: number; used: boolean }>();
-  const deleted = new Set<string>();
-  let receipt = false;
   const files = new Map<number, Blob>();
   const polls = new Map<number, number>();
   const fail = (errorCode: string, status: number) => apiResponse({ errorCode }, status);
-  const issue = () => { token = `mock-only-${crypto.randomUUID()}`; return { accessToken: token, tokenType: "Bearer", expiresIn: 1800, user: { userId: activeUser.userId, email: activeUser.email, name: activeUser.name } }; };
   const sync = () => {
     const links = docs.getLinks();
     // A deleted Case removes links, preserving workplace originals.
@@ -54,59 +48,20 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     cases.forEach(c => { c.documentCount = links.filter(l => l.caseId === c.caseId).length; });
   };
   const handlers = [
-    http.post(`${baseUrl}/auth/forgot-password`, async ({ request }) => {
-      const body = await request.json() as { email?: string };
-      if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return fail("VALIDATION_ERROR", 422);
-      if (users.has(body.email) && !deleted.has(body.email)) {
-        latestResetToken = crypto.randomUUID();
-        resets.set(latestResetToken, { email: body.email, expires: Date.now() + 30 * 60_000, used: false });
-      }
-      return apiResponse({ deliveryMode: "LOCAL_OUTBOX_ONLY" }, 202);
-    }),
-    http.post(`${baseUrl}/auth/reset-password`, async ({ request }) => {
-      const body = await request.json() as { token?: string; newPassword?: string };
-      const reset = body.token && resets.get(body.token);
-      if (!reset || reset.used || reset.expires <= Date.now() || !body.newPassword || deleted.has(reset.email)) return fail("VALIDATION_ERROR", 422);
-      users.get(reset.email)!.password = body.newPassword;
-      reset.used = true;
-      token = ""; clearMockSession();
-      return new HttpResponse(null, { status: 204 });
-    }),
-    http.get(`${baseUrl}/users/me/deletion`, () => receipt ? apiResponse({}) : fail("AUTH_REQUIRED", 401)),
-    http.post(`${baseUrl}/auth/signup`, async ({ request }) => {
-      const body = await request.json() as typeof demoAccount;
-      if (!body.email || !body.password || !body.name) return fail("VALIDATION_ERROR", 422);
-      if (users.has(body.email)) return fail("EMAIL_ALREADY_EXISTS", 409);
-      users.set(body.email, { ...body, userId: users.size + 7 });
-      return apiResponse({ userId: users.get(body.email)!.userId, email: body.email, name: body.name }, 201);
-    }),
-    http.post(`${baseUrl}/auth/login`, async ({ request }) => {
-      const body = await request.json() as typeof demoAccount;
-      const user = users.get(body.email);
-      if (!user || deleted.has(user.email) || user.password !== body.password) return fail("INVALID_CREDENTIALS", 401);
-      receipt = false;
-      activeUser = user;
-      document.cookie = `${marker}=${encodeURIComponent(user.email)}; Path=/; SameSite=Lax`;
-      return apiResponse(issue());
-    }),
-    http.post(`${baseUrl}/auth/refresh`, () => {
-      const email = document.cookie.split("; ").find(v => v.startsWith(`${marker}=`))?.slice(marker.length + 1);
-      const user = email && users.get(decodeURIComponent(email));
-      if (!user || deleted.has(user.email)) return fail("AUTH_REQUIRED", 401);
-      activeUser = user;
-      return apiResponse(issue());
-    }),
-    http.post(`${baseUrl}/auth/logout`, () => { token = ""; clearMockSession(); return new HttpResponse(null, { status: 204 }); }),
     // Guard every supported resource before resolving shared handlers. Never bypass an API request.
     http.all(`${baseUrl}/*`, async ({ request }) => {
-      if (!token || request.headers.get("Authorization") !== `Bearer ${token}`) return fail("AUTH_REQUIRED", 401);
-      // Shared synthetic stores belong to the seed user. Other users cannot mutate or read them.
-      if (activeUser.userId !== 7 && !new URL(request.url).pathname.endsWith("/users/me")) return fail("RESOURCE_NOT_FOUND", 404);
       sync();
       const path = new URL(request.url).pathname;
       const c = path.match(/\/cases\/(\d+)/)?.[1];
       const w = path.match(/\/workplaces\/(\d+)/)?.[1];
       const d = path.match(/\/documents\/(\d+)/)?.[1];
+      if (request.headers.get("Content-Type")?.includes("application/json") && request.method !== "GET") {
+        const body = await request.clone().json().catch(() => ({})) as Record<string, unknown>;
+        if (typeof body.documentId === "number" && !documents.some(v => v.documentId === body.documentId)) return fail("RESOURCE_NOT_FOUND", 404);
+        if (typeof body.workplaceId === "number" && !management.getWorkplace(body.workplaceId)) return fail("RESOURCE_NOT_FOUND", 404);
+      }
+      const linkId = path.match(/\/document-links\/(\d+)/)?.[1];
+      if (linkId && !docs.getLinks().some(l => l.linkId === Number(linkId) && l.caseId === Number(c))) return fail("RESOURCE_NOT_FOUND", 404);
       const candidate = [...review.replacements.values()].find(r => r.documentId === Number(d));
       if (candidate && !documents.some(v => v.documentId === Number(d))) {
         const original = documents.find(v => v.documentId === candidate.oldDocumentId)!;
@@ -128,16 +83,9 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
         if (file.size > 20 * 1024 * 1024) return fail("FILE_TOO_LARGE", 413);
         if (!["application/pdf", "image/png", "image/jpeg"].includes(file.type)) return fail("UNSUPPORTED_FILE_TYPE", 415);
         // Uploads return the actual local file in the viewer; OCR fields remain synthetic.
-        const nextId = path.endsWith("/replace") ? 901 + review.replacements.size : Math.max(100, ...documents.map(d => d.documentId)) + 1;
+        const nextId = path.endsWith("/replace") ? 901 + review.replacements.size : Math.max(100 + idOffset, ...documents.map(d => d.documentId)) + 1;
         files.set(nextId, file);
       }
-    }),
-    http.get(`${baseUrl}/users/me`, () => apiResponse({ userId: activeUser.userId, email: activeUser.email, name: activeUser.name })),
-    http.delete(`${baseUrl}/users/me`, async ({ request }) => {
-      const body = await request.json() as { confirmation?: string };
-      if (body.confirmation !== "DELETE_ACCOUNT") return fail("VALIDATION_ERROR", 422);
-      deleted.add(activeUser.email); receipt = true; token = ""; clearMockSession();
-      return apiResponse({}, 202);
     }),
     http.get(`${baseUrl}/cases/:c/documents`, ({ request, params }) => {
       const caseId = Number(params.c);
@@ -167,7 +115,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       });
       const resultRefs=Object.entries(result.versions).flatMap(([type,v])=>v?.snapshotId&&v.version?[{caseId,type,snapshotId:v.snapshotId,version:v.version}]:[]);
       return {sources,resultRefs,inputVersion:result.currentInputVersion};
-    }).handlers, ...supportMocks(baseUrl, c=>activeUser.userId===7?inputs.getResult(c):undefined, c=>docs.getLinks().filter(l=>l.caseId===c && documents.some(d=>d.documentId===l.documentId)).map(l=>l.documentId), async(c,id)=>{
+    }).handlers, ...supportMocks(baseUrl, c=>inputs.getResult(c), c=>docs.getLinks().filter(l=>l.caseId===c && documents.some(d=>d.documentId===l.documentId)).map(l=>l.documentId), async(c,id)=>{
       const owner=cases.find(v=>v.caseId===c),doc=documents.find(d=>d.documentId===id);
       if(!owner||!doc||doc.workplaceId!==owner.workplaceId)return;
       return {documentId:id,name:doc.fileName,bytes:files.has(id)?new Uint8Array(await files.get(id)!.arrayBuffer()):samplePdf()};
@@ -179,4 +127,76 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   ];
   sync();
   return { handlers, management, docs, review, inputs };
+}
+export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
+  const seed = createBusinessScenario(baseUrl, true, 0);
+  const stores = new Map([[7, seed]]);
+  const users = new Map([[demoAccount.email, { ...demoAccount, userId: 7 }]]);
+  let activeUser = users.get(demoAccount.email)!;
+  let token = "";
+  latestResetToken = "";
+  const resets = new Map<string, { email: string; expires: number; used: boolean }>();
+  const deleted = new Set<string>();
+  let receipt = false;
+  const fail = (errorCode: string, status: number) => apiResponse({ errorCode }, status);
+  const issue = () => { token = `mock-only-${crypto.randomUUID()}`; return { accessToken: token, tokenType: "Bearer", expiresIn: 1800, user: { userId: activeUser.userId, email: activeUser.email, name: activeUser.name } }; };
+  const handlers = [
+    http.post(`${baseUrl}/auth/forgot-password`, async ({ request }) => {
+      const body = await request.json() as { email?: string };
+      if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return fail("VALIDATION_ERROR", 422);
+      if (users.has(body.email) && !deleted.has(body.email)) {
+        latestResetToken = crypto.randomUUID();
+        resets.set(latestResetToken, { email: body.email, expires: Date.now() + 30 * 60_000, used: false });
+      }
+      return apiResponse({ deliveryMode: "LOCAL_OUTBOX_ONLY" }, 202);
+    }),
+    http.post(`${baseUrl}/auth/reset-password`, async ({ request }) => {
+      const body = await request.json() as { token?: string; newPassword?: string };
+      const reset = body.token && resets.get(body.token);
+      if (!reset || reset.used || reset.expires <= Date.now() || !body.newPassword || deleted.has(reset.email)) return fail("VALIDATION_ERROR", 422);
+      users.get(reset.email)!.password = body.newPassword;
+      reset.used = true;
+      token = ""; clearMockSession();
+      return new HttpResponse(null, { status: 204 });
+    }),
+    // P4 conditional receipt fixture. No artificial physical purge completion.
+    http.get(`${baseUrl}/users/me/deletion`, () => receipt ? apiResponse({ status: "LEGAL_HOLD", normalStoragePurgeDueAt: null }) : fail("AUTH_REQUIRED", 401)),
+    http.post(`${baseUrl}/auth/signup`, async ({ request }) => {
+      const body = await request.json() as typeof demoAccount;
+      if (!body.email || !body.password || !body.name) return fail("VALIDATION_ERROR", 422);
+      if (users.has(body.email)) return fail("EMAIL_ALREADY_EXISTS", 409);
+      users.set(body.email, { ...body, userId: users.size + 7 });
+      stores.set(users.get(body.email)!.userId, createBusinessScenario(baseUrl, false, users.get(body.email)!.userId * 100000));
+      return apiResponse({ userId: users.get(body.email)!.userId, email: body.email, name: body.name }, 201);
+    }),
+    http.post(`${baseUrl}/auth/login`, async ({ request }) => {
+      const body = await request.json() as typeof demoAccount;
+      const user = users.get(body.email);
+      if (!user || deleted.has(user.email) || user.password !== body.password) return fail("INVALID_CREDENTIALS", 401);
+      receipt = false;
+      activeUser = user;
+      document.cookie = `${marker}=${encodeURIComponent(user.email)}; Path=/; SameSite=Lax`;
+      return apiResponse(issue());
+    }),
+    http.post(`${baseUrl}/auth/refresh`, () => {
+      const email = document.cookie.split("; ").find(v => v.startsWith(`${marker}=`))?.slice(marker.length + 1);
+      const user = email && users.get(decodeURIComponent(email));
+      if (!user || deleted.has(user.email)) return fail("AUTH_REQUIRED", 401);
+      activeUser = user;
+      return apiResponse(issue());
+    }),
+    http.post(`${baseUrl}/auth/logout`, () => { token = ""; clearMockSession(); return new HttpResponse(null, { status: 204 }); }),
+    http.all(`${baseUrl}/*`, ({ request }) => {
+      if (!token || request.headers.get("Authorization") !== `Bearer ${token}`) return fail("AUTH_REQUIRED", 401);
+    }),
+    http.get(`${baseUrl}/users/me`, () => apiResponse({ userId: activeUser.userId, email: activeUser.email, name: activeUser.name })),
+    http.delete(`${baseUrl}/users/me`, async ({ request }) => {
+      const body = await request.json() as { confirmation?: string };
+      if (body.confirmation !== "DELETE_ACCOUNT") return fail("VALIDATION_ERROR", 422);
+      deleted.add(activeUser.email); receipt = true; token = ""; clearMockSession();
+      return apiResponse({}, 202);
+    }),
+    http.all(`${baseUrl}/*`, ({ request }) => getResponse(stores.get(activeUser.userId)!.handlers, request)),
+  ];
+  return { ...seed, handlers };
 }

@@ -2,7 +2,7 @@ import { http, HttpResponse } from "msw";
 import type { DocumentDto } from "@/features/documents/schemas";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 import { apiResponse } from "./response";
-export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0.0.1:8000/api/v1", development = false) {
+export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0.0.1:8000/api/v1", development = false, idOffset = 0) {
   const documents: DocumentDto[] = Array.from({length: 21}, (_, i) => ({ documentId: 101 + i, workplaceId: 3, workplaceName: "카페 나무", documentType: i === 0 ? "CONTRACT" : "PAYSLIP", fileName: i === 0 ? "근로계약서.pdf" : `급여명세서-${i}.pdf`, processingStatus: "READY", reviewStatus: "NOT_STARTED", progress: null, linkedCaseIds: i === 0 ? [15, 16] : [], uploadedAt: "2026-11-09T00:00:00+00:00" }));
   let links = [{ linkId: 777, caseId: 15, documentId: 101, purpose: "CONTRACT_FOR_PERIOD", applicableFrom: "2026-10-03", applicableTo: "2026-11-02", overrideCount: 0 }];
   const requests: {method: string; path: string; body?: Record<string, unknown>}[] = [];
@@ -15,7 +15,7 @@ export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0
   const error = (errorCode: string, status = 409) => apiResponse({errorCode}, status);
   const upload = async (request: Request, caseId?: number) => {
     const form = await request.formData(); record(request, { documentType: form.get("documentType"), fileName: (form.get("file") as File)?.name });
-    const documentId = Math.max(100, ...documents.map(d => d.documentId)) + 1;
+    const documentId = Math.max(100 + idOffset, ...documents.map(d => d.documentId)) + 1;
     const dto: DocumentDto = {documentId, workplaceId: development ? (caseId ? current(caseId).workplaceId : Number(new URL(request.url).pathname.split("/").at(-2))) : 3, documentType: form.get("documentType") as DocumentDto["documentType"], fileName: (form.get("file") as File).name, processingStatus: "UPLOADED", reviewStatus: "NOT_STARTED", progress: 10, linkedCaseIds: caseId ? [caseId] : []};
     documents.push(dto);
     if (caseId) { links.push({linkId: documentId + 700, caseId, documentId, purpose: "CONTRACT_FOR_PERIOD", applicableFrom: current(caseId).periodStart, applicableTo: current(caseId).periodEnd, overrideCount: 0}); bump(caseId); }

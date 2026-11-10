@@ -44,7 +44,7 @@ describe("account lifecycle on isolated MSW", () => {
   it("isolates new accounts from seed business data", async () => {
     const user = { email: "new@example.com", password: "new", name: "New" };
     await app.authApi.signup(user); await app.auth.login(user);
-    await expect(app.api.requestJson("/cases", v => v)).rejects.toMatchObject({ status: 404 });
+    await expect(app.api.requestJson("/cases", v => v)).resolves.toMatchObject({ items: [], total: 0 });
     await expect(app.authApi.getMe()).resolves.toMatchObject({ email: user.email });
   });
 });

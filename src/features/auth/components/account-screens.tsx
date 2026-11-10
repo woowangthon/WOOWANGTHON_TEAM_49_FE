@@ -15,6 +15,7 @@ import { ApiError } from "@/lib/api/error";
 import { mockEnabled } from "@/lib/config/mock";
 import { useCurrentUser } from "../hooks/use-auth";
 import { loginRequestSchema } from "../schemas";
+import { deletionDescription, deletionPollInterval } from "../deletion";
 
 function errorText(error: unknown) {
   if (error instanceof ApiError) {
@@ -105,10 +106,11 @@ export function SettingsScreen() {
 export function DeletionStatusScreen() {
   const { authApi } = useAppServices();
   const generation = useSessionGeneration();
-  const status = useQuery({ queryKey: ["account-deletion", generation], queryFn: ({ signal }) => authApi.deletionStatus(signal), retry: false });
+  const status = useQuery({ queryKey: ["account-deletion", generation], queryFn: ({ signal }) => authApi.deletionStatus(signal), retry: false,
+    refetchOnWindowFocus: false, refetchInterval: query => deletionPollInterval(query.state.data, query.state.error) });
   return <section className={cardStyle}><h1 className="text-2xl font-bold">계정 삭제 상태 확인</h1>
     <p className="my-4">탈퇴 접수와 데이터 삭제 완료는 다릅니다.</p>
-    {status.isPending ? <p role="status">영수증 쿠키로 조회 중…</p> : status.isError ? <p role="alert">{errorText(status.error)} 영수증이 없거나 만료되었을 수 있습니다.</p> : <p role="status">상태 조회 응답을 받았습니다. 상세 응답 계약이 확인되지 않아 진행 단계·파기 구현 여부·예정일·완료 여부를 표시할 수 없습니다.</p>}
-    <button className={primaryButton + " my-4"} disabled={status.isFetching} onClick={() => void status.refetch()}>상태 다시 확인</button><p>상태 enum과 종료 조건 확인 전에는 자동 반복 조회하지 않습니다. 서버 데이터의 완전 삭제를 보증하지 않습니다.</p><Link className="inline-flex min-h-11 items-center underline" href="/login">로그인 화면</Link>
+    {status.isPending ? <p role="status">영수증 쿠키로 조회 중…</p> : status.isError ? <p role="alert">{errorText(status.error)} 영수증이 없거나 만료되었을 수 있습니다. 자동 조회를 중단했습니다.</p> : <><p role="status">{deletionDescription(status.data)}</p><dl><dt>일반 저장소 파기 예정일</dt><dd>{status.data.normalStoragePurgeDueAt ?? "미정 또는 미제공"}</dd></dl><p>자동 물리 파기 구현 여부는 현재 응답 계약으로 확인할 수 없습니다.</p></>}
+    <button className={primaryButton + " my-4"} disabled={status.isFetching} onClick={() => void status.refetch()}>상태 다시 확인</button><p>파기 대기 상태만 자동 조회하며, 완료·보존 보류·오류·알 수 없는 상태에서는 중단합니다.</p><Link className="inline-flex min-h-11 items-center underline" href="/login">로그인 화면</Link>
   </section>;
 }

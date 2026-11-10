@@ -6,7 +6,7 @@ import type { WorkplaceDto } from "@/features/workplaces/schemas";
 import { apiResponse } from "./response";
 
 /** Stateful test fixtures only. No production module imports these handlers. */
-export function managementMocks({ empty = false, count = 21, baseUrl: testApiUrl = "http://127.0.0.1:8000/api/v1" } = {}) {
+export function managementMocks({ empty = false, count = 21, idOffset = 0, baseUrl: testApiUrl = "http://127.0.0.1:8000/api/v1" } = {}) {
   let workplaces: WorkplaceDto[] = empty ? [] : Array.from({ length: count }, (_, index) => ({
     workplaceId: index + 3, name: index === 0 ? "카페 나무" : `근무지 ${index + 3}`,
     industry: index === 0 ? "음식점" : null, region: index === 0 ? "청주시" : null,
@@ -46,7 +46,7 @@ export function managementMocks({ empty = false, count = 21, baseUrl: testApiUrl
     }),
     http.post(`${testApiUrl}/workplaces`, async ({ request }) => {
       const body = await record(request);
-      const workplaceId = Math.max(2, ...workplaces.map((row) => row.workplaceId)) + 1;
+      const workplaceId = Math.max(2 + idOffset, ...workplaces.map((row) => row.workplaceId)) + 1;
       workplaces.push({ workplaceId, name: body.name as string, industry: body.industry as string | null, region: body.region as string | null, employmentStatus: body.employmentStatus as "CURRENT" | "FORMER", caseCount: 0 });
       return apiResponse({ workplaceId }, 201);
     }),
@@ -75,7 +75,7 @@ export function managementMocks({ empty = false, count = 21, baseUrl: testApiUrl
       const body = await record(request);
       const owner = workplace(body.workplaceId as number);
       if (!owner) return missing();
-      const caseId = Math.max(14, ...cases.map((row) => row.caseId)) + 1;
+      const caseId = Math.max(14 + idOffset, ...cases.map((row) => row.caseId)) + 1;
       cases.push({ caseId, workplaceId: owner.workplaceId, workplace: owner, payType: body.payType as "HOURLY" | "MONTHLY", periodStart: body.periodStart as string, periodEnd: body.periodEnd as string, scheduledPayDate: body.scheduledPayDate as string | null, status: "CREATED", currentStep: "UPLOAD", documentCount: 0, inputVersion: 1, attentionRequired: false, attentionCount: 0, updatedAt: "2026-11-09T00:00:00+00:00" });
       return apiResponse({ caseId, status: "CREATED", inputVersion: 1, recompute: { scheduled: true, jobId: "job-msw", affectedChecks: [] } }, 201);
     }),

@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { AppServicesContext } from "@/hooks/use-app-services";
 import { createAppServices } from "@/lib/app-services";
 import { apiResponse, server, testApiUrl } from "@/test/server";
@@ -43,4 +43,21 @@ describe("account recovery UI", () => {
   let calls=0;server.use(http.get(testApiUrl+'/users/me/deletion',({request})=>{calls++;expect(request.headers.has('Authorization')).toBe(false);return apiResponse({})}));
   mount(false,true);await screen.findByRole('status');await waitFor(()=>expect(screen.getByRole('button')).not.toBeDisabled());expect(calls).toBe(1);
  });
+});
+
+describe('receipt polling lifecycle',()=>{
+ it('polls pending then stops after terminal state',async()=>{
+  let calls=0;server.use(http.get(testApiUrl+'/users/me/deletion',()=>apiResponse({status:++calls===1?'PENDING_PURGE':'PURGED',normalStoragePurgeDueAt:null})));
+  mount(false,true);await waitFor(()=>expect(calls).toBe(2),{timeout:6500});await new Promise(r=>setTimeout(r,5200));expect(calls).toBe(2);
+ },14000);
+ it('does not refresh or poll a receipt 401',async()=>{
+  let refresh=0,calls=0;server.use(http.post(testApiUrl+'/auth/refresh',()=>{refresh++;return apiResponse({},401)}),http.get(testApiUrl+'/users/me/deletion',()=>{calls++;return apiResponse({},401)}));mount(false,true);await screen.findByRole('alert');expect(calls).toBe(1);expect(refresh).toBe(0);
+ });
+ it('unmount removes the polling observer',async()=>{
+  let calls=0;server.use(http.get(testApiUrl+'/users/me/deletion',()=>{calls++;return apiResponse({status:'PENDING_PURGE'})}));mount(false,true);await waitFor(()=>expect(calls).toBe(1));cleanup();await new Promise(r=>setTimeout(r,5200));expect(calls).toBe(1);
+ },8000);
+});
+
+it('aborts a receipt request when its screen unmounts',async()=>{
+ let signal:AbortSignal|undefined;server.use(http.get(testApiUrl+'/users/me/deletion',async({request})=>{signal=request.signal;await delay(200);return apiResponse({})}));mount(false,true);await waitFor(()=>expect(signal).toBeDefined());cleanup();await waitFor(()=>expect(signal?.aborted).toBe(true));
 });

@@ -4,6 +4,7 @@ import { protocolError } from "@/lib/api/response";
 
 import { loginResponseSchema, userSchema } from "../schemas";
 import type { LoginRequest, SignupRequest } from "../types";
+import { deletionSchema } from "../deletion";
 
 function decode<T>(schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false } }) {
   return (value: unknown): T => {
@@ -25,7 +26,7 @@ export function createAuthApi(api: ApiClient, baseUrl: string) {
     resetPassword: (token: string, newPassword: string) => api.requestNoContent("/auth/reset-password", { method: "POST", body: { token, newPassword }, auth: "none" }),
     deleteAccount: () => api.requestAccepted("/users/me", { method: "DELETE", body: { confirmation: "DELETE_ACCOUNT" }, refresh: false }),
     // Receipt cookie only. Never refresh or send a Bearer credential here.
-    deletionStatus: (signal?: AbortSignal) => api.requestJson("/users/me/deletion", () => ({ received: true }), { auth: "none", refresh: false, expectedStatus: 200, signal }),
+    deletionStatus: (signal?: AbortSignal) => api.requestJson("/users/me/deletion", decode(deletionSchema), { auth: "none", refresh: false, expectedStatus: 200, signal }),
     getMe: (signal?: AbortSignal) => api.requestJson("/users/me", decode(userSchema), { signal }),
     async logout(accessToken: string | null) {
       // Main session is revoked immediately. Keep only this bounded logout request alive.
