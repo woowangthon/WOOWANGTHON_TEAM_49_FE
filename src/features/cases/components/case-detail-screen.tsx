@@ -43,7 +43,8 @@ export function CaseDetailScreen({ id }: { id: number }) {
       {saved && <p role="status" className="rounded-control bg-success-soft p-4 text-body">사례 정보를 저장했습니다.</p>}
       <nav aria-label="수기 자료와 계산 조건" className="flex flex-wrap gap-3"><Link href={`/cases/${id}/manual-records`} className={secondaryButton}>수기 자료 입력·관리</Link><Link href={`/cases/${id}/conditions`} className={secondaryButton}>계산 조건·실행 가능성</Link><Link href={`/cases/${id}/result`} className={secondaryButton}>통합 결과</Link><Link href={`/cases/${id}/compare`} className={secondaryButton}>대조·합계 검사</Link></nav>
       {<section className={cardStyle} aria-label="급여 사례 관리">{editing ? <CaseForm initial={dto} onSaved={() => { setEditing(false); setSaved(true); }} onCancel={() => setEditing(false)} /> : <div className="flex flex-wrap gap-3"><Link href={`/cases/${id}/upload`} className={primaryButton}>자료 등록·관리</Link><Link href={`/cases/${id}/review`} className={secondaryButton}>원문·추출값 검토</Link><button type="button" className={secondaryButton} onClick={() => { setEditing(true); setSaved(false); }}>사례 수정</button><DeleteCase id={id} /></div>}</section>}
-      <details className={cardStyle}><summary className="font-bold">지급 거래·사례 배분 관리</summary><p className="my-4 text-body text-muted">근무지 원거래와 이 사례에 배분한 금액을 구분해 관리합니다. 접어도 입력 중인 값은 유지됩니다.</p><PaymentScreen workplaceId={dto.workplaceId} caseId={id} inputVersion={dto.inputVersion}/><DepositComparisonPanel caseId={id}/></details>
+      <DepositComparisonPanel caseId={id}/>
+      <details id="payments" className={cardStyle}><summary className="font-bold">지급 거래·사례 배분 관리</summary><p className="my-4 text-body text-muted">근무지 원거래와 이 사례에 배분한 금액을 구분해 관리합니다. 접어도 입력 중인 값은 유지됩니다.</p><PaymentScreen workplaceId={dto.workplaceId} caseId={id} inputVersion={dto.inputVersion}/></details>
     </div>
   );
 }
