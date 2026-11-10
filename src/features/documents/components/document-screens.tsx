@@ -44,6 +44,7 @@ function CaseDocuments({ id, workplaceId, workplaceName, inputVersion }: { id: n
     <PageHeading title={`${workplaceName} 자료 등록`} description="파일을 새로 올리거나 같은 근무지의 기존 원본을 연결하세요." action={<Link href={`/cases/${id}`} className={secondaryButton}>사례 상세</Link>} />
     <div className="flex flex-wrap gap-3"><Link className={secondaryButton} href={`/workplaces/${workplaceId}/documents`}>근무지 공유 자료함</Link><Link className={secondaryButton} href="/library">전체 자료함</Link></div>
     <Link href={`/cases/${id}/review`} className={secondaryButton}>원문·추출값 검토</Link>
+    <div className="flex flex-wrap gap-3"><Link href={`/cases/${id}/manual-records`} className={secondaryButton}>수기 자료 입력·관리</Link><Link href={`/cases/${id}/conditions`} className={secondaryButton}>계산 조건·실행 가능성</Link></div>
     <DocumentNotice /><RecomputeNotice id={id} />
     {docs.data && docs.data.total >= 20 && <p role="alert" className={cardStyle}>사례에는 문서를 최대 20개 연결할 수 있습니다. 기존 연결을 해제한 뒤 등록해 주세요.</p>}
     <UploadForm context={{ kind: "case", id }} disabled={!canAdd} />

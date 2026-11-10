@@ -9,4 +9,8 @@ export const documentKeys = {
   status: (g: number, context: DocumentContext, id: number) => [...documentKeys.root(g), "status", context, id] as const,
   impact: (g: number, workplaceId: number, id: number) => [...documentKeys.root(g), "impact", workplaceId, id] as const,
   recompute: (g: number, caseId: number) => [...businessKeys.case(g, caseId), "recompute-status"] as const,
+  recomputeHint: (g: number, caseId: number) => [...businessKeys.case(g, caseId), "recompute-receipt"] as const,
 };
+
+// Client bookkeeping for a server mutation receipt, never fabricated job/freshness state.
+export interface RecomputeReceipt { jobId: string; receivedAt: number }

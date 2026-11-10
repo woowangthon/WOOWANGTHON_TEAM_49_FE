@@ -1,0 +1,110 @@
+import { http, HttpResponse } from "msw";
+import type { CaseDetailDto } from "@/features/cases/schemas";
+import { conditionsPutSchema, manualInputSchema, checkTypes, type Condition, type ManualRecord, type RecordType } from "@/features/case-inputs/schemas";
+import { manualDefaults, manualFormSchema } from "@/features/case-inputs/manual-fields";
+import { apiResponse } from "./response";
+
+/** Synthetic readiness policy for development/tests only; never an official wage engine. */
+export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://127.0.0.1:8000/api/v1") {
+  const states = new WeakMap<CaseDetailDto, ReturnType<typeof initialState>>();
+  let nextRecord = 1, nextTransaction = 1, nextJob = 1;
+  const requests: { method: string; path: string; body?: unknown }[] = [];
+  const definitions: Pick<Condition, "conditionId" | "question" | "type" | "options" | "requiredFor">[] = [
+    { conditionId: "workplace_size", question: "상시 근로자 수를 알고 있나요?", type: "SELECT", options: ["LESS_THAN_5", "AT_LEAST_5", "UNKNOWN"], requiredFor: ["WAGE_CALCULATION"] },
+    { conditionId: "regular_minutes", question: "이 기간의 소정근로시간은 몇 분인가요?", type: "NUMBER", requiredFor: ["WAGE_CALCULATION"] },
+    { conditionId: "base_scope_confirmed", question: "임금의 기본 적용 범위를 확인했나요?", type: "BOOLEAN", requiredFor: ["WAGE_CALCULATION"] },
+    { conditionId: "comparison_basis_confirmed", question: "시급의 기간과 의미가 일치하나요?", type: "BOOLEAN", requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
+    { conditionId: "hours_basis_confirmed", question: "실근로시간의 기간과 의미가 일치하나요?", type: "BOOLEAN", requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
+    { conditionId: "base_pay_basis_confirmed", question: "기본급의 기간과 의미가 일치하나요?", type: "BOOLEAN", requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
+  ];
+  function initialState(c: CaseDetailDto) {
+    return { records: [] as ManualRecord[], transactions: [] as { transactionId: number; allocationId: number; data: ManualRecord["data"] }[], conditions: definitions.map(d => ({ ...d, value: null, status: "REQUIRED", source: null } as Condition)), observedVersion: c.inputVersion, job: null as null | { jobId: string; status: string; requestedInputVersion: number; errorCode: string | null }, polls: 0, resultVersion: 0 };
+  }
+  function state(c: CaseDetailDto) { if (!states.has(c)) states.set(c, initialState(c)); return states.get(c)!; }
+  getCases().forEach(c => state(c));
+  const current = (id: unknown) => getCases().find(c => c.caseId === Number(id));
+  const missing = () => apiResponse({ errorCode: "RESOURCE_NOT_FOUND" }, 404);
+  const error = (code: string, status: number) => apiResponse({ errorCode: code }, status);
+  function schedule(c: CaseDetailDto, increment = true) {
+    const s = state(c); if (increment) c.inputVersion++;
+    s.observedVersion = c.inputVersion; s.polls = 0;
+    s.job = { jobId: `input-job-${nextJob++}`, requestedInputVersion: c.inputVersion, status: "PENDING", errorCode: null };
+    return { inputVersion: c.inputVersion, recompute: { scheduled: true, jobId: s.job.jobId, affectedChecks: [...checkTypes] } };
+  }
+  const parseManual = async (request: Request, c: CaseDetailDto, recordId?: number) => {
+    const body = await request.json() as { recordType: RecordType; data: ManualRecord["data"]; source: string };
+    requests.push({ method: request.method, path: new URL(request.url).pathname, body });
+    const payload = manualInputSchema.safeParse(body);
+    if (!payload.success) return apiResponse({ errorCode: "VALIDATION_ERROR", errors: payload.error.issues.map(i => ({ field: i.path.join("."), reason: i.message })) }, 422);
+    if (!body.data || !["CONTRACT", "ATTENDANCE", "PAYSLIP", "DEPOSIT"].includes(body.recordType) || body.source !== "USER_INPUT") return error("VALIDATION_ERROR", 422);
+    const s = state(c); const old = s.records.find(r => r.recordId === recordId);
+    if (recordId && !old) return missing();
+    if (old && old.recordType !== body.recordType) return error("VALIDATION_ERROR", 422);
+    const fields = manualFormSchema(body.recordType, c.periodStart, c.periodEnd).safeParse(manualDefaults(body.recordType, body.data));
+    if (!fields.success) return apiResponse({ errorCode: "VALIDATION_ERROR", errors: fields.error.issues.map(i => ({ field: `data.${String(i.path.at(-1))}`, reason: i.message })) }, 422);
+    if (body.recordType === "DEPOSIT") {
+      const transaction = { transactionId: nextTransaction++, allocationId: nextTransaction++, data: structuredClone(body.data) }; s.transactions.push(transaction);
+      return apiResponse({ recordId: null, canonicalResource: "PAYMENT_TRANSACTION", transactionId: transaction.transactionId, allocationId: transaction.allocationId, ...schedule(c) }, 201);
+    }
+    const now = new Date().toISOString();
+    const record: ManualRecord = { recordId: old?.recordId ?? nextRecord++, caseId: c.caseId, recordType: body.recordType, data: structuredClone(body.data), source: "USER_INPUT", createdAt: old?.createdAt ?? now, updatedAt: now };
+    if (old) Object.assign(old, record); else s.records.push(record);
+    return apiResponse({ ...record, ...schedule(c) }, old ? 200 : 201);
+  };
+  const handlers = [
+    http.get(`${baseUrl}/cases/:c/manual-records`, ({ request, params }) => {
+      const c = current(params.c); if (!c) return missing();
+      const q = new URL(request.url).searchParams; const page = Math.max(1, Number(q.get("page") ?? 1)), size = Math.min(100, Math.max(1, Number(q.get("size") ?? 20)));
+      const records = state(c).records;
+      return apiResponse({ items: records.slice((page - 1) * size, page * size), page, size, total: records.length });
+    }),
+    http.post(`${baseUrl}/cases/:c/manual-records`, ({ request, params }) => { const c = current(params.c); return c ? parseManual(request, c) : missing(); }),
+    http.get(`${baseUrl}/cases/:c/manual-records/:r`, ({ params }) => {
+      const c = current(params.c); const r = c && state(c).records.find(r => r.recordId === Number(params.r)); return r ? apiResponse(r) : missing();
+    }),
+    http.patch(`${baseUrl}/cases/:c/manual-records/:r`, ({ request, params }) => { const c = current(params.c); return c ? parseManual(request, c, Number(params.r)) : missing(); }),
+    http.delete(`${baseUrl}/cases/:c/manual-records/:r`, ({ params, request }) => {
+      const c = current(params.c); if (!c) return missing(); const s = state(c); const index = s.records.findIndex(r => r.recordId === Number(params.r)); if (index < 0) return missing();
+      requests.push({ method: request.method, path: new URL(request.url).pathname }); s.records.splice(index, 1); schedule(c); return new HttpResponse(null, { status: 204 });
+    }),
+    http.get(`${baseUrl}/cases/:c/conditions`, ({ params }) => { const c = current(params.c); return c ? apiResponse({ conditions: state(c).conditions, inputVersion: c.inputVersion }) : missing(); }),
+    http.put(`${baseUrl}/cases/:c/conditions`, async ({ request, params }) => {
+      const c = current(params.c); if (!c) return missing(); const body = await request.json(); requests.push({ method: request.method, path: new URL(request.url).pathname, body });
+      const parsed = conditionsPutSchema.safeParse(body); if (!parsed.success) return apiResponse({ errorCode: "VALIDATION_ERROR", errors: parsed.error.issues.map(i => ({ field: i.path.join("."), reason: i.message })) }, 422);
+      if (parsed.data.expectedInputVersion !== c.inputVersion) return apiResponse({ errorCode: "INPUT_VERSION_CONFLICT", details: { currentInputVersion: c.inputVersion, expectedInputVersion: parsed.data.expectedInputVersion } }, 409);
+      const s = state(c); parsed.data.answers.forEach(a => { const condition = s.conditions.find(v => v.conditionId === a.conditionId)!; condition.value = a.value; condition.status = a.value === "UNKNOWN" ? "UNKNOWN" : "ANSWERED"; });
+      return apiResponse(schedule(c));
+    }),
+    http.get(`${baseUrl}/cases/:c/readiness`, ({ params }) => {
+      const c = current(params.c); if (!c) return missing(); const s = state(c);
+      const contract = s.records.find(r => r.recordType === "CONTRACT"); const attendance = s.records.some(r => r.recordType === "ATTENDANCE"); const payslip = s.records.find(r => r.recordType === "PAYSLIP");
+      const answer = (id: string) => s.conditions.find(v => v.conditionId === id)?.value;
+      const contractWage = !!contract && (typeof contract.data.hourlyWage === "number" || typeof contract.data.monthlyBasePay === "number");
+      const wage = contractWage && typeof answer("regular_minutes") === "number";
+      const comparison = contractWage && attendance && ["comparison_basis_confirmed", "hours_basis_confirmed", "base_pay_basis_confirmed"].every(id => answer(id) === true);
+      const fullPayslip = !!payslip && ["grossPay", "totalDeductions", "netPay"].every(k => typeof payslip.data[k] === "number") && Array.isArray(payslip.data.paymentItems) && Array.isArray(payslip.data.deductionItems);
+      const partialPayslip = !!payslip && ["grossPay", "totalDeductions", "netPay", "paymentItems", "deductionItems"].some(k => typeof payslip.data[k] === "number" || Array.isArray(payslip.data[k]));
+      const deposit = !!payslip && typeof payslip.data.netPay === "number" && s.transactions.length > 0;
+      const checks = [
+        { checkType: checkTypes[0], available: !!wage, mode: wage ? "PARTIAL" : "NONE", missingInputs: wage ? ["verified_statutory_rules"] : ["contract_wage", "regular_minutes"], reasonCode: wage ? "PARTIAL_INPUTS" : "MISSING_REQUIRED_INPUT" },
+        { checkType: checkTypes[1], available: comparison, mode: comparison ? "FULL" : "NONE", missingInputs: comparison ? [] : ["contract", "attendance", "comparison_basis_confirmation"] },
+        { checkType: checkTypes[2], available: partialPayslip, mode: fullPayslip ? "FULL" : partialPayslip ? "PARTIAL" : "NONE", missingInputs: fullPayslip ? [] : ["confirmed_payslip_totals_and_items"] },
+        { checkType: checkTypes[3], available: deposit, mode: deposit ? "FULL" : "NONE", missingInputs: deposit ? [] : ["payslip_net_pay", "allocated_payment"] },
+      ];
+      return apiResponse({ caseId: c.caseId, inputVersion: c.inputVersion, checks });
+    }),
+    http.get(`${baseUrl}/cases/:c/recompute-status`, ({ params }) => {
+      const c = current(params.c); if (!c) return missing(); const s = state(c);
+      if (s.observedVersion !== c.inputVersion) schedule(c, false);
+      if (s.job && ["PENDING", "RUNNING"].includes(s.job.status)) {
+        s.job.status = s.polls === 0 ? "PENDING" : s.polls === 1 ? "RUNNING" : "PARTIAL";
+        if (s.job.status === "PARTIAL") s.resultVersion++; s.polls++;
+      }
+      const active = s.job && ["PENDING", "RUNNING"].includes(s.job.status);
+      const freshness = s.job?.status === "FAILED" ? "FAILED" : s.job?.status === "PENDING" ? "STALE" : active ? "UPDATING" : "CURRENT";
+      return apiResponse({ caseId: c.caseId, currentInputVersion: c.inputVersion, pending: s.job?.status === "PENDING" ? 1 : 0, running: s.job?.status === "RUNNING" ? 1 : 0, activeJob: active ? s.job : null, latestJob: s.job,
+        results: Object.fromEntries(["calculation", "comparison", "payslipValidation", "depositComparison"].map(key => [key, { snapshotId: s.resultVersion || null, version: s.resultVersion || null, inputVersion: c.inputVersion, freshness }])) });
+    }),
+  ];
+  return { handlers, requests, state, setJobStatus(c: number, status: string) { const owner = current(c); if (!owner) return; const s = state(owner); if (!s.job) schedule(owner, false); s.job!.status = status; } };
+}

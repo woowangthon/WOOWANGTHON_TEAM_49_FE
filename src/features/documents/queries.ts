@@ -1,7 +1,7 @@
 "use client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSessionScope } from "@/hooks/use-session-scope";
-import { documentKeys } from "./query-keys";
+import { documentKeys, type RecomputeReceipt } from "./query-keys";
 import { businessKeys } from "@/lib/query/business-keys";
 import { useRemovalState } from "@/lib/query/use-removal-state";
 import { documentApi, recomputeActive } from "./api";
@@ -39,15 +39,20 @@ export function useDocumentImpact(workplaceId: number, id: number) {
 }
 export function useRecomputeStatus(caseId: number) {
   const s = useSessionScope();
-  return useQuery({ queryKey: documentKeys.recompute(s.generation, caseId), queryFn: async ({ signal }) => {
+  const removal = useRemovalState([...businessKeys.case(s.generation, caseId), "remove"]);
+  const receipt = useQuery<RecomputeReceipt | null>({ queryKey: documentKeys.recomputeHint(s.generation, caseId), queryFn: () => null, enabled: false });
+  const unobserved = (data: Awaited<ReturnType<ReturnType<typeof documentApi>["recompute"]>> | undefined) => !!receipt.data && data?.activeJob?.jobId !== receipt.data.jobId && data?.latestJob?.jobId !== receipt.data.jobId;
+  const query = useQuery({ queryKey: documentKeys.recompute(s.generation, caseId), queryFn: async ({ signal }) => {
       const result = await documentApi(s.api).recompute(caseId, signal);
       if (!recomputeActive(result)) {
         // Existing result snapshots remain visible while the final server versions refresh.
         void s.queryClient.invalidateQueries({ queryKey: businessKeys.case(s.generation, caseId), predicate: q => q.queryKey.includes("readiness") || q.queryKey.includes("results") });
       }
       return result;
-    }, enabled: s.enabled,
-    refetchInterval: q => q.state.error ? false : q.state.data && recomputeActive(q.state.data) ? 2000 : false });
+    }, enabled: s.enabled && !removal.pending && !removal.removed,
+    refetchInterval: q => q.state.error ? false : q.state.data && recomputeActive(q.state.data) ? 2000
+      : unobserved(q.state.data) && Date.now() - receipt.data!.receivedAt < 15_000 ? 2000 : false });
+  return { ...query, awaitingScheduledJob: unobserved(query.data) };
 }
 export type DocumentAction =
  | { type: "upload"; context: Exclude<DocumentContext, {kind: "library"}>; file: File; documentType: string; signal: AbortSignal }

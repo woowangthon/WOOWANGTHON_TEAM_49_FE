@@ -1,8 +1,8 @@
 # 월급잇다 Frontend
 
 Next.js 16 App Router · React 19 · TypeScript strict · Tailwind CSS 4.
-5차 문서 원문·OCR 필드 검토·공유 기본값·Case 재정의·안전한 교체를 구현했습니다.
-기존 1~4차 기반을 유지합니다. 실제 OCR 실행·임금 계산·최종 결과·AI 기능은 이번 범위에 포함하지 않습니다.
+6차 수기 자료·계산 조건·기능별 실행 가능성·자동 갱신 상태를 구현했습니다.
+기존 1~5차와 개발용 Mock Mode를 유지합니다. 실제 OCR 실행·임금 계산·최종 결과·AI 기능은 이번 범위에 포함하지 않습니다.
 
 ## 실행
 
@@ -48,7 +48,8 @@ accessToken은 기존 메모리 세션에만 보관합니다. 개발 전용 `wag
 | 연결·삭제 | POST `/cases/{c}/document-links`; PATCH/DELETE `/cases/{c}/document-links/{l}`; GET `/workplaces/{w}/documents/{d}/deletion-impact`; DELETE 같은 문서 경로의 `?confirm=true`. 공유 원본 연결·기간·목적 수정·연결 해제·확인 후 삭제 |
 | 원문·필드 | GET `/workplaces/{w}/documents/{d}/preview`, `/file`; GET `/cases/{c}/documents/{d}/fields`; PATCH 같은 경로의 `/fields/{f}` 및 공유 원본 `/fields/{f}`; DELETE Case 문서 `/field-overrides/{f}`; GET Case 문서 `/fields/{f}/history`. PDF 샘플 원문·실제 업로드 파일 Blob, null/0 구분, 필드 확인·Case override·공유값 수정·재정의 제거·수정 이력 |
 | 검토·교체 | GET `/cases/{c}/documents/{d}/review`; POST `/review/confirm`, `/replace`; GET `/cases/{c}/document-replacements/{r}`; POST 같은 경로의 `/confirm`. 미완료 검토 안내, 전체 필드 확인 후 검토 완료, 새 파일 대조 후 해당 연결만 교체·override 이관 |
-| 갱신 상태 | GET `/cases/{c}/recompute-status`. 비활성 상태의 PARTIAL 샘플이며 공식 임금 결과를 계산하지 않음 |
+| 수기·조건·준비 상태 (6차) | 수기 기록 CRUD, GET/PUT `/cases/{c}/conditions`, GET `/cases/{c}/readiness`. 변경 후 조회와 독립 준비 상태 반영 |
+| 갱신 상태 | GET `/cases/{c}/recompute-status`. 6차 저장 후 PENDING → RUNNING → PARTIAL, 서버 역할의 합성 freshness 참조. 공식 임금 결과를 계산하지 않음 |
 
 시작 경로: 로그인 → 대시보드 → 카페 나무 → 사례 #15 → 자료 등록·관리 → 파일 업로드 → 원문·추출값 검토. 문서 #101은 사례 #15/#16에서 공유합니다. 공유값과 Case 전용 수정의 차이를 확인할 수 있습니다. 공제액은 null, 추가 지급액은 0으로 시작합니다. 공제액을 입력·확인하고 지급총액도 확인한 뒤 문서 검토 완료를 요청하세요. 교체는 새 파일 등록 후 원문·필드를 확인하고 체크박스와 확인 대화상자를 거쳐 확정합니다.
 
@@ -60,7 +61,7 @@ accessToken은 기존 메모리 세션에만 보관합니다. 개발 전용 `wag
 
 - `/health`, `/consultation-centers`
 - `/auth/forgot-password`, `/auth/reset-password`, DELETE `/users/me`, `/users/me/deletion`
-- `/cases/{c}/workflow`, `/conditions`, `/readiness`, `/manual-records` 및 개별 수기 기록
+- `/cases/{c}/workflow`
 - `/cases/{c}/results`, `/recompute-jobs/{j}`, POST `/recompute`
 - 계산·대조·검증 생성/목록/상세: `/calculations`, `/comparisons`, `/payslip-validations`, `/deposit-comparisons`
 - `/questions`, `/company-inquiry`
@@ -106,7 +107,7 @@ npm run build
 개발 서버를 재시작해 개발 타입을 갱신합니다. 새 체크아웃에서는 `npm run typecheck`를 사용합니다.
 Vitest는 Node의 전송·세션·캐시 테스트와 jsdom의 React Testing Library 테스트를 실행합니다.
 MSW 3의 `onUnhandledFrame: "error"`로 미등록 요청을 차단합니다.
-MSW fixture는 `src/test/server.ts`에서 테스트에만 연결하며, 제품에는 모킹을 넣지 않습니다.
+MSW 테스트 수명주기는 `src/test/server.ts`에 있습니다. 브라우저 개발 Mock은 `src/mocks/`에 분리하며 production에서는 시작하지 않습니다.
 
 ## 구조와 개발 원칙
 
@@ -489,6 +490,65 @@ Playwright는 기존 임시 경로의 설치를 사용했고 package.json/lockfi
 5차에서는 문서 상세에 원문 Blob·필드 Query·Case override 편집·review.confirm을 연결하되,
 READY/CONFIRMED 구분과 서버 inputVersion·공유 원본 참조 모델을 유지해야 합니다.
 main 단일 브랜치를 유지하며 commit/push하지 않았습니다.
+
+## 6차: 수기 자료·계산 조건·Readiness·자동 갱신
+
+`/cases/[caseId]/manual-records`와 `/cases/[caseId]/conditions`를 추가했습니다. Case 상세와 기존 업로드 화면에서 진입할 수 있으며 기존 인증 보호·Sidebar·Drawer·API 클라이언트를 사용합니다. 페이지는 Server Component로 ID를 검증하고 feature 화면만 Client Component입니다.
+
+- CONTRACT: 시급·월 기본급. PAYSLIP: 지급총액·공제총액·실수령액·개별 지급/공제 목록·시급·기본급·실근로시간. 빈 선택 항목은 누락/null, 실제 0은 숫자 0입니다. 목록은 확인한 개별 금액만 쉼표/줄바꿈으로 입력하며 소계·합계를 중복 입력하지 않습니다.
+- ATTENDANCE: 근무일·출퇴근·휴게 분 필수. 근무일의 Case 기간, 실제 날짜·시각, 시간 역전·음수/과도한 휴게를 검증합니다. 입력은 한국시간 UTC+09:00이며 기존 timezone-bearing 시각도 같은 순간으로 표시합니다. 서버의 업무 검증을 대체하지 않습니다.
+- DEPOSIT: 수단(BANK_TRANSFER/CASH)·날짜·0 이상 정수 금액, 선택 보낸 사람·메모. `source:USER_INPUT`, `confirmationStatus:USER_REPORTED`를 명시합니다. 서버 거래/전액 배분 응답 `recordId:null, canonicalResource:PAYMENT_TRANSACTION, transactionId, allocationId`를 별도 수신하고 일반 수기 목록에 추가하지 않습니다. 거래 전체 수정·삭제 UI는 후속 단계입니다.
+- 일반 수기 목록·상세·수정·삭제를 지원합니다. 출처 USER_INPUT과 원본 없음 표시, 422 필드 오류·포커스, 204 삭제, 목록 페이지·빈 상태·실패 재조회가 있습니다. PATCH는 같은 recordType·source와 **전체 data**를 보내며 서버의 알려지지 않은 기존 data 키, 미변경 빈 배열/UTC 시각도 보존합니다. 선택 값을 명시적으로 지우면 null로 전송합니다.
+- 조건은 서버 question/type/options/requiredFor/status/source/value로 렌더링합니다. SELECT·NUMBER·BOOLEAN과 UNKNOWN을 지원하며, 실제 0·false·미응답을 구분합니다. ANSWERED/UNKNOWN/NOT_APPLICABLE을 표시하고 질문 바로가기·readiness 이동을 제공합니다. TEXT는 표시할 수 있지만 현 P0에는 허용 TEXT 조건 ID가 없어 저장을 막습니다. 임의 텍스트 조건을 생성하지 않습니다.
+- 조건은 변경 답변만 `answers`에 담고 편집 기준 expectedInputVersion을 전송합니다. 백그라운드 refetch가 초안을 덮어쓰지 않습니다. 409에서는 초안을 보존하고 저장을 잠근 뒤 명시적으로 최신 질문·답변을 불러와 재검토합니다. 422 answers 인덱스/필드 오류를 입력에 표시합니다. 저장 성공 뒤 최신 조회가 실패하면 재저장 대신 재조회를 안내합니다.
+- 네 검사(WAGE_CALCULATION / CONTRACT_ATTENDANCE_COMPARISON / PAYSLIP_VALIDATION / DEPOSIT_COMPARISON)의 available·FULL/PARTIAL/NONE·missingInputs·reasonCode를 독립적으로 표시합니다. 누락된 검사 응답은 미제공으로 표시합니다. currentStep, 검토 완료, 실행 가능, 결과 일치를 합치지 않습니다. 검사 실행·결과 화면은 구현 범위 밖이므로 실행되는 것처럼 보이는 버튼을 추가하지 않았습니다.
+- 수기/조건 변경 후 관련 Case·목록·상세·조건·readiness·recompute 캐시를 무효화합니다. 제공된 inputVersion을 기존 Case 캐시에 반영하고 기존 recompute hook/API를 재사용합니다. 서버 PENDING/RUNNING 동안 2초 polling, PARTIAL/SUCCEEDED/FAILED/SUPERSEDED 등 종결·오류 시 중단합니다. 실패 후 상태 재조회는 작업 재실행이 아닙니다. 계산 POST를 자동 호출하지 않습니다.
+- `recompute.scheduled:true`와 jobId가 있으면 메모리 Query 캐시에 접수 정보만 보관합니다. 상태 API에 해당 job이 아직 없을 때는 최대 15초 추가 조회하고 미관측 안내를 남깁니다. 2초/15초는 FE 조회 정책이지 서버 debounce·처리시간 보장이 아닙니다. 접수 정보로 가짜 PENDING/freshness를 만들지 않습니다.
+- 결과별 CURRENT/STALE/UPDATING/FAILED와 버전은 서버 results 참조를 그대로 표시합니다. 입력 버전 비교로 최신성을 계산하지 않습니다. 기존 결과 Query를 삭제하거나 임금 계산을 수행하지 않습니다.
+
+### 6차 P0 계약 및 문서 누락·충돌
+
+실제 파일명은 `백엔드_API_명세_v1.pdf`입니다(`명세서`라는 파일은 없음). `데이터베이스_스키마.pdf`는 표지·링크만 있어 테이블/컬럼 정의를 제공하지 않습니다. 로컬 PDF·참고 문서만 확인했으며 사용자 제약에 따라 서버 실행·접속·OpenAPI 조회는 하지 않았습니다.
+
+| 대상 | 적용 계약과 보완 근거 |
+| --- | --- |
+| 수기 POST/GET/PATCH/DELETE | P0 API_ENDPOINTS의 201/200/200/204 우선. v1 p3의 유형별 data, USER_INPUT, 같은 recordType·data 전체 교체 사용. P4 B-49의 `data + expectedInputVersion` PATCH 예시는 사용하지 않고 API_ENDPOINTS의 ManualCreate 요청 및 v1 전체 교체를 우선 |
+| 수기 조회·일반 생성 응답 | P0가 전체 DTO를 생략. P4 ManualRecord(recordId/caseId/recordType/data/source, 선택 시각), Page 목록으로 decoder를 보완. mutation은 recordId와 선택 inputVersion/recompute만 소비. 실제 서버 확정 DTO라고 주장하지 않음 |
+| DEPOSIT | P0 v1 p3·p5의 거래 필드와 canonicalResource 응답을 우선. 수기 recordId를 임의 발급하거나 거래 목록 API로 조용히 대체하지 않음 |
+| 조건 PUT | P0 v1 p3의 여섯 conditionId와 값 범위: workplace_size=LESS_THAN_5/AT_LEAST_5/UNKNOWN, regular_minutes=0~1000000 정수 분/UNKNOWN, 나머지 네 항목=boolean/UNKNOWN. 변경 답변만 병합. 임의 ID/타입은 저장 불가 |
+| 조건 GET·Readiness | P0는 경로와 정책만 정의하고 전체 JSON은 생략. P4 §7.1/§7.2 및 Condition/CheckReadiness DTO의 conditions/inputVersion, checks/caseId/inputVersion, source/options 구조를 보완 사용. P4 프로토타입의 연장수당 포함 여부 등 추가 질문은 P0 허용 ID가 아니므로 생성하지 않음 |
+| 조건 성공 응답 | P4가 예시한 remainingQuestions/calculationAvailable로 실행 가능성을 추론하지 않고 inputVersion·선택 recompute만 사용한 뒤 readiness 재조회 |
+| recompute-status | P0 v1 p3~4의 pending/running·latestJob·PARTIAL/SUPERSEDED/freshness 정책 우선. P4 RecomputeStatus/§8.5의 activeJob/results(결과별 VersionRef) 구조로 보완. P0의 `/results` 예시에 있는 freshness.overall을 recompute 응답으로 임의 복제하지 않음. 필드 미제공은 최신성 미제공 표시 |
+
+P0는 수기 일반 금액의 상세 범위·일부 선택 필드와 nullable 조합·수기 동시성 제어·전체 오류 DTO를 완전히 정의하지 않습니다. FE는 정수 표현 안전성, 문서에 명시한 단위/기간·필수 항목을 검사하고, 미확정 업무 규칙은 서버 422 처리로 남깁니다. P4 보완 DTO와 실제 서버 구조가 다르면 해당 decoder/DTO를 조정해야 합니다. 실제 서버 연동 검증은 하지 않았습니다.
+
+### 6차 개발 Mock 사용
+
+기존 `.env.local`의 `NEXT_PUBLIC_MOCK_API=true`, `npm run dev`, `worker@example.com / password1234`를 그대로 사용합니다. 추가 의존성은 없습니다. `src/mocks/shared/input-handlers.ts`를 브라우저 개발 handlers와 Vitest MSW에서 공유하고 실제 API 클라이언트에 Mock 분기를 넣지 않았습니다. 인증·근무지·Case·문서 handlers의 우선순위를 유지합니다.
+
+체험: 로그인 → 대시보드의 카페 나무 사례 #15 → 수기 자료 입력·관리 → 시급 0 또는 임의 가상 금액 저장 → 계산 조건 확인 → 소정근로시간 0 또는 가상 분 입력·사업장 규모 UNKNOWN → 변경된 조건 저장 → 임금 readiness NONE → PARTIAL과 자동 갱신 상태 확인.
+
+PAYSLIP에 확인한 총액·목록을 추가하면 명세서 검사가 독립적으로 FULL/PARTIAL, DEPOSIT을 추가하면 입금 준비 상태가 바뀝니다. 계약·근태 및 비교 기준 답변을 준비하면 대응 검사도 바뀝니다. 이는 **개발용 합성 준비 상태 시나리오**이며 법정 임금 공식·공식 준비 상태 정책을 구현한 것이 아닙니다. 샘플은 문서 OCR 결과를 자동 계산 입력으로 병합하지 않습니다. 법정수당 미검증을 반영해 전체 자동 job은 PARTIAL로 끝납니다. 생성·수정·삭제·조건 답변은 클라이언트 라우팅 동안 후속 조회에 반영되며 기존 Mock 정책대로 전체 새로고침 시 샘플로 초기화됩니다.
+
+### 6차 변경 파일
+
+- 신규 라우트: `src/app/(workspace)/cases/[caseId]/{manual-records,conditions}/page.tsx`
+- 신규 feature: `src/features/case-inputs/{schemas,api,manual-fields,queries,contracts.test}.ts`, `inputs.test.tsx`
+- 신규 UI: `src/features/case-inputs/components/{manual-form,manual-screen,conditions-screen,input-status}.tsx`
+- 신규 공유 Mock: `src/mocks/shared/input-handlers.ts`
+- 기존 연결: `src/mocks/development.ts`, `src/features/cases/components/case-detail-screen.tsx`, `src/features/documents/components/document-screens.tsx`
+- 기존 polling·DTO 확장: `src/features/documents/{api,queries,query-keys}.ts`
+- 사용 방법·계약·검증 기록: `README.md`
+
+### 6차 최종 검증 (2026-11-10)
+
+`npm run lint`, `npm run typecheck`, `npm test`, `npm run build` 모두 통과했습니다. Vitest 15개 파일·278개 테스트(기존 230개 + 신규 48개)이며 기존 1~5차 회귀 테스트를 포함합니다. 신규 검증은 네 유형 생성, 목록·상세·전체 data 수정·204 삭제, DEPOSIT 거래 매핑, 필수 날짜·시간·정수·null/0, UNKNOWN·부분 병합, 409 초안 보존, 422 필드 포커스, 독립 FULL/PARTIAL/NONE, 서버 freshness, active/terminal 및 접수 지연 polling을 포함합니다.
+
+실제 Microsoft Edge(headless)와 브라우저 MSW Service Worker로 320/375/768/1280px에서 로그인 → Case 선택 → 수기 계약(시급 0) 저장 → 계산 조건 UNKNOWN/분 0 저장 → readiness NONE에서 PARTIAL 전환 → 자동 갱신 종결을 확인했습니다. 네 유형 폼과 조건·readiness 레이아웃에 가로 넘침·JS 오류가 없었고 실제 백엔드 네트워크 요청은 0건이었습니다. 실제 모바일 기기·터치 키보드 테스트는 아닙니다.
+
+로컬 산출물은 Git 제외 `test-results/phase6-browser-report.json`, `test-results/phase6-{320,375,768,1280}.png`이며 재현 스크립트는 기존 임시 Playwright 설치를 사용한 `%TEMP%/wageitda-browser-check/phase6.cjs`입니다. API 테스트는 MSW 합성 계약 검증이며 실제 백엔드 연동 성공을 의미하지 않습니다. production 빌드에서는 기존 규칙대로 Mock Mode가 활성화되지 않습니다.
+
+남은 사항: 생략된 실제 DTO/오류·동시성 상세는 연동이 허용되는 시점에 확인해야 합니다. TEXT 조건은 현 P0 허용 ID가 없어 읽기 전용입니다. 검사 실행·실제 결과·거래 전체 관리·배분 UI·명시적 갱신 재실행은 범위 밖으로 유지했습니다. 다음 단계는 서버 권위의 결과/버전/freshness 화면과 입금 거래·배분 관리를 연결하는 것입니다. main을 유지하며 commit/push하지 않았습니다.
 
 최종 검증: lint·typecheck·build 통과, Vitest 10개 파일·182개 테스트 통과(기존 147개 + 문서 35개).
 Edge 4개 viewport의 문서 등록·관리 흐름은 MSW로 검증했으며 실제 백엔드 연동 성공을 뜻하지 않습니다.

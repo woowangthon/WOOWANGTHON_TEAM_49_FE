@@ -5,6 +5,7 @@ import { documentMocks } from "./shared/document-handlers";
 import { reviewMocks } from "./shared/review-handlers";
 import { apiResponse } from "./shared/response";
 import { samplePdf } from "./sample";
+import { inputMocks } from "./shared/input-handlers";
 
 export const demoAccount = { email: "worker@example.com", password: "password1234", name: "가상 근로자" };
 // This cookie is an inert development marker, never an authentication credential.
@@ -27,6 +28,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     if (link) link.documentId = next;
   });
   review.histories.splice(0);
+  const inputs = inputMocks(management.getCases, baseUrl);
   const users = new Map([[demoAccount.email, { ...demoAccount, userId: 7 }]]);
   let activeUser = users.get(demoAccount.email)!;
   let token = "";
@@ -118,12 +120,12 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       const linked = docs.getLinks().filter(l => l.caseId === Number(params.c));
       return apiResponse({ linkedDocumentCount: linked.length, sharedDocumentCount: linked.filter(l => documents.find(d => d.documentId === l.documentId)!.linkedCaseIds!.length > 1).length, reportCount: 0, willUnlinkSharedDocuments: true, willDeleteSharedOriginals: false, willRevokeCaseAccessImmediately: true });
     }),
-    ...review.handlers, ...docs.handlers, ...management.handlers,
+    ...inputs.handlers, ...review.handlers, ...docs.handlers, ...management.handlers,
     http.all(`${baseUrl}/*`, () => {
       window.dispatchEvent(new Event("wageitda:mock-unhandled"));
       return apiResponse({ errorCode: "MOCK_NOT_IMPLEMENTED" }, 501);
     }),
   ];
   sync();
-  return { handlers, management, docs, review };
+  return { handlers, management, docs, review, inputs };
 }

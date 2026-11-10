@@ -9,8 +9,13 @@ export function documentPath(context: DocumentContext) {
 export const recomputeSchema = z.object({
   caseId: z.number().int().positive(),
   pending: z.number().int().nonnegative().optional(), running: z.number().int().nonnegative().optional(),
-  activeJob: z.object({ status: z.string() }).nullable().optional(),
-  latestJob: z.object({ status: z.string() }).nullable().optional(),
+  currentInputVersion: z.number().int().positive().optional(),
+  activeJob: z.object({ status: z.string(), jobId: z.string().optional(), errorCode: z.string().nullable().optional() }).nullable().optional(),
+  latestJob: z.object({ status: z.string(), jobId: z.string().optional(), errorCode: z.string().nullable().optional() }).nullable().optional(),
+  results: z.record(z.string(), z.object({
+    snapshotId: z.number().nullable().optional(), version: z.number().nullable().optional(),
+    inputVersion: z.number().int().optional(), freshness: z.enum(["CURRENT", "STALE", "UPDATING", "FAILED"]),
+  }).nullable()).optional(),
 }).refine(v => v.pending !== undefined || v.running !== undefined || v.activeJob !== undefined,
   "갱신 상태 계약을 확인할 수 없습니다.");
 export function recomputeActive(value: z.infer<typeof recomputeSchema>) {
