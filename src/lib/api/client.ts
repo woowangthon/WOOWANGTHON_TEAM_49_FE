@@ -3,6 +3,7 @@ import { parseApiBaseUrl } from "@/lib/config/env";
 import type { JsonValue } from "@/types/api";
 
 import { ApiError } from "./error";
+import { downloadFilename, type DownloadType } from "./download";
 import { hasMediaType, protocolError, readApiError, readJsonData } from "./response";
 
 export interface ApiRequestOptions {
@@ -179,6 +180,14 @@ export function createApiClient(options: ClientOptions) {
           (!["application/octet-stream", "application/pdf", "application/zip"].includes(mediaType) && !mediaType.startsWith("image/"))
         ) throw protocolError();
         return response.blob();
+      });
+    },
+    requestDownload(path: string, type: DownloadType, fallback: string, init: ApiRequestOptions = {}) {
+      return request(path, init, type, async (response) => {
+        if (response.status !== 200 || !hasMediaType(response, type)) throw protocolError();
+        const blob = await response.blob();
+        if (!blob.size) throw protocolError();
+        return { blob, filename: downloadFilename(response.headers.get("Content-Disposition"), fallback, type) };
       });
     },
     requestSse(path: string, init: ApiRequestOptions = {}): Promise<ReadableStream<Uint8Array>> {

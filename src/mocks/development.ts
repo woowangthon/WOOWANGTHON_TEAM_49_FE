@@ -133,7 +133,11 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       });
       const resultRefs=Object.entries(result.versions).flatMap(([type,v])=>v?.snapshotId&&v.version?[{caseId,type,snapshotId:v.snapshotId,version:v.version}]:[]);
       return {sources,resultRefs,inputVersion:result.currentInputVersion};
-    }).handlers, ...supportMocks(baseUrl, inputs.getResult, c=>docs.getLinks().filter(l=>l.caseId===c && documents.some(d=>d.documentId===l.documentId)).map(l=>l.documentId)), ...inputs.handlers, ...review.handlers, ...docs.handlers, ...management.handlers,
+    }).handlers, ...supportMocks(baseUrl, c=>activeUser.userId===7?inputs.getResult(c):undefined, c=>docs.getLinks().filter(l=>l.caseId===c && documents.some(d=>d.documentId===l.documentId)).map(l=>l.documentId), async(c,id)=>{
+      const owner=cases.find(v=>v.caseId===c),doc=documents.find(d=>d.documentId===id);
+      if(!owner||!doc||doc.workplaceId!==owner.workplaceId)return;
+      return {documentId:id,name:doc.fileName,bytes:files.has(id)?new Uint8Array(await files.get(id)!.arrayBuffer()):samplePdf()};
+    }), ...inputs.handlers, ...review.handlers, ...docs.handlers, ...management.handlers,
     http.all(`${baseUrl}/*`, () => {
       window.dispatchEvent(new Event("wageitda:mock-unhandled"));
       return apiResponse({ errorCode: "MOCK_NOT_IMPLEMENTED" }, 501);

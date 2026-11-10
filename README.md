@@ -55,9 +55,9 @@ accessToken은 기존 메모리 세션에만 보관합니다. 개발 전용 `wag
 
 일반 JSON은 `{code,message,data}`, 목록은 `{items,page,size,total}`, 삭제·로그아웃 204는 빈 body, 파일은 JSON 래퍼 없는 Blob입니다. OCR은 업로드 내용과 무관한 합성 필드입니다. 파일 크기·MIME 기본 검증만 모사하며 손상·암호화·위장 파일·PDF 페이지 수 등 실제 서버 검증을 대신하지 않습니다. 업로드 PDF 미리보기 메타데이터는 1페이지로 제한합니다. 공유 검토 상태는 Case 연결별로 관리합니다. 가상 토큰은 실제 서버에서 사용할 수 없습니다.
 
-### 미지원 API
+### 6차 당시 미지원 API (이후 변경은 아래 차수별 기록 참조)
 
-현재 화면에서 구현하지 않은 다음 P0 API는 501로 차단합니다. 성공 응답이나 임의 DTO를 만들지 않습니다. SSE도 현재 채팅 UI가 없어 모사하지 않습니다.
+6차 당시 화면에서 구현하지 않았던 다음 P0 API는 501로 차단합니다. 성공 응답이나 임의 DTO를 만들지 않습니다. SSE도 현재 채팅 UI가 없어 모사하지 않습니다.
 
 - `/health`, `/consultation-centers`
 - `/auth/forgot-password`, `/auth/reset-password`, DELETE `/users/me`, `/users/me/deletion`
@@ -758,6 +758,12 @@ Edge MSW의 주요 사용자 여정과 320/375/768/1280px를 검증했습니다.
 9차 보완 최종 검증: lint/typecheck/build 통과, Vitest 28파일·367테스트 통과(기존 358개 회귀 유지). Edge 주요 여정과 네 너비에서 가로 넘침·JS 오류·미처리 Mock·실제 백엔드 전달 요청 0건 확인.
 
 
-## 10차 개발 (부분 구현)
+## 10차 개발 보완
 
-질문 목록, 수동 문의 작성·복사, 보고서 생성·상태·이력을 추가했습니다. 서버 문의 생성·기관 검색·선택 원본 ZIP은 미완료입니다. [개발 기록](DEVELOPMENT_10.md)을 확인하세요.
+Case 질문·직접 작성·보고서 흐름을 유지하면서 서버 문의 초안, 상담기관 지역/임금 분야 조회와 페이지 내 검색, 선택 원본 ZIP, 안전한 Content-Disposition 파일명을 추가했습니다. 문의의 원문과 사용자 작성본은 분리하며, PDF/ZIP은 READY에서만 인증 다운로드합니다. Mock ZIP은 접수 당시 선택 원본 바이트와 참조 스냅샷을 고정합니다.
+
+P0에 생략된 Inquiry 요청 DTO는 추가 필드 없는 `{}` 최소 요청으로 **조건부 연결**했습니다. 문의·기관의 응답 adapter도 실제 서버 확정 계약이 아닙니다. tone/resultItemIds 등 제안 필드나 서버 검색 파라미터는 추가하지 않았습니다. 실제 백엔드 연동은 검증하지 않았습니다.
+
+Vitest 32파일·410테스트 통과(기존 372개 유지). Edge headless + MSW에서 320/375/768/1280px 전체 여정, 편집·복사, PDF 열기·ZIP CRC/압축 해제, 변경 이후 과거 스냅샷을 확인했습니다. 가로 넘침·JS 실행 오류·미처리 Mock·실제 백엔드 전달 요청은 0건이며, 의도적인 HTTP 오류 로그는 별도로 기록했습니다.
+
+계약 구분, 변경 파일, 검증 산출물과 제한은 [DEVELOPMENT_10.md](DEVELOPMENT_10.md)를 확인하세요. Mock 시나리오는 테스트 전용 `X-Wageitda-Mock-Scenario` 헤더로 inquiry-409/inquiry-503, centers-error/centers-empty, report-stale/report-failed, download-not-ready, filename-invalid/filename-absent를 선택할 수 있습니다. 일반 UI 요청에는 이 헤더를 추가하지 않습니다. Mock OFF/production 비활성·미처리 API 차단 정책을 유지합니다.
