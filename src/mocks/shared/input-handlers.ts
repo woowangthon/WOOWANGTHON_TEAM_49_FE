@@ -4,6 +4,7 @@ import type { CaseDetailDto } from "@/features/cases/schemas";
 import { conditionsPutSchema, manualInputSchema, checkTypes, type Condition, type ManualRecord, type RecordType } from "@/features/case-inputs/schemas";
 import { manualDefaults, manualFormSchema } from "@/features/case-inputs/manual-fields";
 import { buildResultScenario, type MockEvidence } from "./result-scenario";
+import type { DepositComparison } from "@/features/payments/comparison-schemas";
 import type { Results } from "@/features/results/schemas";
 import { apiResponse } from "./response";
 
@@ -29,13 +30,15 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
   const current = (id: unknown) => getCases().find(c => c.caseId === Number(id));
   const missing = () => apiResponse({ errorCode: "RESOURCE_NOT_FOUND" }, 404);
   const error = (code: string, status: number) => apiResponse({ errorCode: code }, status);
-  function schedule(c: CaseDetailDto, increment = true) {
-    const s = state(c); result(c); if (increment) c.inputVersion++;
+  function schedule(c: CaseDetailDto, increment = true, paymentOnly = false) {
+    const s = state(c); result(c);
+    if (paymentOnly && s.job && ["PENDING","RUNNING"].includes(s.job.status) && s.target!=="deposit") paymentOnly=false;
+    if (increment) c.inputVersion++;
     if(s.job && ["PENDING","RUNNING"].includes(s.job.status))s.job.status="SUPERSEDED";
-    s.observedVersion = c.inputVersion; s.polls = 0;s.target="recompute";
+    s.observedVersion = c.inputVersion; s.polls = 0;s.target=paymentOnly?"deposit":"recompute";
     s.job = { jobId: `case-${c.caseId}-input-job-${nextJob++}`, requestedInputVersion: c.inputVersion, status: "PENDING", errorCode: null };
     jobs.set(s.job.jobId,s.job);
-    return { inputVersion: c.inputVersion, recompute: { scheduled: true, jobId: s.job.jobId, affectedChecks: [...checkTypes] } };
+    return { inputVersion: c.inputVersion, recompute: { scheduled: true, jobId: s.job.jobId, affectedChecks: paymentOnly?["DEPOSIT_COMPARISON"]:[...checkTypes] } };
   }
   const parseManual = async (request: Request, c: CaseDetailDto, recordId?: number) => {
     const body = await request.json() as { recordType: RecordType; data: ManualRecord["data"]; source: string };
@@ -50,7 +53,7 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
     if (!fields.success) return apiResponse({ errorCode: "VALIDATION_ERROR", errors: fields.error.issues.map(i => ({ field: `data.${String(i.path.at(-1))}`, reason: i.message })) }, 422);
     if (body.recordType === "DEPOSIT") {
       const transaction = { ...payments.manual(c,body.data), data: structuredClone(body.data) }; s.transactions.push(transaction);
-      return apiResponse({ recordId: null, canonicalResource: "PAYMENT_TRANSACTION", transactionId: transaction.transactionId, allocationId: transaction.allocationId, ...schedule(c) }, 201);
+      return apiResponse({ recordId: null, canonicalResource: "PAYMENT_TRANSACTION", transactionId: transaction.transactionId, allocationId: transaction.allocationId, ...schedule(c,true,true) }, 201);
     }
     const now = new Date().toISOString();
     const record: ManualRecord = { recordId: old?.recordId ?? nextRecord++, caseId: c.caseId, recordType: body.recordType, data: structuredClone(body.data), source: "USER_INPUT", createdAt: old?.createdAt ?? now, updatedAt: now };
@@ -78,21 +81,40 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
       if(target!=="payslipValidation")next.payslipValidation=previous.payslipValidation;
       for(const key of ["calculation","comparison","payslipValidation"] as const)if(key!==target)next.versions[key]=previous.versions[key];
     }
+    if(s.target==="deposit"&&previous){next.calculation=previous.calculation;next.comparison=previous.comparison;next.payslipValidation=previous.payslipValidation;for(const key of ["calculation","comparison","payslipValidation"])next.versions[key]=previous.versions[key];}
+    const deposit=buildDeposit(c);depositHistory(c).unshift(deposit);next.depositComparison=deposit;next.versions.depositComparison={snapshotId:deposit.depositComparisonId,version:deposit.version,inputVersion:c.inputVersion,createdAt:deposit.createdAt!,freshness:"CURRENT"};
     history(c).unshift(structuredClone(next));
   }
   function result(c:CaseDetailDto) {
     const s=state(c);const list=history(c);
     if(!list.length){const initial=freshness(c)==="CURRENT";
       list.push(buildResultScenario({...c,inputVersion:s.snapshotInputVersion},s.resultVersion,initial?s.records:[],initial?s.conditions:[],initial?getEvidence(c.caseId):[]));}
-    const current=freshness(c),active=s.job && ["PENDING","RUNNING"].includes(s.job.status);
-    return {...list[0],currentInputVersion:c.inputVersion,freshness:{overall:current,hasOutdatedResults:current!=="CURRENT",activeJobId:active?s.job!.jobId:null},versions:Object.fromEntries(Object.entries(list[0].versions).map(([k,v])=>[k,v?{...v,freshness:current}:null]))};
+    const deposits=depositHistory(c);if(!deposits.length)deposits.push(buildDeposit(c));
+    const snapshot=deposits[0];list[0].versions.depositComparison={snapshotId:snapshot.depositComparisonId,version:snapshot.version,inputVersion:snapshot.basedOnInputVersion!,createdAt:snapshot.createdAt!,freshness:"CURRENT"}; const current=freshness(c),active=s.job && ["PENDING","RUNNING"].includes(s.job.status);
+    return {...list[0],depositComparison:{...deposits[0],freshness:current},currentInputVersion:c.inputVersion,freshness:{overall:current,hasOutdatedResults:current!=="CURRENT",activeJobId:active?s.job!.jobId:null},versions:Object.fromEntries(Object.entries(list[0].versions).map(([k,v])=>[k,v?{...v,freshness:s.target==="deposit"&&k!=="depositComparison"?v.freshness:current}:null]))};
   }
   function completion(c:CaseDetailDto) {
     const s=state(c);const p=buildResultScenario(c,s.resultVersion,s.records,s.conditions,getEvidence(c.caseId)).payslipValidation;
     return s.target==="payslip-validations" && [p?.paymentTotal.status,p?.deductionTotal.status,p?.netPay.status].every(v=>v==="MATCH"||v==="DIFFERENCE")?"SUCCEEDED":"PARTIAL";
   }
-  const payments=paymentMocks(getCases,baseUrl,c=>schedule(c));
+  const payments=paymentMocks(getCases,baseUrl,c=>schedule(c,true,true));
+  const depositSnapshots=new WeakMap<CaseDetailDto,DepositComparison[]>();
+  function depositHistory(c:CaseDetailDto){if(!depositSnapshots.has(c))depositSnapshots.set(c,[]);return depositSnapshots.get(c)!;}
+  function buildDeposit(c:CaseDetailDto):DepositComparison {
+    const links=payments.allocations.filter(a=>a.caseId===c.caseId);
+    const records=state(c).records;const payslip=records.find(r=>r.recordType==="PAYSLIP");
+    const evidenceValues=getEvidence(c.caseId).flatMap(e=>e.fields).filter(f=>f.key==="netPay"&&f.status==="CONFIRMED");const evidence=evidenceValues.length===1?evidenceValues[0]:undefined;
+    const net=typeof payslip?.data.netPay==="number"?payslip.data.netPay:typeof evidence?.value==="number"?evidence.value:null;
+    const total=(method:string)=>links.filter(a=>payments.transactions.find(t=>t.transactionId===a.transactionId)?.paymentMethod===method).reduce((sum,a)=>sum+a.allocatedAmount,0);
+    const bank=links.length?total("BANK_TRANSFER"):null,cash=links.length?total("CASH"):null,linked=bank===null||cash===null?null:bank+cash;
+    const review=(!payslip && evidenceValues.length>1) || links.some(a=>!["USER_REPORTED","DOCUMENT_SUPPORTED"].includes(payments.transactions.find(t=>t.transactionId===a.transactionId)?.confirmationStatus??""));
+    const difference=net===null||linked===null?null:net-linked;
+    const version=depositHistory(c).length+1;
+    return {depositComparisonId:c.caseId*10000+version,version,basedOnInputVersion:c.inputVersion,createdAt:new Date().toISOString(),freshness:"CURRENT",payslipNetPay:net,linkedBankDepositTotal:bank,linkedCashPaymentTotal:cash,linkedPaymentTotal:linked,difference,status:review?"REVIEW_REQUIRED":difference===null?"INSUFFICIENT_INFORMATION":difference===0?"MATCH":"DIFFERENCE"};
+  }
   const handlers = [...payments.handlers,
+    http.get(`${baseUrl}/cases/:c/deposit-comparison`,({params})=>{const c=current(params.c);if(!c)return missing();result(c);return apiResponse({...depositHistory(c)[0],freshness:freshness(c)});}),
+    http.get(`${baseUrl}/cases/:c/deposit-comparisons`,({params,request})=>{const c=current(params.c);if(!c)return missing();result(c);const page=Math.max(1,Number(new URL(request.url).searchParams.get("page")??1));const items=depositHistory(c);return apiResponse({items:items.slice((page-1)*20,page*20),page,size:20,total:items.length});}),
     http.get(`${baseUrl}/cases/:c/recompute-jobs/:jobId`,({params})=>{const c=current(params.c);if(!c)return missing();const job=jobs.get(String(params.jobId));return job && job.jobId.startsWith(`case-${c.caseId}-`)?apiResponse(job):missing();}),
 
     ...(["calculations","comparisons","payslip-validations"] as const).map(endpoint=>http.get(`${baseUrl}/cases/:c/${endpoint}`,({params,request})=>{const c=current(params.c);if(!c)return missing();result(c);const key={calculations:"calculation",comparisons:"comparison","payslip-validations":"payslipValidation"}[endpoint];const items=(snapshots.get(c)??[]).map(v=>v[key as "calculation"|"comparison"|"payslipValidation"]).filter(v=>v!==null).filter((v,i,list)=>list.findIndex(other=>other?.version===v?.version)===i);const q=new URL(request.url).searchParams;const page=Math.max(1,Number(q.get("page")??1)),size=Math.min(100,Math.max(1,Number(q.get("size")??20)));return apiResponse({items:items.slice((page-1)*size,page*size),page,size,total:items.length});})),
@@ -138,7 +160,7 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
       const comparison = contractWage && attendance && ["comparison_basis_confirmed", "hours_basis_confirmed", "base_pay_basis_confirmed"].every(id => answer(id) === true);
       const fullPayslip = !!payslip && ["grossPay", "totalDeductions", "netPay"].every(k => typeof payslip.data[k] === "number") && Array.isArray(payslip.data.paymentItems) && Array.isArray(payslip.data.deductionItems);
       const partialPayslip = !!payslip && ["grossPay", "totalDeductions", "netPay", "paymentItems", "deductionItems"].some(k => typeof payslip.data[k] === "number" || Array.isArray(payslip.data[k]));
-      const deposit = !!payslip && typeof payslip.data.netPay === "number" && s.transactions.length > 0;
+      const deposit = buildDeposit(c).payslipNetPay!==null && payments.allocations.some(a=>a.caseId===c.caseId);
       const checks = [
         { checkType: checkTypes[0], available: !!wage, mode: wage ? "PARTIAL" : "NONE", missingInputs: wage ? ["verified_statutory_rules"] : ["contract_wage", "regular_minutes"], reasonCode: wage ? "PARTIAL_INPUTS" : "MISSING_REQUIRED_INPUT" },
         { checkType: checkTypes[1], available: comparison, mode: comparison ? "FULL" : "NONE", missingInputs: comparison ? [] : ["contract", "attendance", "comparison_basis_confirmation"] },

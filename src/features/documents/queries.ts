@@ -46,7 +46,7 @@ export function useRecomputeStatus(caseId: number) {
       const result = await documentApi(s.api).recompute(caseId, signal);
       if (!recomputeActive(result)) {
         // Existing result snapshots remain visible while the final server versions refresh.
-        void s.queryClient.invalidateQueries({ queryKey: businessKeys.case(s.generation, caseId), predicate: q => q.queryKey.includes("readiness") || q.queryKey.includes("results") });
+        void s.queryClient.invalidateQueries({ queryKey: businessKeys.case(s.generation, caseId), predicate: q => q.queryKey.includes("readiness") || q.queryKey.includes("results") || q.queryKey.includes("deposit-comparison") });
       }
       return result;
     }, enabled: s.enabled && !removal.pending && !removal.removed,

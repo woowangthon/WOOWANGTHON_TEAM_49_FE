@@ -1,5 +1,6 @@
 "use client";
 
+import { DepositComparisonPanel } from "@/features/payments/comparison-panel";
 import { PaymentScreen } from "@/features/payments/payment-screen";
 import Link from "next/link";
 import { useState } from "react";
@@ -24,7 +25,7 @@ export function CaseDetailScreen({ id }: { id: number }) {
   const dto = query.data;
   const item = caseCard(dto);
   return (
-    <div className="space-y-6"><PaymentScreen workplaceId={dto.workplaceId} caseId={id} inputVersion={dto.inputVersion}/>
+    <div className="space-y-6"><PaymentScreen workplaceId={dto.workplaceId} caseId={id} inputVersion={dto.inputVersion}/><DepositComparisonPanel caseId={id}/>
       <Link href="/cases" className="inline-flex min-h-11 items-center text-body underline">급여 사례 목록</Link>
       <PageHeading title={`${item.workplaceName}의 급여 사례`} description={item.period} action={<Link href={`/workplaces/${dto.workplaceId}`} className={secondaryButton}>근무지 보기</Link>} />
       <section className={cardStyle} aria-label="급여 사례 상세 정보">

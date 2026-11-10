@@ -741,3 +741,7 @@ Edge headless 개발 MSW: 수기 입력 → 조건 저장 → 부분 소계/시�
 최종 검증: `npm run lint` 경고 없이 통과, `npm run typecheck` 통과, `npm test` 19개 파일·323개 테스트 통과(기존 293개 + 신규 30개), `npm run build` 통과. `git diff --check` 통과. main 유지. 실제 백엔드 연동은 검증하지 않았습니다.
 
 8차 거래·배분 기능은 부분 구현 상태입니다. 적용 계약과 미완료 항목은 DEVELOPMENT_8.md를 확인하세요.
+
+8차 보완: 중복 후보(지원 DTO는 계약 확인 대상), Case 입금 대조·이력, 결과 최신성 연결, 삭제 영향 확인 UI를 추가했습니다. Edge 320/375/768/1280px의 개발 MSW 흐름을 확인했습니다. 상세 파일·계약 제한·검증 결과는 DEVELOPMENT_8.md를 참고하세요. 실제 백엔드 연동은 검증하지 않았습니다.
+
+8차 보완 최종 검증: lint/typecheck/build 통과, Vitest 21파일·342테스트 통과. Edge 네 너비에서 가로 넘침·JS 오류·미처리 Mock·실제 백엔드 전달 요청 없음.
