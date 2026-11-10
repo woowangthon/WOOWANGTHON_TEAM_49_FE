@@ -7,7 +7,7 @@ import { caseCard } from "../view-models";
 
 export function CaseCards({ items }: { items: CaseListDto[] }) {
   return (
-    <ul className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <ul className="workspace-card-list grid min-w-0 gap-4">
       {items.map((dto) => {
         const card = caseCard(dto);
         return (

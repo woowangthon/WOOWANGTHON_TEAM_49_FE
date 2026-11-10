@@ -120,3 +120,24 @@
 @layer base {
   summary { min-height: 2.75rem; padding-block: .625rem; }
 }
+
+/* T2: final prototype workspace hierarchy, 690/950px boundaries. */
+.workspace-shell { min-height: 100dvh; }
+.workspace-sidebar { display: none; }
+.workspace-mobile-header { display:flex; height:64px; align-items:center; justify-content:space-between; padding:0 20px; background:#fbfcfe; border-bottom:1px solid #e4e8f0; }
+.workspace-content { width:100%; min-width:0; max-width:1208px; margin-inline:auto; padding:26px 20px 90px; }
+.workspace-brand { gap:10px; }
+.workspace-brand::before { content:"W"; display:grid; place-items:center; width:34px; height:34px; border-radius:11px; background:linear-gradient(135deg,#668ae7,#8c75dc); color:white; font-size:18px; }
+.workspace-nav-link { display:flex; align-items:center; min-height:44px; min-width:44px; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:700; }
+.workspace-nav-link:hover { background:#f3f6f9; }
+.workspace-nav-link[aria-current=page] { background:#eaf0ff; color:#4a6cc8; }
+.workspace-tree summary { font-size:14px; }
+.workspace-content { container-type:inline-size; }
+@container (min-width:600px) { .workspace-card-list { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (min-width:691px) {
+ .workspace-shell { display:grid; grid-template-columns:250px minmax(0,1fr); }
+ .workspace-sidebar { position:sticky; top:0; display:flex; height:100dvh; min-width:0; flex-direction:column; gap:26px; overflow-y:auto; border-right:1px solid #e4e8f0; background:#fbfcfe; padding:24px 18px; }
+ .workspace-mobile-header { display:none; }
+ .workspace-content { padding:30px 22px 64px; }
+}
+@media (min-width:951px) { .workspace-shell { grid-template-columns:278px minmax(0,1fr); } .workspace-content { padding-inline:38px; } }

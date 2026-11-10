@@ -10,6 +10,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { CaseDetailScreen } from "@/features/cases/components/case-detail-screen";
+import { CaseContext } from "@/features/cases/components/case-context";
+import { WorkspaceNavigation } from "@/features/auth/components/workspace-navigation";
 import { CaseForm } from "@/features/cases/components/case-form";
 import { CaseList } from "@/features/cases/components/case-list";
 import { WorkplaceDetailScreen } from "@/features/workplaces/components/workplace-detail-screen";
@@ -297,4 +299,31 @@ describe("dashboard and management user flows with MSW", () => {
     expect(app.queryClient.getQueryCache().getAll()).toHaveLength(0);
     await waitFor(() => expect(navigation.router.replace).toHaveBeenCalled());
   });
+});
+
+it("keeps payment drafts and mounted inputs when the management disclosure closes", async () => {
+  const { mount, user } = await setup();
+  mount(<CaseDetailScreen id={15} />);
+  await screen.findByRole("heading", { name: /급여 사례$/ });
+  const disclosure = screen.getByText("지급 거래·사례 배분 관리").closest("details")!;
+  expect(disclosure.open).toBe(false);
+  await user.click(within(disclosure).getByText("지급 거래·사례 배분 관리"));
+  const input = within(disclosure).getByLabelText("입금자");
+  await user.type(input, "보존할 초안");
+  await user.click(within(disclosure).getByText("지급 거래·사례 배분 관리"));
+  expect(disclosure.open).toBe(false);
+  await user.click(within(disclosure).getByText("지급 거래·사례 배분 관리"));
+  expect(within(disclosure).getByLabelText("입금자")).toBe(input);
+  expect(input).toHaveValue("보존할 초안");
+});
+it("provides all case tasks without workflow locks and preserves workplace routes", async () => {
+  const { mount } = await setup();
+  mount(<><WorkspaceNavigation /><CaseContext id={15} /></>);
+  const tasks = screen.getByRole("navigation", { name: "사례 작업" });
+  expect(within(tasks).getByRole("link", { name: "결과" })).toHaveAttribute("href", "/cases/15/result");
+  expect(within(tasks).getByRole("link", { name: "상담 준비" })).toHaveAttribute("href", "/cases/15/questions");
+  expect(within(tasks).getAllByRole("link")).toHaveLength(6);
+  expect(screen.getByRole("link", { name: "급여 사례 전체 목록" })).toHaveAttribute("href", "/cases");
+  await screen.findByText("카페 나무", { selector: "summary" });
+  expect(screen.getAllByRole("link", { hidden: true }).some(link => link.getAttribute("href") === "/workplaces/3/documents")).toBe(true);
 });

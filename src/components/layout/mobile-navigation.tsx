@@ -3,14 +3,14 @@
 import { Menu, X } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
-export function MobileNavigation({ children, label="메뉴", title="월급잇다 메뉴" }: { children: ReactNode; label?:string; title?:string }) {
+export function MobileNavigation({ children, label="메뉴", title="월급잇다 메뉴", breakpoint="64rem" }: { children: ReactNode; label?:string; title?:string; breakpoint?:string }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dialogId = useId();
   const titleId = useId();
 
   useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 64rem)");
+    const desktop = window.matchMedia(`(min-width: ${breakpoint})`);
     const dialog = dialogRef.current;
     const previousOverflow = document.body.style.overflow;
     const closeOnDesktop = () => { if (desktop.matches) dialog?.close(); };
@@ -27,7 +27,7 @@ export function MobileNavigation({ children, label="메뉴", title="월급잇다
       dialog?.removeEventListener("close", restoreScroll);
       restoreScroll();
     };
-  }, []);
+  }, [breakpoint]);
 
   return (
     <div className="lg:hidden">

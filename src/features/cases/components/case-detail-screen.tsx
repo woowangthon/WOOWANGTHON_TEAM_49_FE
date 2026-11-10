@@ -25,7 +25,7 @@ export function CaseDetailScreen({ id }: { id: number }) {
   const dto = query.data;
   const item = caseCard(dto);
   return (
-    <div className="space-y-6"><PaymentScreen workplaceId={dto.workplaceId} caseId={id} inputVersion={dto.inputVersion}/><DepositComparisonPanel caseId={id}/>
+    <div className="space-y-6">
       <Link href="/cases" className="inline-flex min-h-11 items-center text-body underline">급여 사례 목록</Link>
       <PageHeading title={`${item.workplaceName}의 급여 사례`} description={item.period} action={<Link href={`/workplaces/${dto.workplaceId}`} className={secondaryButton}>근무지 보기</Link>} />
       <section className={cardStyle} aria-label="급여 사례 상세 정보">
@@ -39,9 +39,11 @@ export function CaseDetailScreen({ id }: { id: number }) {
         </dl>
         <p className="mt-6 rounded-control bg-neutral-soft p-4 text-body">사례 상태와 작업 단계는 검사 준비 여부나 계산·대조 완료를 의미하지 않습니다.</p>
       </section>
+
       {saved && <p role="status" className="rounded-control bg-success-soft p-4 text-body">사례 정보를 저장했습니다.</p>}
       <nav aria-label="수기 자료와 계산 조건" className="flex flex-wrap gap-3"><Link href={`/cases/${id}/manual-records`} className={secondaryButton}>수기 자료 입력·관리</Link><Link href={`/cases/${id}/conditions`} className={secondaryButton}>계산 조건·실행 가능성</Link><Link href={`/cases/${id}/result`} className={secondaryButton}>통합 결과</Link><Link href={`/cases/${id}/compare`} className={secondaryButton}>대조·합계 검사</Link></nav>
       {<section className={cardStyle} aria-label="급여 사례 관리">{editing ? <CaseForm initial={dto} onSaved={() => { setEditing(false); setSaved(true); }} onCancel={() => setEditing(false)} /> : <div className="flex flex-wrap gap-3"><Link href={`/cases/${id}/upload`} className={primaryButton}>자료 등록·관리</Link><Link href={`/cases/${id}/review`} className={secondaryButton}>원문·추출값 검토</Link><button type="button" className={secondaryButton} onClick={() => { setEditing(true); setSaved(false); }}>사례 수정</button><DeleteCase id={id} /></div>}</section>}
+      <details className={cardStyle}><summary className="font-bold">지급 거래·사례 배분 관리</summary><p className="my-4 text-body text-muted">근무지 원거래와 이 사례에 배분한 금액을 구분해 관리합니다. 접어도 입력 중인 값은 유지됩니다.</p><PaymentScreen workplaceId={dto.workplaceId} caseId={id} inputVersion={dto.inputVersion}/><DepositComparisonPanel caseId={id}/></details>
     </div>
   );
 }
