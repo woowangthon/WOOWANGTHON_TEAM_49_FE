@@ -21,6 +21,13 @@ beforeEach(async()=>{
 });
 afterEach(()=>{cleanup();services.session.clear();services.queryClient.clear();vi.unstubAllGlobals();vi.restoreAllMocks()});
 function mount(node:ReactNode){return render(<AppServicesContext value={services}><QueryClientProvider client={services.queryClient}>{node}</QueryClientProvider></AppServicesContext>)}
+it("navigates report history past twenty records and back",async()=>{
+ const mock=createDevelopmentScenario(testApiUrl);server.use(...mock.handlers);await services.auth.login({email:"worker@example.com",password:"password1234"});
+ const api=supportApi(services.api);for(let i=0;i<21;i++)await api.create(15,[],`audit-${i}`);
+ mount(<ReportsScreen caseId={15}/>);await screen.findByRole("heading",{name:/보고서 #110 /});
+ fireEvent.click(screen.getByRole("button",{name:"다음 보고서"}));expect(await screen.findByRole("heading",{name:/보고서 #90 /})).toBeVisible();
+ expect(screen.getByRole("button",{name:"다음 보고서"})).toBeDisabled();fireEvent.click(screen.getByRole("button",{name:"이전 보고서"}));expect(await screen.findByRole("heading",{name:/보고서 #110 /})).toBeVisible();
+});
 it("shows the server original separately and never overwrites an in-flight edit",async()=>{
  let finish:()=>void=()=>{};const pending=new Promise<void>(resolve=>{finish=resolve});let count=0;
  server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,async({request})=>{count++;expect(await request.json()).toEqual({});await pending;return apiResponse({text:"서버 원문 0원 · 미확인 금액은 null",requiresUserReview:true,basedOnResultVersions:{comparison:3}})}));

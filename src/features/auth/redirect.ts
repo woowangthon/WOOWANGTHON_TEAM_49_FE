@@ -14,7 +14,7 @@ export function safeReturnTo(value: string | null | undefined): string {
       decoded.split("/").some((part) => part === "." || part === "..")
     ) return fallback;
     const url = new URL(value, internalOrigin);
-    if (url.origin !== internalOrigin || !/^\/(dashboard|workplaces|cases|library|settings)(\/|$)/.test(url.pathname)) return fallback;
+    if (url.origin !== internalOrigin || !/^\/(dashboard|workplaces|cases|library|settings|consultation-centers)(\/|$)/.test(url.pathname)) return fallback;
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return fallback;

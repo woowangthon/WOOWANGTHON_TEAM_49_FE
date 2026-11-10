@@ -6,8 +6,8 @@ import { businessKeys } from "@/lib/query/business-keys";
 import { paymentsApi } from "./api";
 export function usePayments(w:number,page=1,c?:number) {
  const s=useSessionScope();const api=paymentsApi(s.api);
- const transactions=useQuery({queryKey:[...businessKeys.workplace(s.generation,w),"payments",page],queryFn:()=>api.list(w,page),enabled:s.enabled});
- const allocations=useQuery({queryKey:[...businessKeys.case(s.generation,c??0),"deposits"],queryFn:()=>api.allocations(c!),enabled:s.enabled&&!!c});
+ const transactions=useQuery({queryKey:[...businessKeys.workplace(s.generation,w),"payments",page],queryFn:({signal})=>api.list(w,page,signal),enabled:s.enabled});
+ const allocations=useQuery({queryKey:[...businessKeys.case(s.generation,c??0),"deposits"],queryFn:({signal})=>api.allocations(c!,signal),enabled:s.enabled&&!!c});
  const action=useMutation({gcTime:0,mutationFn:(run:()=>Promise<unknown>)=>run(),onSuccess:data=>{
  if(s.session.getSnapshot().generation!==s.generation||!c||!data||typeof data!=="object")return;
  const meta=data as {recompute?:{scheduled?:boolean;jobId?:string}};

@@ -17,17 +17,17 @@ function decode<T>(schema: { safeParse: (value: unknown) => { success: true; dat
 export function createAuthApi(api: ApiClient, baseUrl: string) {
   return {
     signup: (body: SignupRequest, signal?: AbortSignal) => api.requestJson(
-      "/auth/signup", () => undefined, { method: "POST", body, auth: "none", signal },
+      "/auth/signup", () => undefined, { method: "POST", body, auth: "none", signal, expectedStatus: 201 },
     ),
     login: (body: LoginRequest, signal?: AbortSignal) => api.requestJson(
-      "/auth/login", decode(loginResponseSchema), { method: "POST", body, auth: "none", signal },
+      "/auth/login", decode(loginResponseSchema), { method: "POST", body, auth: "none", signal, expectedStatus: 200 },
     ),
     forgotPassword: (email: string) => api.requestAccepted("/auth/forgot-password", { method: "POST", body: { email }, auth: "none" }),
     resetPassword: (token: string, newPassword: string) => api.requestNoContent("/auth/reset-password", { method: "POST", body: { token, newPassword }, auth: "none" }),
     deleteAccount: () => api.requestAccepted("/users/me", { method: "DELETE", body: { confirmation: "DELETE_ACCOUNT" }, refresh: false }),
     // Receipt cookie only. Never refresh or send a Bearer credential here.
     deletionStatus: (signal?: AbortSignal) => api.requestJson("/users/me/deletion", decode(deletionSchema), { auth: "none", refresh: false, expectedStatus: 200, signal }),
-    getMe: (signal?: AbortSignal) => api.requestJson("/users/me", decode(userSchema), { signal }),
+    getMe: (signal?: AbortSignal) => api.requestJson("/users/me", decode(userSchema), { signal, expectedStatus: 200 }),
     async logout(accessToken: string | null) {
       // Main session is revoked immediately. Keep only this bounded logout request alive.
       const isolatedSession = createMemorySession();

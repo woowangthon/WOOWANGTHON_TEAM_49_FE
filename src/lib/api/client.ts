@@ -175,7 +175,7 @@ export function createApiClient(options: ClientOptions) {
       return request(path, init, "application/octet-stream, application/pdf, application/zip, image/*", async (response) => {
         const mediaType = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
         if (
-          response.status === 204 ||
+          response.status !== 200 ||
           !mediaType ||
           (!["application/octet-stream", "application/pdf", "application/zip"].includes(mediaType) && !mediaType.startsWith("image/"))
         ) throw protocolError();

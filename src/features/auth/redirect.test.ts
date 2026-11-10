@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { loginHref, safeReturnTo } from "./redirect";
 
 describe("validated login return paths", () => {
-  it.each(["/dashboard", "/dashboard?tab=my-cases", "/cases/15/review?documentId=3", "/workplaces/2", "/library", "/settings#profile"]) (
+  it.each(["/consultation-centers?category=WAGE", "/dashboard", "/dashboard?tab=my-cases", "/cases/15/review?documentId=3", "/workplaces/2", "/library", "/settings#profile"]) (
     "preserves an internal workspace destination: %s", (path) => expect(safeReturnTo(path)).toBe(path),
   );
 

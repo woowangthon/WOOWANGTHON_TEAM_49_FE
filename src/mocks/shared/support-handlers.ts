@@ -37,7 +37,12 @@ export function supportMocks(base: string, getResult: (c: number) => Results | u
       return apiResponse({ text: "[개발용 서버 초안 예시] 급여 산정에 사용된 조건과 자료를 확인 부탁드립니다. 표시된 차이는 확정된 미지급임금이 아니며 관련 근거를 함께 검토하고 싶습니다.", basedOnResultVersions: Object.fromEntries(Object.entries(result.versions).map(([k,v]) => [k,v?.version ?? null])), requiresUserReview: true });
     }),
     http.get(`${base}/cases/:c/questions`, ({ params }) => !getResult(Number(params.c)) ? missing() : apiResponse({ questions: Number(params.c) === 15 ? [{ questionId: 12, type: "MISSING_CONDITION", question: "계산 조건을 확인해 주세요.", reason: "개발용 예시 질문입니다.", relatedItemId: "conditions" }] : [] })),
-    http.get(`${base}/cases/:c/reports`, ({ params }) => { const c = Number(params.c); return getResult(c) ? apiResponse({ items: (records.get(c) ?? []).map(r => view(c,r)) }) : missing(); }),
+    http.get(`${base}/cases/:c/reports`, ({ params, request }) => {
+      const c = Number(params.c), query = new URL(request.url).searchParams;
+      const page = Math.max(1, Number(query.get("page")) || 1), size = Math.min(100, Math.max(1, Number(query.get("size")) || 20));
+      const items = (records.get(c) ?? []).map(r => view(c,r));
+      return getResult(c) ? apiResponse({ items: items.slice((page-1)*size,page*size),page,size,total:items.length }) : missing();
+    }),
     http.post(`${base}/cases/:c/reports`, async ({ params, request }) => {
       const c = Number(params.c), result = getResult(c); if (!result) return missing();
       const body = await request.json() as { documentIds: number[]; includeOriginalDocuments: boolean; useLatestAvailableResults: boolean; acknowledgeOutdatedResults: boolean };

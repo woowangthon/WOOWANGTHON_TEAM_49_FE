@@ -7,10 +7,10 @@ import { workplaceSchema, type WorkplaceWrite } from "./schemas";
 
 export function workplaceApi(api: ApiClient) {
   return {
-    list: (pagination: PaginationInput, signal?: AbortSignal) => api.requestJson(`/workplaces?${paginationSearch(pagination)}`, decodeWith(pageSchema(workplaceSchema)), { signal }),
-    detail: (id: number, signal?: AbortSignal) => api.requestJson(`/workplaces/${id}`, decodeWith(workplaceSchema), { signal }),
-    create: (body: WorkplaceWrite) => api.requestJson("/workplaces", decodeWith(z.object({ workplaceId: z.number().int().positive() })), { method: "POST", body: { ...body } }),
-    update: (id: number, body: Partial<WorkplaceWrite>) => api.requestJson(`/workplaces/${id}`, () => undefined, { method: "PATCH", body: { ...body } }),
+    list: (pagination: PaginationInput, signal?: AbortSignal) => api.requestJson(`/workplaces?${paginationSearch(pagination)}`, decodeWith(pageSchema(workplaceSchema)), { signal, expectedStatus: 200 }),
+    detail: (id: number, signal?: AbortSignal) => api.requestJson(`/workplaces/${id}`, decodeWith(workplaceSchema), { signal, expectedStatus: 200 }),
+    create: (body: WorkplaceWrite) => api.requestJson("/workplaces", decodeWith(z.object({ workplaceId: z.number().int().positive() })), { expectedStatus: 201, method: "POST", body: { ...body } }),
+    update: (id: number, body: Partial<WorkplaceWrite>) => api.requestJson(`/workplaces/${id}`, () => undefined, { expectedStatus: 200, method: "PATCH", body: { ...body } }),
     // P0 API_ENDPOINTS supplies the status omitted from the narrative PDF.
     remove: (id: number) => api.requestNoContent(`/workplaces/${id}`, { method: "DELETE" }),
   };

@@ -22,6 +22,6 @@ export function createRefreshAccessToken(options: {
       if (!parsed.success) throw protocolError();
       return parsed.data.accessToken;
     },
-    { method: "POST", auth: "none", signal },
+    { method: "POST", auth: "none", signal, expectedStatus: 200 },
   );
 }

@@ -25,7 +25,8 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
  const prefix=['chats',s.generation,w];
  const list=useQuery({queryKey:[...prefix,'list',page],queryFn:({signal})=>api.list(page,signal),enabled:s.enabled});
  const detail=useQuery({queryKey:[...prefix,'detail',id,history],queryFn:({signal})=>api.detail(id!,history,signal),enabled:s.enabled&&!!id,staleTime:0});
- const cases=useCases(1,100,w);
+ const [casePage,setCasePage]=useState(1);
+ const cases=useCases(casePage,100,w);
  useEffect(()=>()=>abort.current?.abort(),[]);
  useEffect(()=>{if(follow.current)bottom.current?.scrollIntoView({block:'nearest'});},[draft]);
  const refresh=()=>s.queryClient.invalidateQueries({queryKey:prefix});
@@ -44,16 +45,18 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
     if(event.event==='error'){setPhase('AI 생성 실패');setError(`${event.data.errorCode} · ${event.data.retryable?'재시도 가능':'재시도 불가'}`);}
    });
   }catch(e){if(!ctrl.signal.aborted){setPhase('실패 · 저장 상태 확인 필요');setError(e instanceof Error?e.message:'네트워크 오류');}}
-  finally{if(!ctrl.signal.aborted){await refresh();setDraft('');setBusy(false);lock.current=false;}}
+  finally{if(!ctrl.signal.aborted){await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}}
  }
- async function cancel(){if(!id||!run)return;setPhase('취소 요청 중');try{await api.cancel(id,run);setPhase('취소 접수 · 서버 상태 확인 중');abort.current?.abort();await refresh();setDraft('');setBusy(false);lock.current=false;}catch(e){setPhase('취소 실패');setError(e instanceof Error?e.message:'취소 실패');}}
+ async function cancel(){if(!id||!run)return;setPhase('취소 요청 중');try{await api.cancel(id,run);setPhase('취소 접수 · 서버 상태 확인 중');abort.current?.abort();await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}catch(e){setPhase('취소 실패');setError(e instanceof Error?e.message:'취소 실패');}}
  const chatList=( <div className={`${cardStyle} min-w-0 space-y-3`}><h2 className="font-bold">대화 목록</h2>
- {list.isPending?<p>대화 불러오는 중</p>:list.isError?<p role="alert">대화 목록 조회 실패</p>:list.data.items.length?list.data.items.map(c=><Link className="block rounded border p-2 aria-[current=page]:bg-neutral-soft aria-[current=page]:font-bold" key={c.chatId} aria-current={id===c.chatId?"page":undefined} href={`/workplaces/${w}/chats/${c.chatId}`}>{c.title}<small className="block">{c.lastMessagePreview}<br/>{c.updatedAt}</small></Link>):<p>저장된 대화가 없습니다.</p>}
+ {list.isPending?<p>대화 불러오는 중</p>:list.isError?<p role="alert">대화 목록 조회 실패 <button onClick={()=>void list.refetch()}>대화 목록 다시 조회</button></p>:list.data.items.length?list.data.items.map(c=><Link className="block rounded border p-2 aria-[current=page]:bg-neutral-soft aria-[current=page]:font-bold" key={c.chatId} aria-current={id===c.chatId?"page":undefined} href={`/workplaces/${w}/chats/${c.chatId}`}>{c.title}<small className="block">{c.lastMessagePreview}<br/>{c.updatedAt}</small></Link>):<p>저장된 대화가 없습니다.</p>}
  <button disabled={page===1} onClick={()=>setPage(p=>p-1)}>이전 목록</button><button disabled={!list.data||page*20>=list.data.total} onClick={()=>setPage(p=>p+1)}>다음 목록</button>
  <form onSubmit={e=>{e.preventDefault();void action(async()=>{const c=await api.create(title,Number(caseId));router.push(`/workplaces/${w}/chats/${c.chatId}`);});}} className="space-y-2">
  <label className="block">새 대화 제목<input className="w-full border p-2" required value={title} onChange={e=>setTitle(e.target.value)}/></label>
  <label className="block">기본 Case<select required className="w-full border p-2" value={caseId} onChange={e=>setCaseId(e.target.value)}><option value="">Case 선택</option>{cases.data?.items.filter(c=>c.workplaceId===w).map(c=><option key={c.caseId} value={c.caseId}>Case #{c.caseId}</option>)}</select></label>
- <button className={secondaryButton} disabled={busy||!caseId}>새 채팅</button></form></div>);
+ {cases.isError&&<p role="alert">Case 목록 조회 실패 <button type="button" onClick={()=>void cases.refetch()}>Case 목록 다시 조회</button></p>}
+ <div><button type="button" disabled={casePage===1||cases.isFetching} onClick={()=>{setCaseId('');setCasePage(p=>p-1);}}>이전 Case 목록</button><span>{casePage}페이지</span><button type="button" disabled={!cases.data||cases.isFetching||casePage*100>=cases.data.total} onClick={()=>{setCaseId('');setCasePage(p=>p+1);}}>다음 Case 목록</button></div>
+ <button className={secondaryButton} disabled={busy||!caseId||cases.isError||cases.isFetching}>새 채팅</button></form></div>);
  return <div className="min-w-0 space-y-4 [overflow-wrap:anywhere]">
  <Link href={`/workplaces/${w}`} className="underline">근무지로 돌아가기</Link><h1 className="text-2xl font-bold">AI 자료 도우미</h1>
  <p>AI 설명은 공식 임금 계산 결과와 구분됩니다. 저장된 모든 과거 대화가 모델에 전달된다는 의미는 아닙니다.</p>
@@ -62,18 +65,19 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
  <div className="grid min-w-0 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
  <div className="hidden lg:block">{chatList}</div>
  <section className="min-w-0 space-y-4">
- {!id?<p>Case를 선택하고 새 대화를 시작하거나 기존 대화를 선택하세요.</p>:detail.isPending?<p>과거 기록 불러오는 중</p>:detail.isError?<p role="alert">대화에 접근할 수 없습니다. 삭제 또는 권한과 응답 형식을 확인하세요.</p>:<>
+ {!id?<p>Case를 선택하고 새 대화를 시작하거나 기존 대화를 선택하세요.</p>:detail.isPending?<p>과거 기록 불러오는 중</p>:detail.isError?<p role="alert">대화에 접근할 수 없습니다. 삭제 또는 권한과 응답 형식을 확인하세요. <button onClick={()=>void detail.refetch()}>대화 기록 다시 조회</button></p>:<>
  <h2 className="font-bold">{detail.data.session.title}</h2>
  <form onSubmit={e=>{e.preventDefault();void action(()=>api.rename(id,title));}} className="flex flex-wrap gap-2"><label>수정할 제목<input required className="w-full border" value={title} onChange={e=>setTitle(e.target.value)}/></label><button disabled={busy} className={secondaryButton}>제목 수정</button><button type="button" disabled={busy} onClick={()=>{if(window.confirm('이 대화를 삭제할까요?'))void action(async()=>{await api.remove(id);s.queryClient.removeQueries({queryKey:[...prefix,'detail',id]});router.replace(`/workplaces/${w}/chats`);});}}>대화 삭제</button></form>
  <div className="max-h-[60vh] min-w-0 space-y-4 overflow-y-auto" onScroll={e=>{const el=e.currentTarget;follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<80;}}>
  {detail.data.messages.items.map(m=><StoredMessage key={m.messageId} message={m} retry={()=>void send(m.messageId)} busy={busy} returnTo={`/workplaces/${w}/chats/${id}`}/>)}
- {busy&&<article className={cardStyle}><p>{phase}{mode==='mock'?' · 개발용 사전 작성 답변(mock)':''}</p><ChatMarkdown content={draft}/></article>}<div ref={bottom}/></div>
+<div ref={bottom}/></div>
  <button disabled={history===1||busy} onClick={()=>setHistory(p=>p-1)}>이전 기록</button><button disabled={busy||history*20>=detail.data.messages.total} onClick={()=>setHistory(p=>p+1)}>다음 기록</button>
  <p role="status" aria-live="polite">{phase}</p>
  <form onSubmit={e=>{e.preventDefault();void send();}} className="space-y-2">
  <label className="block"><input type="checkbox" disabled={busy} checked={all} onChange={e=>setAll(e.target.checked)}/> 근무지 전체 참조</label><p>{all?'현재 근무지의 모든 Case로 참조 범위가 넓어집니다.':`기본 범위: ${detail.data.session.defaultScope.scopeType==='CASE'?`Case #${detail.data.session.defaultScope.caseId}`:'근무지 전체 (서버 기본값)'}`}</p>
  <label className="block" htmlFor="chat-question">질문</label><textarea id="chat-question" className="w-full min-w-0 rounded border p-3" required value={content} disabled={busy} onChange={e=>setContent(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send();}}}/>
  <button className={secondaryButton} disabled={busy||!content.trim()}>전송</button>{busy&&<button type="button" disabled={!run||phase==='취소 요청 중'} onClick={()=>void cancel()}>답변 중지</button>}</form></>}
+ {(busy||draft)&&<article className={cardStyle}><p>{phase}{mode==='mock'?' · 개발용 사전 작성 답변(mock)':''}</p><ChatMarkdown content={draft}/>{!busy&&<><p>수신한 임시 답변입니다. 저장 기록과 완료 상태를 확인하세요.</p><button onClick={()=>setDraft('')}>임시 답변 닫기</button></>}</article>}
  </section></div></div>;
 }
 export function StoredMessage({message:m,retry,busy,returnTo}:{message:Message;retry:()=>void;busy:boolean;returnTo?:string}){
