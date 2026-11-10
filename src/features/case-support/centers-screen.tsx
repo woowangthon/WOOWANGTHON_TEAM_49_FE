@@ -24,11 +24,11 @@ export function CentersScreen() {
   return <div className="min-w-0 space-y-5 [overflow-wrap:anywhere]">
     <h1 className="text-title font-bold">상담기관 찾기</h1><p>조회는 상담 예약·접수가 아닙니다. 연락 전 기관의 공식 정보를 확인하세요.</p>
     <form className={`${cardStyle} grid min-w-0 gap-4 sm:grid-cols-2`} onSubmit={e => { e.preventDefault(); setFilters({ region, category, page: 1 }); }}>
-      <label>지역<input className="mt-1 block w-full min-w-0 rounded-control border p-3" placeholder="예: 청주시" value={region} onChange={e => setRegion(e.target.value)}/></label>
-      <label>상담 분야<select aria-label="상담 분야" className="mt-1 block w-full min-w-0 rounded-control border p-3" value={category} onChange={e => setCategory(e.target.value)}><option value="">전체 분야</option><option value="WAGE">임금</option></select></label>
+      <label>지역<input className="ui-control " placeholder="예: 청주시" value={region} onChange={e => setRegion(e.target.value)}/></label>
+      <label>상담 분야<select aria-label="상담 분야" className="ui-control " value={category} onChange={e => setCategory(e.target.value)}><option value="">전체 분야</option><option value="WAGE">임금</option></select></label>
       <button className={secondaryButton} disabled={q.isFetching}>기관 조회</button>
     </form>
-    <label className="block">현재 페이지 기관명 검색<input className="mt-1 block w-full rounded-control border p-3" value={search} onChange={e => setSearch(e.target.value)}/></label><p>이름 검색은 현재 조회 페이지에만 적용됩니다.</p>
+    <label className="block">현재 페이지 기관명 검색<input className="ui-control " value={search} onChange={e => setSearch(e.target.value)}/></label><p>이름 검색은 현재 조회 페이지에만 적용됩니다.</p>
     {q.isPending ? <QueryFeedback pending/> : q.isError ? <QueryFeedback error={q.error} retry={() => void q.refetch()}/> : <>
       {q.data.nationwideFallbackUsed && <p role="status">지역 대신 전국 단위 대안을 표시합니다.</p>}
       {!items?.length && <p>표시할 상담기관이 없습니다. 지역·분야 또는 페이지 내 검색어를 바꿔 주세요.</p>}

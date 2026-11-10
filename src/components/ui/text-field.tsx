@@ -1,8 +1,8 @@
 import type { ComponentProps } from "react";
 
-export function TextField({ label, error, id, ...props }: ComponentProps<"input"> & {
+export function TextField({ label, error, hint, className, "aria-describedby": describedBy, id, ...props }: ComponentProps<"input"> & {
   label: string;
-  error?: string;
+  error?: string; hint?: string;
   id: string;
 }) {
   return (
@@ -12,9 +12,10 @@ export function TextField({ label, error, id, ...props }: ComponentProps<"input"
         {...props}
         id={id}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className="min-h-12 w-full min-w-0 rounded-control border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted disabled:cursor-wait disabled:bg-surface-muted aria-invalid:border-danger"
+        aria-describedby={[describedBy, hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") || undefined}
+        className={`ui-control ${className ?? ""}`}
       />
+      {hint && <p id={`${id}-hint`} className="text-caption text-muted">{hint}</p>}
       {error && <p id={`${id}-error`} role="alert" className="text-caption font-medium text-foreground">{error}</p>}
     </div>
   );

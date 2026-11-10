@@ -10,7 +10,7 @@ import { useDocuments, useRecomputeStatus } from "../queries";
 import { DocumentList } from "./document-list";
 import { UploadForm } from "./upload-form";
 export function LibraryScreen() {
-  return <div className="min-w-0 space-y-6"><PageHeading title="전체 자료함" description="근무지별 공유 원본과 연결된 급여 사례를 확인합니다." action={<Link className={secondaryButton} href="/workplaces">근무지에서 자료 등록</Link>} /><DocumentNotice /><DocumentList context={{kind: "library"}} /></div>;
+  return <div className="min-w-0 space-y-6"><PageHeading variant="library" title="전체 자료함" description="근무지별 공유 원본과 연결된 급여 사례를 확인합니다." action={<Link className={secondaryButton} href="/workplaces">근무지에서 자료 등록</Link>} /><DocumentNotice /><DocumentList context={{kind: "library"}} /></div>;
 }
 function DocumentNotice() {
   return <p className="rounded-control bg-neutral-soft p-4 text-body">처리 완료(READY)는 사용자 검토 확인(CONFIRMED)과 다릅니다. 연결된 사례의 검토 화면에서 원문과 추출값을 확인해 주세요.</p>;
@@ -21,7 +21,7 @@ export function WorkplaceDocumentsScreen({ id }: { id: number }) {
   if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 근무지입니다.</p>;
   if (query.isPending) return <QueryFeedback pending />;
   if (query.isError) return <QueryFeedback error={query.error} retry={() => { void query.refetch(); }} />;
-  return <div className="min-w-0 space-y-6"><PageHeading title={`${query.data.name} 자료함`} description="이 근무지의 공유 원본입니다. 연결 해제와 원본 삭제는 서로 다른 작업입니다." action={<Link href={`/workplaces/${id}`} className={secondaryButton}>근무지 상세</Link>} /><DocumentNotice /><UploadForm context={{ kind: "workplace", id }} /><DocumentList context={{ kind: "workplace", id }} /></div>;
+  return <div className="min-w-0 space-y-6"><PageHeading variant="library" title={`${query.data.name} 자료함`} description="이 근무지의 공유 원본입니다. 연결 해제와 원본 삭제는 서로 다른 작업입니다." action={<Link href={`/workplaces/${id}`} className={secondaryButton}>근무지 상세</Link>} /><DocumentNotice /><UploadForm context={{ kind: "workplace", id }} /><DocumentList context={{ kind: "workplace", id }} /></div>;
 }
 function RecomputeNotice({ id }: { id: number }) {
   const query = useRecomputeStatus(id);
@@ -41,7 +41,7 @@ function CaseDocuments({ id, workplaceId, workplaceName, inputVersion }: { id: n
   const docs = useDocuments({ kind: "case", id }, { page: 1, size: 20 });
   const canAdd = !!docs.data && !docs.isError && docs.data.total < 20;
   return <div className="min-w-0 space-y-6">
-    <PageHeading title={`${workplaceName} 자료 등록`} description="파일을 새로 올리거나 같은 근무지의 기존 원본을 연결하세요." action={<Link href={`/cases/${id}`} className={secondaryButton}>사례 상세</Link>} />
+    <PageHeading variant="library" title={`${workplaceName} 자료 등록`} description="파일을 새로 올리거나 같은 근무지의 기존 원본을 연결하세요." action={<Link href={`/cases/${id}`} className={secondaryButton}>사례 상세</Link>} />
     <div className="flex flex-wrap gap-3"><Link className={secondaryButton} href={`/workplaces/${workplaceId}/documents`}>근무지 공유 자료함</Link><Link className={secondaryButton} href="/library">전체 자료함</Link></div>
     <Link href={`/cases/${id}/review`} className={secondaryButton}>원문·추출값 검토</Link>
     <div className="flex flex-wrap gap-3"><Link href={`/cases/${id}/manual-records`} className={secondaryButton}>수기 자료 입력·관리</Link><Link href={`/cases/${id}/conditions`} className={secondaryButton}>계산 조건·실행 가능성</Link></div>
