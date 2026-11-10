@@ -1,4 +1,5 @@
 "use client";
+import { SupportLinks } from "@/features/case-support/screens";
 import { SelectedSnapshot } from "./selected-snapshot";
 import type { SnapshotKind } from "./snapshot-link";
 import { DepositComparisonPanel } from "@/features/payments/comparison-panel";
@@ -32,7 +33,7 @@ export function ResultScreen({caseId, compare=false, selection, returnTo}:{caseI
  <nav className="flex flex-wrap gap-3"><Link className={secondaryButton} href={`/cases/${caseId}`}>사례로</Link><Link className={secondaryButton} href={`/cases/${caseId}/${compare ? "result" : "compare"}`}>{compare ? "통합 결과" : "대조·합계 검사"}</Link><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>조건 보완</Link></nav>
  <p>차이 발견은 미지급임금 확정을 의미하지 않습니다. 공제액의 적법성이나 세금·보험료의 적정성을 판단하지 않습니다.</p>
  {returnTo&&<Link href={returnTo} className={secondaryButton}>원래 채팅으로 돌아가기</Link>}{selection!==undefined&&<SelectedSnapshot caseId={caseId} selection={selection}/>}
- <DepositComparisonPanel caseId={caseId}/><InputStatus caseId={caseId} compact/>{job?.jobId && <details className={cardStyle}><summary>작업 상세 · {job.jobId}</summary>{detail.isPending?<QueryFeedback pending/>:detail.isError?<QueryFeedback error={detail.error} retry={()=>void detail.refetch()}/>:<ServerValue value={detail.data} caseId={caseId}/>}</details>}{(["calculations","comparisons","payslip-validations"] as const).map(endpoint=><ResultHistory key={endpoint} caseId={caseId} endpoint={endpoint}/> )}
+ <SupportLinks caseId={caseId}/><DepositComparisonPanel caseId={caseId}/><InputStatus caseId={caseId} compact/>{job?.jobId && <details className={cardStyle}><summary>작업 상세 · {job.jobId}</summary>{detail.isPending?<QueryFeedback pending/>:detail.isError?<QueryFeedback error={detail.error} retry={()=>void detail.refetch()}/>:<ServerValue value={detail.data} caseId={caseId}/>}</details>}{(["calculations","comparisons","payslip-validations"] as const).map(endpoint=><ResultHistory key={endpoint} caseId={caseId} endpoint={endpoint}/> )}
  {!q.data ? <QueryFeedback pending={q.isPending} error={q.error} retry={()=>void q.refetch()}/> : <>
  {q.isError && <><p role="alert">최신 결과 조회에 실패해 직전 조회 결과를 보존합니다. 최신성을 다시 확인해 주세요.</p><QueryFeedback error={q.error} retry={()=>void q.refetch()}/></>}
  <div className="flex flex-wrap gap-3">{(["recompute","calculations","comparisons","payslip-validations"] as const).map(endpoint=><button key={endpoint} className={secondaryButton} disabled={busy} onClick={async()=>{if(lock.current||busy)return;lock.current=true;try{await execution.mutateAsync({endpoint,version:q.data.currentInputVersion});}catch{}finally{lock.current=false;}}}>{{recompute:"전체 수동 재실행",calculations:"계산 재실행",comparisons:"대조 재실행","payslip-validations":"합계 검사 재실행"}[endpoint]}</button>)}</div>

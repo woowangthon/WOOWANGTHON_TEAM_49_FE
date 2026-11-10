@@ -1,0 +1,17 @@
+import { reportPdf,snapshotZip } from "./report-files";
+import { http, HttpResponse } from "msw";
+import { apiResponse } from "./response";
+import type { Report } from "@/features/case-support/schemas";
+import type { Results } from "@/features/results/schemas";
+export function supportMocks(base:string,getResult:(c:number)=>Results|undefined,allowed:(c:number)=>number[]) {
+ const records=new Map<number,Report[]>();const polls=new Map<number,number>();const keys=new Map<string,{body:string;report:Report}>();let sequence=90;
+ const missing=()=>apiResponse({errorCode:"RESOURCE_NOT_FOUND"},404);
+ const view=(c:number,r:Report)=>({...r,isCurrent:r.basedOnInputVersion===getResult(c)?.currentInputVersion});
+ return [http.get(`${base}/cases/:c/reports/:r/:kind`,({params})=>{const c=Number(params.c);if(!getResult(c))return missing();const r=records.get(c)?.find(r=>r.reportId===Number(params.r));if(!r)return missing();if(r.status!=="READY")return apiResponse({errorCode:"REPORT_NOT_READY"},409);if(params.kind!=="pdf"&&params.kind!=="originals")return missing();const pdf=params.kind==="pdf";return new HttpResponse(pdf?reportPdf(r):snapshotZip(r),{headers:{"Content-Type":pdf?"application/pdf":"application/zip","Content-Disposition":`attachment; filename="report-${r.reportId}.${pdf?"pdf":"zip"}"`}})}),http.get(`${base}/cases/:c/questions`,({params})=>{const c=Number(params.c);if(!getResult(c))return missing();return apiResponse({questions:c===15?[{questionId:12,type:"MISSING_CONDITION",question:"계산 조건을 확인해 주세요.",reason:"개발용 예시 질문입니다.",relatedItemId:"conditions"}]:[]})}),
+ http.get(`${base}/cases/:c/reports`,({params})=>{const c=Number(params.c);return getResult(c)?apiResponse({items:(records.get(c)??[]).map(r=>view(c,r))}):missing()}),
+ http.post(`${base}/cases/:c/reports`,async({params,request})=>{const c=Number(params.c);const result=getResult(c);if(!result)return missing();const body=await request.json() as {documentIds:number[]};if(!Array.isArray(body.documentIds)||body.documentIds.some(id=>!allowed(c).includes(id)))return apiResponse({errorCode:"INVALID_DOCUMENT_SELECTION"},422);
+ const key=`${c}:${request.headers.get("Idempotency-Key")}`;const prior=keys.get(key);if(prior)return prior.body===JSON.stringify(body)?apiResponse(prior.report,202):apiResponse({errorCode:"IDEMPOTENCY_KEY_REUSED"},409);
+ const versions=Object.values(result.versions);if(!versions.some(v=>v?.snapshotId)||versions.some(v=>v&&["UPDATING","STALE"].includes(v.freshness)))return apiResponse({errorCode:"REPORT_SOURCE_STALE"},409);
+ const r:Report={reportId:sequence++,version:(records.get(c)?.length??0)+1,status:"PROCESSING",basedOnInputVersion:result.currentInputVersion,referencedSnapshots:Object.fromEntries(Object.entries(result.versions).map(([k,v])=>[k,v?.snapshotId??null])),selectedDocumentIds:[...body.documentIds],createdAt:new Date().toISOString(),isCurrent:true};records.set(c,[r,...records.get(c)??[]]);keys.set(key,{body:JSON.stringify(body),report:structuredClone(r)});return apiResponse(r,202)}),
+ http.get(`${base}/cases/:c/reports/:r`,({params})=>{const c=Number(params.c);if(!getResult(c))return missing();const r=records.get(c)?.find(r=>r.reportId===Number(params.r));if(!r)return missing();const n=polls.get(r.reportId)??0;polls.set(r.reportId,n+1);if(n>=2){r.status=r.selectedDocumentIds.length?"FAILED":"READY";r.errorCode=r.selectedDocumentIds.length?"MOCK_ORIGINAL_ARCHIVE_NOT_IMPLEMENTED":null}return apiResponse(view(c,r))})];
+}
