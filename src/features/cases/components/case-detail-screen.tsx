@@ -38,7 +38,7 @@ export function CaseDetailScreen({ id }: { id: number }) {
         <p className="mt-6 rounded-control bg-neutral-soft p-4 text-body">사례 상태와 작업 단계는 검사 준비 여부나 계산·대조 완료를 의미하지 않습니다.</p>
       </section>
       {saved && <p role="status" className="rounded-control bg-success-soft p-4 text-body">사례 정보를 저장했습니다.</p>}
-      <nav aria-label="수기 자료와 계산 조건" className="flex flex-wrap gap-3"><Link href={`/cases/${id}/manual-records`} className={secondaryButton}>수기 자료 입력·관리</Link><Link href={`/cases/${id}/conditions`} className={secondaryButton}>계산 조건·실행 가능성</Link></nav>
+      <nav aria-label="수기 자료와 계산 조건" className="flex flex-wrap gap-3"><Link href={`/cases/${id}/manual-records`} className={secondaryButton}>수기 자료 입력·관리</Link><Link href={`/cases/${id}/conditions`} className={secondaryButton}>계산 조건·실행 가능성</Link><Link href={`/cases/${id}/result`} className={secondaryButton}>통합 결과</Link><Link href={`/cases/${id}/compare`} className={secondaryButton}>대조·합계 검사</Link></nav>
       {<section className={cardStyle} aria-label="급여 사례 관리">{editing ? <CaseForm initial={dto} onSaved={() => { setEditing(false); setSaved(true); }} onCancel={() => setEditing(false)} /> : <div className="flex flex-wrap gap-3"><Link href={`/cases/${id}/upload`} className={primaryButton}>자료 등록·관리</Link><Link href={`/cases/${id}/review`} className={secondaryButton}>원문·추출값 검토</Link><button type="button" className={secondaryButton} onClick={() => { setEditing(true); setSaved(false); }}>사례 수정</button><DeleteCase id={id} /></div>}</section>}
     </div>
   );

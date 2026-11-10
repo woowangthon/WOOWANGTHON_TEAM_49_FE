@@ -43,7 +43,7 @@ describe("browser development scenario through the existing MSW infrastructure",
     const response = await request("/workplaces/3/documents/101/file", token);
     expect(response.headers.get("Content-Type")).toBe("application/pdf");
     expect((await response.text()).startsWith("%PDF-1.4")).toBe(true);
-    expect((await request("/cases/15/results", token)).status).toBe(501);
+    expect((await request("/cases/15/unsupported-feature", token)).status).toBe(501);
   });
   it("revokes Case document access after deletion while preserving the original", async () => {
     await request("/cases/15", token, "DELETE");

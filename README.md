@@ -698,3 +698,18 @@ Edge 네 폭의 합성 PDF/이미지·필드·공유값·교체 흐름은 MSW �
 
 새 P0 204 계약을 반영한 최신 빌드에서 기존 자료함의 업로드·연결·해제·원본 삭제 흐름도 Edge 네 폭으로 재검증했습니다.
 `test-results/documents-browser-report.json`과 `review-browser-report.json` 모두 오류·가로 넘침 없이 통과했습니다.
+
+
+## 7차 개발 — 현재 구현 및 미완료 범위
+
+`/cases/[caseId]/result`, `/cases/[caseId]/compare`에서 통합 결과, 계산/대조/합계 검사 상세, 서버 최신성 및 버전을 표시합니다. 기존 세션·API 클라이언트·Query 캐시·readiness·recompute polling을 재사용합니다. null은 미제공으로 유지하고 클라이언트 임금 계산은 수행하지 않습니다. 수동 실행은 confirmed/expectedInputVersion으로 요청하고 접수 jobId를 기존 polling에 연결합니다.
+
+P0 적용: API_ENDPOINTS의 경로·202 상태, 백엔드 API v1의 summary/versions/freshness/items 및 세 상세 섹션을 우선 적용했습니다. P4의 동기 POST 200 예시는 사용하지 않았습니다. 실제 백엔드·OpenAPI는 접속하지 않았습니다. 저장소의 PDF 파일명은 `백엔드_API_명세_v1.pdf`입니다. DB PDF는 상세 테이블이 없는 표지입니다.
+
+계약 미확정: P0는 목록·작업 상세 DTO 전체를 생략했습니다. 이력 응답은 opaque 서버 데이터로 보존하여 표시하며, Mock 목록은 P4의 명시된 Page<CalculationSnapshot>/Page<ComparisonSnapshot>/Page<PayslipValidation>을 참고합니다. P0의 실제 페이지 응답 형태, 실행 receipt의 전체 필드와 작업 상세 DTO는 실제 연동 시 확인이 필요합니다. 하위 상세 필드는 일부 P4 예시를 참고한 개발용 fixture이며 실제 서버 스키마 검증을 의미하지 않습니다.
+
+남은 작업: 문서명·필드 기준 근거 UI 정리, 단위별 금액 표시, 엄격한 상세 DTO 검증, 전체 시나리오 및 입력별 Mock 결과의 정밀한 일관성 구현이 필요합니다. 현재 Mock은 합성 결과를 제공하며 입력값에서 공식 임금을 계산하지 않습니다. 이 단계 전체 완료로 간주하지 않습니다.
+
+추가 파일: `src/features/results/{api,schemas,queries,result-screen,results.test,contracts.test}`와 result/compare 페이지. 기존 Case 탐색, shared input Mock 및 미지원 API 회귀 테스트를 확장했습니다. 개발 새로고침 초기화와 미등록 API 차단 정책을 유지합니다.
+
+검증: 신규 UI 테스트 10개 및 MSW 계약 테스트 5개. 전체 17개 파일 293개 테스트 통과. lint/typecheck/build 통과. 작업 상세는 기존 polling의 상태 전환에 맞춰 조회하며, 출처 펼치기는 기존 OriginalViewer로 서버 좌표를 전달합니다. Edge 브라우저 MSW 로그인 후 결과 화면 320/375/768/1280px에서 가로 넘침·JS 오류·백엔드 전달 요청 없음. 추가 Edge 검증에서 조건 확인 → 결과 → 전체 수동 재실행 → 작업 종료 → 원문 근거 펼치기 → 문서 검토 이동을 통과했습니다. 모든 오류·재시도 시나리오를 브라우저에서 검증한 것은 아닙니다. 실제 서버 연동 성공을 의미하지 않습니다. 브라우저 산출물은 Git 제외 `test-results/results-browser-report.json`, `results-*.png`입니다.

@@ -51,7 +51,33 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
     if (old) Object.assign(old, record); else s.records.push(record);
     return apiResponse({ ...record, ...schedule(c) }, old ? 200 : 201);
   };
+  const snapshots = new WeakMap<CaseDetailDto, Record<string, unknown>[]>();
+  function result(c: CaseDetailDto) {
+    const s = state(c); const history = snapshots.get(c) ?? []; snapshots.set(c, history);
+    const active = s.job && ["PENDING", "RUNNING"].includes(s.job.status);
+    const freshness = s.observedVersion !== c.inputVersion ? "STALE" : s.job?.status === "FAILED" ? "FAILED" : active ? "UPDATING" : "CURRENT";
+    if (!history.length || (!active && s.resultVersion > Number(history[0].resultVersion))) {
+      const version = s.resultVersion;
+      history.unshift({ caseId:c.caseId, currentInputVersion:c.inputVersion, resultVersion:version,
+        summary:{ calculationStatus:"PARTIAL", comparisonStatus:"INSUFFICIENT_INFORMATION", counts:{match:1,difference:1,insufficientInformation:1,reviewRequired:1} },
+        versions:Object.fromEntries(["calculation","comparison","payslipValidation"].map(k=>[k,{snapshotId:version,version,inputVersion:c.inputVersion,createdAt:"2026-11-08T00:00:00Z",freshness}])),
+        items:[{id:"sample-review",title:"가상 자료 검토 예시",status:"REVIEW_REQUIRED",calculatedValue:null,documentValue:null,difference:null,unit:null,periodStart:c.periodStart,periodEnd:c.periodEnd,formula:null,rule:null,comparisonBasis:null,sources:[{documentId:101,page:1,text:"가상 명세서",boundingBox:null,coordinateSystem:"RELATIVE_0_1"}],confirmedAt:null,nextAction:"원문과 계산 조건을 확인해 주세요"}],
+        calculation:{calculationId:version,version,basedOnInputVersion:c.inputVersion,status:"PARTIAL",items:[{type:"BASE_PAY",label:"기본급 (가상 예시)",status:"CALCULATED",amount:2000000,currency:"KRW"},{type:"OVERTIME_PAY",label:"연장수당",status:"REVIEW_REQUIRED",amount:null}],calculatedSubtotal:2000000,grossPay:null},
+        comparison:{comparisonId:version,version,basedOnInputVersion:c.inputVersion,items:[{type:"HOURLY_WAGE",status:"INSUFFICIENT_INFORMATION",contractValue:null,payslipValue:null,difference:null,comparisonBasis:{unit:"KRW_PER_HOUR",semanticMatch:false}}]},
+        payslipValidation:{validationId:version,version,paymentTotal:{status:"MATCH",itemSum:2300000,statedTotal:2300000,difference:0},deductionTotal:{status:"INSUFFICIENT_INFORMATION",itemSum:null,statedTotal:200000,difference:null},netPay:{status:"DIFFERENCE",calculated:2100000,stated:2090000,difference:10000}},depositComparison:null });
+    }
+    return {...history[0], currentInputVersion:c.inputVersion, freshness:{overall:freshness,hasOutdatedResults:freshness!=="CURRENT",activeJobId:active?s.job?.jobId:null},versions:Object.fromEntries(Object.entries(history[0].versions as Record<string,object>).map(([k,v])=>[k,{...v,freshness}]))};
+  }
   const handlers = [
+    http.get(`${baseUrl}/cases/:c/recompute-jobs/:jobId`,({params})=>{const c=current(params.c);if(!c)return missing();const job=state(c).job;return job?.jobId===params.jobId?apiResponse(job):missing();}),
+
+    ...(["calculations","comparisons","payslip-validations"] as const).map(endpoint=>http.get(`${baseUrl}/cases/:c/${endpoint}`,({params})=>{const c=current(params.c);if(!c)return missing();result(c);const key={calculations:"calculation",comparisons:"comparison","payslip-validations":"payslipValidation"}[endpoint];const items=(snapshots.get(c)??[]).map(v=>v[key]);return apiResponse({items,page:1,size:20,total:items.length});})),
+    http.get(`${baseUrl}/cases/:c/calculations/:id`,({params})=>{const c=current(params.c);if(!c)return missing();result(c);const found=(snapshots.get(c)??[]).map(v=>v.calculation as Record<string,unknown>).find(v=>v.calculationId===Number(params.id));return found?apiResponse(found):missing();}),
+
+    ...["recompute","calculations","comparisons","payslip-validations"].map(endpoint=>http.post(`${baseUrl}/cases/:c/${endpoint}`,async({params,request})=>{const c=current(params.c);if(!c)return missing();const body=await request.json() as {expectedInputVersion?:number};if(body.expectedInputVersion!==c.inputVersion)return error("INPUT_VERSION_CONFLICT",409);const s=state(c);if(s.job && ["PENDING","RUNNING"].includes(s.job.status))return error("RECOMPUTE_IN_PROGRESS",409);schedule(c,false);return apiResponse({...s.job},202);})),
+
+    http.get(`${baseUrl}/cases/:c/results`, ({params})=> { const c=current(params.c); return c?apiResponse(result(c)):missing(); }),
+
     http.get(`${baseUrl}/cases/:c/manual-records`, ({ request, params }) => {
       const c = current(params.c); if (!c) return missing();
       const q = new URL(request.url).searchParams; const page = Math.max(1, Number(q.get("page") ?? 1)), size = Math.min(100, Math.max(1, Number(q.get("size") ?? 20)));
