@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { WorkflowProgress } from "./workflow-progress";
 import Link from "next/link";
 import { ArrowUpRight, FolderOpen } from "lucide-react";
 
@@ -11,6 +13,7 @@ import { useCases } from "@/features/cases/queries";
 import { useWorkplaces } from "@/features/workplaces/queries";
 
 export function DashboardScreen() {
+  const [attentionLimit, setAttentionLimit] = useState(3);
   const workplaces = useWorkplaces();
   const cases = useCases();
   const sorted = cases.data ? [...cases.data.items].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)) : undefined;
@@ -24,8 +27,8 @@ export function DashboardScreen() {
       <header className="flex flex-wrap items-end justify-between gap-5"><div><p className="mb-3 text-caption font-bold text-muted">내 급여 검토 워크스페이스</p><h1 className="heading-dashboard font-extrabold">내 급여, 이어서 살펴볼까요</h1><p className="mt-3 text-body text-muted">현재 작업을 확인하고 필요한 자료를 차근차근 준비하세요.</p></div><Link href="/cases/new" className={primaryButton}>새 급여 검토</Link></header>
       {cases.isPending ? <QueryFeedback pending /> : cases.isError && <QueryFeedback error={cases.error} retry={() => { void cases.refetch(); }} />}
       <div className="dashboard-panels">
-        <section className="dashboard-panel dashboard-current"><div className="dashboard-panel-heading"><h2 className="text-title font-extrabold">현재 검토</h2><FolderOpen aria-hidden="true" className="size-5 text-accent" /></div><p className="mt-2 text-caption text-muted">조회된 사례 중 최근 진행 사례</p>{card ? <div className="dashboard-current-body"><h3 className="text-title font-bold">{card.workplaceName}</h3><p className="mt-2 text-body text-muted">{card.period}</p><p className="my-3 text-caption">{card.status} · 현재 작업: {card.step}</p><Link href={caseTaskHref(current!)} className={primaryButton}>현재 사례 이어가기<ArrowUpRight aria-hidden="true" className="ml-3 size-4" /></Link><p className="mt-4 text-caption text-muted">작업 단계는 검사 완료나 결과 일치를 의미하지 않습니다.</p></div> : <p className="mt-5 text-body text-muted">{cases.data ? "조회 범위에 진행 중인 사례가 없습니다. 전체 목록을 확인하거나 새 검토를 시작하세요." : "사례를 조회하면 현재 작업을 확인할 수 있습니다."}</p>}</section>
-        <section className="dashboard-panel dashboard-attention"><h2 className="text-title font-extrabold">확인할 작업</h2><p className="my-3 text-caption text-muted">조회된 사례의 추가 확인 요청</p>{attention?.length ? <CaseCards items={attention} compact /> : <p className="text-body text-muted">{knownAttention ? "조회 범위에 추가 확인 요청이 없습니다." : "확인 필요 정보가 제공되지 않았습니다."}</p>}</section>
+        <section className="dashboard-panel dashboard-current"><div className="dashboard-panel-heading"><h2 className="text-title font-extrabold">현재 검토</h2><FolderOpen aria-hidden="true" className="size-5 text-accent" /></div><p className="mt-2 text-caption text-muted">조회된 사례 중 최근 진행 사례</p>{card ? <div className="dashboard-current-body"><h3 className="text-title font-bold">{card.workplaceName}</h3><p className="mt-2 text-body text-muted">{card.period}</p><p className="my-3 text-caption">{card.status} · 현재 작업: {card.step}</p><WorkflowProgress item={current!} /><Link href={caseTaskHref(current!)} className={primaryButton}>현재 사례 이어가기<ArrowUpRight aria-hidden="true" className="ml-3 size-4" /></Link><p className="mt-4 text-caption text-muted">작업 단계는 검사 완료나 결과 일치를 의미하지 않습니다.</p></div> : <p className="mt-5 text-body text-muted">{cases.data ? "조회 범위에 진행 중인 사례가 없습니다. 전체 목록을 확인하거나 새 검토를 시작하세요." : "사례를 조회하면 현재 작업을 확인할 수 있습니다."}</p>}</section>
+        <section className="dashboard-panel dashboard-attention"><h2 className="text-title font-extrabold">확인할 작업</h2><p className="my-3 text-caption text-muted">조회된 사례의 추가 확인 요청</p>{attention?.length ? <><CaseCards items={attention.slice(0, attentionLimit)} compact />{attentionLimit < attention.length && <button className={secondaryButton} onClick={() => setAttentionLimit(n => n + 3)}>더 보기 ({Math.min(attentionLimit, attention.length)}/{attention.length})</button>}</> : <p className="text-body text-muted">{knownAttention ? "조회 범위에 추가 확인 요청이 없습니다." : "확인 필요 정보가 제공되지 않았습니다."}</p>}</section>
       </div>
 
       <div className="dashboard-stats grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

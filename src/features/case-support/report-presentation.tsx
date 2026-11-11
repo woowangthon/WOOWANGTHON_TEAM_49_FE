@@ -8,7 +8,7 @@ export function ReportPresentation({ report:r, busy, downloadDisabled, download,
 }) {
  const ready=r.status==='READY';
  return <article className={`${cardStyle} space-y-4`} aria-label={`보고서 ${r.reportId}`}>
-  <header className={`rounded-panel border p-4 ${ready?'border-success bg-success-soft':r.status==='FAILED'?'border-danger bg-danger-soft':'border-border bg-neutral-soft'}`}>
+  <header className="space-y-2 border-b border-border pb-4">
    <p className="text-caption font-bold">{r.isCurrent===true?'현재 입력 기준':r.isCurrent===false?'과거 입력 기준':'최신성 미제공'}</p>
    <h2 className="text-title font-extrabold">보고서 #{r.reportId} · 상담 자료</h2>
    <p role="status">{ready?'보고서 준비 완료':r.status==='PROCESSING'?'보고서 생성 중':'보고서 생성 실패'} · {r.status}</p>

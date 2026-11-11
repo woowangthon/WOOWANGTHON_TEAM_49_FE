@@ -24,6 +24,7 @@ import { apiResponse, server, testApiUrl } from "@/test/server";
 import { managementMocks } from "@/test/management-handlers";
 
 import { DashboardScreen } from "./dashboard-screen";
+import { caseApi } from "@/features/cases/api";
 
 const navigation = vi.hoisted(() => ({ router: { replace: vi.fn() }, pathname: "/dashboard" }));
 vi.mock("next/navigation", () => ({ useRouter: () => navigation.router, usePathname: () => navigation.pathname, useSearchParams: () => new URLSearchParams() }));
@@ -48,6 +49,17 @@ async function setup(empty = false) {
 }
 
 describe("dashboard and management user flows with MSW", () => {
+  it("reveals attention items three at a time within the fetched page", async () => {
+    const { mount, app } = await setup();
+    const data=await caseApi(app.api).list({page:1,size:20});
+    server.use(http.get(`${testApiUrl}/cases`,()=>apiResponse({...data,items:data.items.map(item=>({...item,attentionRequired:true}))})));
+    mount(<DashboardScreen />);
+    await screen.findByText("확인 필요 여부가 제공된 20건 기준");
+    const region=screen.getByRole("heading",{name:"확인할 작업"}).closest("section")!;
+    expect(within(region).getAllByRole("listitem")).toHaveLength(3);
+    const more=within(region).queryByRole("button",{name:/더 보기/});
+    if(more){fireEvent.click(more);expect(within(region).getAllByRole("listitem").length).toBeGreaterThan(3);}
+  });
   it("shows only response-derived totals and attention scope on the dashboard", async () => {
     const { mount } = await setup();
     mount(<DashboardScreen />);

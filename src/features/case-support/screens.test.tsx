@@ -21,21 +21,59 @@ beforeEach(async()=>{
 });
 afterEach(()=>{cleanup();services.session.clear();services.queryClient.clear();vi.unstubAllGlobals();vi.restoreAllMocks()});
 function mount(node:ReactNode){return render(<AppServicesContext value={services}><QueryClientProvider client={services.queryClient}>{node}</QueryClientProvider></AppServicesContext>)}
+it("preserves selected originals across local pages without a mutation",async()=>{
+ let posts=0;
+ server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:Array.from({length:11},(_,i)=>({documentId:i+201,workplaceId:3,documentType:"PAYSLIP",fileName:`original-${i+1}.pdf`,processingStatus:"READY",link:{linkId:i+1,caseId:15,documentId:i+201,purpose:"PAYSLIP",applicableFrom:null,applicableTo:null}})),total:11,page:1,size:100})),http.post(`${testApiUrl}/cases/15/reports`,()=>{posts++;return apiResponse({},500)}));
+ mount(<ReportsScreen caseId={15}/>);
+ fireEvent.click(await screen.findByRole('checkbox',{name:'original-1.pdf'}));
+ fireEvent.click(screen.getByRole('button',{name:'다음 원본'}));
+ fireEvent.click(screen.getByRole('checkbox',{name:'original-6.pdf'}));
+ fireEvent.click(screen.getByRole('button',{name:'이전 원본'}));
+ expect(screen.getByRole('checkbox',{name:'original-1.pdf'})).toBeChecked();
+ fireEvent.click(screen.getByRole('button',{name:'다음 원본'}));
+ expect(screen.getByRole('checkbox',{name:'original-6.pdf'})).toBeChecked();
+ expect(screen.getByText('선택한 원본 2개')).toBeVisible();expect(posts).toBe(0);
+});
 it("navigates report history past twenty records and back",async()=>{
  const mock=createDevelopmentScenario(testApiUrl);server.use(...mock.handlers);await services.auth.login({email:"worker@example.com",password:"password1234"});
  const api=supportApi(services.api);for(let i=0;i<21;i++)await api.create(15,[],`audit-${i}`);
- mount(<ReportsScreen caseId={15}/>);await screen.findByRole("heading",{name:/보고서 #110 /});
- fireEvent.click(screen.getByRole("button",{name:"다음 보고서"}));expect(await screen.findByRole("heading",{name:/보고서 #90 /})).toBeVisible();
- expect(screen.getByRole("button",{name:"다음 보고서"})).toBeDisabled();fireEvent.click(screen.getByRole("button",{name:"이전 보고서"}));expect(await screen.findByRole("heading",{name:/보고서 #110 /})).toBeVisible();
+ mount(<ReportsScreen caseId={15}/>);await screen.findByRole("heading",{name:/보고서 #110/});
+ await waitFor(()=>expect(screen.getByRole("button",{name:"다음 보고서"})).toBeEnabled());fireEvent.click(screen.getByRole("button",{name:"다음 보고서"}));expect(await screen.findByRole("heading",{name:/보고서 #90/})).toBeVisible();
+ expect(screen.getByRole("button",{name:"다음 보고서"})).toBeDisabled();fireEvent.click(screen.getByRole("button",{name:"이전 보고서"}));expect(await screen.findByRole("heading",{name:/보고서 #110/})).toBeVisible();
 });
 it("shows the server original separately and never overwrites an in-flight edit",async()=>{
  let finish:()=>void=()=>{};const pending=new Promise<void>(resolve=>{finish=resolve});let count=0;
  server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,async({request})=>{count++;expect(await request.json()).toEqual({});await pending;return apiResponse({text:"서버 원문 0원 · 미확인 금액은 null",requiresUserReview:true,basedOnResultVersions:{comparison:3}})}));
  mount(<InquiryScreen caseId={15}/>);fireEvent.click(screen.getByRole("button",{name:"서버 초안 생성"}));
  fireEvent.change(screen.getByRole("textbox"),{target:{value:"요청 중 편집"}});finish();
- expect(await screen.findByRole("region",{name:"서버 생성 원문"})).toBeVisible();expect(screen.getByRole("textbox")).toHaveValue("요청 중 편집");expect(screen.getByText("사용자 검토 필수")).toBeVisible();expect(count).toBe(1);
+ expect(await screen.findByRole("region",{name:"서버 생성 원문"})).toBeVisible();expect(screen.getByRole("textbox")).toHaveValue("요청 중 편집");fireEvent.click(screen.getByText("서버 생성 원문 · 적용 및 기준 보기"));expect(screen.getByText("사용자 검토 필수")).toBeVisible();expect(count).toBe(1);
  fireEvent.click(screen.getByRole("button",{name:"서버 초안 재생성"}));expect(screen.getByRole("dialog")).toHaveTextContent("작성 중인 문장은 유지");fireEvent.click(screen.getByRole("button",{name:"취소"}));expect(count).toBe(1);
 });
+it("preserves the editor when clipboard access fails",async()=>{
+ Object.defineProperty(navigator,"clipboard",{value:{writeText:vi.fn().mockRejectedValue(new Error('denied'))},configurable:true});
+ mount(<InquiryScreen caseId={15}/>);
+ fireEvent.change(screen.getByRole('textbox'),{target:{value:'보존할 문의'}});
+ fireEvent.click(screen.getByRole('button',{name:'문장 복사'}));
+ expect(await screen.findByText(/복사하지 못했습니다/)).toBeVisible();
+ expect(screen.getByRole('textbox')).toHaveValue('보존할 문의');
+});
+it("keeps polling the requested report after navigating the history",async()=>{
+ const mock=createDevelopmentScenario(testApiUrl);server.use(...mock.handlers);
+ await services.auth.login({email:"worker@example.com",password:"password1234"});
+ const api=supportApi(services.api);for(let i=0;i<21;i++)await api.create(15,[],`track-${i}`);
+ let polls=0;
+ server.use(http.get(`${testApiUrl}/cases/15/reports/111`,()=>{polls++;return apiResponse({reportId:111,version:1,status:polls<3?'PROCESSING':'READY',basedOnInputVersion:7,referencedSnapshots:{},selectedDocumentIds:[],createdAt:'2026-11-11T01:00:00Z',isCurrent:true})}));
+ mount(<ReportsScreen caseId={15}/>);
+ fireEvent.click(await screen.findByLabelText('선택 문서와 현재 결과로 보고서 생성을 요청합니다.'));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'보고서 생성 요청'})).toBeEnabled());
+ fireEvent.click(screen.getByRole('button',{name:'보고서 생성 요청'}));
+ const tracking=await screen.findByRole('region',{name:'현재 생성 요청'});
+ await waitFor(()=>expect(screen.getByRole('button',{name:'다음 보고서'})).toBeEnabled());
+ fireEvent.click(screen.getByRole('button',{name:'다음 보고서'}));
+ expect(tracking).toBeVisible();
+ await waitFor(()=>expect(within(tracking).getByRole('button',{name:'PDF 다운로드'})).toBeEnabled(),{timeout:10000});
+ expect(polls).toBeGreaterThanOrEqual(3);
+},15000);
 it("allows direct edits and copies while generation fails",async()=>{
  const copy=vi.fn().mockResolvedValue(undefined);Object.defineProperty(navigator,"clipboard",{value:{writeText:copy},configurable:true});
  server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,()=>apiResponse({errorCode:"UPSTREAM_UNAVAILABLE"},503)));
@@ -72,7 +110,7 @@ it("requires explicit report confirmation, selects originals, prevents duplicate
 it("confirms replacing only the local draft, preserves cancel without another API call",async()=>{
  let calls=0;server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,()=>{calls++;return apiResponse({text:"서버 새 원문",requiresUserReview:true})}));
  mount(<InquiryScreen caseId={15}/>);fireEvent.click(screen.getByRole('button',{name:'서버 초안 생성'}));await screen.findByText('서버 새 원문');
- fireEvent.change(screen.getByRole('textbox'),{target:{value:'보존할 작성본'}});const trigger=screen.getByRole('button',{name:'작성본 교체 확인'});trigger.focus();fireEvent.click(trigger);
+ fireEvent.click(screen.getByText('서버 생성 원문 · 적용 및 기준 보기'));fireEvent.change(screen.getByRole('textbox'),{target:{value:'보존할 작성본'}});const trigger=screen.getByRole('button',{name:'작성본 교체 확인'});trigger.focus();fireEvent.click(trigger);
  expect(screen.getByRole('dialog')).toHaveTextContent('기존 작성 내용은 사라집니다');fireEvent.click(screen.getByRole('button',{name:'취소'}));expect(screen.getByRole('textbox')).toHaveValue('보존할 작성본');
  fireEvent.click(trigger);fireEvent.click(screen.getByRole('button',{name:'작성본 교체'}));expect(screen.getByRole('textbox')).toHaveValue('서버 새 원문');expect(calls).toBe(1);expect(screen.queryByRole('dialog')).toBeNull();
 });
