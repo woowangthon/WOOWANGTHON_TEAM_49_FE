@@ -22,3 +22,12 @@ describe('chat mock contracts (conditional history DTO)',()=>{
  it('requires explicit all scope',async()=>{const c=await create();await consumeChat(await api.stream(c.chatId,new AbortController().signal,'설명',{scopeType:'WORKPLACE_ALL'}),()=>{});expect((await api.detail(c.chatId,1)).messages.items[0].scope).toEqual({scopeType:'WORKPLACE_ALL'});});
 });
 it('parses multiline CRLF payload and ignores heartbeat',async()=>{const bytes=new TextEncoder().encode(': waiting\r\nevent: message_start\r\ndata: {"runId":"r","messageId":1,\r\ndata: "role":"ASSISTANT","scope":{"scopeType":"CASE","caseId":15}}\r\n\r\nevent: message_done\ndata: {"runId":"r","messageId":1,"status":"COMPLETED"}\n\n');const events:ChatEvent[]=[];await consumeChat(new ReadableStream({start(c){for(const byte of bytes)c.enqueue(new Uint8Array([byte]));c.close();}}),e=>events.push(e));expect(events.map(e=>e.event)).toEqual(['message_start','message_done']);});
+
+it('V06 HTML supplement replays a completed clientMessageId without a second user or model run',async()=>{
+ const c=await create(),signal=new AbortController().signal;
+ const first:ChatEvent[]=[];await consumeChat(await api.stream(c.chatId,signal,'question',undefined,undefined,'question-1'),e=>first.push(e));
+ const replay:ChatEvent[]=[];await consumeChat(await api.stream(c.chatId,signal,'question',undefined,undefined,'question-1'),e=>replay.push(e));
+ expect(replay).toEqual(first);expect((await api.detail(c.chatId,1)).messages.total).toBe(2);
+ await expect(api.stream(c.chatId,signal,'different content',undefined,undefined,'question-1')).rejects.toMatchObject({status:409});
+ await expect(api.stream(c.chatId,signal,'question',{scopeType:'WORKPLACE_ALL'},undefined,'question-1')).rejects.toMatchObject({status:409});
+});

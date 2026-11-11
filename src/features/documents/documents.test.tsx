@@ -324,3 +324,11 @@ it("A05 requires nullable integer linkId and strips undeclared nested links", ()
   expect(caseDocumentSchema.parse({...dto,link:{linkId:777}})).not.toHaveProperty("link");
   for (const linkId of [undefined,"777",1.5]) expect(caseDocumentSchema.safeParse({...dto,linkId}).success).toBe(false);
 });
+
+it("V01 shows only server-provided duplicate candidates while accepting the upload",async()=>{
+ const {mount,user}=await setup();
+ server.use(http.post(`${testApiUrl}/cases/15/documents`,()=>apiResponse({documentId:222,processingStatus:"UPLOADED",duplicateCandidateIds:[101,105]},202)));
+ mount(<UploadForm context={{kind:"case",id:15}}/>);
+ await user.upload(screen.getByLabelText("파일 선택 또는 이곳에 끌어 놓기"),pdf());await user.click(screen.getByRole("button",{name:"파일 업로드"}));
+ expect(await screen.findByText(/중복 원본 후보: #101, #105/)).toBeVisible();expect(screen.getByText(/업로드가 접수되었습니다/)).toBeVisible();
+});

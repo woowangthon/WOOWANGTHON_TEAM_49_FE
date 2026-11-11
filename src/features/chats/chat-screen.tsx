@@ -27,6 +27,7 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
  const s=useSessionScope(),api=chatApi(s.api,w),router=useRouter();
  const [page,setPage]=useState(1),[history,setHistory]=useState(1),[title,setTitle]=useState(''),[caseId,setCaseId]=useState(''),[content,setContent]=useState(''),[all,setAll]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[phase,setPhase]=useState(''),[draft,setDraft]=useState(''),[run,setRun]=useState<string>(),[mode,setMode]=useState('');
  const [confirmDelete,setConfirmDelete]=useState(false),[showLatest,setShowLatest]=useState(false);
+ const pendingMessage=useRef<{signature:string;id:string}|undefined>(undefined);
  const lock=useRef(false),abort=useRef<AbortController|undefined>(undefined),viewport=useRef<HTMLDivElement>(null),follow=useRef(true);
  const prefix=['chats',s.generation,w];
  const list=useQuery({queryKey:[...prefix,'list',page],queryFn:({signal})=>api.list(page,signal),enabled:s.enabled});
@@ -49,10 +50,12 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
   lock.current=true;setBusy(true);setError('');setDraft('');setRun(undefined);setPhase('대기');
   const ctrl=new AbortController();abort.current=ctrl;
   try{
-   const stream=await api.stream(id,ctrl.signal,content,all?{scopeType:'WORKPLACE_ALL'}:undefined,retry);
+   const signature=JSON.stringify([content,all]);
+   if(!retry&&pendingMessage.current?.signature!==signature)pendingMessage.current={signature,id:crypto.randomUUID()};
+   const stream=await api.stream(id,ctrl.signal,content,all?{scopeType:'WORKPLACE_ALL'}:undefined,retry,retry?undefined:pendingMessage.current?.id);
    await consumeChat(stream,event=>{
     if(ctrl.signal.aborted)return;
-    if(event.event==='message_start'){setRun(event.data.runId);setMode(event.data.aiMode??'');setPhase('스트리밍');setContent('');}
+    if(event.event==='message_start'){pendingMessage.current=undefined;setRun(event.data.runId);setMode(event.data.aiMode??'');setPhase('스트리밍');setContent('');}
     if(event.event==='content_delta')setDraft(v=>v+event.data.delta);
     if(event.event==='message_done')setPhase(event.data.status==='COMPLETED'?'완료':event.data.status==='CANCELLED'?'취소 완료':'실패');
     if(event.event==='error'){setPhase('AI 생성 실패');setError(`${event.data.errorCode} · ${event.data.retryable?'재시도 가능':'재시도 불가'}`);}

@@ -24,7 +24,7 @@ export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0
     const dto: DocumentDto = {documentId, workplaceId: development ? (caseId ? current(caseId).workplaceId : Number(new URL(request.url).pathname.split("/").at(-2))) : 3, documentType: form.get("documentType") as DocumentDto["documentType"], fileName: (form.get("file") as File).name, processingStatus: "UPLOADED", reviewStatus: "NOT_STARTED", progress: 10, linkId: null, errorCode: null, aiMetadata: null, uploadedAt: "2026-11-09", linkedCaseIds: caseId ? [caseId] : []};
     documents.push(dto);
     if (caseId) { links.push({linkId: documentId + 700, caseId, documentId, purpose: "CONTRACT_FOR_PERIOD", applicableFrom: current(caseId).periodStart, applicableTo: current(caseId).periodEnd, overrideCount: 0}); bump(caseId); }
-    return apiResponse({documentId, processingStatus: "UPLOADED", reviewStatus: "NOT_STARTED", progress: 10}, 202);
+    return apiResponse({documentId, processingStatus: "UPLOADED", reviewStatus: "NOT_STARTED", progress: 10, duplicateCandidateIds: []}, 202);
   };
   const handlers = [
     http.get(`${testApiUrl}/documents`, ({ request }) => { record(request); return page(request, filter(request)); }),

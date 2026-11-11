@@ -112,3 +112,13 @@ it('uses server history pages without sending or discarding the composer draft',
  fireEvent.click(screen.getByRole('button',{name:'다음 기록'}));await screen.findByText('기록 페이지 2');expect(screen.getByLabelText('질문')).toHaveValue('미전송 초안');expect(screen.getByRole('button',{name:'다음 기록'})).toBeDisabled();
  fireEvent.click(screen.getByRole('button',{name:'이전 기록'}));await screen.findByText('기록 페이지 1');expect(pages).toEqual([1,2,1]);expect(screen.getByLabelText('질문')).toHaveValue('미전송 초안');
 });
+
+it('V06 retains a client message ID across pre-start failures and renews it for edited content',async()=>{
+ const chat=await chatApi(app.api,3).create('Resend key',15);const bodies:{content:string;clientMessageId:string}[]=[];
+ server.use(http.post(`${testApiUrl}/workplaces/3/chats/:id/messages`,async({request})=>{bodies.push(await request.json() as typeof bodies[number]);return apiResponse({errorCode:'UPSTREAM_UNAVAILABLE'},503);}));
+ mount(chat.chatId);await screen.findByRole('heading',{name:'Resend key'});
+ const input=screen.getByLabelText('질문');fireEvent.change(input,{target:{value:'question'}});
+ for(let i=1;i<=2;i++){fireEvent.click(screen.getByRole('button',{name:'전송'}));await waitFor(()=>expect(bodies).toHaveLength(i));await waitFor(()=>expect(screen.getByRole('button',{name:'전송'})).toBeEnabled());}
+ expect(bodies[0].clientMessageId).toBeTruthy();expect(bodies[1].clientMessageId).toBe(bodies[0].clientMessageId);
+ fireEvent.change(input,{target:{value:'edited question'}});fireEvent.click(screen.getByRole('button',{name:'전송'}));await waitFor(()=>expect(bodies).toHaveLength(3));expect(bodies[2].clientMessageId).not.toBe(bodies[0].clientMessageId);
+});

@@ -20,7 +20,7 @@ export function chatApi(api:ApiClient,w:number){
  create:(title:string,caseId:number)=>api.requestJson(root,decodeWith(z.object({chatId:z.number().int().positive()})),{method:'POST',body:chatCreateSchema.parse({title,defaultScope:{scopeType:'CASE',caseId}}),expectedStatus:201}),
  rename:(id:number,title:string)=>api.requestJson(`${root}/${id}`,decodeWith(z.unknown()),{method:'PATCH',body:chatPatchSchema.parse({title}),expectedStatus:200}),
  remove:(id:number)=>api.requestNoContent(`${root}/${id}`,{method:'DELETE'}),
- stream:(id:number,signal:AbortSignal,content:string,scope?:ChatScope,retry?:number)=>api.requestSse(`${root}/${id}/messages${retry?`/${retry}/retry`:''}`,{method:'POST',signal,refresh:false,...(!retry?{body:{content,...(scope?{scope}: {})}}:{})}),
+ stream:(id:number,signal:AbortSignal,content:string,scope?:ChatScope,retry?:number,clientMessageId?:string)=>api.requestSse(`${root}/${id}/messages${retry?`/${retry}/retry`:''}`,{method:'POST',signal,refresh:false,...(!retry?{body:{content,...(clientMessageId?{clientMessageId}:{}),...(scope?{scope}: {})}}:{})}),
  cancel:(id:number,run:string)=>api.requestAccepted(`${root}/${id}/runs/${encodeURIComponent(run)}/cancel`,{method:'POST',expectedStatus:202,refresh:false}),
  };
 }

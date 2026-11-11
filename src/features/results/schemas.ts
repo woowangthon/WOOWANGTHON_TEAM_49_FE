@@ -54,13 +54,20 @@ export const resultItemSchema = resultItemWireSchema;
 
 /** HTML supplements describe presentation only; P0 free objects always survive in wire. */
 export function resultsView(wire: ResultsWireDto): Results {
- const summary = resultsViewSchema.shape.summary.safeParse(wire.summary);
+ const summaryShape = resultsViewSchema.shape.summary.shape;
+ const nullable = <T>(schema:z.ZodType<T>, value:unknown):T|null => {const parsed=schema.safeParse(value);return parsed.success?parsed.data:null;};
+ const counts = typeof wire.summary.counts === "object" && wire.summary.counts !== null && !Array.isArray(wire.summary.counts) ? wire.summary.counts : {};
+ const summary = {...wire.summary,
+  calculationStatus:nullable(calculationStatusSchema,wire.summary.calculationStatus),
+  comparisonStatus:nullable(resultStatusSchema,wire.summary.comparisonStatus),
+  counts:Object.fromEntries(Object.entries(summaryShape.counts.shape).map(([key,schema])=>[key,nullable(schema,counts[key])])) as Results["summary"]["counts"],
+ };
  const freshness = resultsViewSchema.shape.freshness.safeParse(wire.freshness);
  const calculation = calculationSchema.safeParse(wire.calculation);
  const comparison = comparisonSchema.safeParse(wire.comparison);
  const validation = validationSchema.safeParse(wire.payslipValidation);
  return {...wire, wire,
-  summary:summary.success ? summary.data : {calculationStatus:null,comparisonStatus:null,counts:{match:null,difference:null,insufficientInformation:null,reviewRequired:null}},
+  summary,
   freshness:freshness.success ? freshness.data : {},
   calculation:calculation.success ? calculation.data : null,
   comparison:comparison.success ? comparison.data : null,

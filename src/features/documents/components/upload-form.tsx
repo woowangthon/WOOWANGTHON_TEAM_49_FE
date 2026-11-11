@@ -6,7 +6,7 @@ import { z } from "zod";
 import { UploadCloud } from "lucide-react";
 import { SelectField } from "@/components/ui/select-field";
 import { cardStyle, primaryButton, secondaryButton } from "@/components/ui/styles";
-import { documentTypes, type DocumentContext } from "../schemas";
+import { documentTypes, uploadSchema, type DocumentContext } from "../schemas";
 import { useDocumentAction } from "../queries";
 import { documentError, typeLabels } from "../view-models";
 import { validateFile, validateImageDimensions } from "../file-validation";
@@ -15,6 +15,7 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
   const id = useId();
   const [file, setFile] = useState<File>();
   const [message, setMessage] = useState("");
+  const [candidates, setCandidates] = useState<number[]>([]);
   const [success, setSuccess] = useState(false);
   const [busy, setBusy] = useState(false);
   const controller = useRef<AbortController | null>(null);
@@ -26,7 +27,7 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; controller.current?.abort(); }; }, []);
   const choose = (files: FileList | null) => {
     if (locked.current || disabled) return;
-    setSuccess(false);
+    setSuccess(false); setCandidates([]);
     if (!files?.length) return;
     if (files.length !== 1) { setMessage("한 번에 파일 하나를 선택해 주세요. 완료 후 다음 파일을 등록할 수 있습니다."); return; }
     const error = validateFile(files[0]);
@@ -35,14 +36,14 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
   return <form className={`${cardStyle} space-y-5`} aria-label="새 파일 업로드" onSubmit={event => { void handleSubmit(async values => {
     if (locked.current || disabled) return;
     if (!file) { setMessage("파일을 선택해 주세요."); input.current?.focus(); return; }
-    locked.current = true; setBusy(true); setSuccess(false); setMessage("");
+    locked.current = true; setBusy(true); setSuccess(false); setCandidates([]); setMessage("");
     controller.current = new AbortController();
     try {
       const error = validateFile(file) ?? await validateImageDimensions(file);
       if (error) { setMessage(error); return; }
       if (!mounted.current || controller.current.signal.aborted) return;
-      await mutation.mutateAsync({ type: "upload", context, file, documentType: values.documentType, signal: controller.current.signal });
-      if (mounted.current) { setFile(undefined); setSuccess(true); if (input.current) input.current.value = ""; }
+      const receipt = await mutation.mutateAsync({ type: "upload", context, file, documentType: values.documentType, signal: controller.current.signal });
+      if (mounted.current) { setCandidates(uploadSchema.safeParse(receipt).data?.duplicateCandidateIds ?? []); setFile(undefined); setSuccess(true); if (input.current) input.current.value = ""; }
     } catch (error) { if (mounted.current) setMessage(documentError(error)); }
     finally { locked.current = false; if (mounted.current) setBusy(false); }
   })(event); }}>
@@ -60,6 +61,7 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
     <p className="text-caption text-muted">PDF·JPEG·PNG, 20MiB 이하. PDF 50페이지, 이미지 각 축 10000px 이하. 암호화·손상·실제 파일 형식은 서버에서 최종 검사합니다.</p>
     {message && <p role="alert" tabIndex={-1} className="break-words text-body">{message}</p>}
     {success && <p role="status" className="text-body">업로드가 접수되었습니다. 아래 목록에서 서버 처리 상태를 확인해 주세요.</p>}
+    {!!candidates.length && <p role="status" className="break-words text-body">중복 원본 후보: {candidates.map(id => `#${id}`).join(", ")}. 서버가 제공한 후보이며, 업로드는 접수되었습니다. 기존 자료를 확인해 주세요.</p>}
     {busy && <p role="status" className="text-body">업로드 요청 중… 서버 처리 진행률과는 별개입니다.</p>}
     <div className="flex flex-wrap gap-3"><button className={primaryButton} disabled={busy || disabled} type="submit">{busy ? "업로드 요청 중" : "파일 업로드"}</button>
       {busy && <button className={secondaryButton} type="button" onClick={() => controller.current?.abort()}>요청 대기 중단</button>}

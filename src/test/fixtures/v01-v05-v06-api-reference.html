@@ -1,0 +1,303 @@
+<a id="api-025"></a><h3>API-025 · 근무지 자료함에 원본 업로드</h3><p><strong><code>POST /api/v1/workplaces/{workplace_id}/documents</code></strong></p><p>multipart 업로드. Case 연결은 만들지 않는다. 적용기간은 원본 metadata에 저장하여 이후 연결 시 기본값으로 사용한다. 중복 해시도 저장하되 duplicateCandidateIds로 안내한다.</p><ul><li>인증: <strong>Bearer 액세스 토큰 필요</strong>.</li><li>성공: <strong>202</strong>, <code>application/json</code>.</li></ul><p><strong>Path / Query</strong></p><div class="table-wrap"><table><thead><tr><th>이름</th><th>위치</th><th>필수</th><th>타입</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>workplace_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>근무지 정수 ID.</td></tr></tbody></table></div><p><strong>요청 Body</strong>: <code>multipart/form-data</code>, 필수. 상세 정의: <a href="#dto-body_upload_workplace_api_v1_workplaces__workplace_id__documents_post">Body_upload_workplace_api_v1_workplaces__workplace_id__documents_post</a>.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>file</code></td><td>string</td><td>필수</td><td>—</td><td>PDF/PNG/JPEG 실제 바이너리. JSON 문자열이 아님.</td></tr><tr><td><code>documentType</code></td><td><code>CONTRACT</code>, <code>ATTENDANCE</code>, <code>PAYSLIP</code>, <code>DEPOSIT</code></td><td>필수</td><td>—</td><td>일반 업로드는 대문자 enum, 추출 요청·검토 구간은 소문자 enum. API별 타입 표를 그대로 사용.</td></tr><tr><td><code>source</code></td><td><code>USER_UPLOAD</code></td><td>생략 가능</td><td>기본값: <code>&quot;USER_UPLOAD&quot;</code></td><td>USER_INPUT은 수기 진술, DOCUMENT는 원본 행의 검증된 계보 필요.</td></tr><tr><td><code>applicableFrom</code></td><td>string (date) / null</td><td>생략 가능</td><td>—; —</td><td>원본 연결 적용기간 시작. 업로드 metadata의 기본값 여부는 endpoint 설명 참고.</td></tr><tr><td><code>applicableTo</code></td><td>string (date) / null</td><td>생략 가능</td><td>—; —</td><td>원본 연결 적용기간 종료. 시작일≤종료일, Case 기간과 겹쳐야 함.</td></tr></tbody></table></div><p>파일은 실제 바이너리로 선택한다. <code>files</code> 배열은 같은 키를 반복한다.</p><p><strong>성공 응답</strong></p><p>래퍼의 <code>data</code> 타입: <strong><a href="#dto-uploadresult">UploadResult</a></strong>. 중첩 필드의 전체 정의는 해당 DTO 링크를 따른다.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>documentId</code></td><td>integer</td><td>항상</td><td>—</td><td>저장한 원본 ID</td></tr><tr><td><code>processingStatus</code></td><td>string</td><td>항상</td><td>—</td><td>접수 시 UPLOADED</td></tr><tr><td><code>reviewStatus</code></td><td>string</td><td>항상</td><td>—</td><td>접수 시 NOT_STARTED</td></tr><tr><td><code>progress</code></td><td>integer</td><td>항상</td><td>—</td><td>접수 시 10</td></tr><tr><td><code>duplicateCandidateIds</code></td><td>array&lt;integer&gt;</td><td>항상</td><td>—</td><td>동일 근무지·동일 바이트 해시의 기존 원본 ID; 후보가 없으면 []</td></tr></tbody></table></div><p>성공 형식 예시:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;code&quot;: 202,
+  &quot;message&quot;: &quot;요청이 처리되었습니다.&quot;,
+  &quot;data&quot;: {
+    &quot;documentId&quot;: 1,
+    &quot;processingStatus&quot;: &quot;UPLOADED&quot;,
+    &quot;reviewStatus&quot;: &quot;NOT_STARTED&quot;,
+    &quot;progress&quot;: 10,
+    &quot;duplicateCandidateIds&quot;: []
+  }
+}</code></pre></div><p><strong>오류·전제</strong></p><p>공통 인증/검증/권한 오류는 <a href="#errors">오류 규칙</a>을 함께 적용한다. 아래는 이 동작의 주요 분기이며 비동기 모델 오류가 HTTP 성공 응답 대신 작업/SSE 안에 저장될 수 있다.</p><div class="table-wrap"><table><thead><tr><th>HTTP</th><th>errorCode</th><th>처리/의미</th></tr></thead><tbody><tr><td>409</td><td><code>DOCUMENT_LIMIT_EXCEEDED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>413</td><td><code>FILE_TOO_LARGE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>415</td><td><code>UNSUPPORTED_FILE_TYPE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>422</td><td><code>EMPTY_FILE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>422</td><td><code>INVALID_FILE</code></td><td>읽을 수 없는 파일입니다.</td></tr><tr><td>422</td><td><code>PDF_PAGE_LIMIT_EXCEEDED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr></tbody></table></div><p><strong>curl 예시</strong></p><div class="code-block"><div class="code-label">bash</div><pre><code>curl -i -X POST &quot;${BASE_URL}/api/v1/workplaces/1/documents&quot; \
+  -H &quot;Authorization: Bearer ${TOKEN}&quot; \
+  -F &quot;file=@sample.pdf&quot; \
+  -F &quot;documentType=PAYSLIP&quot;</code></pre></div><p>구현 확인: <a href="../app/routers/documents.py#L209">app/routers/documents.py:209</a>.</p>
+<a id="api-026"></a><h3>API-026 · Case에 원본 업로드</h3><p><strong><code>POST /api/v1/cases/{case_id}/documents</code></strong></p><p>multipart 업로드 후 해당 Case에 바로 연결하고 자동 검사 예약. 이 경로에는 applicableFrom/applicableTo 폼 필드가 선언되어 있지 않다. 적용기간은 자료함 업로드 또는 연결 수정 API로 지정한다.</p><ul><li>인증: <strong>Bearer 액세스 토큰 필요</strong>.</li><li>성공: <strong>202</strong>, <code>application/json</code>.</li></ul><p><strong>Path / Query</strong></p><div class="table-wrap"><table><thead><tr><th>이름</th><th>위치</th><th>필수</th><th>타입</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>case_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>Case 정수 ID.</td></tr></tbody></table></div><p><strong>요청 Body</strong>: <code>multipart/form-data</code>, 필수. 상세 정의: <a href="#dto-body_upload_case_api_v1_cases__case_id__documents_post">Body_upload_case_api_v1_cases__case_id__documents_post</a>.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>file</code></td><td>string</td><td>필수</td><td>—</td><td>PDF/PNG/JPEG 실제 바이너리. JSON 문자열이 아님.</td></tr><tr><td><code>documentType</code></td><td><code>CONTRACT</code>, <code>ATTENDANCE</code>, <code>PAYSLIP</code>, <code>DEPOSIT</code></td><td>필수</td><td>—</td><td>일반 업로드는 대문자 enum, 추출 요청·검토 구간은 소문자 enum. API별 타입 표를 그대로 사용.</td></tr><tr><td><code>source</code></td><td><code>USER_UPLOAD</code></td><td>생략 가능</td><td>기본값: <code>&quot;USER_UPLOAD&quot;</code></td><td>USER_INPUT은 수기 진술, DOCUMENT는 원본 행의 검증된 계보 필요.</td></tr></tbody></table></div><p>파일은 실제 바이너리로 선택한다. <code>files</code> 배열은 같은 키를 반복한다.</p><p><strong>성공 응답</strong></p><p>래퍼의 <code>data</code> 타입: <strong><a href="#dto-caseuploadresult">CaseUploadResult</a></strong>. 중첩 필드의 전체 정의는 해당 DTO 링크를 따른다.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>documentId</code></td><td>integer</td><td>항상</td><td>—</td><td>새 원본 ID</td></tr><tr><td><code>processingStatus</code></td><td>string</td><td>항상</td><td>—</td><td>UPLOADED</td></tr><tr><td><code>reviewStatus</code></td><td>string</td><td>항상</td><td>—</td><td>NOT_STARTED</td></tr><tr><td><code>progress</code></td><td>integer</td><td>항상</td><td>—</td><td>10</td></tr><tr><td><code>duplicateCandidateIds</code></td><td>array&lt;integer&gt;</td><td>항상</td><td>—</td><td>중복 원본 후보 ID</td></tr><tr><td><code>inputVersion</code></td><td>integer</td><td>항상</td><td>—</td><td>업로드·연결 후 Case 입력 버전</td></tr><tr><td><code>recompute</code></td><td><a href="#dto-recomputehint">RecomputeHint</a></td><td>항상</td><td>—</td><td>자동 검사 예약</td></tr></tbody></table></div><p>성공 형식 예시:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;code&quot;: 202,
+  &quot;message&quot;: &quot;요청이 처리되었습니다.&quot;,
+  &quot;data&quot;: {
+    &quot;documentId&quot;: 1,
+    &quot;processingStatus&quot;: &quot;UPLOADED&quot;,
+    &quot;reviewStatus&quot;: &quot;NOT_STARTED&quot;,
+    &quot;progress&quot;: 10,
+    &quot;duplicateCandidateIds&quot;: [],
+    &quot;inputVersion&quot;: 4,
+    &quot;recompute&quot;: {
+      &quot;scheduled&quot;: true,
+      &quot;jobId&quot;: &quot;job-example&quot;,
+      &quot;affectedChecks&quot;: [
+        &quot;PAYSLIP_VALIDATION&quot;
+      ]
+    }
+  }
+}</code></pre></div><p><strong>오류·전제</strong></p><p>공통 인증/검증/권한 오류는 <a href="#errors">오류 규칙</a>을 함께 적용한다. 아래는 이 동작의 주요 분기이며 비동기 모델 오류가 HTTP 성공 응답 대신 작업/SSE 안에 저장될 수 있다.</p><div class="table-wrap"><table><thead><tr><th>HTTP</th><th>errorCode</th><th>처리/의미</th></tr></thead><tbody><tr><td>409</td><td><code>DOCUMENT_LIMIT_EXCEEDED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>413</td><td><code>FILE_TOO_LARGE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>415</td><td><code>UNSUPPORTED_FILE_TYPE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>422</td><td><code>EMPTY_FILE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>422</td><td><code>INVALID_FILE</code></td><td>읽을 수 없는 파일입니다.</td></tr><tr><td>422</td><td><code>PDF_PAGE_LIMIT_EXCEEDED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr></tbody></table></div><p><strong>curl 예시</strong></p><div class="code-block"><div class="code-label">bash</div><pre><code>curl -i -X POST &quot;${BASE_URL}/api/v1/cases/1/documents&quot; \
+  -H &quot;Authorization: Bearer ${TOKEN}&quot; \
+  -F &quot;file=@sample.pdf&quot; \
+  -F &quot;documentType=PAYSLIP&quot;</code></pre></div><p>구현 확인: <a href="../app/routers/documents.py#L234">app/routers/documents.py:234</a>.</p>
+<a id="api-058"></a><h3>API-058 · Case 통합 결과 조회</h3><p><strong><code>GET /api/v1/cases/{case_id}/results</code></strong></p><p>네 독립 검사 섹션과 버전·집계·항목을 반환한다. 아직 결과가 없으면 섹션=null, items=[]. freshness가 최신성 기준이며 입력 부족은 항목 상태로 구분한다. 추가 result는 원시 상세 결과로 금액이 문자열·상태가 소문자일 수 있다.</p><ul><li>인증: <strong>Bearer 액세스 토큰 필요</strong>.</li><li>성공: <strong>200</strong>, <code>application/json</code>.</li></ul><p><strong>Path / Query</strong></p><div class="table-wrap"><table><thead><tr><th>이름</th><th>위치</th><th>필수</th><th>타입</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>case_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>Case 정수 ID.</td></tr></tbody></table></div><p><strong>요청 Body</strong>: 없음. 빈 JSON <code>{}</code>을 보낼 필요가 없다.</p><p><strong>성공 응답</strong></p><p>래퍼의 <code>data</code> 타입: <strong><a href="#dto-resultsdetailed">ResultsDetailed</a></strong>. 중첩 필드의 전체 정의는 해당 DTO 링크를 따른다.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>caseId</code></td><td>integer</td><td>항상</td><td>—</td><td>Case ID</td></tr><tr><td><code>currentInputVersion</code></td><td>integer</td><td>항상</td><td>—</td><td>최신 입력 버전</td></tr><tr><td><code>resultVersion</code></td><td>integer</td><td>항상</td><td>—</td><td>네 참조 version의 최댓값; 전체를 고정하는 공통 version은 아님</td></tr><tr><td><code>summary</code></td><td><a href="#dto-resultsummary">ResultSummary</a></td><td>항상</td><td>—</td><td>계산·대조 집계</td></tr><tr><td><code>freshness</code></td><td><a href="#dto-resultfreshness">ResultFreshness</a></td><td>항상</td><td>—</td><td>최신성</td></tr><tr><td><code>versions</code></td><td><a href="#dto-resultversions">ResultVersions</a></td><td>항상</td><td>—</td><td>독립 snapshot 참조</td></tr><tr><td><code>items</code></td><td>array&lt;<a href="#dto-resultitem">ResultItem</a>&gt;</td><td>항상</td><td>—</td><td>결과 화면용 항목</td></tr><tr><td><code>calculation</code></td><td><a href="#dto-calculation">Calculation</a></td><td>null 가능</td><td>—</td><td>임금 계산 최신 snapshot</td></tr><tr><td><code>comparison</code></td><td><a href="#dto-comparison">Comparison</a></td><td>null 가능</td><td>—</td><td>계약/근태 대조 snapshot</td></tr><tr><td><code>payslipValidation</code></td><td><a href="#dto-payslipvalidation">PayslipValidation</a></td><td>null 가능</td><td>—</td><td>명세서 산술 snapshot</td></tr><tr><td><code>depositComparison</code></td><td><a href="#dto-depositcomparison">DepositComparison</a></td><td>null 가능</td><td>—</td><td>지급 내역 snapshot</td></tr><tr><td><code>result</code></td><td><a href="#dto-rawanalysisresult">RawAnalysisResult</a></td><td>null 가능</td><td>—</td><td>추가 원시 상세 결과; 문자열 금액과 소문자 상태</td></tr></tbody></table></div><p>성공 형식 예시:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;code&quot;: 200,
+  &quot;message&quot;: &quot;요청이 처리되었습니다.&quot;,
+  &quot;data&quot;: {
+    &quot;caseId&quot;: 1,
+    &quot;currentInputVersion&quot;: 4,
+    &quot;resultVersion&quot;: 1,
+    &quot;summary&quot;: {
+      &quot;calculationStatus&quot;: &quot;REVIEW_REQUIRED&quot;,
+      &quot;comparisonStatus&quot;: &quot;DIFFERENCE&quot;,
+      &quot;counts&quot;: {
+        &quot;match&quot;: 1,
+        &quot;difference&quot;: 2,
+        &quot;insufficientInformation&quot;: 4,
+        &quot;reviewRequired&quot;: 0
+      },
+      &quot;calculatedSubtotal&quot;: null,
+      &quot;grossPay&quot;: null
+    },
+    &quot;freshness&quot;: {
+      &quot;overall&quot;: &quot;CURRENT&quot;,
+      &quot;hasOutdatedResults&quot;: false,
+      &quot;activeJobId&quot;: null
+    },
+    &quot;versions&quot;: {
+      &quot;calculation&quot;: {
+        &quot;snapshotId&quot;: 1,
+        &quot;version&quot;: 1,
+        &quot;inputVersion&quot;: 4,
+        &quot;createdAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+        &quot;freshness&quot;: &quot;CURRENT&quot;
+      },
+      &quot;comparison&quot;: {
+        &quot;snapshotId&quot;: 2,
+        &quot;version&quot;: 1,
+        &quot;inputVersion&quot;: 4,
+        &quot;createdAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+        &quot;freshness&quot;: &quot;CURRENT&quot;
+      },
+      &quot;payslipValidation&quot;: {
+        &quot;snapshotId&quot;: 3,
+        &quot;version&quot;: 1,
+        &quot;inputVersion&quot;: 4,
+        &quot;createdAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+        &quot;freshness&quot;: &quot;CURRENT&quot;
+      },
+      &quot;depositComparison&quot;: {
+        &quot;snapshotId&quot;: 4,
+        &quot;version&quot;: 1,
+        &quot;inputVersion&quot;: 4,
+        &quot;createdAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+        &quot;freshness&quot;: &quot;CURRENT&quot;
+      }
+    },
+    &quot;items&quot;: [
+      {
+        &quot;id&quot;: &quot;HOURLY_WAGE&quot;,
+        &quot;title&quot;: &quot;HOURLY_WAGE&quot;,
+        &quot;status&quot;: &quot;INSUFFICIENT_INFORMATION&quot;,
+        &quot;calculatedValue&quot;: null,
+        &quot;documentValue&quot;: null,
+        &quot;difference&quot;: null,
+        &quot;unit&quot;: &quot;KRW&quot;,
+        &quot;periodStart&quot;: &quot;2026-10-01&quot;,
+        &quot;periodEnd&quot;: &quot;2026-10-31&quot;,
+        &quot;formula&quot;: null,
+        &quot;rule&quot;: null,
+        &quot;comparisonBasis&quot;: null,
+        &quot;sources&quot;: [],
+        &quot;confirmedAt&quot;: null,
+        &quot;nextAction&quot;: &quot;자료와 확인값을 검토하세요.&quot;
+      },
+      {
+        &quot;id&quot;: &quot;WORKED_MINUTES&quot;,
+        &quot;title&quot;: &quot;WORKED_MINUTES&quot;,
+        &quot;status&quot;: &quot;INSUFFICIENT_INFORMATION&quot;,
+        &quot;calculatedValue&quot;: null,
+        &quot;documentValue&quot;: null,
+        &quot;difference&quot;: null,
+        &quot;unit&quot;: &quot;MINUTE&quot;,
+        &quot;periodStart&quot;: &quot;2026-10-01&quot;,
+        &quot;periodEnd&quot;: &quot;2026-10-31&quot;,
+        &quot;formula&quot;: null,
+        &quot;rule&quot;: null,
+        &quot;comparisonBasis&quot;: null,
+        &quot;sources&quot;: [],
+        &quot;confirmedAt&quot;: null,
+        &quot;nextAction&quot;: &quot;자료와 확인값을 검토하세요.&quot;
+      },
+      {
+        &quot;id&quot;: &quot;BASE_PAY&quot;,
+        &quot;title&quot;: &quot;BASE_PAY&quot;,
+        &quot;status&quot;: &quot;INSUFFICIENT_INFORMATION&quot;,
+        &quot;calculatedValue&quot;: null,
+        &quot;documentValue&quot;: null,
+        &quot;difference&quot;: null,
+        &quot;unit&quot;: &quot;KRW&quot;,
+        &quot;periodStart&quot;: &quot;2026-10-01&quot;,
+        &quot;periodEnd&quot;: &quot;2026-10-31&quot;,
+        &quot;formula&quot;: null,
+        &quot;rule&quot;: null,
+        &quot;comparisonBasis&quot;: null,
+        &quot;sources&quot;: [],
+        &quot;confirmedAt&quot;: null,
+        &quot;nextAction&quot;: &quot;자료와 확인값을 검토하세요.&quot;
+      },
+      {
+        &quot;id&quot;: &quot;paymentTotal&quot;,
+        &quot;title&quot;: &quot;paymentTotal&quot;,
+        &quot;status&quot;: &quot;MATCH&quot;,
+        &quot;calculatedValue&quot;: 2300000,
+        &quot;documentValue&quot;: 2300000,
+        &quot;difference&quot;: 0,
+        &quot;unit&quot;: &quot;KRW&quot;,
+        &quot;periodStart&quot;: &quot;2026-10-01&quot;,
+        &quot;periodEnd&quot;: &quot;2026-10-31&quot;,
+        &quot;formula&quot;: null,
+        &quot;rule&quot;: null,
+        &quot;comparisonBasis&quot;: null,
+        &quot;sources&quot;: [],
+        &quot;confirmedAt&quot;: null,
+        &quot;nextAction&quot;: null
+      },
+      {
+        &quot;id&quot;: &quot;deductionTotal&quot;,
+        &quot;title&quot;: &quot;deductionTotal&quot;,
+        &quot;status&quot;: &quot;DIFFERENCE&quot;,
+        &quot;calculatedValue&quot;: 190000,
+        &quot;documentValue&quot;: 200000,
+        &quot;difference&quot;: -10000,
+        &quot;unit&quot;: &quot;KRW&quot;,
+        &quot;periodStart&quot;: &quot;2026-10-01&quot;,
+        &quot;periodEnd&quot;: &quot;2026-10-31&quot;,
+        &quot;formula&quot;: null,
+        &quot;rule&quot;: null,
+        &quot;comparisonBasis&quot;: null,
+        &quot;sources&quot;: [],
+        &quot;confirmedAt&quot;: null,
+        &quot;nextAction&quot;: &quot;자료와 확인값을 검토하세요.&quot;
+      },
+      {
+        &quot;id&quot;: &quot;netPay&quot;,
+        &quot;title&quot;: &quot;netPay&quot;,
+        &quot;status&quot;: &quot;DIFFERENCE&quot;,
+        &quot;calculatedValue&quot;: 2100000,
+        &quot;documentValue&quot;: 2090000,
+        &quot;difference&quot;: 10000,
+        &quot;unit&quot;: &quot;KRW&quot;,
+        &quot;periodStart&quot;: &quot;2026-10-01&quot;,
+        &quot;periodEnd&quot;: &quot;2026-10-31&quot;,
+        &quot;formula&quot;: null,
+        &quot;rule&quot;: null,
+        &quot;comparisonBasis&quot;: null,
+        &quot;sources&quot;: [],
+        &quot;confirmedAt&quot;: null,
+        &quot;nextAction&quot;: &quot;자료와 확인값을 검토하세요.&quot;
+      },
+      {
+        &quot;id&quot;: &quot;NET_VS_PAYMENT&quot;,
+        &quot;title&quot;: &quot;NET_VS_PAYMENT&quot;,
+        &quot;status&quot;: &quot;INSUFFICIENT_INFORMATION&quot;,
+        &quot;calculatedValue&quot;: 2090000,
+        &quot;documentValue&quot;: null,
+        &quot;difference&quot;: null,
+        &quot;unit&quot;: &quot;KRW&quot;,
+        &quot;periodStart&quot;: &quot;2026-10-01&quot;,
+        &quot;periodEnd&quot;: &quot;2026-10-31&quot;,
+        &quot;formula&quot;: null,
+        &quot;rule&quot;: null,
+        &quot;comparisonBasis&quot;: null,
+        &quot;sources&quot;: [],
+        &quot;confirmedAt&quot;: null,
+        &quot;nextAction&quot;: &quot;자료와 확인값을 검토하세요.&quot;
+      }
+    ],
+    &quot;calculation&quot;: {
+      &quot;calculationId&quot;: 1,
+      &quot;status&quot;: &quot;REVIEW_REQUIRED&quot;,
+      &quot;items&quot;: [],
+      &quot;calculatedSubtotal&quot;: null,
+      &quot;grossPay&quot;: null,
+      &quot;version&quot;: 1,
+      &quot;basedOnInputVersion&quot;: 4,
+      &quot;createdAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+      &quot;freshness&quot;: &quot;CURRENT&quot;,
+      &quot;agentResultId&quot;: &quot;result-example&quot;,
+      &quot;result_id&quot;: &quot;result-example&quot;
+    },
+    &quot;comparison&quot;: {
+      &quot;comparisonId&quot;: 2,
+      &quot;status&quot;: &quot;PARTIAL&quot;,
+      &quot;items&quot;: [],
+      &quot;version&quot;: 1,
+      &quot;basedOnInputVersion&quot;: 4,
+      &quot;createdAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+      &quot;freshness&quot;: &quot;CURRENT&quot;,
+      &quot;agentResultId&quot;: &quot;result-example&quot;,
+      &quot;result_id&quot;: &quot;result-example&quot;
+    },
+    &quot;payslipValidation&quot;: {
+      &quot;validationId&quot;: 3,
+      &quot;paymentTotal&quot;: {
+        &quot;status&quot;: &quot;MATCH&quot;,
+        &quot;calculated&quot;: 2300000,
+        &quot;stated&quot;: 2300000,
+        &quot;difference&quot;: 0,
+        &quot;itemSum&quot;: 2300000,
+        &quot;statedTotal&quot;: 2300000,
+        &quot;sources&quot;: []
+      },
+      &quot;deductionTotal&quot;: {
+        &quot;status&quot;: &quot;DIFFERENCE&quot;,
+        &quot;calculated&quot;: 190000,
+        &quot;stated&quot;: 200000,
+        &quot;difference&quot;: -10000,
+        &quot;itemSum&quot;: 190000,
+        &quot;statedTotal&quot;: 200000,
+        &quot;sources&quot;: []
+      },
+      &quot;netPay&quot;: {
+        &quot;status&quot;: &quot;DIFFERENCE&quot;,
+        &quot;calculated&quot;: 2100000,
+        &quot;stated&quot;: 2090000,
+        &quot;difference&quot;: 10000,
+        &quot;itemSum&quot;: 2100000,
+        &quot;statedTotal&quot;: 2090000,
+        &quot;sources&quot;: []
+      },
+      &quot;version&quot;: 1,
+      &quot;basedOnInputVersion&quot;: 4,
+      &quot;createdAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+      &quot;freshness&quot;: &quot;CURRENT&quot;,
+      &quot;agentResultId&quot;: &quot;result-example&quot;,
+      &quot;result_id&quot;: &quot;result-example&quot;
+    },
+    &quot;depositComparison&quot;: {
+      &quot;depositComparisonId&quot;: 4,
+      &quot;status&quot;: &quot;INSUFFICIENT_INFORMATION&quot;,
+      &quot;payslipNetPay&quot;: 2090000,
+      &quot;linkedBankDepositTotal&quot;: null,
+      &quot;linkedCashPaymentTotal&quot;: null,
+      &quot;linkedPaymentTotal&quot;: null,
+      &quot;difference&quot;: null,
+      &quot;transactionIds&quot;: [],
+      &quot;deposits&quot;: [],
+      &quot;version&quot;: 1,
+      &quot;basedOnInputVersion&quot;: 4,
+      &quot;createdAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+      &quot;freshness&quot;: &quot;CURRENT&quot;,
+      &quot;agentResultId&quot;: &quot;result-example&quot;,
+      &quot;result_id&quot;: &quot;result-example&quot;
+    },
+    &quot;result&quot;: null
+  }
+}</code></pre></div><p><strong>오류·전제</strong></p><p>공통 인증/검증/권한 오류는 <a href="#errors">오류 규칙</a>을 함께 적용한다. 아래는 이 동작의 주요 분기이며 비동기 모델 오류가 HTTP 성공 응답 대신 작업/SSE 안에 저장될 수 있다.</p><p>이 endpoint 전용 추가 오류는 공통 규칙과 상위 자원 존재/소유권 조건을 따른다.</p><p><strong>curl 예시</strong></p><div class="code-block"><div class="code-label">bash</div><pre><code>curl -i -X GET &quot;${BASE_URL}/api/v1/cases/1/results&quot; \
+  -H &quot;Authorization: Bearer ${TOKEN}&quot;</code></pre></div><p>구현 확인: <a href="../app/routers/analysis.py#L352">app/routers/analysis.py:352</a>.</p>
+<a id="api-088"></a><h3>API-088 · 채팅 질문 전송·SSE 응답</h3><p><strong><code>POST /api/v1/workplaces/{workplace_id}/chats/{chat_id}/messages</code></strong></p><p>일반 JSON 응답이 아니다. scope 생략 시 세션 기본 범위. 사용자 질문을 먼저 저장하고 답변을 생성한다. clientMessageId 또는 Idempotency-Key로 중복 사용자 질문·모델 호출을 막는다. 같은 키 다른 내용/범위는 409. 완료 응답은 재생, 진행 중이면 409. 실패 답변 새 생성은 retry API 사용.</p><ul><li>인증: <strong>Bearer 액세스 토큰 필요</strong>.</li><li>성공: <strong>200</strong>, <code>text/event-stream</code>.</li><li>선택 헤더: <code>Idempotency-Key</code>. <code>clientMessageId</code>를 보내면 그 값이 우선.</li></ul><p><strong>Path / Query</strong></p><div class="table-wrap"><table><thead><tr><th>이름</th><th>위치</th><th>필수</th><th>타입</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>workplace_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>근무지 정수 ID.</td></tr><tr><td><code>chat_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>정수 채팅 세션 ID.</td></tr></tbody></table></div><p><strong>요청 Body</strong>: <code>application/json</code>, 필수. 상세 정의: <a href="#dto-messagecreate">MessageCreate</a>.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>content</code></td><td>string</td><td>필수</td><td>최소 문자: <code>1</code>; 최대 문자: <code>10000</code></td><td>사용자 질문 텍스트. 1~10000자.</td></tr><tr><td><code>scope</code></td><td><a href="#dto-scope">Scope</a> / null</td><td>생략 가능</td><td>—; —</td><td>메시지 문맥. 생략하면 세션 기본. WORKPLACE_ALL이면 caseId를 보내지 않음.</td></tr><tr><td><code>clientMessageId</code></td><td>string / null</td><td>생략 가능</td><td>최소 문자: <code>1</code>; 최대 문자: <code>128</code>; —</td><td>같은 사용자 질문 재전송에 유지할 고유 키. 같은 키 다른 내용/범위는 409.</td></tr></tbody></table></div><p>요청 예시:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;content&quot;: &quot;명세서 실수령액의 계산 차이를 설명해 주세요.&quot;,
+  &quot;scope&quot;: {
+    &quot;scopeType&quot;: &quot;CASE&quot;,
+    &quot;caseId&quot;: 1
+  },
+  &quot;clientMessageId&quot;: &quot;test-message-001&quot;
+}</code></pre></div><p><strong>성공 응답</strong></p><p><a href="#sse">SSE 이벤트 계약</a>의 순서·payload를 사용한다. code/message/data JSON 래퍼는 없다.</p><p><strong>오류·전제</strong></p><p>공통 인증/검증/권한 오류는 <a href="#errors">오류 규칙</a>을 함께 적용한다. 아래는 이 동작의 주요 분기이며 비동기 모델 오류가 HTTP 성공 응답 대신 작업/SSE 안에 저장될 수 있다.</p><div class="table-wrap"><table><thead><tr><th>HTTP</th><th>errorCode</th><th>처리/의미</th></tr></thead><tbody><tr><td>409</td><td><code>CHAT_RUN_IN_PROGRESS</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>409</td><td><code>IDEMPOTENCY_KEY_REUSED</code></td><td>같은 중복 방지 키를 다른 본문/고정 입력에 재사용.</td></tr><tr><td>422</td><td><code>INVALID_IDEMPOTENCY_KEY</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr></tbody></table></div><p><strong>curl 예시</strong></p><div class="code-block"><div class="code-label">bash</div><pre><code>curl -i -N -X POST &quot;${BASE_URL}/api/v1/workplaces/1/chats/1/messages&quot; \
+  -H &quot;Authorization: Bearer ${TOKEN}&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  --data-raw &#x27;{&quot;content&quot;:&quot;명세서 실수령액의 계산 차이를 설명해 주세요.&quot;,&quot;scope&quot;:{&quot;scopeType&quot;:&quot;CASE&quot;,&quot;caseId&quot;:1},&quot;clientMessageId&quot;:&quot;test-message-001&quot;}&#x27;</code></pre></div><p>구현 확인: <a href="../app/routers/chats.py#L304">app/routers/chats.py:304</a>.</p>

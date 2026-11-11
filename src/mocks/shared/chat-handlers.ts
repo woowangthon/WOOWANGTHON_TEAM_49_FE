@@ -7,6 +7,7 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
  let seq=100;
  const inputVersions=new Map<number,number>();
  const chats=new Map<number,{chatId:number;workplaceId:number;title:string;defaultScope:Message['scope'];updatedAt:string;lastMessagePreview:string;messages:Message[]}>();
+ const receipts=new Map<string,{signature:string;frames:string[];done:boolean}>();
  const active=new Map<number,{runId:string;message:Message;cancelled:boolean}>();
  const root=`${base}/workplaces/:w/chats`;
  const fail=(errorCode:string,status:number)=>apiResponse({errorCode},status);
@@ -18,11 +19,23 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
   if(active.has(chat.chatId))return fail('CHAT_RUN_ALREADY_ACTIVE',409);
   const previous=retry?chat.messages.find(m=>m.messageId===retry&&m.role==='ASSISTANT'):undefined;
   if(retry&&(!previous||!['FAILED','CANCELLED'].includes(previous.status)))return fail('MESSAGE_NOT_RETRYABLE',409);
-  const body=retry?{content:chat.messages.slice(0,chat.messages.indexOf(previous!)).findLast(m=>m.role==='USER')?.content??'',scope:previous!.scope}:await request.json() as {content:string;scope?:unknown};
+  const body=retry?{content:chat.messages.slice(0,chat.messages.indexOf(previous!)).findLast(m=>m.role==='USER')?.content??'',scope:previous!.scope}:await request.json() as {content:string;scope?:unknown;clientMessageId?:string};
   if(!body.content?.trim())return fail('VALIDATION_ERROR',422);
   if(body.content==='JSON 오류')return fail('CHAT_RUN_ALREADY_ACTIVE',409);
   const scope=scopeSchema.safeParse(body.scope??chat.defaultScope);if(!scope.success)return fail('VALIDATION_ERROR',422);
   if(scope.data.scopeType==='CASE'&&!getCases().some(v=>v.caseId===(scope.data as {caseId:number}).caseId&&v.workplaceId===chat.workplaceId))return fail('RESOURCE_NOT_FOUND',404);
+  const key=retry?undefined:('clientMessageId' in body ? body.clientMessageId : undefined)??request.headers.get('Idempotency-Key');
+  if(key!==undefined&&key!==null&&(typeof key!=='string'||key.length<1||key.length>128))return fail('INVALID_IDEMPOTENCY_KEY',422);
+  const receiptKey=key?`${chat.chatId}:${key}`:undefined;
+  const signature=JSON.stringify([body.content,scope.data]);
+  const saved=receiptKey?receipts.get(receiptKey):undefined;
+  if(saved){
+   if(saved.signature!==signature)return fail('IDEMPOTENCY_KEY_REUSED',409);
+   if(!saved.done)return fail('CHAT_RUN_IN_PROGRESS',409);
+   return new HttpResponse(saved.frames.join(''),{headers:{'Content-Type':'text/event-stream'}});
+  }
+  const receipt={signature,frames:[] as string[],done:false};
+  if(receiptKey)receipts.set(receiptKey,receipt);
   const message=(role:Message['role']):Message=>({messageId:++seq,role,content:'',status:'COMPLETED',scope:scope.data,sources:[],resultRefs:[],sourceMayBeOutdated:false,runId:null,errorCode:null});
   if(!retry)chat.messages.push({...message('USER'),content:body.content});
   const answer=message('ASSISTANT');answer.status='STREAMING';answer.runId=`run-${++seq}`;chat.messages.push(answer);
@@ -31,7 +44,7 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
   const run={runId:answer.runId,message:answer,cancelled:false};active.set(chat.chatId,run);
   return new HttpResponse(new ReadableStream<Uint8Array>({async start(controller){
    const enc=new TextEncoder();let connected=true;
-   const emit=(event:string,data:unknown)=>{if(!connected)return;try{const bytes=enc.encode(`event: ${event}\r\ndata: ${JSON.stringify(data)}\r\n\r\n`);for(let i=0;i<bytes.length;i+=7)controller.enqueue(bytes.slice(i,i+7));}catch{connected=false;}};
+   const emit=(event:string,data:unknown)=>{if(!connected)return;try{const frame=`event: ${event}\r\ndata: ${JSON.stringify(data)}\r\n\r\n`;receipt.frames.push(frame);const bytes=enc.encode(frame);for(let i=0;i<bytes.length;i+=7)controller.enqueue(bytes.slice(i,i+7));}catch{connected=false;}};
    const identity={runId:run.runId,messageId:answer.messageId};
    try{
     emit('message_start',{...identity,role:'ASSISTANT',scope:answer.scope,aiMode:'mock'});
@@ -42,7 +55,7 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
     }
     if(!run.cancelled){answer.sources=body.content==='삭제 출처'?[{documentId:99999,page:1}]:captured?.sources??(answer.scope.scopeType==='CASE'?[{documentId:101,page:1,caseId:answer.scope.caseId}]:[]);answer.resultRefs=captured?.resultRefs??[];if(body.content==='없는 스냅샷')answer.resultRefs=[{type:'calculation',snapshotId:99999,version:1,...(answer.scope.scopeType==='CASE'?{caseId:answer.scope.caseId}:{})}];emit('sources',{sources:answer.sources,resultRefs:answer.resultRefs});}
     answer.status=run.cancelled?'CANCELLED':'COMPLETED';emit('message_done',{...identity,status:answer.status});
-   }finally{chat.updatedAt=new Date().toISOString();chat.lastMessagePreview=answer.content;active.delete(chat.chatId);try{controller.close();}catch{connected=false;}}
+   }finally{receipt.done=true;chat.updatedAt=new Date().toISOString();chat.lastMessagePreview=answer.content;active.delete(chat.chatId);try{controller.close();}catch{connected=false;}}
   }}),{headers:{'Content-Type':'text/event-stream'}});
  }
  return {chats,handlers:[
