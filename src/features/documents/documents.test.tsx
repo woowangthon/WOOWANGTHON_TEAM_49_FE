@@ -1,3 +1,4 @@
+import { caseDocumentResponse } from "@/mocks/shared/document-handlers";
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { File as NodeFile } from "node:buffer";
@@ -22,7 +23,7 @@ import { documentApi } from "./api";
 import { documentKeys, useRecomputeStatus } from "./queries";
 import { revokeDocumentScope } from "./cache";
 import { MAX_FILE_SIZE, validateFile, validateImageDimensions } from "./file-validation";
-import { documentSchema } from "./schemas";
+import { caseDocumentSchema, documentSchema } from "./schemas";
 const nav = vi.hoisted(() => ({replace: vi.fn()}));
 vi.mock("next/navigation", () => ({useRouter: () => nav, usePathname: () => "/library", useSearchParams: () => new URLSearchParams()}));
 const apps: AppServices[] = [];
@@ -149,7 +150,7 @@ describe("document flows with MSW, never a live backend", () => {
     expect(mocks.getLinks()[0].applicableTo).toBe("2026-11-03"); expect(mocks.getDocuments()).toHaveLength(21);
   });
   it("unlinks only the Case link, preserving original and other Case references", async () => {
-    const {mount,user,mocks} = await setup(); mount(<DocumentCard dto={{...mocks.getDocuments()[0],link:mocks.getLinks()[0]}} context={{kind:"case",id:15}} inputVersion={7} />);
+    const {mount,user,mocks} = await setup(); mount(<DocumentCard dto={{...mocks.getDocuments()[0],linkId:mocks.getLinks()[0].linkId}} context={{kind:"case",id:15}} inputVersion={7} />);
     await user.click(screen.getByRole("button",{name:"이 사례 연결 해제"}));
     expect(screen.getByRole("dialog")).toHaveTextContent("공유 원본과 다른 사례의 연결은 보존");
     await user.click(screen.getByRole("button",{name:"연결만 해제"})); await waitFor(()=>expect(mocks.getLinks()).toHaveLength(0));
@@ -222,7 +223,7 @@ describe("document flows with MSW, never a live backend", () => {
   });
   it("disables Case additions at the 20-link limit", async () => {
     const {mount,mocks,user}=await setup();
-    server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:[{...mocks.getDocuments()[0],link:mocks.getLinks()[0]}],page:1,size:20,total:20})));
+    server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:[caseDocumentResponse(mocks.getDocuments()[0], mocks.getLinks()[0].linkId)],page:1,size:20,total:20})));
     mount(<CaseUploadScreen id={15} />); await screen.findByText(/사례에는 문서를 최대 20개/);
     expect(screen.getByRole("button",{name:"파일 업로드"})).toBeDisabled();
     await user.click(screen.getByRole("button",{name:"기존 자료 연결"}));
@@ -295,4 +296,32 @@ it("keeps compact row metadata separate and reveals linked cases five at a time"
  await user.click(screen.getByRole("button",{name:"연결 사례 더 보기"}));
  expect(screen.getByRole("link",{name:"사례 #6"})).toBeVisible();
  expect(mocks.requests.filter(r=>r.method!=="GET")).toHaveLength(0);
+});
+
+
+it.each([null, 777])("A05 lists and opens details without a nested link (%s)", async linkId => {
+  const {app,mount,user,mocks} = await setup();
+  const dto = caseDocumentResponse(mocks.getDocuments()[0], linkId);
+  server.use(http.get(`${testApiUrl}/cases/15/documents`, () => apiResponse({items:[dto],page:1,size:20,total:1})),
+    http.get(`${testApiUrl}/cases/15/documents/101`, () => apiResponse(dto)));
+  const page = await documentApi(app.api).list({kind:"case",id:15},{page:1,size:20});
+  expect(page.items[0].linkId).toBe(linkId);
+  expect(page.items[0]).not.toHaveProperty("link");
+  expect((await documentApi(app.api).detail(15,101)).documentId).toBe(101);
+  mount(<DocumentCard dto={page.items[0]} context={{kind:"case",id:15}} inputVersion={7} />);
+  await user.click(screen.getByText("\uC790\uB8CC \uAD00\uB9AC \uC0C1\uC138"));
+  expect(screen.getByRole("link",{name:"\uC6D0\uBB38\u00B7\uCD94\uCD9C\uAC12 \uAC80\uD1A0"})).toHaveAttribute("href","/cases/15/review?documentId=101");
+  expect(screen.queryByRole("button",{name:"\uC5F0\uACB0 \uC815\uBCF4 \uC218\uC815"})).toBeNull();
+  const unlink = screen.queryByRole("button",{name:"\uC774 \uC0AC\uB840 \uC5F0\uACB0 \uD574\uC81C"});
+  expect(Boolean(unlink)).toBe(linkId !== null);
+  if (unlink) {
+    await user.click(unlink);
+    await user.click(screen.getByRole("button",{name:"\uC5F0\uACB0\uB9CC \uD574\uC81C"}));
+    await waitFor(() => expect(mocks.requests.some(r => r.method === "DELETE" && r.path.endsWith("document-links/777"))).toBe(true));
+  } else expect(mocks.requests.some(r => r.method === "DELETE")).toBe(false);
+});
+it("A05 requires nullable integer linkId and strips undeclared nested links", () => {
+  const dto = caseDocumentResponse({documentId:1,workplaceId:1,documentType:"CONTRACT",fileName:"a",processingStatus:"READY"},null);
+  expect(caseDocumentSchema.parse({...dto,link:{linkId:777}})).not.toHaveProperty("link");
+  for (const linkId of [undefined,"777",1.5]) expect(caseDocumentSchema.safeParse({...dto,linkId}).success).toBe(false);
 });

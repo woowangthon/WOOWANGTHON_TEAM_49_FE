@@ -26,7 +26,7 @@ it("preserves selected originals across local pages without a mutation",async()=
  server.use(...mock.handlers);
  await services.auth.login({email:"worker@example.com",password:"password1234"});
  let posts=0;
- server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:Array.from({length:11},(_,i)=>({documentId:i+201,workplaceId:3,documentType:"PAYSLIP",fileName:`original-${i+1}.pdf`,processingStatus:"READY",link:{linkId:i+1,caseId:15,documentId:i+201,purpose:"PAYSLIP",applicableFrom:null,applicableTo:null}})),total:11,page:1,size:100})),http.post(`${testApiUrl}/cases/15/reports`,()=>{posts++;return apiResponse({},500)}));
+ server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:Array.from({length:11},(_,i)=>({documentId:i+201,workplaceId:3,documentType:"PAYSLIP",fileName:`original-${i+1}.pdf`,processingStatus:"READY",linkId:i+1,reviewStatus:"NOT_STARTED",progress:100,linkedCaseIds:[15],uploadedAt:"2026-11-09T00:00:00Z",errorCode:null,aiMetadata:null})),total:11,page:1,size:100})),http.post(`${testApiUrl}/cases/15/reports`,()=>{posts++;return apiResponse({},500)}));
  mount(<ReportsScreen caseId={15}/>);
  fireEvent.click(await screen.findByRole('checkbox',{name:'original-1.pdf'}));
  fireEvent.click(screen.getByRole('button',{name:'다음 원본'}));

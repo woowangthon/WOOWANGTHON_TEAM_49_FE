@@ -1,3 +1,4 @@
+import { caseDocumentResponse } from "@/mocks/shared/document-handlers";
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { File as NodeFile } from "node:buffer";
@@ -114,4 +115,12 @@ describe("P0 document review via MSW",()=>{
  expect(screen.getByLabelText("수정값")).toHaveValue("123");expect(mocks.requests.some(r=>r.method==="PATCH")).toBe(false);
  });
 
+});
+
+it.each([null,777])("A05 enters review without link details (%s)",async linkId=>{
+ const {mount,d}=await setup();
+ const dto=caseDocumentResponse(d.getDocuments()[0],linkId);
+ server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:[dto],page:1,size:20,total:1})));
+ mount(<ReviewScreen id={15}/>);
+ expect(await screen.findByRole("tab",{name:"\uCD94\uCD9C \uD544\uB4DC"})).toBeVisible();
 });

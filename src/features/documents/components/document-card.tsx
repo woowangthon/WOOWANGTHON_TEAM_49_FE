@@ -4,11 +4,11 @@ import { useState } from "react";
 import { CircleCheck, CircleAlert, FileText, LoaderCircle } from "lucide-react";
 import { secondaryButton } from "@/components/ui/styles";
 import { useDocumentAction, useDocumentStatus } from "../queries";
-import type { DocumentContext, DocumentDto } from "../schemas";
-import { documentCard, documentError, isProcessing } from "../view-models";
+import type { DocumentContext } from "../schemas";
+import { documentCard, documentError, isProcessing, type DocumentViewModel } from "../view-models";
 import { DocumentActions } from "./document-actions";
 import { LinkForm } from "./link-form";
-export function DocumentCard({ dto, context, inputVersion, selectableCaseId, canConnect = true, onEditingChange }: { dto: DocumentDto; context: DocumentContext; inputVersion?: number; selectableCaseId?: number; canConnect?: boolean; onEditingChange?: (editing: boolean) => void }) {
+export function DocumentCard({ dto, context, linkDetails, inputVersion, selectableCaseId, canConnect = true, onEditingChange }: DocumentViewModel & { context: DocumentContext; inputVersion?: number; selectableCaseId?: number; canConnect?: boolean; onEditingChange?: (editing: boolean) => void }) {
   const status = useDocumentStatus(context.kind === "library" ? { kind: "workplace", id: dto.workplaceId } : context, dto);
   const item = documentCard(dto, status.data);
   const [visibleLinks, setVisibleLinks] = useState(5);
@@ -18,6 +18,7 @@ export function DocumentCard({ dto, context, inputVersion, selectableCaseId, can
   const active = isProcessing(item.processingStatus);
   const Icon = active ? LoaderCircle : item.processingStatus === "READY" ? CircleCheck : CircleAlert;
   const caseId = context.kind === "case" ? context.id : undefined;
+  const link = linkDetails && linkDetails.linkId === dto.linkId && linkDetails.documentId === dto.documentId && linkDetails.caseId === caseId ? linkDetails : undefined;
   const retryCaseId = caseId ?? dto.linkedCaseIds?.[0];
   return <article className={`document-row min-w-0`} aria-label={dto.fileName}>
     <div className="flex min-w-0 items-start gap-3"><FileText aria-hidden="true" className="mt-1 size-6 shrink-0" /><div className="min-w-0"><h3 className="break-all text-body font-bold">{dto.fileName}</h3><p className="mt-1 text-caption text-muted">{item.typeLabel}{context.kind === "library" && ` · ${dto.workplaceName ?? `근무지 #${dto.workplaceId}`}`}</p></div></div>
@@ -31,11 +32,12 @@ export function DocumentCard({ dto, context, inputVersion, selectableCaseId, can
     <Link className="mt-2 inline-flex min-h-11 items-center break-all text-body underline" href={`/workplaces/${dto.workplaceId}/documents`}>{dto.workplaceName ?? `근무지 #${dto.workplaceId}`} 자료함</Link>
     {dto.linkedCaseIds === undefined ? <p className="text-caption text-muted">연결 사례 정보 미제공</p> : <div className="text-caption"><p>연결 사례 {dto.linkedCaseIds.length}개</p><div className="flex flex-wrap gap-x-3">{dto.linkedCaseIds.slice(0, visibleLinks).map(id => <Link className="inline-flex min-h-11 items-center underline" key={id} href={`/cases/${id}/upload`}>사례 #{id}</Link>)}</div>{dto.linkedCaseIds.length > visibleLinks && <button className={secondaryButton} onClick={() => setVisibleLinks(n => n + 5)}>연결 사례 더 보기</button>}</div>}
     {caseId&&<Link className={`mt-3 ${secondaryButton}`} href={`/cases/${caseId}/review?documentId=${dto.documentId}`}>원문·추출값 검토</Link>}
-    {dto.link && <div className="mt-3 break-words text-body"><p>이 사례에 연결됨 · 목적: {dto.link.purpose}</p><p>적용기간: {dto.link.applicableFrom ?? "시작 미지정"} ~ {dto.link.applicableTo ?? "종료 미지정"}</p></div>}
+    {caseId && !link && <p className="mt-3 text-caption text-muted">연결 목적·기간 정보가 제공되지 않아 연결 정보를 수정할 수 없습니다.</p>}
+    {link && <div className="mt-3 break-words text-body"><p>이 사례에 연결됨 · 목적: {link.purpose}</p><p>적용기간: {link.applicableFrom ?? "시작 미지정"} ~ {link.applicableTo ?? "종료 미지정"}</p></div>}
 
     {selectableCaseId && inputVersion ? <div className="mt-auto pt-4">{!editing && <button className={secondaryButton} disabled={!canConnect || dto.linkedCaseIds?.includes(selectableCaseId)} onClick={() => { setEditing(true); onEditingChange?.(true); }}>{dto.linkedCaseIds?.includes(selectableCaseId) ? "이미 연결됨" : "기존 원본 선택"}</button>}
       {editing && <LinkForm caseId={selectableCaseId} documentId={dto.documentId} inputVersion={inputVersion} onDone={() => { setEditing(false); onEditingChange?.(false); }} />}</div> : <>
-      {caseId && dto.link && inputVersion && <div className="mt-4">{!editing && <button className={secondaryButton} onClick={() => { setEditing(true); onEditingChange?.(true); }}>연결 정보 수정</button>}{editing && <LinkForm caseId={caseId} documentId={dto.documentId} link={dto.link} inputVersion={inputVersion} onDone={() => { setEditing(false); onEditingChange?.(false); }} />}</div>}
+      {caseId && link && inputVersion && <div className="mt-4">{!editing && <button className={secondaryButton} onClick={() => { setEditing(true); onEditingChange?.(true); }}>연결 정보 수정</button>}{editing && <LinkForm caseId={caseId} documentId={dto.documentId} link={link} inputVersion={inputVersion} onDone={() => { setEditing(false); onEditingChange?.(false); }} />}</div>}
       <div className="mt-auto"><DocumentActions dto={dto} caseId={caseId} inputVersion={inputVersion} /></div>
     </>}
     </details>

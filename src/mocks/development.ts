@@ -1,3 +1,4 @@
+import { caseDocumentResponse } from "./shared/document-handlers";
 import { getResponse, http, HttpResponse } from "msw";
 import { supportMocks } from "./shared/support-handlers";
 import { chatMocks } from './shared/chat-handlers';
@@ -93,7 +94,7 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
       const page = Math.max(1, Number(q.get("page") ?? 1)), size = Math.min(100, Math.max(1, Number(q.get("size") ?? 20)));
       const items = docs.getLinks().filter(l => l.caseId === caseId).map(link => {
         const doc = documents.find(d => d.documentId === link.documentId)!;
-        return { ...doc, link, reviewStatus: review.reviewStates.get(`${caseId}:${doc.documentId}`) ?? "NOT_STARTED" };
+        return { ...caseDocumentResponse(doc, link.linkId), reviewStatus: review.reviewStates.get(`${caseId}:${doc.documentId}`) ?? "NOT_STARTED" };
       });
       return apiResponse({ items: items.slice((page - 1) * size, page * size), page, size, total: items.length });
     }),

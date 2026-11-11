@@ -2,6 +2,14 @@ import { http, HttpResponse } from "msw";
 import type { DocumentDto } from "@/features/documents/schemas";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 import { apiResponse } from "./response";
+// Explicit wire projection: internal mock link records never leak into DocumentDTO.
+export function caseDocumentResponse(d: DocumentDto, linkId: number | null) {
+  return { documentId: d.documentId, workplaceId: d.workplaceId, documentType: d.documentType,
+    fileName: d.fileName, processingStatus: d.processingStatus, reviewStatus: d.reviewStatus ?? "NOT_STARTED",
+    progress: d.progress ?? 0, linkId, linkedCaseIds: d.linkedCaseIds ?? [],
+    uploadedAt: d.uploadedAt ?? "2026-11-09T00:00:00+00:00", errorCode: d.processingErrorCode ?? null,
+    aiMetadata: null, workplaceName: d.workplaceName };
+}
 export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0.0.1:8000/api/v1", development = false, idOffset = 0) {
   const documents: DocumentDto[] = Array.from({length: 21}, (_, i) => ({ documentId: 101 + i, workplaceId: 3, workplaceName: "카페 나무", documentType: i === 0 ? "CONTRACT" : "PAYSLIP", fileName: i === 0 ? "근로계약서.pdf" : `급여명세서-${i}.pdf`, processingStatus: development && i === 1 ? "READ_READY" : "READY", reviewStatus: "NOT_STARTED", progress: null, linkedCaseIds: i === 0 ? [15, 16] : [], uploadedAt: "2026-11-09T00:00:00+00:00" }));
   let links = [{ linkId: 777, caseId: 15, documentId: 101, purpose: "CONTRACT_FOR_PERIOD", applicableFrom: "2026-10-03", applicableTo: "2026-11-02", overrideCount: 0 }];
@@ -24,10 +32,10 @@ export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0
   const handlers = [
     http.get(`${testApiUrl}/documents`, ({ request }) => { record(request); return page(request, filter(request)); }),
     http.get(`${testApiUrl}/workplaces/:w/documents`, ({ request }) => { record(request); return page(request, filter(request)); }),
-    http.get(`${testApiUrl}/cases/:c/documents`, ({ request, params }) => { record(request); return page(request, documents.filter(d => links.some(l => l.caseId === Number(params.c) && l.documentId === d.documentId)).map(d => ({...d, link: links.find(l => l.caseId === Number(params.c) && l.documentId === d.documentId)!}))); }),
+    http.get(`${testApiUrl}/cases/:c/documents`, ({ request, params }) => { record(request); return page(request, documents.filter(d => links.some(l => l.caseId === Number(params.c) && l.documentId === d.documentId)).map(d => caseDocumentResponse(d, links.find(l => l.caseId === Number(params.c) && l.documentId === d.documentId)!.linkId))); }),
     http.post(`${testApiUrl}/cases/:c/documents`, ({ request, params }) => upload(request, Number(params.c))),
     http.post(`${testApiUrl}/workplaces/:w/documents`, ({ request }) => upload(request)),
-    http.get(`${testApiUrl}/cases/:c/documents/:d`, ({request, params}) => { record(request); const d = documents.find(d => d.documentId === Number(params.d)); return d ? apiResponse(d) : error("RESOURCE_NOT_FOUND", 404); }),
+    http.get(`${testApiUrl}/cases/:c/documents/:d`, ({request, params}) => { record(request); const d = documents.find(d => d.documentId === Number(params.d)); return d ? apiResponse(caseDocumentResponse(d, links.find(l => l.caseId === Number(params.c) && l.documentId === d.documentId)?.linkId ?? null)) : error("RESOURCE_NOT_FOUND", 404); }),
     http.get(`${testApiUrl}/workplaces/:w/documents/:d`, ({request, params}) => { record(request); const d = documents.find(d => d.documentId === Number(params.d)); return d ? apiResponse(d) : error("RESOURCE_NOT_FOUND", 404); }),
     http.post(`${testApiUrl}/cases/:c/documents/:d/retry`, ({request, params}) => { record(request); const dto = documents.find(d => d.documentId === Number(params.d))!; dto.processingStatus = "PROCESSING"; return apiResponse({documentId: dto.documentId, processingStatus: "PROCESSING"}, 202); }),
     http.post(`${testApiUrl}/cases/:c/document-links`, async ({request, params}) => {

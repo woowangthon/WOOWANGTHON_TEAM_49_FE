@@ -4,7 +4,7 @@ import {fieldSchema, fieldsSchema, valueSchema} from "@/features/documents/revie
 import {processingSchema} from "@/features/documents/schemas";
 import {displayValue, fieldEditorView, parseFieldValue} from "@/features/documents/review/view-models";
 import {isProcessing} from "@/features/documents/view-models";
-const contract=createOpenApiContract("docs/references/openapi.json");
+const contract=createOpenApiContract("contracts/openapi.json");
 const field={fieldId:1,key:"items",label:"Items",value:null,valueType:"JSON",status:"DEFERRED",editedByUser:false,effectiveValueOrigin:"SHARED_DEFAULT",hasCaseOverride:false,confirmedAt:null,source:null};
 describe("A03/A06 independent P0 alignment",()=>{
  it.each(["DEFERRED","NEEDS_RECONFIRMATION"])("retains %s without substitution",status=>{

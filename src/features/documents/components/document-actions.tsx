@@ -41,8 +41,8 @@ function UnlinkConfirmation({ dto, caseId, version, onClose }: { dto: DocumentDt
   const [conflict, setConflict] = useState(false);
   const [error, setError] = useState("");
   return <ConfirmDialog title="이 사례에서 연결 해제" busy={mutation.isPending} onClose={onClose} action={<button className={dangerButton} disabled={conflict || mutation.isPending} onClick={async () => {
-    if (!dto.link) return;
-    try { await mutation.mutateAsync({ type: "unlink", caseId, linkId: dto.link.linkId, expectedInputVersion: inputVersion }); onClose(); }
+    if (dto.linkId == null) return;
+    try { await mutation.mutateAsync({ type: "unlink", caseId, linkId: dto.linkId, expectedInputVersion: inputVersion }); onClose(); }
     catch (e) { setError(documentError(e)); if (e instanceof ApiError && e.errorCode === "INPUT_VERSION_CONFLICT") setConflict(true); }
   }}>연결만 해제</button>}>
     <p className="break-all">{dto.fileName}</p><p>이 사례의 연결과 적용 정보만 해제합니다. 근무지 공유 원본과 다른 사례의 연결은 보존됩니다.</p>
@@ -53,7 +53,7 @@ function UnlinkConfirmation({ dto, caseId, version, onClose }: { dto: DocumentDt
 export function DocumentActions({ dto, caseId, inputVersion }: { dto: DocumentDto; caseId?: number; inputVersion?: number }) {
   const [mode, setMode] = useState<"remove" | "unlink">();
   return <><div className="mt-4 flex flex-wrap gap-2">
-    {caseId && dto.link && inputVersion && <button type="button" className={secondaryButton} onClick={() => setMode("unlink")}>이 사례 연결 해제</button>}
+    {caseId && dto.linkId != null && inputVersion && <button type="button" className={secondaryButton} onClick={() => setMode("unlink")}>이 사례 연결 해제</button>}
     <button type="button" className={dangerButton} onClick={() => setMode("remove")}>공유 원본 삭제</button>
   </div>
   {mode === "remove" && <OriginalDeletion dto={dto} onClose={() => setMode(undefined)} />}

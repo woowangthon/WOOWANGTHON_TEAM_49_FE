@@ -9,18 +9,28 @@ export const linkSchema = z.object({
   applicableFrom: z.iso.date().nullable(), applicableTo: z.iso.date().nullable(),
   overrideCount: z.number().int().nonnegative().optional(),
 });
-// P0 omits list DTO details. Optional metadata stays absent; see README phase 4.
+// Shared UI metadata for legacy envelope endpoints. Case lists decode the P0 wire DTO below.
 export const documentSchema = z.object({
   documentId: id, workplaceId: id, documentType: z.enum(documentTypes), fileName: z.string(),
   processingStatus: processingSchema,
   reviewStatus: z.enum(["NOT_STARTED", "IN_PROGRESS", "CONFIRMED"]).optional(),
-  workplaceName: z.string().optional(), mimeType: z.string().optional(), sizeBytes: z.number().nonnegative().optional(),
+  workplaceName: z.string().nullable().optional(), mimeType: z.string().optional(), sizeBytes: z.number().nonnegative().optional(),
   progress: z.number().min(0).max(100).nullable().optional(),
   linkedCaseIds: z.array(id).optional(), uploadedAt: z.iso.datetime({ offset: true }).optional(),
   processingErrorCode: z.string().nullable().optional(),
-  link: linkSchema.optional(),
+  linkId: z.number().int().nullable().optional(),
 });
-export const caseDocumentSchema = documentSchema.extend({ link: linkSchema });
+// P0 DocumentDTO: no nested link; nullable is distinct from missing.
+export const caseDocumentSchema = z.object({
+  documentId: z.number().int(), workplaceId: z.number().int(),
+  documentType: z.enum(documentTypes), fileName: z.string(), processingStatus: processingSchema,
+  reviewStatus: z.enum(["NOT_STARTED", "IN_PROGRESS", "CONFIRMED"]),
+  progress: z.number().int(), linkId: z.number().int().nullable(),
+  linkedCaseIds: z.array(z.number().int()), uploadedAt: z.string(),
+  errorCode: z.string().nullable(), aiMetadata: z.record(z.string(), z.json()).nullable(),
+  workplaceName: z.string().nullable().optional(),
+});
+export type DocumentWireDto = z.infer<typeof caseDocumentSchema>;
 export const statusSchema = z.object({
   documentId: id, processingStatus: processingSchema,
   reviewStatus: documentSchema.shape.reviewStatus, progress: documentSchema.shape.progress,
