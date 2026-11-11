@@ -1,6 +1,7 @@
 "use client";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
+import { CaseStageHeader } from "@/features/cases/components/case-stage-header";
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useSessionScope } from "@/hooks/use-session-scope";
@@ -35,9 +36,9 @@ function InquiryEditor({ caseId }: { caseId: number }) {
   }
   const error = mutation.error;
   return <div className="t7-support max-w-[760px] min-w-0 space-y-5 [overflow-wrap:anywhere]">
-    <p className="text-caption text-muted">Case #{caseId} · 상담 준비</p><h1 className="text-[31px] font-extrabold">회사 문의 문장 검토</h1>
+    <CaseStageHeader stage="inquiry" title="회사 문의 문장 검토" description="회사에 확인할 내용을 문장으로 정리해요. 초안을 검토하고 상황에 맞게 다듬어 주세요." />
 
-    <p>서버 초안은 검토용이며 법률적 확정 의견이 아닙니다. 문장을 수정·복사하여 직접 전달하세요. 이 화면에서는 회사로 발송하지 않습니다.</p>
+    <p data-case-notice>서버 초안은 검토용이며 법률적 확정 의견이 아닙니다. 문장을 수정·복사하여 직접 전달하세요. 이 화면에서는 회사로 발송하지 않습니다.</p>
     <section className={`${cardStyle} space-y-4`} aria-label="현재 작성본">    <Textarea id="inquiry-text" label={origin} className="min-h-60" value={text} onChange={e => { setText(e.target.value); setMessage(""); }}/>
     <button className={primaryButton} disabled={!text} onClick={async () => { try { await navigator.clipboard.writeText(text); setMessage("복사했습니다."); } catch { setMessage("복사하지 못했습니다. 문장을 선택해 직접 복사해 주세요."); } }}>문장 복사</button>
     </section>

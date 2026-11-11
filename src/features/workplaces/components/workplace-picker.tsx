@@ -10,7 +10,7 @@ import { TextField } from "@/components/ui/text-field";
 
 import { useWorkplaces } from "../queries";
 
-export function WorkplacePicker({ value, onChange }: { value: number | null; onChange: (id: number) => void }) {
+export function WorkplacePicker({ value, onChange }: { value: number | null; onChange: (id: number, name: string) => void }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const id = useId();
@@ -24,7 +24,7 @@ export function WorkplacePicker({ value, onChange }: { value: number | null; onC
         {query.data.items.length === 0 && <p className="text-body">등록된 근무지가 없습니다. 먼저 근무지를 등록해 주세요.</p>}
         {query.data.items.length > 0 && filtered?.length === 0 && <p className="text-body">현재 페이지에 검색 결과가 없습니다. 검색어를 바꾸거나 다른 페이지를 확인해 주세요.</p>}
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-          {filtered?.map((item) => <label key={item.workplaceId} className="flex min-w-0 items-start gap-3 rounded-control border border-border p-4 text-body"><input type="radio" name={`${id}-workplace`} className="mt-1 size-5 shrink-0" value={item.workplaceId} checked={value === item.workplaceId} onChange={() => onChange(item.workplaceId)} /><span className="min-w-0">{item.name}</span></label>)}
+          {filtered?.map((item) => <label key={item.workplaceId} className="flex min-w-0 items-start gap-3 rounded-control border border-border p-4 text-body"><input type="radio" name={`${id}-workplace`} className="mt-1 size-5 shrink-0" value={item.workplaceId} checked={value === item.workplaceId} onChange={() => onChange(item.workplaceId, item.name)} /><span className="min-w-0">{item.name}</span></label>)}
         </div>
         <Pagination page={query.data.page} size={query.data.size} total={query.data.total} onPage={(next) => { setPage(next); setSearch(""); }} busy={query.isFetching} />
       </>}

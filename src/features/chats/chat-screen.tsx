@@ -2,6 +2,11 @@
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { MobileNavigation } from '@/components/layout/mobile-navigation';
 import { ChatMarkdown } from './markdown';
+import { WorkplaceHeader } from '@/features/workplaces/components/workplace-header';
+import { useWorkplace } from '@/features/workplaces/queries';
+import { caseCard } from '@/features/cases/view-models';
+import workplaceStyles from '@/features/workplaces/components/workplace-space.module.css';
+import styles from './chat-space.module.css';
 import { snapshotHref } from '@/features/results/snapshot-link';
 
 import Link from 'next/link';
@@ -33,6 +38,9 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
  const detail=useQuery({queryKey:[...prefix,'detail',id,history],queryFn:({signal})=>api.detail(id!,history,signal),enabled:s.enabled&&!!id,staleTime:0});
  const [casePage,setCasePage]=useState(1);
  const cases=useCases(casePage,100,w);
+ const workplace=useWorkplace(w);
+ const defaultScope=detail.data?.session.defaultScope;
+ const referenceCase=cases.data?.items.find(c=>defaultScope?.scopeType==='CASE'&&c.caseId===defaultScope.caseId);
  const conversation=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const update=()=>{const el=conversation.current;if(el)el.style.setProperty('--chat-height',`${Math.max(220,(window.visualViewport?.height??window.innerHeight)-el.getBoundingClientRect().top-24)}px`);};
@@ -62,27 +70,26 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
  }
  async function cancel(){if(!id||!run)return;setPhase('취소 요청 중');try{await api.cancel(id,run);setPhase('취소 접수 · 서버 상태 확인 중');abort.current?.abort();await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}catch(e){setPhase('취소 실패');setError(e instanceof Error?e.message:'취소 실패');}}
  const chatList=( <div className="v2-chat-list"><h2 className="font-bold">대화 목록</h2>
- {list.isPending?<p>대화 불러오는 중</p>:list.isError?<p role="alert">대화 목록 조회 실패 <button className={secondaryButton} onClick={()=>void list.refetch()}>대화 목록 다시 조회</button></p>:list.data.items.length?list.data.items.map(c=><Link className="v2-chat-session" key={c.chatId} aria-current={id===c.chatId?"page":undefined} href={`/workplaces/${w}/chats/${c.chatId}`}><strong>{c.title}</strong><small className="block font-normal"><span className="line-clamp-2">{c.lastMessagePreview}</span><time className="block">{c.updatedAt}</time></small></Link>):<p>저장된 대화가 없습니다.</p>}
+ {list.isPending?<p>대화 불러오는 중</p>:list.isError?<p role="alert">대화 목록 조회 실패 <button className={secondaryButton} onClick={()=>void list.refetch()}>대화 목록 다시 조회</button></p>:list.data.items.length?list.data.items.map(c=><Link className="v2-chat-session" key={c.chatId} aria-current={id===c.chatId?"page":undefined} href={`/workplaces/${w}/chats/${c.chatId}`}><strong>{c.title}</strong><small className="block font-normal"><span className="line-clamp-2">{c.lastMessagePreview}</span><time dateTime={c.updatedAt} className="block">{new Date(c.updatedAt).toLocaleDateString("ko-KR", {year:"numeric",month:"long",day:"numeric"})}</time></small></Link>):<p>저장된 대화가 없습니다.</p>}
  {!!list.data?.total&&<Pagination page={page} size={20} total={list.data.total} onPage={setPage} busy={list.isFetching}/>}
  </div>);
  const startForm=( <form onSubmit={e=>{e.preventDefault();void action(async()=>{const c=await api.create(title,Number(caseId));router.push(`/workplaces/${w}/chats/${c.chatId}`);});}} className="v2-chat-start">
- <label className="block">기본 Case<select required className="ui-control " value={caseId} onChange={e=>setCaseId(e.target.value)}><option value="">Case 선택</option>{cases.data?.items.filter(c=>c.workplaceId===w).map(c=><option key={c.caseId} value={c.caseId}>Case #{c.caseId}</option>)}</select></label>
+ <label className="block"><span className={styles.stepLabel}>01 · 급여 사례 선택</span>어떤 급여 기록이 궁금하세요?<select required className="ui-control " value={caseId} onChange={e=>setCaseId(e.target.value)}><option value="">급여 기간을 선택해 주세요</option>{cases.data?.items.filter(c=>c.workplaceId===w).map(c=><option key={c.caseId} value={c.caseId}>{caseCard(c).period} · {caseCard(c).status} · 사례 #{c.caseId}</option>)}</select></label>
  {cases.isPending&&<p role="status">급여 사례 불러오는 중</p>}
  {cases.data?.total===0&&<p>참조할 급여 사례가 없습니다. 사례를 등록한 뒤 대화를 시작하세요.</p>}
- {cases.isError&&<p role="alert">Case 목록 조회 실패 <button type="button" onClick={()=>void cases.refetch()}>Case 목록 다시 조회</button></p>}
- {(casePage>1||(cases.data?.total??0)>100)&&<div className="flex flex-wrap items-center gap-2"><button className={secondaryButton} type="button" disabled={casePage===1||cases.isFetching} onClick={()=>{setCaseId('');setCasePage(p=>p-1);}}>이전 Case 목록</button><span>{casePage}페이지</span><button className={secondaryButton} type="button" disabled={!cases.data||cases.isFetching||casePage*100>=cases.data.total} onClick={()=>{setCaseId('');setCasePage(p=>p+1);}}>다음 Case 목록</button></div>}
- <label className="block">새 대화 제목<input className="ui-control " required value={title} onChange={e=>setTitle(e.target.value)}/></label>
+ {cases.isError&&<p role="alert">급여 사례를 불러오지 못했어요. <button type="button" onClick={()=>void cases.refetch()}>급여 사례 다시 조회</button></p>}
+ {(casePage>1||(cases.data?.total??0)>100)&&<div className="flex flex-wrap items-center gap-2"><button className={secondaryButton} type="button" disabled={casePage===1||cases.isFetching} onClick={()=>{setCaseId('');setCasePage(p=>p-1);}}>이전 사례 목록</button><span>{casePage}페이지</span><button className={secondaryButton} type="button" disabled={!cases.data||cases.isFetching||casePage*100>=cases.data.total} onClick={()=>{setCaseId('');setCasePage(p=>p+1);}}>다음 사례 목록</button></div>}
+ <div hidden={!caseId} className={styles.titleStep}><span className={styles.stepLabel}>02 · 대화 제목</span><label className="block">새 대화 제목<input className="ui-control " placeholder="예: 10월 급여명세서 확인" required value={title} onChange={e=>setTitle(e.target.value)}/></label></div>
  <button className={primaryButton} disabled={busy||!caseId||!title.trim()||cases.isError||cases.isFetching}>대화 시작</button></form>);
- return <div className="v2-chat-shell">
- <div className="v2-chat-top"><Link href={`/workplaces/${w}`}>근무지로 돌아가기</Link><span className="text-caption text-muted">근무지 #{w}</span></div>
- {!id&&<><h1 className="sr-only">AI 자료 도우미</h1><section aria-label="AI 대화 시작 안내" className="v2-chat-intro"><span aria-hidden="true" className="v2-chat-orb">✦</span><h2>이 근무지의 자료, 무엇이 궁금하세요?</h2><p>참조할 급여 사례와 제목을 정해 대화를 시작하세요.</p></section>{startForm}{chatList}<p className="v2-chat-disclaimer">AI 설명은 공식 임금 계산 결과와 구분됩니다.</p></>}
+ return <div className={workplaceStyles.screen}><WorkplaceHeader id={w} workplace={workplace.data} active="chats" compact={!!id} /><div className={`v2-chat-shell ${styles.shell}`}>
+ {!id&&<><section aria-label="AI 대화 시작 안내" className="v2-chat-intro"><span aria-hidden="true" className="v2-chat-orb">✦</span><h2>이 근무지의 자료, 무엇이 궁금하세요?</h2><p>급여 사례를 선택하면, 그 기록을 바탕으로 대화할 수 있어요.</p></section>{startForm}<div className={styles.history}>{chatList}</div><p className="v2-chat-disclaimer">AI 설명은 공식 임금 계산 결과와 구분됩니다.</p></>}
  {id&&<div className="v2-chat-header"><h1>{detail.data?.session.title??'AI 자료 도우미'}</h1><div className="v2-chat-drawer"><MobileNavigation label="채팅 목록" title="대화 목록" breakpoint="99999px"><Link className={secondaryButton} href={`/workplaces/${w}/chats`}>새 대화 시작</Link>{chatList}</MobileNavigation></div></div>}
  {error&&<p role="alert" className="v2-chat-warning">{error}</p>}
  <section className="min-w-0">
  {!id?null:detail.isPending?<p>과거 기록 불러오는 중</p>:detail.isError?<p role="alert">대화에 접근할 수 없습니다. 삭제 또는 권한과 응답 형식을 확인하세요. <button className={secondaryButton} onClick={()=>void detail.refetch()}>대화 기록 다시 조회</button></p>:<>
  <details className="v2-chat-management"><summary>대화 관리 · 제목 수정 및 삭제</summary><form onSubmit={e=>{e.preventDefault();void action(()=>api.rename(id,title));}} className="flex flex-wrap gap-2"><label>수정할 제목<input required className="ui-control " value={title} onChange={e=>setTitle(e.target.value)}/></label><button className={secondaryButton} disabled={busy}>제목 수정</button><button className={secondaryButton} type="button" disabled={busy} onClick={()=>setConfirmDelete(true)}>대화 삭제</button></form></details>{confirmDelete&&<ConfirmDialog title="이 대화를 삭제할까요?" busy={busy} onClose={()=>setConfirmDelete(false)} action={<button className={secondaryButton} disabled={busy} onClick={()=>void action(async()=>{await api.remove(id);s.queryClient.removeQueries({queryKey:[...prefix,'detail',id]});router.replace(`/workplaces/${w}/chats`);})}>대화 삭제 확인</button>}><p>삭제할 대화와 기록을 확인하세요.</p></ConfirmDialog>}
  <div ref={conversation} className="v2-chat-conversation">
- <ChatContextBar workplaceId={w} scope={detail.data.session.defaultScope} all={all} busy={busy} onAll={setAll}/>
+ <ChatContextBar workplaceId={w} scope={detail.data.session.defaultScope} caseLabel={referenceCase ? `${caseCard(referenceCase).period} · 사례 #${referenceCase.caseId}` : undefined} all={all} busy={busy} onAll={setAll}/>
  <div ref={viewport} role="region" aria-label="대화 메시지" tabIndex={0} className="v2-chat-messages" onScroll={e=>{const el=e.currentTarget;follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<80;setShowLatest(!follow.current);}}>
  {detail.data.messages.total>20&&<div className="v2-chat-history"><button disabled={history===1||busy} onClick={()=>setHistory(p=>p-1)}>이전 기록</button><span>{history} / {Math.ceil(detail.data.messages.total/20)} 페이지 · 총 {detail.data.messages.total}개</span><button disabled={busy||history*20>=detail.data.messages.total} onClick={()=>setHistory(p=>p+1)}>다음 기록</button></div>}
  {detail.data.messages.items.map(m=><StoredMessage key={m.messageId} message={m} retry={()=>void send(m.messageId)} busy={busy} currentScope={all?{scopeType:'WORKPLACE_ALL'}:detail.data.session.defaultScope} returnTo={`/workplaces/${w}/chats/${id}`}/>)}
@@ -94,7 +101,7 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
  <div className="v2-chat-footer"><small>Enter 전송 · Shift+Enter 줄바꿈</small><button className={primaryButton} disabled={busy||!content.trim()}>전송</button>{busy&&<button className={secondaryButton} type="button" disabled={!run||phase==='취소 요청 중'} onClick={()=>void cancel()}>답변 중지</button>}</div></form><p className="v2-chat-disclaimer">AI 설명은 공식 계산과 구분됩니다. 저장된 모든 대화가 모델에 전달되는 것은 아닙니다.</p></div></>}
 
 {detail.isError&&(busy||draft)&&<article className="v2-chat-bubble"><p>{phase}{mode==='mock'?' · 개발용 사전 작성 답변(mock)':''}</p><ChatMarkdown content={draft}/>{!busy&&<><p>수신한 임시 답변입니다. 저장 기록과 완료 상태를 확인하세요.</p><button className={secondaryButton} onClick={()=>setDraft('')}>임시 답변 닫기</button></>}</article>}
- </section></div>;
+ </section></div></div>;
 }
 export function StoredMessage({message:m,retry,busy,returnTo,currentScope}:{message:Message;retry:()=>void;busy:boolean;returnTo?:string;currentScope?:ChatScope}){
  const caseId=m.scope.scopeType==='CASE'?m.scope.caseId:undefined;

@@ -51,7 +51,7 @@ describe("document flows with MSW, never a live backend", () => {
     await user.selectOptions(screen.getByLabelText("문서 유형 필터"), "CONTRACT");
     expect(await screen.findByRole("article", {name: "근로계약서.pdf"})).toBeVisible();
     await user.selectOptions(screen.getByLabelText("처리 상태 필터"), "FAILED");
-    expect(await screen.findByText("등록된 자료가 없습니다")).toBeVisible();
+    expect(await screen.findByText("조건에 맞는 자료가 없어요")).toBeVisible();
     expect(mocks.requests.some(r => r.path.includes("documentType=CONTRACT&processingStatus=FAILED"))).toBe(true);
     expect(mocks.requests.some(r => r.path.includes("page=2&size=20"))).toBe(true);
   });
@@ -60,14 +60,25 @@ describe("document flows with MSW, never a live backend", () => {
     await user.type(screen.getByLabelText("현재 페이지 파일명 검색"), "없는 자료");
     expect(screen.getByText("현재 페이지에 검색 결과가 없습니다.")).toBeVisible();
     expect(mocks.requests.filter(r => r.path.includes("/documents?") && r.method === "GET")).toHaveLength(1);
-    await user.click(screen.getByText("근무지 필터 (전체 근무지)"));
+    await user.click(screen.getByText("근무지 필터 · 전체 근무지"));
     await user.click(await screen.findByRole("radio", {name:"카페 나무"}));
     await waitFor(() => expect(mocks.requests.some(r => r.path.includes("workplaceId=3"))).toBe(true));
     expect(mocks.requests.every(r => !r.path.includes("search="))).toBe(true);
+    const workplaceFilter = screen.getByText("근무지 필터 · 카페 나무");
+    expect(workplaceFilter.closest("details")).not.toHaveAttribute("open");
+    expect(workplaceFilter).toHaveFocus();
+    await user.selectOptions(screen.getByLabelText("문서 유형 필터"), "PAYSLIP");
+    await user.selectOptions(screen.getByLabelText("처리 상태 필터"), "READY");
+    await user.click(screen.getByRole("button", {name: "필터 초기화"}));
+    expect(screen.getByLabelText("문서 유형 필터")).toHaveValue("");
+    expect(screen.getByLabelText("처리 상태 필터")).toHaveValue("");
+    expect(screen.getByLabelText("현재 페이지 파일명 검색")).toHaveValue("");
+    expect(screen.getByText("근무지 필터 · 전체 근무지")).toBeVisible();
+    expect(await screen.findByRole("article", {name: "근로계약서.pdf"})).toBeVisible();
   });
   it("renders workplace shared originals and its upload form", async () => {
     const {mount, user} = await setup(); mount(<WorkplaceDocumentsScreen id={3} />);
-    expect(await screen.findByRole("heading", {name: "카페 나무 자료함"})).toBeVisible();
+    expect(await screen.findByRole("heading", {name: "근무지 자료함"})).toBeVisible();
     expect(await screen.findByRole("article", {name: "근로계약서.pdf"})).toHaveTextContent("연결 사례 2개");
     await user.click(screen.getByText("자료 추가",{exact:true}));
     expect(screen.getByRole("form", {name: "새 파일 업로드"})).toBeVisible();
@@ -191,6 +202,8 @@ describe("document flows with MSW, never a live backend", () => {
     expect(await screen.findByRole("heading",{name:"카페 나무 자료 등록"})).toBeVisible();
     await user.click(screen.getByRole("button",{name:"기존 자료 연결"}));
     expect(await screen.findByRole("region",{name:"근무지 기존 원본 연결"})).toBeVisible();
+    expect(screen.getByRole("region",{name:"이 사례에 연결된 자료"})).toBeVisible();
+    await user.click(screen.getByText("자료함·등록 안내"));
     expect(await screen.findByText(/작업 종료는 모든 계산의 완료나 일치를 뜻하지 않습니다/)).toBeVisible();
   });
   it("keeps omitted metadata absent and accepts null progress", () => {

@@ -5,7 +5,7 @@ type Model = ReturnType<typeof toResultsViewModel>;
 function Badge({status}:{status:string|null|undefined}) { return <span className="inline-block rounded-full bg-neutral-soft px-3 py-1 text-sm font-bold">{status ? statusLabels[status] ?? status : "상태 미제공"}</span>; }
 export function ResultSummary({value,compare=false}:{value:Model;compare?:boolean}) {
  const d=value.dto;
- return <section className={`${cardStyle} space-y-4 border-l-[5px] border-l-primary`}>
+ return <section data-case-summary className={`${cardStyle} space-y-4`}>
  <h2 className="text-xl font-bold">{value.title}</h2>
  <p role="status">{d.freshness.overall==="CURRENT"?"현재 입력 기준":d.freshness.overall==="UPDATING"?"자동 갱신 중 · 이전 입력 기준 결과입니다.":d.freshness.overall==="FAILED"?"갱신 실패 · 이전 입력 기준 결과입니다.":"이전 입력 기준 결과입니다."}</p>
  <Badge status={compare?d.summary.comparisonStatus:d.summary.calculationStatus}/>

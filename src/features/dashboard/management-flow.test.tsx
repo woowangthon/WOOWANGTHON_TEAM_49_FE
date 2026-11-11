@@ -61,6 +61,40 @@ async function setup(empty = false) {
 }
 
 describe("dashboard and management user flows with MSW", () => {
+  it("opens existing cases and starts a first case while retaining workplace management", async () => {
+    const { mount, mocks, user } = await setup();
+    server.use(http.get(`${testApiUrl}/workplaces`, () => apiResponse({ items: [
+      { workplaceId: 3, name: "이전 근무지", industry: "음식점", region: "청주시", employmentStatus: "FORMER", caseCount: 2 },
+      { workplaceId: 4, name: "새 근무지", industry: null, region: null, employmentStatus: "CURRENT", caseCount: 0 },
+    ], page: 1, size: 20, total: 2 })));
+    mount(<WorkplaceListScreen />);
+    const previous = await screen.findByRole("link", { name: "이전 근무지" });
+    expect(previous).toHaveAttribute("href", "/workplaces/3");
+    expect(previous).toHaveAccessibleDescription("급여 사례 2개 보기");
+    expect(within(previous).getByText("퇴사", { exact: true })).toBeVisible();
+    expect(screen.getByRole("link", { name: "새 근무지" })).toHaveAttribute("href", "/cases/new?workplaceId=4");
+    expect(screen.getByRole("link", { name: "새 근무지 근무지 정보" })).toHaveAttribute("href", "/workplaces/4");
+    expect(screen.queryByRole("navigation", { name: "페이지 이동" })).not.toBeInTheDocument();
+    const input = screen.getByLabelText("현재 페이지에서 검색");
+    await user.type(input, "없는 이름");
+    expect(screen.getByText("현재 페이지에 검색 결과가 없습니다")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "검색 초기화" }));
+    expect(input).toHaveValue("");
+    expect(input).toHaveFocus();
+    expect(screen.getByRole("link", { name: "이전 근무지" })).toBeVisible();
+    expect(mocks.requests.some(request => request.method !== "GET")).toBe(false);
+  });
+
+  it("provides one registration action and no search or pagination for an empty workplace list", async () => {
+    const { mount } = await setup(true);
+    mount(<WorkplaceListScreen />);
+    expect(await screen.findByRole("heading", { name: "첫 근무지를 등록해 주세요" })).toBeVisible();
+    expect(screen.getAllByRole("link", { name: "근무지 등록" })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "근무지 등록" })).toHaveAttribute("href", "/workplaces/new");
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "페이지 이동" })).not.toBeInTheDocument();
+  });
+
   it("reveals attention items three at a time within the fetched page", async () => {
     const { mount, app } = await setup();
     const data=await caseApi(app.api).list({page:1,size:20});
@@ -139,6 +173,7 @@ describe("dashboard and management user flows with MSW", () => {
   it("updates only changed workplace fields and refreshes the detail", async () => {
     const { mount, mocks, user } = await setup();
     mount(<WorkplaceDetailScreen id={3} />);
+    await user.click(await screen.findByText("근무지 관리", { selector: "summary" }));
     await user.click(await screen.findByRole("button", { name: "근무지 수정" }));
     await user.clear(screen.getByLabelText("지역 (선택)"));
     await user.type(screen.getByLabelText("지역 (선택)"), "서울");
@@ -164,6 +199,7 @@ describe("dashboard and management user flows with MSW", () => {
     const generation = app.session.getSnapshot().generation;
     app.queryClient.setQueryData(keys.case(generation, 15), { private: true });
     mount(<WorkplaceDetailScreen id={4} />);
+    await user.click(await screen.findByText("근무지 관리", { selector: "summary" }));
     await user.click(await screen.findByRole("button", { name: "근무지 삭제" }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByRole("button", { name: "근무지 삭제 요청" })).toBeDisabled();
@@ -178,6 +214,7 @@ describe("dashboard and management user flows with MSW", () => {
   it("keeps workplace deletion conflicts visible instead of claiming success", async () => {
     const { mount, user } = await setup();
     mount(<WorkplaceDetailScreen id={3} />);
+    await user.click(await screen.findByText("근무지 관리", { selector: "summary" }));
     await user.click(await screen.findByRole("button", { name: "근무지 삭제" }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText(/등록된 급여 사례는 21개/)).toBeVisible();
@@ -299,6 +336,7 @@ describe("dashboard and management user flows with MSW", () => {
   it("links Case details to the document registration route", async () => {
     const { mount } = await setup();
     mount(<CaseDetailScreen id={15} />);
+    fireEvent.click(await screen.findByText("다른 작업으로 이동"));
     expect(await screen.findByRole("link", { name: "자료 등록·관리" })).toHaveAttribute("href", "/cases/15/upload");
     expect(document.querySelector('input[type="file"]')).toBeNull();
     expect(screen.queryByRole("button", { name: /업로드/ })).not.toBeInTheDocument();

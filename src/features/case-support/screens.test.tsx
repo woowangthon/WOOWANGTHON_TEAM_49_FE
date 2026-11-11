@@ -21,6 +21,25 @@ beforeEach(async()=>{
 });
 afterEach(()=>{cleanup();services.session.clear();services.queryClient.clear();vi.unstubAllGlobals();vi.restoreAllMocks()});
 function mount(node:ReactNode){return render(<AppServicesContext value={services}><QueryClientProvider client={services.queryClient}>{node}</QueryClientProvider></AppServicesContext>)}
+it("shows one support question at a time while keeping inquiry and report routes accessible",async()=>{
+ server.use(http.get(`${testApiUrl}/cases/15/questions`,()=>apiResponse({questions:[
+  {questionId:1,type:"MISSING_CONDITION",question:"첫 번째 확인 질문",reason:"첫 질문의 근거"},
+  {questionId:2,type:"MISSING_CONDITION",question:"두 번째 확인 질문",reason:"두 번째 근거"},
+ ]})));
+ mount(<QuestionsScreen caseId={15}/>);
+ await screen.findByRole("heading",{name:"첫 번째 확인 질문"});
+ expect(screen.getAllByRole("article")).toHaveLength(1);
+ const navigation=screen.getByRole("navigation",{name:"확인 질문 이동"});
+ expect(within(navigation).getByRole("button",{name:"이전"})).toBeDisabled();
+ fireEvent.click(within(navigation).getByRole("button",{name:"다음"}));
+ expect(screen.getByRole("heading",{name:"두 번째 확인 질문"})).toBeVisible();
+ expect(screen.queryByRole("heading",{name:"첫 번째 확인 질문"})).not.toBeInTheDocument();
+ expect(within(navigation).getByRole("button",{name:"다음"})).toBeDisabled();
+ fireEvent.click(within(navigation).getByRole("button",{name:"이전"}));
+ expect(screen.getByRole("heading",{name:"첫 번째 확인 질문"})).toBeVisible();
+ expect(screen.getByRole("link",{name:"회사 문의 초안"})).toHaveAttribute("href","/cases/15/company-inquiry");
+ expect(screen.getByRole("link",{name:"상담 자료 묶음"})).toHaveAttribute("href","/cases/15/reports");
+});
 it("preserves selected originals across local pages without a mutation",async()=>{
  const mock=createDevelopmentScenario(testApiUrl);
  server.use(...mock.handlers);
@@ -93,7 +112,7 @@ it("uses only supported server filters and keeps name search local",async()=>{
 });
 it("retries center errors without inventing contact data",async()=>{let failed=true;server.use(http.get(`${testApiUrl}/consultation-centers`,()=>failed?apiResponse({errorCode:"UPSTREAM_UNAVAILABLE"},503):apiResponse({items:[],page:1,size:20,total:0})));mount(<CentersScreen/>);const retry=await screen.findByRole("button",{name:/다시/});failed=false;fireEvent.click(retry);expect(await screen.findByText(/표시할 상담기관이 없습니다/)).toBeVisible()});
 it("allows only safe phone and website schemes",()=>{expect(safeWebsite("javascript:alert(1)")).toBeUndefined();expect(safeWebsite("https://user:secret@example.org")).toBeUndefined();expect(safeWebsite("https://example.org")).toBe("https://example.org/");expect(safePhone("010-1234-5678")).toBe("tel:01012345678");expect(safePhone("123;ext=456")).toBeUndefined()});
-it("keeps question navigation and the empty state",async()=>{server.use(http.get(`${testApiUrl}/cases/15/questions`,()=>apiResponse({questions:[{questionId:1,type:"MISSING_CONDITION",question:"서버 질문",reason:"서버 사유"}]})));const ui=mount(<QuestionsScreen caseId={15}/>);await screen.findByText("서버 질문");const article=screen.getByRole("article");expect(within(article).getByRole("link",{name:"계산 조건 확인"})).toHaveAttribute("href","/cases/15/conditions");expect(within(article).getByRole("link",{name:"문서 검토"})).toHaveAttribute("href","/cases/15/review");ui.unmount();server.use(http.get(`${testApiUrl}/cases/16/questions`,()=>apiResponse({questions:[]})));mount(<QuestionsScreen caseId={16}/>);expect(await screen.findByText("서버가 제공한 확인 질문이 없습니다.")).toBeVisible()});
+it("keeps question navigation and the empty state",async()=>{server.use(http.get(`${testApiUrl}/cases/15/questions`,()=>apiResponse({questions:[{questionId:1,type:"MISSING_CONDITION",question:"서버 질문",reason:"서버 사유"}]})));const ui=mount(<QuestionsScreen caseId={15}/>);await screen.findByText("서버 질문");const article=screen.getByRole("article");expect(within(article).getByRole("link",{name:"계산 조건 확인"})).toHaveAttribute("href","/cases/15/conditions");fireEvent.click(within(article).getByText("자료 보완·질문 상세"));expect(within(article).getByRole("link",{name:"문서 검토"})).toHaveAttribute("href","/cases/15/review");ui.unmount();server.use(http.get(`${testApiUrl}/cases/16/questions`,()=>apiResponse({questions:[]})));mount(<QuestionsScreen caseId={16}/>);expect(await screen.findByText("서버가 제공한 확인 질문이 없습니다.")).toBeVisible()});
 it("requires explicit report confirmation, selects originals, prevents duplicate clicks and stops detail polling at READY",async()=>{
  const mock=createDevelopmentScenario(testApiUrl);server.use(...mock.handlers);
  await services.auth.login({email:"worker@example.com",password:"password1234"});

@@ -138,23 +138,48 @@ describe("manual record forms with real API client and MSW", () => {
   });
 });
 describe("server-driven conditions", () => {
-  it("supports a final partial group and keeps a seventh unsupported question read only", async () => {
+  it("opens the first invalid question when server errors span multiple questions", async () => {
+    const { mount, user } = await setup();
+    server.use(http.put(`${testApiUrl}/cases/15/conditions`, () => apiResponse({ errorCode: "VALIDATION_ERROR", errors: [
+      { field: "answers.0.value", reason: "근로시간을 다시 확인해 주세요" },
+      { field: "answers.1.value", reason: "적용 범위를 다시 확인해 주세요" },
+    ] }, 422)));
+    mount(<ConditionsScreen caseId={15} />);
+    await screen.findByLabelText("상시 근로자 수를 알고 있나요?");
+    await user.click(screen.getByRole("button", { name: /^다음$/ }));
+    const minutes = screen.getByLabelText("이 기간의 소정근로시간은 몇 분인가요?");
+    await user.type(minutes, "60");
+    await user.click(screen.getByRole("button", { name: /^다음$/ }));
+    await user.selectOptions(screen.getByLabelText("임금의 기본 적용 범위를 확인했나요?"), "false");
+    await user.click(screen.getByRole("button", { name: "변경된 조건 저장" }));
+    await waitFor(() => expect(minutes).toHaveFocus());
+    expect(minutes).toBeVisible();
+    expect(minutes).toHaveValue("60");
+    expect(screen.getByText("근로시간을 다시 확인해 주세요")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: /^다음$/ }));
+    expect(screen.getByText("적용 범위를 다시 확인해 주세요")).toBeVisible();
+    expect(screen.getByLabelText("임금의 기본 적용 범위를 확인했나요?")).toHaveValue("false");
+  });
+  it("shows the seventh unsupported question on its own and keeps it read only", async () => {
     const { mount, user, api, mock } = await setup();
     const initial = await api.conditions(15);
     initial.conditions.push({ conditionId: "future_text", question: "추가 읽기 전용 질문", type: "TEXT", requiredFor: [], value: null, status: "NOT_APPLICABLE", source: null });
     mount(<ConditionsForm caseId={15} initial={initial} reload={async () => initial} />);
-    await user.click(screen.getByRole("button", { name: /3\. 질문 7/ }));
+    await user.click(screen.getByText("조건 질문 바로가기 (7개)"));
+    await user.click(screen.getByRole("button", { name: "추가 읽기 전용 질문" }));
     expect(screen.getByLabelText("추가 읽기 전용 질문")).toBeVisible();
     expect(screen.getByLabelText("추가 읽기 전용 질문")).toBeDisabled();
     expect(screen.getByRole("button", { name: /^다음$/ })).toBeDisabled();
     expect(mock.requests).toHaveLength(0);
   });
-  it("pages three questions without saving and focuses hidden answer errors", async () => {
+  it("shows one question without saving and focuses hidden answer errors", async () => {
     const { mount, user, mock } = await setup();
     server.use(http.put(`${testApiUrl}/cases/15/conditions`, () => apiResponse({ errorCode: "VALIDATION_ERROR", errors: [{ field: "answers.0.value", reason: "두 번째 묶음 오류" }] }, 422)));
     mount(<ConditionsScreen caseId={15} />);
     await screen.findByLabelText("상시 근로자 수를 알고 있나요?");
-    expect(screen.getAllByRole("region").filter(r => r.getAttribute("aria-label")?.endsWith(" 조건"))).toHaveLength(3);
+    expect(screen.getAllByRole("region").filter(r => r.getAttribute("aria-label")?.endsWith(" 조건"))).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: /^다음$/ }));
+    await user.click(screen.getByRole("button", { name: /^다음$/ }));
     await user.click(screen.getByRole("button", { name: /^다음$/ }));
     const answer = screen.getByLabelText("시급의 기간과 의미가 일치하나요?");
     await user.selectOptions(answer, "false");
@@ -169,7 +194,7 @@ describe("server-driven conditions", () => {
     const { mount, user, api } = await setup(); const data = await api.conditions(15); let reads=0;
     server.use(http.get(`${testApiUrl}/cases/15/conditions`, () => ++reads === 1 ? apiResponse(data) : apiResponse({errorCode:"INTERNAL_ERROR"},500)));
     mount(<ConditionsScreen caseId={15} />);
-    const input=await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.type(input,"123");
+    const input=await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.click(screen.getByRole("button", { name: /^다음$/ })); await user.type(input,"123");
     await user.click(screen.getByRole("button",{name:"변경된 조건 저장"}));
     await screen.findByText(/조건은 저장했지만 최신 질문 조회에 실패/);
     expect(input).toBeVisible(); expect(input).toHaveValue("123");
@@ -179,11 +204,16 @@ describe("server-driven conditions", () => {
   it("keeps server question order and sends zero and false independently from unanswered", async () => {
     const { mount, user, mock } = await setup(); mount(<ConditionsScreen caseId={15} />);
     const minutes = await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?");
+    const first = screen.getByRole("region", { name: "상시 근로자 수를 알고 있나요? 조건" });
+    expect(within(first).getAllByRole("option").map(o => (o as HTMLOptionElement).value)).toEqual(["", "LESS_THAN_5", "AT_LEAST_5", "UNKNOWN"]);
+    await user.click(screen.getByRole("button", { name: /^다음$/ }));
     await user.type(minutes, "0");
+    await user.click(screen.getByRole("button", { name: /^다음$/ }));
     await user.selectOptions(screen.getByLabelText("임금의 기본 적용 범위를 확인했나요?"), "false");
     const regions = screen.getAllByRole("region").filter(r => r.getAttribute("aria-label")?.endsWith(" 조건"));
-    expect(regions[0]).toHaveAccessibleName("상시 근로자 수를 알고 있나요? 조건");
-    expect(within(regions[0]).getAllByRole("option").map(o => (o as HTMLOptionElement).value)).toEqual(["", "LESS_THAN_5", "AT_LEAST_5", "UNKNOWN"]);
+    expect(regions).toHaveLength(1);
+    expect(regions[0]).toHaveAccessibleName("임금의 기본 적용 범위를 확인했나요? 조건");
+    expect(minutes).toHaveValue("0");
     await user.click(screen.getByRole("button", { name: "변경된 조건 저장" }));
     await screen.findByText("변경된 조건을 저장했습니다. 서버가 관련 검사 상태를 자동 갱신합니다.");
     expect(mock.requests.find(r => r.method === "PUT")?.body).toEqual({answers: [{conditionId:"regular_minutes",value:0},{conditionId:"base_scope_confirmed",value:false}],expectedInputVersion:7});
@@ -191,7 +221,7 @@ describe("server-driven conditions", () => {
   it("blocks duplicate saving after accepted mutation when reload fails and preserves draft", async () => {
     const { mount, user, api, mock } = await setup();
     mount(<ConditionsForm caseId={15} initial={await api.conditions(15)} reload={async () => { throw new Error("reload failed"); }} />);
-    const input = screen.getByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.type(input,"0");
+    const input = screen.getByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.click(screen.getByRole("button", { name: /^다음$/ })); await user.type(input,"0");
     await user.click(screen.getByRole("button",{name:"변경된 조건 저장"}));
     await screen.findByText(/조건은 저장했지만 최신 질문 조회에 실패/);
     expect(input).toHaveValue("0"); expect(screen.getByRole("button",{name:"변경된 조건 저장"})).toBeDisabled();
@@ -209,7 +239,7 @@ describe("server-driven conditions", () => {
   });
   it("preserves a draft on 409 and requires explicit reloading before retry", async () => {
     const { mount, user, m } = await setup(); mount(<ConditionsScreen caseId={15} />);
-    const input = await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.type(input, "0");
+    const input = await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.click(screen.getByRole("button", { name: /^다음$/ })); await user.type(input, "0");
     m.getCases()[0].inputVersion++;
     await user.click(screen.getByRole("button", { name: "변경된 조건 저장" }));
     await screen.findByText(/버전 충돌로 저장을 중단했습니다/);
@@ -220,12 +250,12 @@ describe("server-driven conditions", () => {
   });
   it("maps 422 answer indexes to the submitted condition and retains draft", async () => {
     const { mount, user } = await setup(); server.use(http.put(`${testApiUrl}/cases/15/conditions`, () => apiResponse({ errorCode: "VALIDATION_ERROR", errors: [{ field: "answers.0.value", reason: "서버 범위 오류" }] }, 422)));
-    mount(<ConditionsScreen caseId={15} />); const input = await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.type(input, "123"); await user.click(screen.getByRole("button", { name: "변경된 조건 저장" }));
+    mount(<ConditionsScreen caseId={15} />); const input = await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.click(screen.getByRole("button", { name: /^다음$/ })); await user.type(input, "123"); await user.click(screen.getByRole("button", { name: "변경된 조건 저장" }));
     await screen.findByText("서버 범위 오류"); expect(input).toHaveValue("123"); await waitFor(() => expect(input).toHaveFocus());
   });
   it("does not reset dirty answers when another query refreshes", async () => {
     const { app, mount, user } = await setup(); mount(<ConditionsScreen caseId={15} />);
-    const input = await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.type(input, "60");
+    const input = await screen.findByLabelText("이 기간의 소정근로시간은 몇 분인가요?"); await user.click(screen.getByRole("button", { name: /^다음$/ })); await user.type(input, "60");
     await app.queryClient.invalidateQueries({ queryKey: inputKeys.conditions(app.session.getSnapshot().generation, 15) });
     expect(input).toHaveValue("60");
   });

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCase, useCaseRemoval } from "@/features/cases/queries";
 import { QueryFeedback } from "@/components/ui/query-feedback";
-import { PageHeading } from "@/components/ui/page-heading";
+import { CaseStageHeader } from "@/features/cases/components/case-stage-header";
 import { SelectField } from "@/components/ui/select-field";
 import { Pagination } from "@/components/ui/pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -26,19 +26,19 @@ export function ManualScreen({ caseId }: { caseId: number }) {
   if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 사례입니다.</p>;
   if (owner.isPending) return <QueryFeedback pending />;
   if (owner.isError) return <QueryFeedback error={owner.error} retry={() => { void owner.refetch(); }} />;
-  return <div className="min-w-0 space-y-6"><PageHeading title="수기 자료 입력·관리" description={`${owner.data.workplace.name} · ${owner.data.periodStart} ~ ${owner.data.periodEnd}`} />
-    <nav className="flex flex-wrap gap-3" aria-label="사례 자료 탐색"><Link className={secondaryButton} href={`/cases/${caseId}/upload`}>문서 자료 등록</Link><Link className={primaryButton} href={`/cases/${caseId}/conditions`}>계산 조건 확인</Link><Link className={secondaryButton} href={`/cases/${caseId}`}>사례 상세</Link></nav>
+  return <div className="min-w-0 space-y-6"><CaseStageHeader stage="manual" title="수기 자료 입력·관리" description="파일이 없어도 알고 있는 근무·급여 정보를 기록할 수 있어요. 빈칸과 실제 0은 구분해서 입력해 주세요." />
+
     {receipt && <p role="status" className={`${cardStyle} break-words`}>{"canonicalResource" in receipt ? `입금 거래 #${receipt.transactionId} · 배분 #${receipt.allocationId}을 생성했습니다. PAYMENT_TRANSACTION으로 관리하며 수기 목록에 추가하지 않습니다. 거래 수정·삭제는 후속 단계에서 제공합니다.` : `수기 기록 #${receipt.recordId}을 저장했습니다.`}</p>}
-    <p className={`${cardStyle} text-muted`}>문서가 없어도 알고 있는 내용을 직접 기록할 수 있습니다. 직접 입력한 자료가 출처로 남으며 문서 확인을 대신하지 않습니다. 빈칸은 미확인, 0은 실제 값이 0이라는 뜻입니다.</p>
+
     <div className="flex flex-wrap gap-3" aria-label="입력 작업"><button type="button" className={mode === "new" ? primaryButton : secondaryButton} aria-pressed={mode === "new"} onClick={() => setMode("new")}>새 입력</button><button type="button" className={mode === "records" ? primaryButton : secondaryButton} aria-pressed={mode === "records"} onClick={() => setMode("records")}>기존 기록</button></div>
-    <div hidden={mode !== "new"}><SelectField id="manual-record-type" label="수기 자료 유형" value={type} onChange={e => { setType(e.target.value as RecordType); setVisited(types => types.includes(e.target.value as RecordType) ? types : [...types, e.target.value as RecordType]); setSelected(undefined); }} >{recordTypes.map(t => <option key={t} value={t}>{typeLabels[t]}</option>)}</SelectField>
+    <div data-case-manual-input hidden={mode !== "new"}><SelectField id="manual-record-type" label="수기 자료 유형" value={type} onChange={e => { setType(e.target.value as RecordType); setVisited(types => types.includes(e.target.value as RecordType) ? types : [...types, e.target.value as RecordType]); setSelected(undefined); }} >{recordTypes.map(t => <option key={t} value={t}>{typeLabels[t]}</option>)}</SelectField>
     {visited.map(t => <div key={`${t}-${formKeys[t] ?? 0}`} hidden={type !== t}><ManualForm caseId={caseId} type={t} periodStart={owner.data.periodStart} periodEnd={owner.data.periodEnd} onSaved={r => { setReceipt(r); setFormKeys(keys => ({ ...keys, [t]: (keys[t] ?? 0) + 1 })); setPage(1); setMode("records"); }} /></div>)}
     </div>
     <section hidden={mode !== "records"} className="space-y-4" aria-label="수기 기록 목록"><h2 className="text-title font-bold">기존 수기 기록</h2><p>출처: 사용자 직접 입력 · 입금 거래는 이 목록에 중복 표시하지 않습니다.</p>{list.isPending ? <QueryFeedback pending /> : list.isError ? <QueryFeedback error={list.error} retry={() => { void list.refetch(); }} /> : <>
       {!list.data.items.length && <p className={cardStyle}>이 페이지에 수기 기록이 없습니다.</p>}
       <ul className="space-y-3">{list.data.items.map(r => <li key={r.recordId} className={`${cardStyle} flex flex-wrap items-center justify-between gap-3`}><span>{typeLabels[r.recordType]} #{r.recordId} · 원본 없음 · 사용자 직접 입력</span><button className={secondaryButton} onClick={() => { setSelected(r.recordId); setOpened(ids => ids.includes(r.recordId) ? ids : [...ids, r.recordId]); }}>기록 #{r.recordId} 상세·수정</button></li>)}</ul><Pagination page={list.data.page} size={list.data.size} total={list.data.total} onPage={setPage} busy={list.isFetching} /></>}
     </section>{opened.map(recordId => <div key={recordId} hidden={mode !== "records" || selected !== recordId}><ManualDetail caseId={caseId} recordId={recordId} periodStart={owner.data.periodStart} periodEnd={owner.data.periodEnd} onClose={() => setSelected(undefined)} onDeleted={() => { setSelected(undefined); setOpened(ids => ids.filter(id => id !== recordId)); }} onSaved={setReceipt} /></div>)}
-    <InputStatus caseId={caseId} />
+    <nav data-case-next aria-label="사례 자료 탐색"><div><h2>기록을 저장했다면</h2><p>계산에 필요한 조건을 확인해요.</p></div><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>계산 조건 확인</Link></nav><details className={cardStyle}><summary>실행 가능성·자동 갱신 상태</summary><InputStatus caseId={caseId} /><Link className={secondaryButton} href={`/cases/${caseId}/upload`}>문서 자료 등록</Link></details>
   </div>;
 }
 function ManualDetail({ caseId, recordId, periodStart, periodEnd, onClose, onDeleted, onSaved }: { caseId: number; recordId: number; periodStart: string; periodEnd: string; onClose: () => void; onDeleted: () => void; onSaved: (r: ManualSaved) => void }) {
