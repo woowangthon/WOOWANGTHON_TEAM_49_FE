@@ -11,7 +11,9 @@ export function reviewMocks(cases:CaseDetailDto[],documents:DocumentDto[], testA
     {fieldId:502,key:"deductions",label:"공제액",value:null,valueType:"MONEY_KRW",status:"MISSING",editedByUser:false,effectiveValueOrigin:"SHARED_DEFAULT",hasCaseOverride:false,confirmedAt:null,source:{documentId,page:null,text:null,boundingBox:null,coordinateSystem:"RELATIVE_0_1"}},
     {fieldId:503,key:"bonus",label:"추가 지급액",value:0,valueType:"MONEY_KRW",status:"CONFIRMED",editedByUser:false,effectiveValueOrigin:"SHARED_DEFAULT",hasCaseOverride:false,confirmedAt:"2026-11-09T00:00:00+00:00",source:null},
   ];
-  originals.set(101,baseFields(101));
+  const initialFields=baseFields(101);
+  if(development)initialFields.push(...Array.from({length:10},(_,i)=>({...initialFields[0],fieldId:504+i,key:`reviewSample${i+1}`,label:`검토 예시 ${i+1}`,value:i===9?null:i,status:i===9?"CONFLICTED" as const:"UNCONFIRMED" as const})));
+  originals.set(101,initialFields);
   const overrides=new Map<string,ExtractedField>();const requests:{method:string;path:string;body?:Record<string,unknown>;authorization:string|null}[]=[];
   const histories:{historyId:number;fieldId:number;previousValue:FieldValue;newValue:FieldValue;changedAt:string;changedBy:string;scope:string}[]=Array.from({length:21},(_,i)=>({historyId:i+1,fieldId:501,previousValue:i===0?null:0,newValue:0,changedAt:"2026-11-09T00:00:00+00:00",changedBy:"USER",scope:"CASE_OVERRIDE"}));
   const historyContexts=new Map<number,string>();

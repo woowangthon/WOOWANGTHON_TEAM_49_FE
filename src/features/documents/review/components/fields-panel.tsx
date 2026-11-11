@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Pagination } from "@/components/ui/pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 import { ApiError } from "@/lib/api/error";
@@ -13,6 +14,9 @@ import { FieldEditor } from "./field-editor";
 import { FieldHistory } from "./field-history";
 export function FieldsPanel({fields,context,inputVersion,onSource,onDirty,dirty,linkedCaseIds}:{fields:ExtractedField[];context:ReviewContext;inputVersion:number;onSource:(source:SourceDto|null)=>void;onDirty:(value:boolean)=>void;dirty:boolean;linkedCaseIds?:number[]}){
   const [editor,setEditor]=useState<{fieldId:number;scope:"case"|"shared"}>();
+  const [page,setPage]=useState(1);
+  const activePage=Math.min(page,Math.max(1,Math.ceil(fields.length/6)));
+  const editingField=fields.find(f=>f.fieldId===editor?.fieldId);
   const [history,setHistory]=useState<number>();const [remove,setRemove]=useState<ExtractedField>();
   const [error,setError]=useState("");const [conflict,setConflict]=useState(false);const [receipt,setReceipt]=useState<UpdateMeta>();
   const mutation=useReviewAction(context);const latestCase=useCase(context.caseId);const latestFields=useFields(context.caseId,context.documentId);
@@ -22,29 +26,33 @@ export function FieldsPanel({fields,context,inputVersion,onSource,onDirty,dirty,
   };
   const edit=(fieldId:number,scope:"case"|"shared")=>{if(dirty&&!discardChanges())return;setEditor({fieldId,scope});};
   return <section aria-label="OCR 추출 필드" className="min-w-0 space-y-4"><h2 className="text-title font-bold">추출 필드 확인·수정</h2>
-    <p className="text-body text-muted">공유 기본값은 여러 사례에 적용되며 사례 값 수정은 이 사례에만 적용됩니다. 필드 확인과 문서 전체 검토는 별개입니다. 값 없음·판독 불가·상충을 0으로 바꾸지 않습니다.</p>
+    <p className="text-caption text-muted">필드 확인과 문서 전체 검토는 별개입니다. 값 없음은 0이 아닙니다.</p>
+    <details><summary className="min-h-11 cursor-pointer py-3">검토 필요 {fields.filter(f=>f.status!=="CONFIRMED").length}개 · 상충 {fields.filter(f=>f.status==="CONFLICTED").length}개 · 전체 {fields.length}개</summary><ul className="flex flex-wrap gap-2">{fields.map((f,index)=>f.status!=="CONFIRMED"&&<li key={f.fieldId}><button className={secondaryButton} onClick={()=>{setPage(Math.floor(index/6)+1);requestAnimationFrame(()=>document.getElementById(`review-field-${f.fieldId}`)?.focus());}}>{f.label} · {fieldView(f).statusLabel}</button></li>)}</ul></details>
     {!fields.length&&<p className="text-body">추출된 필드가 없습니다. 원문과 문서 검토 상태를 확인해 주세요.</p>}
     {error&&<p role="alert" tabIndex={-1}>{error}</p>}
     {conflict&&<button className={secondaryButton} onClick={async()=>{const result=await Promise.all([latestCase.refetch(),latestFields.refetch()]);if(result.every(v=>!v.isError)){setConflict(false);setError("");}}}>최신 필드와 버전 확인</button>}
     {receipt&&<p role="status" className="break-words text-body">저장했습니다. 서버가 반환한 영향 사례: {(receipt.affectedCaseIds??receipt.caseUpdates?.map(u=>u.caseId))?.map(c=>`#${c}`).join(", ")??"미제공"}{receipt.caseUpdates?.length?` · 갱신 버전 ${receipt.caseUpdates.map(u=>`#${u.caseId}: ${u.inputVersion}`).join(", ")}`:""}</p>}
-    {fields.map(field=>{const vm=fieldView(field);return <article aria-label={field.label} key={field.fieldId} className="min-w-0 space-y-3 rounded-control border border-border bg-surface p-4">
+    {fields.slice((activePage-1)*6,activePage*6).map(field=>{const vm=fieldView(field);return <article id={`review-field-${field.fieldId}`} tabIndex={-1} aria-label={field.label} key={field.fieldId} className="min-w-0 space-y-2 border-b border-border py-4">
       <div className="flex flex-wrap justify-between gap-2"><h3 className="break-words text-body font-bold">{field.label}</h3><span className="text-caption">{vm.statusLabel}</span></div>
-      <p className="break-all text-title font-bold">{vm.valueLabel}{field.value!==null&&<span className="ml-2 text-caption font-normal">{vm.unitLabel}</span>}</p>
-      <p className="text-caption">적용값 출처: {vm.scopeLabel} · {field.editedByUser?"사용자가 수정함":"사용자 수정 없음"}</p><p className="text-caption">{vm.confirmedLabel}</p>
-      <p className="break-words text-caption">근거: {field.source?`문서 #${field.source.documentId} · `:""}{field.source?.page?`${field.source.page}페이지`:"페이지 미제공"} · {field.source?.text??"근거 문구 미제공"}</p>
+      <p className="break-all text-body font-bold">{vm.valueLabel}{field.value!==null&&<span className="ml-2 text-caption font-normal">{vm.unitLabel}</span>}</p>
+      <p className="text-caption text-muted">{vm.scopeLabel}</p>
       <div className="flex flex-wrap gap-2"><button className={secondaryButton} onClick={()=>onSource(field.source)}>원문 근거 보기</button>
-        <button className={primaryButton} disabled={field.value===null||mutation.isPending||conflict||dirty} onClick={()=>{void perform(field,true);}}>값만 확인</button>
-        <button className={secondaryButton} disabled={mutation.isPending||conflict||dirty} onClick={()=>{void perform(field,false);}}>미확인으로 표시</button>
+        {field.status!=="CONFIRMED"&&<button className={secondaryButton} disabled={field.value===null||mutation.isPending||conflict||dirty} onClick={()=>{void perform(field,true);}}>값만 확인</button>}
+
         <button className={secondaryButton} disabled={mutation.isPending} onClick={()=>edit(field.fieldId,"case")}>이 사례 값 수정</button>
-        <details className="w-full"><summary className="cursor-pointer text-caption font-bold">공유 설정·수정 이력</summary><div className="flex flex-wrap gap-2">
+        <details className="w-full"><summary className="cursor-pointer text-caption font-bold">근거·이력·공유 설정</summary>      <p className="text-caption">적용값 출처: {vm.scopeLabel} · {field.editedByUser?"사용자가 수정함":"사용자 수정 없음"}</p><p className="text-caption">{vm.confirmedLabel}</p>
+      <p className="break-words text-caption">근거: {field.source?`문서 #${field.source.documentId} · `:""}{field.source?.page?`${field.source.page}페이지`:"페이지 미제공"} · {field.source?.text??"근거 문구 미제공"}</p>
+{field.status==="CONFIRMED"&&<div>        <button className={secondaryButton} disabled={mutation.isPending||conflict||dirty} onClick={()=>{void perform(field,false);}}>미확인으로 표시</button></div>}<div className="flex flex-wrap gap-2">
         <button className={secondaryButton} disabled={mutation.isPending} onClick={()=>edit(field.fieldId,"shared")}>공유 기본값 수정</button>
         {field.hasCaseOverride&&<button className={secondaryButton} disabled={mutation.isPending||dirty} onClick={()=>setRemove(field)}>재정의 제거</button>}
         <button className={secondaryButton} onClick={()=>setHistory(history===field.fieldId?undefined:field.fieldId)}>{history===field.fieldId?"이력 닫기":"수정 이력"}</button>
         </div></details>
       </div>
-      {editor?.fieldId===field.fieldId&&<FieldEditor key={`${field.fieldId}-${editor.scope}`} field={field} scope={editor.scope} context={context} version={inputVersion} onClose={()=>setEditor(undefined)} onDirty={onDirty} onSaved={setReceipt} linkedCaseIds={linkedCaseIds} />}
-      {history===field.fieldId&&<FieldHistory caseId={context.caseId} documentId={context.documentId} fieldId={field.fieldId} />}
+
     </article>;})}
+    {history!==undefined&&<FieldHistory caseId={context.caseId} documentId={context.documentId} fieldId={history} />}
+    <Pagination page={activePage} size={6} total={fields.length} onPage={setPage} />
+    {editor&&editingField&&<section aria-label="선택 필드 편집"><h3 className="font-bold">{editingField.label} 편집 중</h3><FieldEditor key={`${editingField.fieldId}-${editor.scope}`} field={editingField} scope={editor.scope} context={context} version={inputVersion} onClose={()=>setEditor(undefined)} onDirty={onDirty} onSaved={setReceipt} linkedCaseIds={linkedCaseIds} /></section>}
     {remove&&<ConfirmDialog title="공유 기본값으로 복귀" busy={mutation.isPending} onClose={()=>setRemove(undefined)} action={<button className={primaryButton} disabled={mutation.isPending||conflict} onClick={async()=>{try{const result=await mutation.mutateAsync({type:"remove-override",fieldId:remove.fieldId,version:inputVersion});setReceipt(updateMetaSchema.parse(result));setRemove(undefined);}catch(e){setError(reviewError(e));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);setRemove(undefined);}}}>재정의 제거 확인</button>}><p>이 사례의 ‘{remove.label}’ 재정의를 제거하고 공유 기본값을 다시 적용합니다. 다른 사례의 재정의는 변경하지 않습니다.</p></ConfirmDialog>}
   </section>;
 }
