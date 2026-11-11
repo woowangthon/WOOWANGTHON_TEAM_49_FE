@@ -2,9 +2,13 @@
 
 ## This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read
+the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next`
+package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+This block is written and re-added by `next dev` — verify at
+`node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted
+change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
 
@@ -23,13 +27,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 All implementation decisions must follow this priority:
 
-1. P0: docs/references/백엔드_API_명세서_v1.pdf, docs/references/API_ENDPOINTS.md, docs/references/데이터베이스_스키마.md
-2. P1: docs/references/최종기획안.pdf
-3. P2: docs/references/월급잇다_UIUX_프로토타입_v0.4.html
-4. P3: docs/references/FE_구현_설계서_v0.3.md
-5. P4: Other references
+1. P0: docs/references/openapi.json, docs/references/API_REFERENCE.html
+2. P1: docs/references/월급잇다_UIUX_프로토타입_v0.4.html
+3. P2: docs/references/FE_구현_설계서_v0.3.md
+4. P3: docs/references/최종기획안.pdf
+5. P4: docs/references/백엔드_API_명세서_v1.pdf, docs/references/API_ENDPOINTS.md, docs/references/데이터베이스_스키마.md
+6. P5: Other references
 
 When documents conflict, use the higher-priority source.
+When documents conflict with same priority, use the former one in the list.
 
 If the backend OpenAPI specification is available,
 verify actual endpoint and DTO contracts against it.
@@ -138,7 +144,6 @@ verify actual endpoint and DTO contracts against it.
 - When API behavior is unclear, document the uncertainty instead of inventing behavior.
 - Run lint, TypeScript type checking, and build after meaningful changes.
 - Report modified files, completed work, unresolved issues, and verification results.
-
 
 ## Development Completion Policy
 
