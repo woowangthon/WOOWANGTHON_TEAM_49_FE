@@ -3,15 +3,15 @@ import { displayScalar, statusLabels, toResultsViewModel } from "./view-models";
 import { ServerValue } from "./result-screen";
 type Model = ReturnType<typeof toResultsViewModel>;
 function Badge({status}:{status:string|null|undefined}) { return <span className="inline-block rounded-full bg-neutral-soft px-3 py-1 text-sm font-bold">{status ? statusLabels[status] ?? status : "상태 미제공"}</span>; }
-export function ResultSummary({value}:{value:Model}) {
+export function ResultSummary({value,compare=false}:{value:Model;compare?:boolean}) {
  const d=value.dto;
  return <section className={`${cardStyle} space-y-4 border-l-[5px] border-l-primary`}>
  <h2 className="text-xl font-bold">{value.title}</h2>
  <p role="status">{d.freshness.overall==="CURRENT"?"현재 입력 기준":d.freshness.overall==="UPDATING"?"자동 갱신 중 · 이전 입력 기준 결과입니다.":d.freshness.overall==="FAILED"?"갱신 실패 · 이전 입력 기준 결과입니다.":"이전 입력 기준 결과입니다."}</p>
- <Badge status={d.summary.calculationStatus}/>
- <dl className="grid gap-4 sm:grid-cols-2"><div><dt>계산 가능한 부분 소계 · 전체 임금 아님</dt><dd className="text-2xl font-bold">{displayScalar(d.calculation?.calculatedSubtotal,"calculatedSubtotal")}</dd></div><div><dt>확정 가능한 범위의 세전 총액</dt><dd className="text-2xl font-bold">{displayScalar(d.calculation?.grossPay,"grossPay")}</dd></div></dl>
- <p>계산 범위는 서버가 제공한 항목에 한합니다. 부분 계산은 전체 임금 확정을 의미하지 않습니다.</p>
- <p>정보 부족 {d.summary.counts.insufficientInformation}개 · 검토 필요 {d.summary.counts.reviewRequired}개 · 차이 {d.summary.counts.difference}개 · 일치 {d.summary.counts.match}개</p>
+ <Badge status={compare?d.summary.comparisonStatus:d.summary.calculationStatus}/>
+ {!compare&&<><dl className="grid gap-4 sm:grid-cols-2"><div><dt>계산 가능한 부분 소계 · 전체 임금 아님</dt><dd className="text-2xl font-bold">{displayScalar(d.calculation?.calculatedSubtotal,"calculatedSubtotal")}</dd></div><div><dt>확정 가능한 범위의 세전 총액</dt><dd className="text-2xl font-bold">{displayScalar(d.calculation?.grossPay,"grossPay")}</dd></div></dl>
+ <p>계산 범위는 서버가 제공한 항목에 한합니다. 부분 계산은 전체 임금 확정을 의미하지 않습니다.</p></>}
+ {compare&&<p>계약·근태·명세서의 차이와 명세서 내부 합계를 각각 확인하세요. 일치 {d.summary.counts.match}개 · 서버 전체 요약</p>}
  </section>;
 }
 export function ResultChecks({value,caseId}:{value:Model;caseId:number}) {
