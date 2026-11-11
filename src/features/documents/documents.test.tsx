@@ -282,3 +282,17 @@ it("preserves the upload selection across all three modes without mutations", as
  expect(screen.getByText("새자료.pdf",{exact:true})).toBeVisible();
  expect(mocks.requests.filter(r=>r.method!=="GET")).toHaveLength(0);
 });
+
+it("keeps compact row metadata separate and reveals linked cases five at a time", async () => {
+ const {mount,user,mocks}=await setup();
+ mount(<DocumentCard dto={{...mocks.getDocuments()[0], linkedCaseIds:[1,2,3,4,5,6]}} context={{kind:"library"}} />);
+ expect(await screen.findByText(/^처리:/)).toBeVisible();
+ expect(screen.getByText(/^검토:/)).toBeVisible();
+ expect(screen.getByRole("link",{name:"사례 #1"}).closest("details")).not.toHaveAttribute("open");
+ await user.click(screen.getByText("자료 관리 상세",{exact:true}));
+ expect(screen.getByRole("link",{name:"사례 #5"})).toBeVisible();
+ expect(screen.queryByRole("link",{name:"사례 #6"})).not.toBeInTheDocument();
+ await user.click(screen.getByRole("button",{name:"연결 사례 더 보기"}));
+ expect(screen.getByRole("link",{name:"사례 #6"})).toBeVisible();
+ expect(mocks.requests.filter(r=>r.method!=="GET")).toHaveLength(0);
+});

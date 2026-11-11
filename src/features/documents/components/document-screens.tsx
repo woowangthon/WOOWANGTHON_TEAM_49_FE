@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { PageHeading } from "@/components/ui/page-heading";
 import { QueryFeedback } from "@/components/ui/query-feedback";
-import { cardStyle, secondaryButton } from "@/components/ui/styles";
+import { cardStyle, primaryButton, secondaryButton } from "@/components/ui/styles";
 import { useCase, useCaseRemoval } from "@/features/cases/queries";
 import { useWorkplace, useWorkplaceRemoval } from "@/features/workplaces/queries";
 import { recomputeActive } from "../api";
@@ -14,7 +14,7 @@ export function LibraryScreen() {
   return <div className="document-screen min-w-0 space-y-6"><PageHeading variant="library" title="전체 자료함" description="근무지별 공유 원본과 연결된 급여 사례를 확인합니다." action={<Link className={secondaryButton} href="/workplaces">근무지에서 자료 등록</Link>} /><DocumentNotice /><DocumentList context={{kind: "library"}} /></div>;
 }
 function DocumentNotice() {
-  return <p className="rounded-control bg-neutral-soft p-4 text-body">근무지 원본은 여러 사례에서 공유합니다. 연결 해제는 원본을 유지하며 원본 삭제는 다른 사례에도 영향을 줍니다. 처리 완료(READY)는 사용자 검토 확인(CONFIRMED)과 다릅니다. 연결된 사례의 검토 화면에서 원문과 추출값을 확인해 주세요.</p>;
+  return <div className="text-caption text-muted"><p>근무지 원본은 여러 사례에서 공유되며, 처리 완료와 검토 확인은 별개입니다.</p><details><summary className="min-h-11 cursor-pointer inline-flex items-center underline">공유와 삭제 안내</summary><p>연결 해제는 원본을 유지하며 원본 삭제는 다른 사례에도 영향을 줍니다. 연결한 사례의 검토 화면에서 원문과 추출값을 확인해 주세요.</p></details></div>;
 }
 export function WorkplaceDocumentsScreen({ id }: { id: number }) {
   const query = useWorkplace(id);
@@ -43,10 +43,18 @@ function CaseDocuments({ id, workplaceId, workplaceName, inputVersion }: { id: n
   const docs = useDocuments({ kind: "case", id }, { page: 1, size: 20 });
   const canAdd = !!docs.data && !docs.isError && docs.data.total < 20;
   return <div className="document-screen min-w-0 space-y-6">
-    <PageHeading variant="library" title={`${workplaceName} 자료 등록`} description="파일을 새로 올리거나 같은 근무지의 기존 원본을 연결하세요." action={<Link href={`/cases/${id}`} className={secondaryButton}>사례 상세</Link>} />
-    <div className="flex flex-wrap gap-3"><Link className={secondaryButton} href={`/workplaces/${workplaceId}/documents`}>근무지 공유 자료함</Link><Link className={secondaryButton} href="/library">전체 자료함</Link></div>
-    <Link href={`/cases/${id}/review`} className={secondaryButton}>원문·추출값 검토</Link>
-    <div className="flex flex-wrap gap-3"><Link href={`/cases/${id}/manual-records`} className={secondaryButton}>수기 자료 입력·관리</Link><Link href={`/cases/${id}/conditions`} className={secondaryButton}>계산 조건·실행 가능성</Link></div>
+    <PageHeading variant="library" title={`${workplaceName} 자료 등록`} description="파일을 새로 올리거나 같은 근무지의 기존 원본을 연결하세요." />
+    <nav aria-label="자료 관련 화면" className="document-action-group">
+      <Link href={`/cases/${id}/review`} className={primaryButton}>원문·추출값 검토</Link>
+      <div className="document-secondary-actions">
+        <Link href={`/cases/${id}/conditions`} className={secondaryButton}>조건 확인</Link>
+        <details><summary className={secondaryButton}>자료함·관련 화면</summary><div className="flex flex-col gap-2 pt-2">
+          <Link className={secondaryButton} href={`/workplaces/${workplaceId}/documents`}>근무지 공유 자료함</Link>
+          <Link className={secondaryButton} href="/library">전체 자료함</Link>
+          <Link className={secondaryButton} href={`/cases/${id}`}>사례 상세</Link>
+        </div></details>
+      </div>
+    </nav>
     <DocumentNotice /><RecomputeNotice id={id} />
     {docs.data && docs.data.total >= 20 && <p role="alert" className={cardStyle}>사례에는 문서를 최대 20개 연결할 수 있습니다. 기존 연결을 해제한 뒤 등록해 주세요.</p>}
     <nav aria-label="자료 등록 방법" className="flex flex-wrap gap-2">{([['upload','새 파일 업로드'],['link','기존 자료 연결'],['manual','직접 입력']] as const).map(([value,label])=><button key={value} className={secondaryButton} aria-pressed={mode===value} onClick={()=>setMode(value)}>{label}</button>)}</nav>
