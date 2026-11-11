@@ -11,7 +11,7 @@ export function documentCard(dto: DocumentDto, status?: DocumentStatusDto) {
   const effective = { ...dto, ...status };
   return { ...effective, typeLabel: typeLabels[dto.documentType], statusLabel: statusLabels[effective.processingStatus],
     reviewLabel: effective.reviewStatus ? reviewLabels[effective.reviewStatus] : "검토 상태 미제공",
-    uploadedLabel: dto.uploadedAt ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(dto.uploadedAt)) : "업로드 시각 미제공" };
+    uploadedLabel: dto.uploadedAt && Number.isFinite(Date.parse(dto.uploadedAt)) ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(dto.uploadedAt)) : "업로드 시각 미제공" };
 }
 export function documentError(error: unknown) {
   if (error instanceof Error && error.name === "AbortError") return "요청 대기를 중단했습니다. 서버에는 접수되었을 수 있으니 목록을 먼저 확인해 주세요.";

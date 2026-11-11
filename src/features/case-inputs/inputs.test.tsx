@@ -241,12 +241,12 @@ describe("independent readiness and authoritative freshness", () => {
     expect(screen.getAllByRole("link", { name: "수기 자료 확인" })).toHaveLength(4);
   });
   it("shows server CURRENT/STALE/UPDATING/FAILED without comparing input versions", () => {
-    render(<RecomputeView data={{ caseId: 15, pending: 0, running: 0, currentInputVersion: 99, activeJob: null, latestJob: { status: "FAILED", errorCode: "RECOMPUTE_FAILED" }, results: { calculation: { inputVersion: 1, version: 1, freshness: "CURRENT" }, comparison: { freshness: "STALE" }, payslipValidation: { freshness: "UPDATING" }, depositComparison: { freshness: "FAILED" } } }} />);
+    render(<RecomputeView data={{ caseId:15,pending: 0, running: 0, currentInputVersion: 99, activeJob: null, latestJob: { status: "FAILED", errorCode: "RECOMPUTE_FAILED" }, results: { calculation: { snapshotId: null, createdAt: null, inputVersion: 1, version: 1, freshness: "CURRENT" }, comparison: { snapshotId: null, createdAt: null, inputVersion: 1, version: null, freshness: "STALE" }, payslipValidation: { snapshotId: null, createdAt: null, inputVersion: 1, version: null, freshness: "UPDATING" }, depositComparison: { snapshotId: null, createdAt: null, inputVersion: 1, version: null, freshness: "FAILED" } } }} />);
     expect(screen.getByText(/임금 계산: CURRENT/)).toBeVisible(); expect(screen.getByText(/계약·근태 대조: STALE/)).toBeVisible(); expect(screen.getByText(/명세서 합계 검사: UPDATING/)).toBeVisible(); expect(screen.getByRole("alert")).toHaveTextContent("RECOMPUTE_FAILED");
   });
   it("polls only active jobs and stops after a terminal response", async () => {
     const { mount } = await setup(); let calls = 0;
-    server.use(http.get(`${testApiUrl}/cases/15/recompute-status`, () => { const status = ["PENDING", "RUNNING", "PARTIAL"][Math.min(calls++, 2)]; return apiResponse({ caseId: 15, pending: status === "PENDING" ? 1 : 0, running: status === "RUNNING" ? 1 : 0, activeJob: status === "PARTIAL" ? null : { status }, latestJob: { status } }); }));
+    server.use(http.get(`${testApiUrl}/cases/15/recompute-status`, () => { const status = ["PENDING", "RUNNING", "PARTIAL"][Math.min(calls++, 2)]; return apiResponse({ caseId:15,currentInputVersion:7,results:{},pending: status === "PENDING" ? 1 : 0, running: status === "RUNNING" ? 1 : 0, activeJob: status === "PARTIAL" ? null : { status }, latestJob: { status } }); }));
     mount(<InputStatus caseId={15} />);
     await screen.findByText("현재 진행 중인 작업 없음 · PARTIAL", {}, { timeout: 7000 });
     expect(calls).toBe(3); await new Promise(resolve => setTimeout(resolve, 2200)); expect(calls).toBe(3);
@@ -254,7 +254,7 @@ describe("independent readiness and authoritative freshness", () => {
   it("observes a scheduled receipt even before the job appears, then stops", async () => {
     const { mount, user } = await setup(); let calls = 0;
     server.use(http.get(`${testApiUrl}/cases/15/recompute-status`, () => {
-      calls++; return apiResponse({ caseId: 15, pending: 0, running: 0, activeJob: null, latestJob: calls >= 3 ? { jobId: "input-job-1", status: "PARTIAL" } : null });
+      calls++; return apiResponse({ caseId:15,currentInputVersion:7,results:{},pending: 0, running: 0, activeJob: null, latestJob: calls >= 3 ? { jobId: "input-job-1", status: "PARTIAL" } : null });
     }));
     mount(<ManualScreen caseId={15} />);
     await user.type(await screen.findByLabelText("시급 (원) · 선택·미확인 가능"), "0");

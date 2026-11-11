@@ -5,7 +5,7 @@ export const caseStepLabels = { UPLOAD: "자료 등록", REVIEW: "추출값 검�
 export function caseCard(dto: CaseListDto) {
   return {
     id: dto.caseId,
-    workplaceName: dto.workplace?.name ?? `근무지 #${dto.workplaceId}`,
+    workplaceName: typeof dto.workplace.name === "string" ? dto.workplace.name : `#${dto.workplaceId}`,
     period: `${dto.periodStart} ~ ${dto.periodEnd}`,
     payType: dto.payType === "HOURLY" ? "시급제" : "월급제",
     status: caseStatusLabels[dto.status],

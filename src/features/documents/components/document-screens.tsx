@@ -36,7 +36,7 @@ export function CaseUploadScreen({ id }: { id: number }) {
   if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 급여 사례입니다.</p>;
   if (query.isPending) return <QueryFeedback pending />;
   if (query.isError) return <QueryFeedback error={query.error} retry={() => { void query.refetch(); }} />;
-  return <CaseDocuments id={id} workplaceId={query.data.workplaceId} workplaceName={query.data.workplace.name} inputVersion={query.data.inputVersion} />;
+  return <CaseDocuments id={id} workplaceId={query.data.workplaceId} workplaceName={(typeof query.data.workplace.name === "string" ? query.data.workplace.name : "\uadfc\ubb34\uc9c0 \uc815\ubcf4 \ubbf8\uc81c\uacf5")} inputVersion={query.data.inputVersion} />;
 }
 function CaseDocuments({ id, workplaceId, workplaceName, inputVersion }: { id: number; workplaceId: number; workplaceName: string; inputVersion: number }) {
   const [mode, setMode] = useState<"upload" | "link" | "manual">("upload");

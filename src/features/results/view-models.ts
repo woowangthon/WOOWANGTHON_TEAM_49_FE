@@ -18,5 +18,5 @@ export function resultRows(value:Record<string,unknown>,inheritedUnit?:string|nu
  return Object.entries(value).map(([key,data])=>({key,label:fieldLabels[key]??key,value:data,unit}));
 }
 export function toResultsViewModel(dto:Results) {
- return {dto,items:dto.items.map(item=>({dto:item,title:item.title,status:item.status,values:(["calculatedValue","documentValue","difference"] as const).map(key=>({key,label:fieldLabels[key],value:item[key],text:displayScalar(item[key],key,item.unit)}))})),title:`결과 요약 · ${statusLabels[dto.freshness.overall]}`,inputVersion:dto.currentInputVersion,resultVersion:dto.resultVersion===null?"없음":String(dto.resultVersion)};
+ return {dto,items:dto.items.map(item=>({dto:item,title:item.title,status:item.status,values:(["calculatedValue","documentValue","difference"] as const).map(key=>({key,label:fieldLabels[key],value:item[key],text:displayScalar(item[key],key,item.unit)}))})),title:`결과 요약 · ${statusLabels[dto.freshness.overall ?? ""] ?? "\ucd5c\uc2e0\uc131 \ubbf8\uc81c\uacf5"}`,inputVersion:dto.currentInputVersion,resultVersion:dto.resultVersion===null?"없음":String(dto.resultVersion)};
 }

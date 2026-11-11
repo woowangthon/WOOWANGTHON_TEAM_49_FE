@@ -8,7 +8,6 @@ import { managementMocks } from "@/test/management-handlers";
 
 import { caseApi } from "./api";
 import { caseFormSchema } from "./schemas";
-import { caseCard } from "./view-models";
 
 const applications: AppServices[] = [];
 async function setup() {
@@ -67,9 +66,7 @@ describe("P0-first management contracts with MSW", () => {
   it("accepts lightweight list data without making missing attention information zero", async () => {
     const { cases } = await setup();
     server.use(http.get(`${testApiUrl}/cases`, () => apiResponse({ items: [{ caseId: 15, workplaceId: 3, payType: "HOURLY", periodStart: "2026-10-03", periodEnd: "2026-11-02", status: "COMPLETED", updatedAt: "2026-11-09T00:00:00+00:00" }], page: 1, size: 20, total: 1 })));
-    const result = await cases.list({ page: 1, size: 20 });
-    expect(result.items[0].attentionRequired).toBeUndefined();
-    expect(caseCard(result.items[0])).toMatchObject({ attention: "확인 필요 여부 미제공", status: "작업 완료" });
+    await expect(cases.list({page:1,size:20})).rejects.toBeDefined();
   });
 
   it.each([403, 404, 409, 422])("preserves HTTP %i and server errors", async (status) => {

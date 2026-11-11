@@ -13,9 +13,9 @@ export function decodeWith<T>(schema: z.ZodType<T>) {
 export function pageSchema<T>(item: z.ZodType<T>) {
   return z.object({
     items: z.array(item),
-    page: z.number().int().positive(),
-    size: z.number().int().min(1).max(100),
-    total: z.number().int().nonnegative(),
+    page: z.number().int(),
+    size: z.number().int(),
+    total: z.number().int(),
   });
 }
 

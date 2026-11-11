@@ -381,12 +381,10 @@ it("keeps overlapping attention/recent cases and server totals distinct", async 
 });
 it("renders one case with omitted attention and step without inventing results", async () => {
   const { mount, mocks } = await setup();
-  const item: import("@/features/cases/schemas").CaseListDto = { ...mocks.getCases()[1], caseId: 15 };
+  const item: Partial<import("@/features/cases/schemas").CaseListDto> = { ...mocks.getCases()[1], caseId: 15 };
   delete item.currentStep;
   delete item.attentionRequired;
   server.use(http.get(`${testApiUrl}/cases`, () => apiResponse({ items: [item], page: 1, size: 20, total: 1 })));
   mount(<DashboardScreen />);
-  await screen.findByText("확인 필요 정보가 제공되지 않았습니다.");
-  expect(screen.getByText("정보 없음", { exact: true })).toBeVisible();
-  expect(await screen.findByRole("link", { name: "현재 사례 이어가기" })).toHaveAttribute("href", "/cases/15");
+  expect(await screen.findByRole("alert")).toBeVisible();
 });

@@ -107,6 +107,6 @@ describe("input validation and lossless draft conversion", () => {
     expect(conditionsPutSchema.safeParse({ expectedInputVersion: 7, answers: [{ conditionId: "regular_minutes", value: "UNKNOWN" }] }).success).toBe(true);
   });
   it.each(["PARTIAL", "SUCCEEDED", "FAILED", "SUPERSEDED", "CANCELLED"])("stops polling terminal job %s", status => {
-    expect(recomputeActive(recomputeSchema.parse({ caseId: 15, pending: 0, running: 0, activeJob: null, latestJob: { status } }))).toBe(false);
+    expect(recomputeActive(recomputeSchema.parse({ caseId:15,currentInputVersion:7,results:{},pending: 0, running: 0, activeJob: null, latestJob: { status } }))).toBe(false);
   });
 });

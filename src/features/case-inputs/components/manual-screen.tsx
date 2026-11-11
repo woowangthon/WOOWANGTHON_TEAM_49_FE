@@ -26,7 +26,7 @@ export function ManualScreen({ caseId }: { caseId: number }) {
   if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 사례입니다.</p>;
   if (owner.isPending) return <QueryFeedback pending />;
   if (owner.isError) return <QueryFeedback error={owner.error} retry={() => { void owner.refetch(); }} />;
-  return <div className="min-w-0 space-y-6"><PageHeading title="수기 자료 입력·관리" description={`${owner.data.workplace.name} · ${owner.data.periodStart} ~ ${owner.data.periodEnd}`} />
+  return <div className="min-w-0 space-y-6"><PageHeading title="수기 자료 입력·관리" description={`${(typeof owner.data.workplace.name === "string" ? owner.data.workplace.name : "\uadfc\ubb34\uc9c0 \uc815\ubcf4 \ubbf8\uc81c\uacf5")} · ${owner.data.periodStart} ~ ${owner.data.periodEnd}`} />
     <nav className="flex flex-wrap gap-3" aria-label="사례 자료 탐색"><Link className={secondaryButton} href={`/cases/${caseId}/upload`}>문서 자료 등록</Link><Link className={primaryButton} href={`/cases/${caseId}/conditions`}>계산 조건 확인</Link><Link className={secondaryButton} href={`/cases/${caseId}`}>사례 상세</Link></nav>
     {receipt && <p role="status" className={`${cardStyle} break-words`}>{"canonicalResource" in receipt ? `입금 거래 #${receipt.transactionId} · 배분 #${receipt.allocationId}을 생성했습니다. PAYMENT_TRANSACTION으로 관리하며 수기 목록에 추가하지 않습니다. 거래 수정·삭제는 후속 단계에서 제공합니다.` : `수기 기록 #${receipt.recordId}을 저장했습니다.`}</p>}
     <p className={`${cardStyle} text-muted`}>문서가 없어도 알고 있는 내용을 직접 기록할 수 있습니다. 직접 입력한 자료가 출처로 남으며 문서 확인을 대신하지 않습니다. 빈칸은 미확인, 0은 실제 값이 0이라는 뜻입니다.</p>

@@ -9,17 +9,6 @@ export const linkSchema = z.object({
   applicableFrom: z.iso.date().nullable(), applicableTo: z.iso.date().nullable(),
   overrideCount: z.number().int().nonnegative().optional(),
 });
-// Shared UI metadata for legacy envelope endpoints. Case lists decode the P0 wire DTO below.
-export const documentSchema = z.object({
-  documentId: id, workplaceId: id, documentType: z.enum(documentTypes), fileName: z.string(),
-  processingStatus: processingSchema,
-  reviewStatus: z.enum(["NOT_STARTED", "IN_PROGRESS", "CONFIRMED"]).optional(),
-  workplaceName: z.string().nullable().optional(), mimeType: z.string().optional(), sizeBytes: z.number().nonnegative().optional(),
-  progress: z.number().min(0).max(100).nullable().optional(),
-  linkedCaseIds: z.array(id).optional(), uploadedAt: z.iso.datetime({ offset: true }).optional(),
-  processingErrorCode: z.string().nullable().optional(),
-  linkId: z.number().int().nullable().optional(),
-});
 // P0 DocumentDTO: no nested link; nullable is distinct from missing.
 export const caseDocumentSchema = z.object({
   documentId: z.number().int(), workplaceId: z.number().int(),
@@ -30,11 +19,12 @@ export const caseDocumentSchema = z.object({
   errorCode: z.string().nullable(), aiMetadata: z.record(z.string(), z.json()).nullable(),
   workplaceName: z.string().nullable().optional(),
 });
+export const documentSchema = caseDocumentSchema;
 export type DocumentWireDto = z.infer<typeof caseDocumentSchema>;
 export const statusSchema = z.object({
   documentId: id, processingStatus: processingSchema,
-  reviewStatus: documentSchema.shape.reviewStatus, progress: documentSchema.shape.progress,
-  processingErrorCode: documentSchema.shape.processingErrorCode,
+  reviewStatus: documentSchema.shape.reviewStatus.optional(), progress: documentSchema.shape.progress.optional(),
+  errorCode: z.string().nullable().optional(),
 });
 export const uploadSchema = statusSchema.extend({ linkId: id.optional(), inputVersion: id.optional() });
 export const mutationSchema = z.object({ inputVersion: id.optional(), affectedCaseIds: z.array(id).optional() });

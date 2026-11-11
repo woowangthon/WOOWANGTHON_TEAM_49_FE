@@ -1,4 +1,5 @@
 "use client";
+import { jobText } from "@/features/documents/api";
 import { useCase } from "@/features/cases/queries";
 import { caseCard } from "@/features/cases/view-models";
 import { ResultSummary } from "./result-presentation";
@@ -31,7 +32,7 @@ export function ResultScreen({caseId, compare=false, selection, returnTo}:{caseI
  const q=useResults(caseId); const execution=useResultExecution(caseId); const status=useRecomputeStatus(caseId); const lock=useRef(false);
  const vm=q.data?toResultsViewModel(q.data):undefined;
  const job=status.data?.activeJob ?? status.data?.latestJob;
- const detail=useResultJob(caseId,job?.jobId,job?.status);
+ const detail=useResultJob(caseId,jobText(job?.jobId),jobText(job?.status));
  const busy=execution.isPending || status.isPending || status.isError || !!status.awaitingScheduledJob || (!!status.data && recomputeActive(status.data));
  return <div className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
  <h1 className="text-[32px] leading-tight font-bold lg:text-[38px]">{compare ? "자료를 비교해 볼까요?" : "내 임금 결과를 확인해 보세요"}</h1>
@@ -50,8 +51,9 @@ export function ResultScreen({caseId, compare=false, selection, returnTo}:{caseI
  <div className="flex flex-wrap gap-3">{(["recompute","calculations","comparisons","payslip-validations"] as const).map(endpoint=><button key={endpoint} className={secondaryButton} disabled={busy} onClick={async()=>{if(lock.current||busy)return;lock.current=true;try{await execution.mutateAsync({endpoint,version:q.data.currentInputVersion});}catch{}finally{lock.current=false;}}}>{{recompute:"전체 수동 재실행",calculations:"계산 재실행",comparisons:"대조 재실행","payslip-validations":"합계 검사 재실행"}[endpoint]}</button>)}</div>
 
  <p>입력 변경 후 자동 갱신됩니다. 아래 실행은 보조 관리 기능입니다.</p>
+ {q.data.wire != null && <details><summary>서버 원본 결과 데이터</summary><p>내부 정보가 표시 형식과 다르면 미제공으로 표시하며 원본은 보존합니다.</p><ServerValue value={q.data.wire} caseId={caseId}/></details>}
  <p>현재 입력 버전 {q.data.currentInputVersion} · 결과 버전 {q.data.resultVersion ?? "없음"}</p><ServerValue value={q.data.versions} caseId={caseId}/>
-{job?.jobId && <details className={cardStyle}><summary>작업 상세 · {job.jobId}</summary>{detail.isPending?<QueryFeedback pending/>:detail.isError?<QueryFeedback error={detail.error} retry={()=>void detail.refetch()}/>:<ServerValue value={detail.data} caseId={caseId}/>}</details>}{(["calculations","comparisons","payslip-validations"] as const).map(endpoint=><ResultHistory key={endpoint} caseId={caseId} endpoint={endpoint}/> )}
+{job?.jobId && <details className={cardStyle}><summary>작업 상세 · {jobText(job.jobId)}</summary>{detail.isPending?<QueryFeedback pending/>:detail.isError?<QueryFeedback error={detail.error} retry={()=>void detail.refetch()}/>:<ServerValue value={detail.data} caseId={caseId}/>}</details>}{(["calculations","comparisons","payslip-validations"] as const).map(endpoint=><ResultHistory key={endpoint} caseId={caseId} endpoint={endpoint}/> )}
 
  <details><summary>전체 서버 결과·추가 근거</summary><ServerValue value={q.data} caseId={caseId}/></details>
  </details>

@@ -10,14 +10,14 @@ export function managementMocks({ empty = false, count = 21, idOffset = 0, baseU
   let workplaces: WorkplaceDto[] = empty ? [] : Array.from({ length: count }, (_, index) => ({
     workplaceId: index + 3, name: index === 0 ? "카페 나무" : `근무지 ${index + 3}`,
     industry: index === 0 ? "음식점" : null, region: index === 0 ? "청주시" : null,
-    employmentStatus: "CURRENT", caseCount: 0,
+    employmentStatus: "CURRENT", createdAt: "2026-11-09", updatedAt: "2026-11-09", caseCount: 0,
   }));
   const cases: CaseDetailDto[] = empty ? [] : Array.from({ length: count }, (_, index) => ({
     caseId: index + 15, workplaceId: 3,
     workplace: { workplaceId: 3, name: "카페 나무", industry: "음식점", region: "청주시" },
     payType: "HOURLY", periodStart: "2026-10-03", periodEnd: "2026-11-02", scheduledPayDate: null,
     status: index === 0 ? "COMPLETED" : "CREATED", currentStep: "UPLOAD",
-    documentCount: index === 0 ? 3 : 0, inputVersion: 7,
+    latestCalculationId: null, documentCount: index === 0 ? 3 : 0, inputVersion: 7,
     attentionRequired: index === 0, attentionCount: index === 0 ? 2 : 0,
     updatedAt: `2026-11-${String((index % 8) + 1).padStart(2, "0")}T00:00:00+00:00`,
   }));
@@ -47,7 +47,7 @@ export function managementMocks({ empty = false, count = 21, idOffset = 0, baseU
     http.post(`${testApiUrl}/workplaces`, async ({ request }) => {
       const body = await record(request);
       const workplaceId = Math.max(2 + idOffset, ...workplaces.map((row) => row.workplaceId)) + 1;
-      workplaces.push({ workplaceId, name: body.name as string, industry: body.industry as string | null, region: body.region as string | null, employmentStatus: body.employmentStatus as "CURRENT" | "FORMER", caseCount: 0 });
+      workplaces.push({ workplaceId, name: body.name as string, industry: body.industry as string | null, region: body.region as string | null, employmentStatus: body.employmentStatus as "CURRENT" | "FORMER", createdAt: "2026-11-09", updatedAt: "2026-11-09", caseCount: 0 });
       return apiResponse({ workplaceId }, 201);
     }),
     http.get(`${testApiUrl}/workplaces/:id`, ({ params }) => {
@@ -76,7 +76,7 @@ export function managementMocks({ empty = false, count = 21, idOffset = 0, baseU
       const owner = workplace(body.workplaceId as number);
       if (!owner) return missing();
       const caseId = Math.max(14 + idOffset, ...cases.map((row) => row.caseId)) + 1;
-      cases.push({ caseId, workplaceId: owner.workplaceId, workplace: owner, payType: body.payType as "HOURLY" | "MONTHLY", periodStart: body.periodStart as string, periodEnd: body.periodEnd as string, scheduledPayDate: body.scheduledPayDate as string | null, status: "CREATED", currentStep: "UPLOAD", documentCount: 0, inputVersion: 1, attentionRequired: false, attentionCount: 0, updatedAt: "2026-11-09T00:00:00+00:00" });
+      cases.push({ caseId, workplaceId: owner.workplaceId, workplace: owner, payType: body.payType as "HOURLY" | "MONTHLY", periodStart: body.periodStart as string, periodEnd: body.periodEnd as string, scheduledPayDate: body.scheduledPayDate as string | null, status: "CREATED", currentStep: "UPLOAD", latestCalculationId: null, documentCount: 0, inputVersion: 1, attentionRequired: false, attentionCount: 0, updatedAt: "2026-11-09T00:00:00+00:00" });
       return apiResponse({ caseId, status: "CREATED", inputVersion: 1, recompute: { scheduled: true, jobId: "job-msw", affectedChecks: [] } }, 201);
     }),
     http.get(`${testApiUrl}/cases/:id`, ({ params }) => {

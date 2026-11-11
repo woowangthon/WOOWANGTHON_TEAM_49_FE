@@ -4,14 +4,10 @@ import type { CaseDetailDto } from "@/features/cases/schemas";
 import { apiResponse } from "./response";
 // Explicit wire projection: internal mock link records never leak into DocumentDTO.
 export function caseDocumentResponse(d: DocumentDto, linkId: number | null) {
-  return { documentId: d.documentId, workplaceId: d.workplaceId, documentType: d.documentType,
-    fileName: d.fileName, processingStatus: d.processingStatus, reviewStatus: d.reviewStatus ?? "NOT_STARTED",
-    progress: d.progress ?? 0, linkId, linkedCaseIds: d.linkedCaseIds ?? [],
-    uploadedAt: d.uploadedAt ?? "2026-11-09T00:00:00+00:00", errorCode: d.processingErrorCode ?? null,
-    aiMetadata: null, workplaceName: d.workplaceName };
+  return { ...d, linkId };
 }
 export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0.0.1:8000/api/v1", development = false, idOffset = 0) {
-  const documents: DocumentDto[] = Array.from({length: 21}, (_, i) => ({ documentId: 101 + i, workplaceId: 3, workplaceName: "카페 나무", documentType: i === 0 ? "CONTRACT" : "PAYSLIP", fileName: i === 0 ? "근로계약서.pdf" : `급여명세서-${i}.pdf`, processingStatus: development && i === 1 ? "READ_READY" : "READY", reviewStatus: "NOT_STARTED", progress: null, linkedCaseIds: i === 0 ? [15, 16] : [], uploadedAt: "2026-11-09T00:00:00+00:00" }));
+  const documents: DocumentDto[] = Array.from({length: 21}, (_, i) => ({ documentId: 101 + i, workplaceId: 3, workplaceName: "카페 나무", documentType: i === 0 ? "CONTRACT" : "PAYSLIP", fileName: i === 0 ? "근로계약서.pdf" : `급여명세서-${i}.pdf`, processingStatus: development && i === 1 ? "READ_READY" : "READY", reviewStatus: "NOT_STARTED", progress: 100, linkId: null, errorCode: null, aiMetadata: null, linkedCaseIds: i === 0 ? [15, 16] : [], uploadedAt: "2026-11-09T00:00:00+00:00" }));
   let links = [{ linkId: 777, caseId: 15, documentId: 101, purpose: "CONTRACT_FOR_PERIOD", applicableFrom: "2026-10-03", applicableTo: "2026-11-02", overrideCount: 0 }];
   const requests: {method: string; path: string; body?: Record<string, unknown>}[] = [];
   const record = (request: Request, body?: Record<string, unknown>) => !development && requests.push({method: request.method, path: new URL(request.url).pathname + new URL(request.url).search, body});
@@ -24,7 +20,7 @@ export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0
   const upload = async (request: Request, caseId?: number) => {
     const form = await request.formData(); record(request, { documentType: form.get("documentType"), fileName: (form.get("file") as File)?.name });
     const documentId = Math.max(100 + idOffset, ...documents.map(d => d.documentId)) + 1;
-    const dto: DocumentDto = {documentId, workplaceId: development ? (caseId ? current(caseId).workplaceId : Number(new URL(request.url).pathname.split("/").at(-2))) : 3, documentType: form.get("documentType") as DocumentDto["documentType"], fileName: (form.get("file") as File).name, processingStatus: "UPLOADED", reviewStatus: "NOT_STARTED", progress: 10, linkedCaseIds: caseId ? [caseId] : []};
+    const dto: DocumentDto = {documentId, workplaceId: development ? (caseId ? current(caseId).workplaceId : Number(new URL(request.url).pathname.split("/").at(-2))) : 3, documentType: form.get("documentType") as DocumentDto["documentType"], fileName: (form.get("file") as File).name, processingStatus: "UPLOADED", reviewStatus: "NOT_STARTED", progress: 10, linkId: null, errorCode: null, aiMetadata: null, uploadedAt: "2026-11-09", linkedCaseIds: caseId ? [caseId] : []};
     documents.push(dto);
     if (caseId) { links.push({linkId: documentId + 700, caseId, documentId, purpose: "CONTRACT_FOR_PERIOD", applicableFrom: current(caseId).periodStart, applicableTo: current(caseId).periodEnd, overrideCount: 0}); bump(caseId); }
     return apiResponse({documentId, processingStatus: "UPLOADED", reviewStatus: "NOT_STARTED", progress: 10}, 202);
@@ -50,7 +46,7 @@ export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0
     http.delete(`${testApiUrl}/cases/:c/document-links/:l`, async ({request, params}) => { record(request); const c = Number(params.c); const link = links.find(l => l.linkId === Number(params.l))!; if (!link) return error("RESOURCE_NOT_FOUND", 404); links = links.filter(l => l !== link); const dto = documents.find(d => d.documentId === link.documentId)!; dto.linkedCaseIds = dto.linkedCaseIds!.filter(id => id !== c); bump(c); return new HttpResponse(null, {status:204}); }),
     http.get(`${testApiUrl}/workplaces/:w/documents/:d/deletion-impact`, ({request, params}) => { record(request); const dto = documents.find(d => d.documentId === Number(params.d)); if (!dto) return error("RESOURCE_NOT_FOUND", 404); return apiResponse({documentId: dto.documentId, linkedCaseIds: dto.linkedCaseIds, linkedCaseCount: dto.linkedCaseIds!.length, canDeleteOriginal: true, reasonCode: null}); }),
     http.delete(`${testApiUrl}/workplaces/:w/documents/:d`, ({request, params}) => { record(request); if (new URL(request.url).searchParams.get("confirm") !== "true") return error("DOCUMENT_SHARED_REFERENCES_EXIST"); documents.splice(0, documents.length, ...documents.filter(d => d.documentId !== Number(params.d))); links = links.filter(l => l.documentId !== Number(params.d)); return new HttpResponse(null, {status:204}); }),
-    http.get(`${testApiUrl}/cases/:c/recompute-status`, ({request, params}) => { record(request); return apiResponse({caseId: Number(params.c), pending: 0, running: 0, latestJob: {status: "PARTIAL"}}); }),
+    http.get(`${testApiUrl}/cases/:c/recompute-status`, ({request, params}) => { record(request); return apiResponse({caseId: Number(params.c), currentInputVersion: current(Number(params.c)).inputVersion, results: {}, activeJob: null, pending: 0, running: 0, latestJob: {status: "PARTIAL"}}); }),
   ];
   return {handlers, requests, getDocuments: () => documents, getLinks: () => links};
 }

@@ -4,29 +4,13 @@ export const payTypeSchema = z.enum(["HOURLY", "MONTHLY"]);
 export const caseStatusSchema = z.enum(["CREATED", "IN_PROGRESS", "COMPLETED", "ARCHIVED"]);
 export const caseStepSchema = z.enum(["UPLOAD", "REVIEW", "CONDITIONS", "COMPARE", "RESULT"]);
 const id = z.number().int().positive();
-export const caseListItemSchema = z.object({
-  caseId: id,
-  workplaceId: id,
-  workplace: z.object({ workplaceId: id, name: z.string(), industry: z.string().nullable().optional(), region: z.string().nullable().optional() }).optional(),
-  payType: payTypeSchema,
-  periodStart: z.iso.date(),
-  periodEnd: z.iso.date(),
-  scheduledPayDate: z.iso.date().nullable().optional(),
-  status: caseStatusSchema,
-  currentStep: caseStepSchema.optional(),
-  attentionRequired: z.boolean().optional(),
-  attentionCount: z.number().int().nonnegative().optional(),
-  updatedAt: z.iso.datetime({ offset: true }),
+export const caseWireSchema = z.object({
+ caseId:z.number().int(), workplaceId:z.number().int(), workplace:z.record(z.string(),z.json()),
+ payType:payTypeSchema,periodStart:z.string(),periodEnd:z.string(),scheduledPayDate:z.string().nullable(),
+ status:caseStatusSchema,currentStep:caseStepSchema,documentCount:z.number().int(),latestCalculationId:z.number().int().nullable(),inputVersion:z.number().int(),attentionRequired:z.boolean(),attentionCount:z.number().int(),updatedAt:z.string(),
 });
-export const caseDetailSchema = caseListItemSchema.extend({
-  workplace: z.object({ workplaceId: id, name: z.string(), industry: z.string().nullable().optional(), region: z.string().nullable().optional() }),
-  scheduledPayDate: z.iso.date().nullable(),
-  currentStep: caseStepSchema,
-  documentCount: z.number().int().nonnegative(),
-  inputVersion: z.number().int().positive(),
-  attentionRequired: z.boolean(),
-  attentionCount: z.number().int().nonnegative(),
-});
+export const caseListItemSchema = caseWireSchema;
+export const caseDetailSchema = caseWireSchema;
 export const caseCreatedSchema = z.object({
   caseId: id, status: z.literal("CREATED"), inputVersion: z.number().int().positive(),
   recompute: z.unknown().optional(),

@@ -194,10 +194,9 @@ describe("document flows with MSW, never a live backend", () => {
     expect(await screen.findByRole("region",{name:"근무지 기존 원본 연결"})).toBeVisible();
     expect(await screen.findByText(/작업 종료는 모든 계산의 완료나 일치를 뜻하지 않습니다/)).toBeVisible();
   });
-  it("keeps omitted metadata absent and accepts null progress", () => {
-    const parsed=documentSchema.parse({documentId:1,workplaceId:3,documentType:"PAYSLIP",fileName:"a.pdf",processingStatus:"READY",progress:null});
-    expect(parsed.linkedCaseIds).toBeUndefined(); expect(parsed.progress).toBeNull(); expect(parsed.reviewStatus).toBeUndefined();
-  });
+  it("rejects missing required metadata and null progress", () => {
+ expect(documentSchema.safeParse({documentId:1,workplaceId:3,documentType:"PAYSLIP",fileName:"a.pdf",processingStatus:"READY",progress:null}).success).toBe(false);
+ });
   it("shares refresh for multipart 401s and preserves the same file on retry", async () => {
     const {app} = await setup(); let uploads=0; let refreshes=0;
     server.use(http.post(`${testApiUrl}/auth/refresh`,()=>{refreshes++;return apiResponse({accessToken:"rotated",tokenType:"Bearer",expiresIn:1800});}),http.post(`${testApiUrl}/cases/15/documents`,async ({request})=>{uploads++; expect((await request.formData()).get("documentType")).toBe("PAYSLIP");return request.headers.get("Authorization")==="Bearer rotated" ? apiResponse({documentId:122,processingStatus:"UPLOADED",reviewStatus:"NOT_STARTED"},202) : apiResponse({},401);}));
@@ -261,8 +260,8 @@ describe("document flows with MSW, never a live backend", () => {
   });
   it("polls recompute-status only while pending/running, without issuing calculations", async () => {
     const {mount,mocks}=await setup(); let calls=0;
-    server.use(http.get(`${testApiUrl}/cases/15/recompute-status`,()=>{calls++;return apiResponse({caseId:15,pending:0,running:calls===1?1:0,latestJob:{status:calls===1?"RUNNING":"PARTIAL"}});}));
-    function Probe(){const q=useRecomputeStatus(15);return <p>{q.data?.latestJob?.status}</p>;}
+    server.use(http.get(`${testApiUrl}/cases/15/recompute-status`,()=>{calls++;return apiResponse({caseId:15,currentInputVersion:7,results:{},pending:0,running:calls===1?1:0,activeJob:null,latestJob:{status:calls===1?"RUNNING":"PARTIAL"}});}));
+    function Probe(){const q=useRecomputeStatus(15);return <p>{String(q.data?.latestJob?.status ?? "")}</p>;}
     mount(<Probe />); await screen.findByText("RUNNING");
     await screen.findByText("PARTIAL",{}, {timeout:3500});
     await new Promise(resolve=>setTimeout(resolve,2200)); expect(calls).toBe(2);
@@ -321,7 +320,7 @@ it.each([null, 777])("A05 lists and opens details without a nested link (%s)", a
   } else expect(mocks.requests.some(r => r.method === "DELETE")).toBe(false);
 });
 it("A05 requires nullable integer linkId and strips undeclared nested links", () => {
-  const dto = caseDocumentResponse({documentId:1,workplaceId:1,documentType:"CONTRACT",fileName:"a",processingStatus:"READY"},null);
+  const dto = caseDocumentResponse({documentId:1,workplaceId:1,documentType:"CONTRACT",fileName:"a",processingStatus:"READY",reviewStatus:"NOT_STARTED",progress:100,linkId:null,linkedCaseIds:[],uploadedAt:"",errorCode:null,aiMetadata:null},null);
   expect(caseDocumentSchema.parse({...dto,link:{linkId:777}})).not.toHaveProperty("link");
   for (const linkId of [undefined,"777",1.5]) expect(caseDocumentSchema.safeParse({...dto,linkId}).success).toBe(false);
 });

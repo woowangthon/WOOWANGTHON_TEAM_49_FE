@@ -1,4 +1,5 @@
 "use client";
+import { jobText } from "@/features/documents/api";
 import Link from "next/link";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { cardStyle, secondaryButton } from "@/components/ui/styles";
@@ -22,7 +23,7 @@ export function RecomputeView({ data }: { data: z.infer<typeof recomputeSchema> 
   const active = recomputeActive(data);
   const job = data.activeJob ?? data.latestJob;
   return <section aria-label="자동 갱신 상태" className={`${cardStyle} min-w-0 break-words space-y-3`}><h2 className="text-title font-bold">자동 갱신 상태</h2><p role="status">{active ? "서버 자동 갱신 중" : "현재 진행 중인 작업 없음"}{job ? ` · ${job.status}` : ""}</p>{data.currentInputVersion !== undefined && <p>현재 입력 버전: {data.currentInputVersion}</p>}
-    {job?.errorCode && <p role="alert">갱신 오류: {job.errorCode}. 이전 결과를 보존합니다. 입력을 확인하고 상태를 다시 조회해 주세요.</p>}
+    {job?.errorCode && <p role="alert">갱신 오류: {jobText(job.errorCode)}. 이전 결과를 보존합니다. 입력을 확인하고 상태를 다시 조회해 주세요.</p>}
     {job?.status === "FAILED" && <p>자동 갱신에 실패했습니다. 상태 재조회는 작업을 새로 생성하지 않습니다. 결과 화면의 수동 재실행 버튼으로 다시 요청할 수 있습니다.</p>}
     {job?.status === "SUPERSEDED" && <p>이 작업은 새 입력으로 대체되었습니다. 최신 상태를 확인해 주세요.</p>}
     {data.results ? <ul className="space-y-2">{Object.entries(data.results).map(([key, ref]) => <li key={key}>{resultLabels[key] ?? key}: {ref ? `${ref.freshness} · 결과 버전 ${ref.version ?? "미제공"} · 입력 버전 ${ref.inputVersion ?? "미제공"}` : "결과 참조 없음"}</li>)}</ul> : <p>서버가 결과 최신성을 제공하지 않았습니다.</p>}

@@ -91,7 +91,7 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
       list.push(buildResultScenario({...c,inputVersion:s.snapshotInputVersion},s.resultVersion,initial?s.records:[],initial?s.conditions:[],initial?getEvidence(c.caseId):[]));}
     const deposits=depositHistory(c);if(!deposits.length)deposits.push(buildDeposit(c));
     const snapshot=deposits[0];list[0].versions.depositComparison={snapshotId:snapshot.depositComparisonId,version:snapshot.version,inputVersion:snapshot.basedOnInputVersion!,createdAt:snapshot.createdAt!,freshness:"CURRENT"}; const current=freshness(c),active=s.job && ["PENDING","RUNNING"].includes(s.job.status);
-    return {...list[0],depositComparison:{...deposits[0],freshness:current},currentInputVersion:c.inputVersion,freshness:{overall:current,hasOutdatedResults:current!=="CURRENT",activeJobId:active?s.job!.jobId:null},versions:Object.fromEntries(Object.entries(list[0].versions).map(([k,v])=>[k,v?{...v,freshness:s.target==="deposit"&&k!=="depositComparison"?v.freshness:current}:null]))};
+    return {...list[0],depositComparison:{...deposits[0],freshness:current},currentInputVersion:c.inputVersion,freshness:{overall:current,hasOutdatedResults:current!=="CURRENT",activeJobId:active?s.job!.jobId:null},versions:Object.fromEntries(Object.entries(list[0].versions).map(([k,v])=>[k,{...v,freshness:s.target==="deposit"&&k!=="depositComparison"?v.freshness:current}]))};
   }
   function completion(c:CaseDetailDto) {
     const s=state(c);const p=buildResultScenario(c,s.resultVersion,s.records,s.conditions,getEvidence(c.caseId)).payslipValidation;

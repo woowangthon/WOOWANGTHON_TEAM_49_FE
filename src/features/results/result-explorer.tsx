@@ -53,7 +53,7 @@ export function ResultExplorer({ data, compare, before, after }: { data: Results
    <h2 className="font-bold">차이와 보완이 필요한 항목</h2>
    <p>서버 전체 요약입니다. 아래 필터 건수는 현재 응답의 선택 검사 범위입니다.</p>
    <div className="flex flex-wrap gap-2">{([["DIFFERENCE", data.summary.counts.difference], ["INSUFFICIENT_INFORMATION", data.summary.counts.insufficientInformation], ["REVIEW_REQUIRED", data.summary.counts.reviewRequired]] as const).map(([status, count]) => <button key={status} className={secondaryButton} onClick={() => jump(status)}>{filters[status]} {count}개 · 확인</button>)}</div>
-   <p>차액은 확정된 미지급임금이 아닙니다. {statusLabels[data.freshness.overall]} · 현재 입력 v{data.currentInputVersion} · 결과 v{data.resultVersion ?? "없음"}</p>
+   <p>차액은 확정된 미지급임금이 아닙니다. {statusLabels[data.freshness.overall ?? ""] ?? "\ucd5c\uc2e0\uc131 \ubbf8\uc81c\uacf5"} · 현재 입력 v{data.currentInputVersion} · 결과 v{data.resultVersion ?? "없음"}</p>
   </aside>
   {before}
   <section className="min-w-0 space-y-5" aria-label={compare ? "검사 탐색" : "결과 탐색"}>

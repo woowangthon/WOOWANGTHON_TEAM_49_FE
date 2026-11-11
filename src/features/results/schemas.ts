@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { pageSchema } from "@/lib/api/schema";
 import { sourceSchema } from "@/features/documents/review/schemas";
-const integer = z.number().int().nonnegative();
+const integer = z.number().int();
 const scalar = z.number().finite();
 const money = scalar.int().safe().nullable();
 const date = z.iso.date();
@@ -26,21 +26,48 @@ export const comparisonItemSchema = z.object({type:z.string().optional(),status:
 export const comparisonSchema = z.object({comparisonId:integer,version:integer,basedOnInputVersion:integer,items:z.array(comparisonItemSchema),status:z.union([resultStatusSchema,calculationStatusSchema]).optional(),createdAt:timestamp.optional()}).passthrough();
 export const validationCheckSchema = z.object({status:resultStatusSchema.optional(),itemSum:money.optional(),statedTotal:money.optional(),calculated:money.optional(),stated:money.optional(),difference:money.optional()}).passthrough();
 export const validationSchema = z.object({validationId:integer,version:integer,paymentTotal:validationCheckSchema,deductionTotal:validationCheckSchema,netPay:validationCheckSchema,basedOnInputVersion:integer.optional(),createdAt:timestamp.optional()}).passthrough();
-export const resultItemSchema = z.object({id:z.string(),title:z.string(),status:resultStatusSchema,calculatedValue:scalar.nullable(),documentValue:scalar.nullable(),difference:scalar.nullable(),unit:z.string().nullable(),periodStart:date.nullable(),periodEnd:date.nullable(),formula:formulaSchema.nullable(),rule:ruleSchema.nullable(),comparisonBasis:basisSchema.nullable(),sources:z.array(resultSourceSchema),confirmedAt:timestamp.nullable(),nextAction:z.string().nullable().optional()}).passthrough().superRefine((v,ctx)=>validateMoneyValues(v,["calculatedValue","documentValue","difference"],v.unit,ctx));
-export const versionSchema = z.object({snapshotId:integer.nullable(),version:integer.nullable(),inputVersion:integer,createdAt:timestamp.nullable(),freshness:freshnessSchema}).passthrough();
-export const resultsSchema = z.object({
- caseId:integer,currentInputVersion:integer,resultVersion:integer.nullable(),
- summary:z.object({calculationStatus:calculationStatusSchema.nullable(),comparisonStatus:resultStatusSchema.nullable(),counts:z.object({match:integer,difference:integer,insufficientInformation:integer,reviewRequired:integer}).passthrough()}).passthrough(),
- freshness:z.object({overall:freshnessSchema,hasOutdatedResults:z.boolean().optional(),activeJobId:z.string().nullable().optional()}).passthrough(),
- versions:z.record(z.string(),versionSchema.nullable()),items:z.array(resultItemSchema),
- calculation:calculationSchema.nullable(),comparison:comparisonSchema.nullable(),payslipValidation:validationSchema.nullable(),depositComparison:z.record(z.string(),z.unknown()).nullable().optional(),
+export const resultItemViewSchema = z.object({id:z.string(),title:z.string(),status:resultStatusSchema,calculatedValue:z.number().int().nullable(),documentValue:z.number().int().nullable(),difference:z.number().int().nullable(),unit:z.string().nullable(),periodStart:z.string(),periodEnd:z.string(),formula:formulaSchema.nullable(),rule:ruleSchema.nullable(),comparisonBasis:basisSchema.nullable(),sources:z.array(resultSourceSchema),confirmedAt:z.string().nullable(),nextAction:z.string().nullable()}).passthrough().superRefine((v,ctx)=>validateMoneyValues(v,["calculatedValue","documentValue","difference"],v.unit,ctx));
+export const versionSchema = z.object({snapshotId:integer.nullable(),version:integer.nullable(),inputVersion:integer,createdAt:z.string().nullable(),freshness:freshnessSchema}).passthrough();
+export const resultsViewSchema = z.object({
+ caseId:integer,currentInputVersion:integer,resultVersion:integer,
+ summary:z.object({calculationStatus:calculationStatusSchema.nullable(),comparisonStatus:resultStatusSchema.nullable(),counts:z.object({match:integer.nullable(),difference:integer.nullable(),insufficientInformation:integer.nullable(),reviewRequired:integer.nullable()}).passthrough()}).passthrough(),
+ freshness:z.object({overall:freshnessSchema.optional(),hasOutdatedResults:z.boolean().optional(),activeJobId:z.string().nullable().optional()}).passthrough(),
+ versions:z.record(z.string(),versionSchema),items:z.array(resultItemViewSchema),
+ calculation:calculationSchema.nullable(),comparison:comparisonSchema.nullable(),payslipValidation:validationSchema.nullable(),depositComparison:z.record(z.string(),z.unknown()).nullable(),
 }).passthrough();
 // P0 guarantees job identity/status; P4 metadata remains optional and is validated when present.
 export const jobSchema = z.object({jobId:z.string().min(1),status:jobStatusSchema,caseId:integer.optional(),requestedInputVersion:integer.optional(),affectedChecks:z.array(z.string()).optional(),createdAt:timestamp.optional(),completedAt:timestamp.nullable().optional(),errorCode:z.string().nullable().optional()}).passthrough();
 export const historySchemas = {calculations:pageSchema(calculationSchema),comparisons:pageSchema(comparisonSchema),"payslip-validations":pageSchema(validationSchema)};
-export type Results = z.infer<typeof resultsSchema>;
+export type Results = z.infer<typeof resultsViewSchema>;
 export type ResultSource = z.infer<typeof resultSourceSchema>;
 
 export type HistoryDto = z.infer<(typeof historySchemas)[keyof typeof historySchemas]>;
 
 export type CalculationDto = z.infer<typeof calculationSchema>;
+
+const jsonObject = z.record(z.string(), z.json());
+export const resultItemWireSchema = z.object({id:z.string(),title:z.string(),status:resultStatusSchema,calculatedValue:integer.nullable(),documentValue:integer.nullable(),difference:integer.nullable(),unit:z.string().nullable(),periodStart:z.string(),periodEnd:z.string(),formula:jsonObject.nullable(),rule:jsonObject.nullable(),comparisonBasis:jsonObject.nullable(),sources:z.array(jsonObject),confirmedAt:z.string().nullable(),nextAction:z.string().nullable()});
+export const resultsSchema = z.object({caseId:integer,currentInputVersion:integer,resultVersion:integer,summary:jsonObject,freshness:jsonObject,versions:z.record(z.string(),versionSchema),items:z.array(resultItemWireSchema),calculation:jsonObject.nullable(),comparison:jsonObject.nullable(),payslipValidation:jsonObject.nullable(),depositComparison:jsonObject.nullable(),result:jsonObject.nullable().optional()});
+export type ResultsWireDto = z.infer<typeof resultsSchema>;
+
+export const resultItemSchema = resultItemWireSchema;
+
+/** HTML supplements describe presentation only; P0 free objects always survive in wire. */
+export function resultsView(wire: ResultsWireDto): Results {
+ const summary = resultsViewSchema.shape.summary.safeParse(wire.summary);
+ const freshness = resultsViewSchema.shape.freshness.safeParse(wire.freshness);
+ const calculation = calculationSchema.safeParse(wire.calculation);
+ const comparison = comparisonSchema.safeParse(wire.comparison);
+ const validation = validationSchema.safeParse(wire.payslipValidation);
+ return {...wire, wire,
+  summary:summary.success ? summary.data : {calculationStatus:null,comparisonStatus:null,counts:{match:null,difference:null,insufficientInformation:null,reviewRequired:null}},
+  freshness:freshness.success ? freshness.data : {},
+  calculation:calculation.success ? calculation.data : null,
+  comparison:comparison.success ? comparison.data : null,
+  payslipValidation:validation.success ? validation.data : null,
+  items:wire.items.map(item => {
+   const parsed=resultItemViewSchema.safeParse(item);
+   return parsed.success ? parsed.data : {...item,formula:null,rule:null,comparisonBasis:null,sources:[]};
+  }),
+ };
+}

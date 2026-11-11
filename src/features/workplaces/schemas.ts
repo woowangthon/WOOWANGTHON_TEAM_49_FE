@@ -2,15 +2,14 @@ import { z } from "zod";
 
 export const employmentStatusSchema = z.enum(["CURRENT", "FORMER"]);
 export const workplaceSchema = z.object({
-  workplaceId: z.number().int().positive(),
+  workplaceId: z.number().int(),
   name: z.string(),
   industry: z.string().nullable(),
   region: z.string().nullable(),
   employmentStatus: employmentStatusSchema,
-  caseCount: z.number().int().nonnegative(),
-  // Dates are not required by the UI; do not assume lightweight responses include them.
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
+  caseCount: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 export const workplaceFormSchema = z.object({
