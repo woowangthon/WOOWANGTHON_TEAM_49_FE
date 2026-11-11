@@ -99,4 +99,13 @@ jobs:
              git reset --hard origin/main && \
              IMAGE_TAG=$IMAGE_TAG docker compose -f compose.prod.yaml pull && \
              IMAGE_TAG=$IMAGE_TAG docker compose -f compose.prod.yaml up -d --no-build && \
-             curl --fail --retry 5 --retry-delay 3 http://127.0.0.1:3000/"
+             curl --fail \
+                --retry 15 \
+                --retry-all-errors \
+                --retry-delay 2 \
+                --connect-timeout 5 \
+                --max-time 10 \
+                --silent \
+                --show-error \
+                --output /dev/null \
+                http://127.0.0.1:3000/
