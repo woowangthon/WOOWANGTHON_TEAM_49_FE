@@ -26,5 +26,24 @@ describe("result evidence and screen",()=>{
  it("renders integrated results with previous snapshot notice and P0 summary",async()=>{const s=await setup();s.mount(<ResultScreen caseId={15}/>);await screen.findByRole("heading",{name:"결과 요약 · 최신"});expect(screen.getAllByText("미확정·확정 불가").length).toBeGreaterThan(0);expect(screen.getAllByText(/전체 세전 임금 아님/).length).toBeGreaterThan(0);await screen.findAllByRole("heading",{name:"가상_급여명세서.pdf"});});
  it("keeps cached results when malformed refetch fails",async()=>{const s=await setup();s.app.queryClient.setDefaultOptions({queries:{retry:false}});s.mount(<ResultScreen caseId={15}/>);await screen.findByRole("heading",{name:"결과 요약 · 최신"});server.use(http.get(`${testApiUrl}/cases/15/results`,()=>apiResponse({caseId:15})));await s.app.queryClient.invalidateQueries({predicate:q=>q.queryKey.at(-1)==="results"});await screen.findByText(/최신 결과 조회에 실패해/);expect(screen.getByRole("heading",{name:"직전 조회 결과 · 최신성 미확인"})).toBeInTheDocument();expect(screen.getByText(/서버 응답 형식이 문서 계약과 일치하지 않습니다/)).toBeInTheDocument();});
  it("formats amounts and hour quantities with accessible text",()=>{render(<ServerValue caseId={15} value={{calculatedSubtotal:2000000,grossPay:null,items:[{amount:0,currency:"KRW"},{unit:"HOUR",value:1.5}]}}/>);expect(screen.getByText("2,000,000 원")).toBeInTheDocument();expect(screen.getByText("0 원")).toBeInTheDocument();expect(screen.getByText("1.5 시간")).toBeInTheDocument();});
- it("receives 202, polls to terminal, invalidates results and re-enables manual execution",async()=>{const s=await setup();s.mount(<ResultScreen caseId={15}/>);const button=await screen.findByRole("button",{name:"전체 수동 재실행"});await waitFor(()=>expect(button).toBeEnabled());fireEvent.click(button);await screen.findByText(/수동 작업 접수:/);await waitFor(()=>expect(button).toBeEnabled(),{timeout:10000});await waitFor(()=>expect(screen.getByText(/현재 입력 버전 7 · 결과 버전 1/)).toBeInTheDocument());expect(screen.getAllByText(/PARTIAL|일부 갱신 완료/).length).toBeGreaterThan(0);},15000);
+ it("receives 202, polls to terminal, displays a newer result and re-enables manual execution",async()=>{
+  const s=await setup();
+  const before=s.scenario.inputs.getResult(15)!;
+  expect(before.resultVersion).toEqual(expect.any(Number));
+  s.mount(<ResultScreen caseId={15}/>);
+  fireEvent.click(await screen.findByText("계산 상세·작업 상태·버전·이력·수동 실행"));
+  expect(await screen.findByText(`현재 입력 버전 ${before.currentInputVersion} · 결과 버전 ${before.resultVersion}`,{exact:true})).toBeVisible();
+  const button=screen.getByRole("button",{name:"전체 수동 재실행"});
+  await waitFor(()=>expect(button).toBeEnabled());
+  fireEvent.click(button);
+  await screen.findByText(/수동 작업 접수:/);
+  await waitFor(()=>expect(button).toBeEnabled(),{timeout:10000});
+  await waitFor(()=>{
+   const after=s.scenario.inputs.getResult(15)!;
+   expect(after.resultVersion).toBeGreaterThan(before.resultVersion!);
+   expect(after.currentInputVersion).toBe(before.currentInputVersion);
+   expect(screen.getByText(`현재 입력 버전 ${after.currentInputVersion} · 결과 버전 ${after.resultVersion}`,{exact:true})).toBeVisible();
+  });
+  expect(screen.getAllByText(/PARTIAL|일부 갱신 완료/).length).toBeGreaterThan(0);
+ },15000);
 });
