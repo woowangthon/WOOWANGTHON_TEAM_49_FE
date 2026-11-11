@@ -23,14 +23,14 @@ export const resetPasswordRequestSchema = z.strictObject({
 
 /** P0 login user fields only; createdAt and other P4 fields are not assumed. */
 export const userSchema = z.object({
-  userId: z.number().int().positive(),
-  email: z.string().pipe(z.email()),
+  userId: z.number().int(),
+  email: z.string(),
   name: z.string(),
 });
 
 export const loginResponseSchema = z.object({
-  accessToken: z.string().min(1),
+  accessToken: z.string(),
   tokenType: z.literal("Bearer"),
-  expiresIn: z.number().int().nonnegative(),
+  expiresIn: z.number().int(),
   user: userSchema,
 });

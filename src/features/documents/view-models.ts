@@ -3,6 +3,9 @@ import { businessErrorMessage } from "@/lib/api/form-errors";
 import type { DocumentDto, DocumentStatusDto, LinkDto } from "./schemas";
 // Link details come only from a separately confirmed link response, never DocumentDTO.
 export interface DocumentViewModel { dto: DocumentDto; linkDetails?: LinkDto }
+export function documentStatusView(dto: DocumentDto) {
+  return {documentId: dto.documentId, processingStatus: dto.processingStatus, reviewStatus: dto.reviewStatus, progress: dto.progress, errorCode: dto.errorCode};
+}
 export const typeLabels = { CONTRACT: "근로계약서", ATTENDANCE: "근태 자료", PAYSLIP: "급여명세서", DEPOSIT: "입금 자료" };
 export const statusLabels = { UPLOADED: "처리 대기", PROCESSING: "처리 중", READ_READY: "읽기 완료 · 원문과 필드 검토 필요", READY: "처리 완료", REVIEW_REQUIRED: "검토 필요", FAILED: "처리 실패" };
 export const reviewLabels = { NOT_STARTED: "검토 전", IN_PROGRESS: "검토 중", CONFIRMED: "검토 확인 완료" };

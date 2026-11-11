@@ -9,18 +9,18 @@ export const sourceSchema = z.object({
   boundingBox: z.tuple([z.number(), z.number(), z.number(), z.number()]).nullable().optional(),
   coordinateSystem: z.string().nullable().optional(),
 });
-export const fieldViewSchema = z.object({
-  fieldId: id, key: z.string(), label: z.string(), value: valueSchema, valueType: z.string(), status: fieldStatusSchema,
+export const fieldWireSchema = z.object({
+  agentKey: z.string().nullable().optional(), fieldId: z.number().int(), key: z.string(), label: z.string(), value: valueSchema, valueType: z.string(), status: fieldStatusSchema,
   editedByUser: z.boolean(), effectiveValueOrigin: z.enum(["SHARED_DEFAULT", "CASE_OVERRIDE"]), hasCaseOverride: z.boolean(),
-  confirmedAt: z.iso.datetime({offset: true}).nullable(), source: sourceSchema.nullable(),
+  confirmedAt: z.string().nullable(), source: z.record(z.string(),z.json()).nullable(),
 });
 // P0 source is free JSON; interpret optional HTML location metadata separately.
-export const fieldWireSchema = fieldViewSchema.extend({source:z.record(z.string(),z.json()).nullable()});
+export const fieldViewSchema = fieldWireSchema.extend({source:sourceSchema.nullable()});
 export const fieldSchema = fieldWireSchema.transform((value): z.infer<typeof fieldViewSchema> & {rawSource?: Record<string, z.infer<typeof valueSchema>> | null} => {
  const source = sourceSchema.safeParse(value.source);
  return {...value, source:source.success ? source.data : null, rawSource:value.source};
 });
-export const fieldsSchema = z.object({documentId: id, caseId: id, processingStatus: z.string(), reviewStatus: reviewStatusSchema, fields: z.array(fieldSchema)});
+export const fieldsSchema = z.object({documentId: z.number().int(), caseId: z.number().int(), processingStatus: z.string(), reviewStatus: z.string(), fields: z.array(fieldSchema)});
 export const previewSchema = z.object({
   documentId: id, mediaType: z.string(), pageCount: id,
   coordinateSystem: z.string().nullable(), rotationDegrees: z.number().nullable(), supportsHighlight: z.boolean(),

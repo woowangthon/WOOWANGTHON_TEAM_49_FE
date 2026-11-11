@@ -113,7 +113,7 @@ describe("document flows with MSW, never a live backend", () => {
   });
   it.each(["READ_READY","READY","REVIEW_REQUIRED","FAILED"] as const)("polls every 2s and stops on %s and unmount", async terminal => {
     const {mount, mocks} = await setup(); const dto = {...mocks.getDocuments()[0], processingStatus:"UPLOADED" as const}; let calls=0;
-    server.use(http.get(`${testApiUrl}/cases/15/documents/101`, () => { calls++; return apiResponse({documentId:101, processingStatus:calls===1 ? "PROCESSING" : terminal, reviewStatus:"NOT_STARTED", progress: calls===1 ? 40 : null}); }));
+    server.use(http.get(`${testApiUrl}/cases/15/documents/101`, () => { calls++; return apiResponse({...dto, documentId:101, processingStatus:calls===1 ? "PROCESSING" : terminal, reviewStatus:"NOT_STARTED", progress: calls===1 ? 40 : 100}); }));
     const view = mount(<DocumentCard dto={dto} context={{kind:"case",id:15}} />);
     await screen.findByText("서버 문서 처리 40%");
     await waitFor(() => expect(calls).toBe(2), {timeout:3500});
@@ -199,7 +199,7 @@ describe("document flows with MSW, never a live backend", () => {
  });
   it("shares refresh for multipart 401s and preserves the same file on retry", async () => {
     const {app} = await setup(); let uploads=0; let refreshes=0;
-    server.use(http.post(`${testApiUrl}/auth/refresh`,()=>{refreshes++;return apiResponse({accessToken:"rotated",tokenType:"Bearer",expiresIn:1800});}),http.post(`${testApiUrl}/cases/15/documents`,async ({request})=>{uploads++; expect((await request.formData()).get("documentType")).toBe("PAYSLIP");return request.headers.get("Authorization")==="Bearer rotated" ? apiResponse({documentId:122,processingStatus:"UPLOADED",reviewStatus:"NOT_STARTED"},202) : apiResponse({},401);}));
+    server.use(http.post(`${testApiUrl}/auth/refresh`,()=>{refreshes++;return apiResponse({accessToken:"rotated",tokenType:"Bearer",expiresIn:1800,user:{userId:1,email:"worker@example.com",name:"Worker"}});}),http.post(`${testApiUrl}/cases/15/documents`,async ({request})=>{uploads++; expect((await request.formData()).get("documentType")).toBe("PAYSLIP");return request.headers.get("Authorization")==="Bearer rotated" ? apiResponse({documentId:122,processingStatus:"UPLOADED",reviewStatus:"NOT_STARTED"},202) : apiResponse({},401);}));
     await Promise.all([documentApi(app.api).upload({kind:"case",id:15},pdf(),"PAYSLIP"),documentApi(app.api).upload({kind:"case",id:15},pdf(),"PAYSLIP")]);
     expect(refreshes).toBe(1); expect(uploads).toBe(4);
   });
@@ -241,7 +241,7 @@ describe("document flows with MSW, never a live backend", () => {
   });
   it("stops document polling immediately when the user session changes", async () => {
     const {app,mount,mocks}=await setup(); let calls=0;
-    server.use(http.get(`${testApiUrl}/cases/15/documents/101`,()=>{calls++;return apiResponse({documentId:101,processingStatus:"PROCESSING"});}));
+    server.use(http.get(`${testApiUrl}/cases/15/documents/101`,()=>{calls++;return apiResponse({...mocks.getDocuments()[0],documentId:101,processingStatus:"PROCESSING"});}));
     mount(<DocumentCard dto={{...mocks.getDocuments()[0],processingStatus:"UPLOADED"}} context={{kind:"case",id:15}} />);
     await waitFor(()=>expect(calls).toBe(1));
     await act(async ()=>{app.session.clear();});

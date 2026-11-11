@@ -11,10 +11,10 @@ import { useCase, useCaseRemoval } from "@/features/cases/queries";
 import { useDocuments, useDocumentStatus, useDocumentAction, useRecomputeStatus } from "../../queries";
 import { recomputeActive } from "../../api";
 import type { DocumentDto } from "../../schemas";
-import { isProcessing, reviewLabels, statusLabels } from "../../view-models";
+import { isProcessing, statusLabels } from "../../view-models";
 import { useFields } from "../queries";
 import type { ReplacementId, SourceDto } from "../schemas";
-import { recomputeJobLabel, reviewError } from "../view-models";
+import { recomputeJobLabel, reviewError, reviewStateView } from "../view-models";
 import { discardChanges, useUnsavedChanges } from "../use-unsaved";
 import { OriginalViewer } from "./original-viewer";
 import { FieldsPanel } from "./fields-panel";
@@ -49,7 +49,7 @@ function ReviewDocument({dto,caseId,version,dirty,onDirty,onFileDirty,replacemen
   const sourceTrigger=useRef<HTMLElement|null>(null);
   const context={caseId,documentId:dto.documentId,workplaceId:dto.workplaceId};
   return <>
-    <p className="text-body">문서 처리: {statusLabels[processing]} · 사용자 검토: {(fields.data?.reviewStatus??status.data?.reviewStatus??dto.reviewStatus)?reviewLabels[(fields.data?.reviewStatus??status.data?.reviewStatus??dto.reviewStatus)!]:"미제공"}</p>
+    <p className="text-body">문서 처리: {statusLabels[processing]} · 사용자 검토: {reviewStateView(processing, fields.data?.reviewStatus??status.data?.reviewStatus??dto.reviewStatus).reviewLabel}</p>
     {status.isError&&<QueryFeedback error={status.error} retry={()=>{void status.refetch();}} />}
     {recompute.isError?<QueryFeedback error={recompute.error} retry={()=>{void recompute.refetch();}} />:<p role="status" className="text-body text-muted">{!recompute.data?"서버 갱신 상태를 불러오는 중…":recomputeActive(recompute.data)?"입력 변경에 따른 서버 결과 갱신 중입니다. 과거 결과는 유지됩니다.":`서버 갱신: ${recomputeJobLabel(jobText(recompute.data.latestJob?.status??recompute.data.activeJob?.status))}. 작업 종료가 모든 계산의 완료를 뜻하지는 않습니다.`}</p>}
     {processing==="FAILED"&&<div className={`${cardStyle} space-y-3`}><p>문서 처리에 실패했습니다. 원문 확인이나 교체는 계속 사용할 수 있습니다.</p>{retryError&&<p role="alert">{retryError}</p>}<button className={secondaryButton} disabled={retry.isPending||dirty} onClick={async()=>{setRetryError("");try{await retry.mutateAsync({type:"retry",caseId,documentId:dto.documentId});}catch(error){setRetryError(reviewError(error));}}}>문서 재처리</button></div>}
@@ -57,10 +57,10 @@ function ReviewDocument({dto,caseId,version,dirty,onDirty,onFileDirty,replacemen
     <div className="review-comparison grid min-w-0 items-start gap-6">
       <div id="original-panel" tabIndex={-1} role="tabpanel" aria-labelledby="original-tab" className={`min-w-0 ${tab==="original"?"block":"review-inactive"}`}><button className={`${secondaryButton} mb-3`} onClick={()=>{setTab("fields");requestAnimationFrame(()=>sourceTrigger.current?.focus());}}>추출 필드로 돌아가기</button><OriginalViewer workplaceId={dto.workplaceId} documentId={dto.documentId} source={source} /></div>
       <div id="fields-panel" role="tabpanel" aria-labelledby="fields-tab" className={`min-w-0 ${tab==="fields"?"block":"review-inactive"}`}>
-        {isProcessing(processing)?<p role="status" className={cardStyle}>문서를 처리 중입니다. 원문은 볼 수 있으며 추출 필드는 처리 후 확인할 수 있습니다.</p>:fields.isPending?<QueryFeedback pending />:fields.isError?<QueryFeedback error={fields.error} retry={()=>{void fields.refetch();}} />:<FieldsPanel fields={fields.data.fields} context={context} inputVersion={version} onSource={s=>{sourceTrigger.current=document.activeElement as HTMLElement;setSource(s);setTab("original");requestAnimationFrame(()=>document.getElementById("original-panel")?.focus());}} dirty={dirty} onDirty={onDirty} linkedCaseIds={dto.linkedCaseIds} />}
+        {isProcessing(processing)?<p role="status" className={cardStyle}>문서를 처리 중입니다. 원문은 볼 수 있으며 추출 필드는 처리 후 확인할 수 있습니다.</p>:fields.isPending?<QueryFeedback pending />:fields.isError?<QueryFeedback error={fields.error} retry={()=>{void fields.refetch();}} />:<FieldsPanel actionsDisabled={!reviewStateView(fields.data?.processingStatus??"",fields.data?.reviewStatus??"").canAct} fields={fields.data.fields} context={context} inputVersion={version} onSource={s=>{sourceTrigger.current=document.activeElement as HTMLElement;setSource(s);setTab("original");requestAnimationFrame(()=>document.getElementById("original-panel")?.focus());}} dirty={dirty} onDirty={onDirty} linkedCaseIds={dto.linkedCaseIds} />}
       </div>
     </div>
-    {!isProcessing(processing)&&fields.data&&<ReviewConfirmation context={context} version={version} fields={fields.data.fields} disabled={dirty} />}
+    {!isProcessing(processing)&&fields.data&&<ReviewConfirmation context={context} version={version} fields={fields.data.fields} disabled={dirty||!reviewStateView(fields.data?.processingStatus??"",fields.data?.reviewStatus??"").canAct} />}
     <Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>계산 조건 확인으로 이동</Link>
     <details className={cardStyle} open={!!replacementId}><summary className="cursor-pointer font-bold">문서 교체 관리</summary><ReplacementPanel context={context} version={version} replacementId={replacementId} onCreated={onCreated} onReset={onReset} onConfirmed={onConfirmed} onDirty={onFileDirty} disabled={dirty} /></details>
   </>;

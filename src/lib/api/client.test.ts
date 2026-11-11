@@ -310,7 +310,7 @@ describe("authentication concurrency", () => {
   it("refresh uses POST, cookie credentials, no body and no Bearer", async () => {
     const session = createMemorySession();
     session.start("expired-token");
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(json({ accessToken: "replacement" }));
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(json({ accessToken: "replacement", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} }));
     const refresh = createRefreshAccessToken({ baseUrl, session, fetch: fetcher });
     await expect(refresh(session.getSnapshot().signal)).resolves.toBe("replacement");
     expect(fetcher).toHaveBeenCalledWith(`${baseUrl}/auth/refresh`, expect.objectContaining({

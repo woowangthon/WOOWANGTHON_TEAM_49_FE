@@ -152,3 +152,12 @@ it.each([null,777])("A05 enters review without link details (%s)",async linkId=>
 });
 
 it("A07 bodyless actions tolerate stale UI versions and duplicate confirmation",async()=>{const {app,m}=await setup();m.getCases()[0].inputVersion=99;const api=reviewApi(app.api);await expect(api.confirmReview(15,101,7)).resolves.toMatchObject({reviewStatus:"IN_PROGRESS"});await expect(api.confirmReview(15,101,7)).resolves.toMatchObject({reviewStatus:"IN_PROGRESS"});await expect(api.removeOverride(15,101,501,7)).resolves.toMatchObject({fieldId:501});});
+
+it("N01 preserves an unknown review status and blocks confirmation/editing",async()=>{
+ const {mount,mocks}=await setup();
+ server.use(http.get(`${testApiUrl}/cases/15/documents/101/fields`,()=>apiResponse({documentId:101,caseId:15,processingStatus:"READY",reviewStatus:"OPAQUE_REVIEW",fields:mocks.fields(15,101)})));
+ mount(<ReviewScreen id={15} initialDocumentId={101}/>);
+ expect(await screen.findByText(/OPAQUE_REVIEW/)).toBeVisible();
+ expect(await screen.findByRole("button",{name:"\uBB38\uC11C \uAC80\uD1A0 \uC644\uB8CC \uC694\uCCAD"})).toBeDisabled();
+ for(const button of screen.getAllByRole("button",{name:"\uC774 \uC0AC\uB840 \uAC12 \uC218\uC815"})) expect(button).toBeDisabled();
+});

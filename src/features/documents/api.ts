@@ -1,3 +1,4 @@
+import { documentStatusView } from "./view-models";
 import { versionSchema } from "@/features/results/schemas";
 import { z } from "zod";
 import type { ApiClient } from "@/lib/api/client";
@@ -25,7 +26,7 @@ export function documentApi(api: ApiClient) {
         : api.requestJson(`${documentPath(context)}?${params}`, decodeWith(pageSchema(documentSchema)), { signal, expectedStatus: 200 });
     },
     detail: (c: number, d: number, signal?: AbortSignal) => api.requestJson(`/cases/${c}/documents/${d}`, decodeWith(documentSchema.refine(v=>v.documentId===d)), {signal,expectedStatus:200}),
-    status: (context: Exclude<DocumentContext, {kind: "library"}>, id: number, signal?: AbortSignal) => api.requestJson(`${documentPath(context)}/${id}`, decodeWith(statusSchema), { signal, expectedStatus: 200 }),
+    status: (context: Exclude<DocumentContext, {kind: "library"}>, id: number, signal?: AbortSignal) => api.requestJson(`${documentPath(context)}/${id}`, decodeWith(documentSchema.transform(documentStatusView)), { signal, expectedStatus: 200 }),
     upload: (context: Exclude<DocumentContext, {kind: "library"}>, file: File, documentType: string, signal?: AbortSignal) => {
       const formData = new FormData();
       formData.set("file", file); formData.set("documentType", documentType);

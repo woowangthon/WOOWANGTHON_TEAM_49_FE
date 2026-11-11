@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api/error";
+import { reviewLabels } from "../view-models";
 import { documentError } from "../view-models";
 import type { ExtractedField, FieldValue, PreviewDto, SourceDto } from "./schemas";
 export const fieldStatusLabels = {UNCONFIRMED:"미확인",CONFIRMED:"확인됨",MISSING:"값 없음",UNREADABLE:"판독 불가",CONFLICTED:"상충",DEFERRED:"보류",NEEDS_RECONFIRMATION:"재확인 필요"};
@@ -10,10 +11,15 @@ export function fieldEditorView(field: ExtractedField, unknownShared = false) {
     empty: !unknownShared && field.value === null, confirmed: false,
     scalar: typeof field.value === "number" || field.valueType === "MONEY_KRW" ? "number" as const : typeof field.value === "boolean" ? "boolean" as const : "string" as const};
 }
+export function reviewStateView(processingStatus: string, reviewStatus: string) {
+  const labels: Record<string, string> = reviewLabels;
+  return {reviewLabel: Object.hasOwn(labels, reviewStatus) ? labels[reviewStatus] : reviewStatus,
+    canAct: ["READ_READY", "READY", "REVIEW_REQUIRED"].includes(processingStatus) && Object.hasOwn(labels, reviewStatus)};
+}
 export function fieldView(field: ExtractedField) {
-  return { ...field, valueLabel: displayValue(field.value), unitLabel: field.valueType === "MONEY_KRW" ? "원" : field.valueType,
+  return { ...field, canEdit: Number.isSafeInteger(field.fieldId) && field.fieldId > 0, valueLabel: displayValue(field.value), unitLabel: field.valueType === "MONEY_KRW" ? "원" : field.valueType,
     statusLabel: fieldStatusLabels[field.status], scopeLabel: field.effectiveValueOrigin === "CASE_OVERRIDE" ? "이 사례의 재정의" : "근무지 공유 기본값",
-    confirmedLabel: field.confirmedAt ? new Date(field.confirmedAt).toLocaleString("ko-KR") : "확인 시각 없음" };
+    confirmedLabel: field.confirmedAt !== null ? Number.isFinite(Date.parse(field.confirmedAt)) ? new Date(field.confirmedAt).toLocaleString("ko-KR") : field.confirmedAt : "확인 시각 없음" };
 }
 export function reviewError(error: unknown) {
   if(error instanceof ApiError){

@@ -4,6 +4,7 @@ import type { ApiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/error";
 
 import type { AuthApi } from "./api/auth";
+import { requireUsableSession } from "./session-validation";
 import { authKeys } from "./query-keys";
 import type { MemorySession } from "./session";
 import type { AuthSnapshot, CurrentUser, LoginRequest } from "./types";
@@ -84,6 +85,7 @@ export function createAuthController({ api, authApi, session, queryClient }: {
       initialized = true;
       const result = await authApi.login(body);
       if (current !== operation) throw new DOMException("인증 요청이 취소되었습니다.", "AbortError");
+      try { requireUsableSession(result); } catch (error) { session.clear(); throw error; }
       session.start(result.accessToken);
       remember(result.user);
     },

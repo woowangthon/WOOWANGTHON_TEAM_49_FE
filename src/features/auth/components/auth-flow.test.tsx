@@ -169,7 +169,7 @@ describe("authentication UI with React Testing Library + MSW", () => {
     const pending = new Promise<void>((resolve) => { release = resolve; });
     let refreshes = 0;
     server.use(
-      http.post(`${testApiUrl}/auth/refresh`, () => { refreshes++; return apiResponse({ accessToken: "restored" }); }),
+      http.post(`${testApiUrl}/auth/refresh`, () => { refreshes++; return apiResponse({ accessToken: "restored", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} }); }),
       http.get(`${testApiUrl}/users/me`, async () => { await pending; return apiResponse(testUser); }),
     );
     mount("protected", true);
@@ -190,7 +190,7 @@ describe("authentication UI with React Testing Library + MSW", () => {
   });
 
   it("redirects a restored user away from guest pages", async () => {
-    server.use(http.post(`${testApiUrl}/auth/refresh`, () => apiResponse({ accessToken: "restored" })));
+    server.use(http.post(`${testApiUrl}/auth/refresh`, () => apiResponse({ accessToken: "restored", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} })));
     navigation.search = "next=%2Fdashboard%3Ftab%3Dmine";
     mount("signup");
     await waitFor(() => expect(navigation.router.replace).toHaveBeenCalledWith("/dashboard?tab=mine"));
@@ -204,7 +204,7 @@ describe("authentication UI with React Testing Library + MSW", () => {
   });
 
   it("removes protected content immediately on logout and redirects after server termination", async () => {
-    server.use(http.post(`${testApiUrl}/auth/refresh`, () => apiResponse({ accessToken: "restored" })));
+    server.use(http.post(`${testApiUrl}/auth/refresh`, () => apiResponse({ accessToken: "restored", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} })));
     mount("protected");
     await screen.findByText("민감한 보호 화면");
     await act(async () => { await services.auth.logout(); });

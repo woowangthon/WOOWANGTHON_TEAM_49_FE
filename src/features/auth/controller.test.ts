@@ -67,7 +67,7 @@ describe("MSW authentication integration", () => {
       // Node interception reconstructs the Request; fetch init is checked by client unit tests.
       expect(request.headers.has("Authorization")).toBe(false);
       await pending;
-      return apiResponse({ accessToken: "restored-token" });
+      return apiResponse({ accessToken: "restored-token", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} });
     }));
     const first = app.auth.restore();
     const duplicate = app.auth.restore();
@@ -112,7 +112,7 @@ describe("MSW authentication integration", () => {
       http.post(`${testApiUrl}/auth/refresh`, async () => {
         refreshes++;
         await pending;
-        return apiResponse({ accessToken: "rotated-token" });
+        return apiResponse({ accessToken: "rotated-token", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} });
       }),
     );
     const completed = Promise.all([app.authApi.getMe(), app.authApi.getMe(), app.authApi.getMe()]);
@@ -128,7 +128,7 @@ describe("MSW authentication integration", () => {
   it("does not keep a token when current-user verification fails", async () => {
     const app = setup();
     server.use(
-      http.post(`${testApiUrl}/auth/refresh`, () => apiResponse({ accessToken: "restored-token" })),
+      http.post(`${testApiUrl}/auth/refresh`, () => apiResponse({ accessToken: "restored-token", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} })),
       http.get(`${testApiUrl}/users/me`, () => apiResponse({}, 503)),
     );
     await app.auth.restore();
@@ -170,7 +170,7 @@ describe("MSW authentication integration", () => {
     let refreshes = 0;
     server.use(
       http.post(`${testApiUrl}/auth/logout`, () => apiResponse({}, status)),
-      http.post(`${testApiUrl}/auth/refresh`, () => { refreshes++; return apiResponse({ accessToken: "must-not-restore" }); }),
+      http.post(`${testApiUrl}/auth/refresh`, () => { refreshes++; return apiResponse({ accessToken: "must-not-restore", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} }); }),
     );
     await app.auth.logout();
     await app.auth.restore();
@@ -188,7 +188,7 @@ describe("MSW authentication integration", () => {
     server.use(http.post(`${testApiUrl}/auth/refresh`, async () => {
       started = true;
       await pending;
-      return apiResponse({ accessToken: "late-token" });
+      return apiResponse({ accessToken: "late-token", tokenType: "Bearer", expiresIn: 1800, user: {userId:1,email:"worker@example.com",name:"Worker"} });
     }));
     const restoring = app.auth.restore();
     await vi.waitFor(() => expect(started).toBe(true));
