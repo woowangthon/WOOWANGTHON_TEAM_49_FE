@@ -59,9 +59,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   }
 
   return (
-    <section className="w-full min-w-0 rounded-card bg-surface p-6 shadow-card sm:p-8" aria-labelledby={`${id}-title`}>
+    <section className="t8-auth-card" aria-labelledby={`${id}-title`}>
       <p className="mb-3 text-caption font-bold text-muted">내 급여를 이해하는 첫걸음</p>
-      <h1 id={`${id}-title`} className="text-2xl font-extrabold tracking-tight">{signup ? "회원가입" : "로그인"}</h1>
+      <h1 id={`${id}-title`} className="text-[30px] font-extrabold tracking-tight">{signup ? "회원가입" : "로그인"}</h1>
       {process.env.NODE_ENV === "development" && mockEnabled && <div className="mt-4 break-words rounded-control bg-amber-100 p-3 text-sm text-amber-950"><p>개발용 가상 인증입니다. 실제 개인정보를 입력하지 마세요.</p><p>테스트 이메일: worker@example.com</p><p>테스트 비밀번호: password1234</p><p>잘못된 비밀번호로 로그인 실패, 같은 이메일로 가입 중복을 확인할 수 있습니다.</p></div>}
       <p className="mt-3 text-body text-muted">{signup ? "계정을 만들고 내 근무 자료를 한곳에서 관리하세요." : "계속하려면 월급잇다 계정으로 로그인해 주세요."}</p>
       {!signup && params.get("registered") === "1" && <p role="status" className="mt-5 rounded-control bg-success-soft p-4 text-body">회원가입이 완료되었습니다. 로그인해 주세요.</p>}

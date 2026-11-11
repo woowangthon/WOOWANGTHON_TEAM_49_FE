@@ -60,13 +60,13 @@ export function RecoveryScreen({ reset = false }: { reset?: boolean }) {
     } catch (error) { setError("root", { message: errorText(error) }); }
     finally { lock.current = false; }
   }
-  return <section className={cardStyle}><h1 className="text-2xl font-bold">{reset ? "비밀번호 재설정" : "비밀번호 찾기"}</h1>
+  return <section className="t8-auth-card"><h1 className="text-[30px] font-extrabold tracking-tight">{reset ? "비밀번호 재설정" : "비밀번호 찾기"}</h1>
     <p className="mt-4">현재 복구 방식은 로컬 outbox 전용이며 실제 이메일을 발송하지 않습니다. 개발자가 확인한 토큰을 사용하세요.</p>
     <form noValidate onSubmit={(event) => { void handleSubmit(submit)(event); }} aria-busy={isSubmitting} className="mt-6 space-y-4">
       {reset ? <><TextField id="reset-token" label="재설정 토큰" type="password" autoComplete="off" required disabled={isSubmitting || done} error={errors.token?.message} {...register("token")} />
       <TextField id="new-password" label="새 비밀번호" type="password" autoComplete="new-password" required disabled={isSubmitting || done} error={errors.newPassword?.message} {...register("newPassword")} />
       <TextField id="confirm-password" label="새 비밀번호 확인" type="password" autoComplete="new-password" required disabled={isSubmitting || done} error={errors.confirm?.message} {...register("confirm")} /></> : <TextField id="recovery-email" label="이메일" type="email" autoComplete="email" required disabled={isSubmitting || done} error={errors.email?.message} {...register("email")} />}
-      {errors.root && <p ref={errorSummary} tabIndex={-1} role="alert">{errors.root.message}</p>}
+      {errors.root && <p ref={errorSummary} tabIndex={-1} role="alert" className="rounded-control bg-danger-soft p-4">{errors.root.message}</p>}
       {done && <p role="status">요청을 접수했습니다. 계정 존재 여부는 안내하지 않습니다. 비밀번호는 재설정을 완료해야 변경됩니다.</p>}
       <button className={primaryButton} disabled={isSubmitting || done}>{isSubmitting ? "처리 중…" : reset ? "비밀번호 재설정" : "복구 요청"}</button>
     </form>
@@ -76,7 +76,7 @@ export function RecoveryScreen({ reset = false }: { reset?: boolean }) {
       setMockToken(token);
     }}>개발용 최신 Mock 토큰 확인</button>}
     {process.env.NODE_ENV === "development" && mockEnabled && mockToken && <TextField id="mock-reset-token" label="개발용 Mock 토큰 (실제 이메일 발송 없음)" value={mockToken} readOnly autoComplete="off" />}
-    <div className="mt-6 flex flex-wrap gap-4"><Link className="min-h-11 underline" href="/login">로그인</Link><Link className="min-h-11 underline" href="/reset-password">재설정 토큰 입력</Link></div>
+    <div className="mt-6 flex flex-wrap gap-4"><Link className="min-h-11 underline" href="/login">로그인</Link><Link className="min-h-11 underline" href={reset ? "/forgot-password" : "/reset-password"}>{reset ? "새 토큰 요청" : "재설정 토큰 입력"}</Link></div>
   </section>;
 }
 
