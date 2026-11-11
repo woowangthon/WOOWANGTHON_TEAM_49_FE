@@ -48,18 +48,11 @@ jobs:
           NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000/api/v1
           NEXT_PUBLIC_MOCK_API: "false"
 
-      # 7. Production build validation
-      - name: Build
-        run: npm run build
-        env:
-          NEXT_PUBLIC_API_BASE_URL: https://itda.kro.kr/api/v1
-          NEXT_PUBLIC_MOCK_API: "false"
-
-      # 8. Setup Docker Buildx
+      # 7. Setup Docker Buildx
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 9. Login to GHCR
+      # 8. Login to GHCR
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -67,7 +60,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 10. Build and push image
+      # 9. Build and push image
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -78,7 +71,7 @@ jobs:
             NEXT_PUBLIC_API_BASE_URL=https://itda.kro.kr/api/v1
             NEXT_PUBLIC_MOCK_API=false
 
-      # 11. Configure SSH
+      # 10. Configure SSH
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.VULTR_SSH_KEY }}
@@ -93,7 +86,7 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
-      # 12. Deploy to Vultr
+      # 11. Deploy to Vultr
       - name: Deploy to Vultr
         env:
           HOST: ${{ secrets.VULTR_HOST }}
