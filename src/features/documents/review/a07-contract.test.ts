@@ -7,7 +7,7 @@ import { reviewApi } from "./api";
 import { historyListSchema, reviewSchema, reviewConfirmedSchema } from "./schemas";
 
 it("checks real serialized A07 requests and response statuses against P0", async()=>{
- const contract=createOpenApiContract("docs/references/openapi.json");
+ const contract=createOpenApiContract("contracts/openapi.json");
  const session=createMemorySession();session.start("test");
  let count=0;
  const client=createApiClient({baseUrl:"http://127.0.0.1:8000/api/v1",session,fetch:async(input,init)=>{
@@ -44,7 +44,7 @@ it("separates HTML review confirmation and lookup; rejects incomplete supplement
 });
 
 it("keeps library queries declared and propagates 409 without a version body",async()=>{
- const contract=createOpenApiContract("docs/references/openapi.json");
+ const contract=createOpenApiContract("contracts/openapi.json");
  const session=createMemorySession();session.start("test");
  const client=createApiClient({baseUrl:"http://127.0.0.1:8000/api/v1",session,fetch:async(input,init)=>{
   expect(contract.request({url:String(input),method:init?.method??"GET",body:init?.body}).valid).toBe(true);

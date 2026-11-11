@@ -55,7 +55,7 @@ describe("P0 document review via MSW",()=>{
   expect(candidate.original?.documentId).toBe(101);
   const confirmed=await api.confirmReplacement(15,created.replacementId,7);
   expect(confirmed.documentId).toBe(candidate.documentId);
-  const contract=createOpenApiContract("docs/references/openapi.json");
+  const contract=createOpenApiContract("contracts/openapi.json");
   for(const request of mocks.requests.filter(r=>r.path.includes("/document-replacements/"))){
    expect(contract.request({method:request.method,url:request.path,body:request.body})).toMatchObject({valid:true});
   }

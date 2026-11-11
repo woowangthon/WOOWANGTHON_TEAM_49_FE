@@ -1,0 +1,102 @@
+<!-- Verbatim API-027/028/029 sections from the supplemental API_REFERENCE.html.
+     Test fixture only; contracts/openapi.json remains the authoritative API contract. -->
+<a id="api-027"></a><h3>API-027 · 문서 교체 후보 업로드</h3><p><strong><code>POST /api/v1/cases/{case_id}/documents/{document_id}/replace</code></strong></p><p>기존 문서 유형을 그대로 사용한다. 업로드만으로 기존 연결을 바꾸지 않는다. 처리 완료 후 별도 교체 확인 API 필요.</p><ul><li>인증: <strong>Bearer 액세스 토큰 필요</strong>.</li><li>성공: <strong>202</strong>, <code>application/json</code>.</li></ul><p><strong>Path / Query</strong></p><div class="table-wrap"><table><thead><tr><th>이름</th><th>위치</th><th>필수</th><th>타입</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>case_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>Case 정수 ID.</td></tr><tr><td><code>document_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>기존 원본 정수 ID.</td></tr></tbody></table></div><p><strong>요청 Body</strong>: <code>multipart/form-data</code>, 필수. 상세 정의: <a href="#dto-body_replace_document_api_v1_cases__case_id__documents__document_id__replace_post">Body_replace_document_api_v1_cases__case_id__documents__document_id__replace_post</a>.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>file</code></td><td>string</td><td>필수</td><td>—</td><td>PDF/PNG/JPEG 실제 바이너리. JSON 문자열이 아님.</td></tr><tr><td><code>expectedInputVersion</code></td><td>integer / null</td><td>생략 가능</td><td>—; —</td><td>선택적인 Case 낙관적 잠금 값. 현재 Case inputVersion과 다르면 409 INPUT_VERSION_CONFLICT. 강제 덮어쓰기 플래그가 아님.</td></tr></tbody></table></div><p>파일은 실제 바이너리로 선택한다. <code>files</code> 배열은 같은 키를 반복한다.</p><p><strong>성공 응답</strong></p><p>래퍼의 <code>data</code> 타입: <strong><a href="#dto-replacementuploadresult">ReplacementUploadResult</a></strong>. 중첩 필드의 전체 정의는 해당 DTO 링크를 따른다.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>documentId</code></td><td>integer</td><td>항상</td><td>—</td><td>교체 후보 원본 ID</td></tr><tr><td><code>processingStatus</code></td><td>string</td><td>항상</td><td>—</td><td>UPLOADED</td></tr><tr><td><code>reviewStatus</code></td><td>string</td><td>항상</td><td>—</td><td>NOT_STARTED</td></tr><tr><td><code>progress</code></td><td>integer</td><td>항상</td><td>—</td><td>10</td></tr><tr><td><code>duplicateCandidateIds</code></td><td>array&lt;integer&gt;</td><td>항상</td><td>—</td><td>중복 원본 후보 ID</td></tr><tr><td><code>replacementId</code></td><td>integer</td><td>항상</td><td>—</td><td>교체 요청 ID</td></tr><tr><td><code>originalDocumentId</code></td><td>integer</td><td>항상</td><td>—</td><td>기존 원본 ID</td></tr><tr><td><code>caseId</code></td><td>integer</td><td>항상</td><td>—</td><td>교체 대상 Case</td></tr><tr><td><code>originalLinkRetained</code></td><td>boolean</td><td>항상</td><td>—</td><td>true: 아직 기존 연결 유지</td></tr><tr><td><code>requiresConfirmation</code></td><td>boolean</td><td>항상</td><td>—</td><td>true: 별도 교체 확인 필요</td></tr></tbody></table></div><p>성공 형식 예시:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;code&quot;: 202,
+  &quot;message&quot;: &quot;요청이 처리되었습니다.&quot;,
+  &quot;data&quot;: {
+    &quot;documentId&quot;: 2,
+    &quot;processingStatus&quot;: &quot;UPLOADED&quot;,
+    &quot;reviewStatus&quot;: &quot;NOT_STARTED&quot;,
+    &quot;progress&quot;: 10,
+    &quot;duplicateCandidateIds&quot;: [],
+    &quot;replacementId&quot;: 1,
+    &quot;originalDocumentId&quot;: 1,
+    &quot;caseId&quot;: 1,
+    &quot;originalLinkRetained&quot;: true,
+    &quot;requiresConfirmation&quot;: true
+  }
+}</code></pre></div><p><strong>오류·전제</strong></p><p>공통 인증/검증/권한 오류는 <a href="#errors">오류 규칙</a>을 함께 적용한다. 아래는 이 동작의 주요 분기이며 비동기 모델 오류가 HTTP 성공 응답 대신 작업/SSE 안에 저장될 수 있다.</p><div class="table-wrap"><table><thead><tr><th>HTTP</th><th>errorCode</th><th>처리/의미</th></tr></thead><tbody><tr><td>409</td><td><code>DOCUMENT_LIMIT_EXCEEDED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>409</td><td><code>INPUT_VERSION_CONFLICT</code></td><td>요청 expectedInputVersion이 현재 inputVersion과 다름. 재조회하고 사용자 변경을 반영.</td></tr><tr><td>413</td><td><code>FILE_TOO_LARGE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>415</td><td><code>UNSUPPORTED_FILE_TYPE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>422</td><td><code>EMPTY_FILE</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>422</td><td><code>INVALID_FILE</code></td><td>읽을 수 없는 파일입니다.</td></tr><tr><td>422</td><td><code>PDF_PAGE_LIMIT_EXCEEDED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr></tbody></table></div><p><strong>curl 예시</strong></p><div class="code-block"><div class="code-label">bash</div><pre><code>curl -i -X POST &quot;${BASE_URL}/api/v1/cases/1/documents/1/replace&quot; \
+  -H &quot;Authorization: Bearer ${TOKEN}&quot; \
+  -F &quot;file=@sample.pdf&quot;</code></pre></div><p>구현 확인: <a href="../app/routers/documents.py#L248">app/routers/documents.py:248</a>.</p><a id="api-028"></a><h3>API-028 · 문서 교체 후보 상세</h3><p><strong><code>GET /api/v1/cases/{case_id}/document-replacements/{replacement_id}</code></strong></p><p>original/candidate는 DocumentDTO. 이 응답의 fields는 원시 키·문자열 값을 가진 RawField 배열로, 일반 /fields의 공개 alias/numeric 변환과 다르다.</p><ul><li>인증: <strong>Bearer 액세스 토큰 필요</strong>.</li><li>성공: <strong>200</strong>, <code>application/json</code>.</li></ul><p><strong>Path / Query</strong></p><div class="table-wrap"><table><thead><tr><th>이름</th><th>위치</th><th>필수</th><th>타입</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>case_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>Case 정수 ID.</td></tr><tr><td><code>replacement_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>교체 후보 정수 ID.</td></tr></tbody></table></div><p><strong>요청 Body</strong>: 없음. 빈 JSON <code>{}</code>을 보낼 필요가 없다.</p><p><strong>성공 응답</strong></p><p>래퍼의 <code>data</code> 타입: <strong><a href="#dto-replacementdetail">ReplacementDetail</a></strong>. 중첩 필드의 전체 정의는 해당 DTO 링크를 따른다.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>replacementId</code></td><td>integer</td><td>항상</td><td>—</td><td>교체 요청 ID</td></tr><tr><td><code>status</code></td><td>string</td><td>항상</td><td>—</td><td>CANDIDATE 또는 CONFIRMED</td></tr><tr><td><code>original</code></td><td><a href="#dto-documentdto">DocumentDTO</a></td><td>항상</td><td>—</td><td>기존 원본</td></tr><tr><td><code>candidate</code></td><td><a href="#dto-documentdto">DocumentDTO</a></td><td>항상</td><td>—</td><td>교체 후보 원본</td></tr><tr><td><code>fields</code></td><td>array&lt;<a href="#dto-rawfield">RawField</a>&gt;</td><td>항상</td><td>—</td><td>교체 후보에 대한 원시 유효 필드</td></tr></tbody></table></div><p>성공 형식 예시:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;code&quot;: 200,
+  &quot;message&quot;: &quot;요청이 처리되었습니다.&quot;,
+  &quot;data&quot;: {
+    &quot;replacementId&quot;: 1,
+    &quot;status&quot;: &quot;CANDIDATE&quot;,
+    &quot;original&quot;: {
+      &quot;documentId&quot;: 1,
+      &quot;workplaceId&quot;: 1,
+      &quot;documentType&quot;: &quot;PAYSLIP&quot;,
+      &quot;fileName&quot;: &quot;synthetic-payslip.pdf&quot;,
+      &quot;processingStatus&quot;: &quot;REVIEW_REQUIRED&quot;,
+      &quot;reviewStatus&quot;: &quot;IN_PROGRESS&quot;,
+      &quot;progress&quot;: 100,
+      &quot;linkId&quot;: 1,
+      &quot;linkedCaseIds&quot;: [
+        1
+      ],
+      &quot;uploadedAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+      &quot;errorCode&quot;: null,
+      &quot;aiMetadata&quot;: {
+        &quot;applicableFrom&quot;: null,
+        &quot;applicableTo&quot;: null,
+        &quot;legacyAutoExtract&quot;: true
+      },
+      &quot;workplaceName&quot;: null
+    },
+    &quot;candidate&quot;: {
+      &quot;documentId&quot;: 2,
+      &quot;workplaceId&quot;: 1,
+      &quot;documentType&quot;: &quot;PAYSLIP&quot;,
+      &quot;fileName&quot;: &quot;synthetic-payslip.pdf&quot;,
+      &quot;processingStatus&quot;: &quot;REVIEW_REQUIRED&quot;,
+      &quot;reviewStatus&quot;: &quot;NOT_STARTED&quot;,
+      &quot;progress&quot;: 100,
+      &quot;linkId&quot;: null,
+      &quot;linkedCaseIds&quot;: [],
+      &quot;uploadedAt&quot;: &quot;2026-11-12T00:00:00+00:00&quot;,
+      &quot;errorCode&quot;: null,
+      &quot;aiMetadata&quot;: {
+        &quot;applicableFrom&quot;: null,
+        &quot;applicableTo&quot;: null,
+        &quot;legacyAutoExtract&quot;: true
+      },
+      &quot;workplaceName&quot;: null
+    },
+    &quot;fields&quot;: []
+  }
+}</code></pre></div><p><strong>오류·전제</strong></p><p>공통 인증/검증/권한 오류는 <a href="#errors">오류 규칙</a>을 함께 적용한다. 아래는 이 동작의 주요 분기이며 비동기 모델 오류가 HTTP 성공 응답 대신 작업/SSE 안에 저장될 수 있다.</p><p>이 endpoint 전용 추가 오류는 공통 규칙과 상위 자원 존재/소유권 조건을 따른다.</p><p><strong>curl 예시</strong></p><div class="code-block"><div class="code-label">bash</div><pre><code>curl -i -X GET &quot;${BASE_URL}/api/v1/cases/1/document-replacements/1&quot; \
+  -H &quot;Authorization: Bearer ${TOKEN}&quot;</code></pre></div><p>구현 확인: <a href="../app/routers/documents.py#L286">app/routers/documents.py:286</a>.</p><a id="api-029"></a><h3>API-029 · 문서 교체 확정</h3><p><strong><code>POST /api/v1/cases/{case_id}/document-replacements/{replacement_id}/confirm</code></strong></p><p>confirmed=true 필요. 새 문서 판독/검토 대기 상태에서 기존 linkId의 문서를 교체한다. Case override는 보존하되 UNCONFIRMED로 재검토한다. 기존 원본은 보관한다. 이미 확정된 후보에 다시 호출하면 축약 응답을 반환한다. Execute.checks/reason은 이 동작에서 사용하지 않는다.</p><ul><li>인증: <strong>Bearer 액세스 토큰 필요</strong>.</li><li>성공: <strong>200</strong>, <code>application/json</code>.</li></ul><p><strong>Path / Query</strong></p><div class="table-wrap"><table><thead><tr><th>이름</th><th>위치</th><th>필수</th><th>타입</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>case_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>Case 정수 ID.</td></tr><tr><td><code>replacement_id</code></td><td>path</td><td>필수</td><td>integer</td><td>—</td><td>교체 후보 정수 ID.</td></tr></tbody></table></div><p><strong>요청 Body</strong>: <code>application/json</code>, 생략 가능. 상세 정의: <a href="#dto-execute">Execute</a>.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>expectedInputVersion</code></td><td>integer / null</td><td>생략 가능</td><td>최소: <code>1.0</code>; —</td><td>선택적인 Case 낙관적 잠금 값. 현재 Case inputVersion과 다르면 409 INPUT_VERSION_CONFLICT. 강제 덮어쓰기 플래그가 아님.</td></tr><tr><td><code>confirmed</code></td><td>boolean</td><td>생략 가능</td><td>기본값: <code>true</code></td><td>true일 때 명시적 확인. 실행 API에서 false는 422. FieldPatch는 이 값이 true일 때만 확정.</td></tr><tr><td><code>checks</code></td><td>array&lt;<code>WAGE_CALCULATION</code>, <code>CONTRACT_ATTENDANCE_COMPARISON</code>, <code>PAYSLIP_VALIDATION</code>, <code>DEPOSIT_COMPARISON</code>&gt; / null</td><td>생략 가능</td><td>최소 개수: <code>1</code>; —</td><td>네 검사 enum 배열. 생략 시 endpoint 기본 검사. 전용 검사 endpoint에 다른 종류를 넣으면 422.</td></tr><tr><td><code>reason</code></td><td><code>USER_RETRY</code>, <code>MANUAL_RECHECK</code> / null</td><td>생략 가능</td><td>—; —</td><td>재실행 요청 이유 USER_RETRY/MANUAL_RECHECK. 현재 저장/실행 분기에는 별도 효과 없음.</td></tr></tbody></table></div><p>요청 예시:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;confirmed&quot;: true
+}</code></pre></div><p><strong>성공 응답</strong></p><p>래퍼의 <code>data</code> 타입: <strong><a href="#dto-replacementconfirmed">ReplacementConfirmed</a></strong>. 중첩 필드의 전체 정의는 해당 DTO 링크를 따른다.</p><div class="table-wrap"><table><thead><tr><th>필드</th><th>JSON 타입/참조</th><th>필수·존재 조건</th><th>기본값·제약</th><th>설명</th></tr></thead><tbody><tr><td><code>replacementId</code></td><td>integer</td><td>항상</td><td>—</td><td>교체 요청 ID</td></tr><tr><td><code>status</code></td><td>string</td><td>항상</td><td>—</td><td>CONFIRMED</td></tr><tr><td><code>documentId</code></td><td>integer</td><td>항상</td><td>—</td><td>확정한 새 원본 ID</td></tr><tr><td><code>inputVersion</code></td><td>integer</td><td>항상</td><td>—</td><td>Case 현재 입력 버전</td></tr><tr><td><code>preservedOverrideCount</code></td><td>integer</td><td>최초 확정 시</td><td>—</td><td>옮겨 보존한 Case 수정값 수</td></tr><tr><td><code>linkId</code></td><td>integer</td><td>최초 확정 시</td><td>—</td><td>유지되는 연결 ID</td></tr><tr><td><code>originalRetained</code></td><td>boolean</td><td>최초 확정 시</td><td>—</td><td>true: 기존 근무지 원본 보존</td></tr><tr><td><code>recompute</code></td><td><a href="#dto-recomputehint">RecomputeHint</a></td><td>최초 확정 시</td><td>—</td><td>자동 검사 예약</td></tr></tbody></table></div><p>성공 형식 예시:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;code&quot;: 200,
+  &quot;message&quot;: &quot;요청이 처리되었습니다.&quot;,
+  &quot;data&quot;: {
+    &quot;replacementId&quot;: 1,
+    &quot;status&quot;: &quot;CONFIRMED&quot;,
+    &quot;documentId&quot;: 2,
+    &quot;preservedOverrideCount&quot;: 1,
+    &quot;linkId&quot;: 1,
+    &quot;originalRetained&quot;: true,
+    &quot;inputVersion&quot;: 4,
+    &quot;recompute&quot;: {
+      &quot;scheduled&quot;: true,
+      &quot;jobId&quot;: &quot;job-example&quot;,
+      &quot;affectedChecks&quot;: [
+        &quot;PAYSLIP_VALIDATION&quot;
+      ]
+    }
+  }
+}</code></pre></div><p>이미 확정된 후보 재호출 시 성공 축약형:</p><div class="code-block"><div class="code-label">json</div><pre><code>{
+  &quot;code&quot;: 200,
+  &quot;message&quot;: &quot;요청이 처리되었습니다.&quot;,
+  &quot;data&quot;: {
+    &quot;replacementId&quot;: 1,
+    &quot;status&quot;: &quot;CONFIRMED&quot;,
+    &quot;documentId&quot;: 2,
+    &quot;inputVersion&quot;: 4
+  }
+}</code></pre></div><p><strong>오류·전제</strong></p><p>공통 인증/검증/권한 오류는 <a href="#errors">오류 규칙</a>을 함께 적용한다. 아래는 이 동작의 주요 분기이며 비동기 모델 오류가 HTTP 성공 응답 대신 작업/SSE 안에 저장될 수 있다.</p><div class="table-wrap"><table><thead><tr><th>HTTP</th><th>errorCode</th><th>처리/의미</th></tr></thead><tbody><tr><td>409</td><td><code>DOCUMENT_ALREADY_LINKED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>409</td><td><code>DOCUMENT_ANALYSIS_FAILED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>409</td><td><code>DOCUMENT_STILL_PROCESSING</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr><tr><td>409</td><td><code>INPUT_VERSION_CONFLICT</code></td><td>요청 expectedInputVersion이 현재 inputVersion과 다름. 재조회하고 사용자 변경을 반영.</td></tr><tr><td>409</td><td><code>REPLACEMENT_OVERRIDE_CONFLICT</code></td><td>교체 원본의 필드 타입이 달라 기존 Case override를 보존할 수 없음. details.fields 참고.</td></tr><tr><td>422</td><td><code>CONFIRMATION_REQUIRED</code></td><td>조건을 충족한 뒤 재조회/수정하여 요청. <a href="#error-index">오류 코드 색인</a>의 구현 위치 참고.</td></tr></tbody></table></div><p><strong>curl 예시</strong></p><div class="code-block"><div class="code-label">bash</div><pre><code>curl -i -X POST &quot;${BASE_URL}/api/v1/cases/1/document-replacements/1/confirm&quot; \
+  -H &quot;Authorization: Bearer ${TOKEN}&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  --data-raw &#x27;{&quot;confirmed&quot;:true}&#x27;</code></pre></div><p>구현 확인: <a href="../app/routers/documents.py#L301">app/routers/documents.py:301</a>.</p>

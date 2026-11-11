@@ -4,7 +4,7 @@ import { replacementCreatedSchema, replacementWireSchema, replacementSchema, rep
 import { createOpenApiContract } from "@/test/openapi/contract";
 
 describe("replacement OpenAPI transport (independent of FE schemas)",()=>{
- const api=createOpenApiContract("docs/references/openapi.json");
+ const api=createOpenApiContract("contracts/openapi.json");
  it("validates the actual case-scoped integer path and Execute body",()=>{
   for(const id of ["replacement-1","replacement-x","1.5"]){
    for(const method of ["GET","POST"]){
@@ -28,7 +28,7 @@ describe("replacement OpenAPI transport (independent of FE schemas)",()=>{
 
 describe("HTML supplemental parsing only; not live server verification",()=>{
  it("parses every API-027/028/029 success example directly from HTML",()=>{
-  const html=readFileSync("docs/references/API_REFERENCE.html","utf8");
+  const html=readFileSync("src/test/fixtures/replacement-api-reference.html","utf8");
   for(const [number,schema] of [["027",replacementCreatedSchema],["028",replacementWireSchema],["029",replacementConfirmedSchema]] as const){
    const section=html.split(`id="api-${number}"`)[1].split('id="api-')[0];
    const examples=[...section.matchAll(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g)].map(m=>m[1].replace(/<[^>]*>/g,"").replace(/&quot;/g,'"').replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">")).filter(s=>s.trim().startsWith("{")).map(s=>JSON.parse(s)).filter(v=>"data" in v);
