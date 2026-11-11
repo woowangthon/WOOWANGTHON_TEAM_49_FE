@@ -18,31 +18,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: npm
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate
-        run: |
-          npm run lint
-          npm run typecheck
-          npm test
-          npm run build
+      # 4. Lint
+      - name: Lint
+        run: npm run lint
+
+      # 5. Typecheck
+      - name: Typecheck
+        run: npm run typecheck
+
+      # 6. Test with MSW
+      - name: Test
+        run: npm test
         env:
-          NEXT_PUBLIC_API_BASE_URL: /api/v1
+          NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000/api/v1
           NEXT_PUBLIC_MOCK_API: "false"
 
+      # 7. Production build validation
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://itda.kro.kr/api/v1
+          NEXT_PUBLIC_MOCK_API: "false"
+
+      # 8. Setup Docker Buildx
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 9. Login to GHCR
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -50,6 +67,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # 10. Build and push image
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -57,9 +75,10 @@ jobs:
           push: true
           tags: ghcr.io/woowangthon/woowangthon_team_49_fe:${{ github.sha }}
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=/api/v1
+            NEXT_PUBLIC_API_BASE_URL=https://itda.kro.kr/api/v1
             NEXT_PUBLIC_MOCK_API=false
 
+      # 11. Configure SSH
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.VULTR_SSH_KEY }}
@@ -67,18 +86,21 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
+
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
+      # 12. Deploy to Vultr
       - name: Deploy to Vultr
         env:
           HOST: ${{ secrets.VULTR_HOST }}
           USER: ${{ secrets.VULTR_USER }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          ssh "$USER@$HOST" \
+          ssh -o BatchMode=yes "$USER@$HOST" \
             "cd /opt/wageitda/frontend && \
              git fetch origin main && \
              git reset --hard origin/main && \
