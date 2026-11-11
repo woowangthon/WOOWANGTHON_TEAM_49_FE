@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup,render,screen,fireEvent,within } from '@testing-library/react';
+import { cleanup,render,screen,fireEvent,within,waitFor } from '@testing-library/react';
 import { beforeEach,afterEach,it,expect,vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { http } from 'msw';
@@ -24,7 +24,7 @@ function mount(id?:number){return render(<AppServicesContext value={app}><QueryC
 it('explains how to start a scoped conversation without inventing messages',async()=>{
  mount();expect(screen.getByRole('region',{name:'AI 대화 시작 안내'})).toBeVisible();
  expect(screen.getByRole('heading',{name:'이 근무지의 자료, 무엇이 궁금하세요?'})).toBeVisible();
- expect(screen.getByText(/대화 목록에서 참조할 급여 사례와 제목을 정해 시작하세요/)).toBeVisible();
+ expect(screen.getByText('참조할 급여 사례와 제목을 정해 대화를 시작하세요.')).toBeVisible();
  expect(screen.queryByRole('region',{name:'대화 메시지'})).toBeNull();
  await screen.findAllByRole('option',{name:'Case #15'});
 });
@@ -56,4 +56,59 @@ it('keeps long history previews compact without truncating stored source text',a
  const api=chatApi(app.api,3);const chat=await api.create('긴 미리보기',15);const list=await api.list(1);list.items.find(c=>c.chatId===chat.chatId)!.lastMessagePreview='긴 답변 '.repeat(300);
  server.use(http.get(`${testApiUrl}/workplaces/3/chats`,()=>apiResponse(list)));mount(chat.chatId);await screen.findByRole('heading',{name:'긴 미리보기'});
  const previews=await screen.findAllByText(('긴 답변 '.repeat(300)).trim());expect(previews.every(e=>e.classList.contains('line-clamp-2'))).toBe(true);
+});
+
+it('pages 21 saved conversations using the server and keeps the creation draft',async()=>{
+ const api=chatApi(app.api,3);for(let i=1;i<=21;i++)await api.create(`대화 ${i}`,15);
+ mount();await screen.findByRole('link',{name:/대화 20/});
+ fireEvent.change(screen.getByLabelText('새 대화 제목'),{target:{value:'보존할 제목'}});
+ fireEvent.click(screen.getByRole('button',{name:'다음'}));
+ await screen.findByRole('link',{name:/대화 21/});expect(screen.queryByRole('link',{name:/대화 1 /})).toBeNull();
+ expect(screen.getByLabelText('새 대화 제목')).toHaveValue('보존할 제목');
+ expect(screen.getByText('2 / 2 페이지 · 총 21개')).toBeVisible();
+});
+
+it('keeps SSE running through disclosures, locks scope, and restores saved messages',async()=>{
+ const api=chatApi(app.api,3),chat=await api.create('펼침 중 스트림',15);mount(chat.chatId);
+ await screen.findByRole('heading',{name:'펼침 중 스트림'});
+ const input=screen.getByLabelText('질문');fireEvent.change(input,{target:{value:'설명'}});fireEvent.keyDown(input,{key:'Enter',shiftKey:true});expect(input).toHaveValue('설명');
+ fireEvent.click(screen.getByText('참조 범위 변경'));fireEvent.click(screen.getByLabelText('근무지 전체 참조'));
+ fireEvent.click(screen.getByRole('button',{name:'전송'}));await screen.findByRole('button',{name:'답변 중지'});
+ expect(screen.getByLabelText('근무지 전체 참조')).toBeDisabled();
+ fireEvent.click(screen.getByText('대화 관리 · 제목 수정 및 삭제'));fireEvent.click(screen.getByText('참조 범위 변경'));
+ await waitFor(()=>expect(input).toBeEnabled(),{timeout:10000});
+ const saved=await api.detail(chat.chatId,1);expect(saved.messages.total).toBe(2);expect(saved.messages.items.every(m=>m.scope.scopeType==='WORKPLACE_ALL')).toBe(true);
+ expect(screen.getByRole('article',{name:'AI 답변'})).toHaveTextContent('개발용');
+},15000);
+
+it('keeps the creation form and explains Case lookup failures',async()=>{
+ server.use(http.get(`${testApiUrl}/workplaces/3/cases`,()=>apiResponse({errorCode:'UPSTREAM_UNAVAILABLE'},503)));
+ mount();await screen.findByRole('button',{name:'Case 목록 다시 조회'});
+ fireEvent.change(screen.getByLabelText('새 대화 제목'),{target:{value:'작성한 제목'}});
+ expect(screen.getByRole('button',{name:'대화 시작'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:'Case 목록 다시 조회'}));
+ expect(screen.getByLabelText('새 대화 제목')).toHaveValue('작성한 제목');
+});
+
+it('preserves required creation inputs after a server error and allows retry',async()=>{
+ let fail=true;server.use(http.post(`${testApiUrl}/workplaces/3/chats`,()=>fail?apiResponse({errorCode:'UPSTREAM_UNAVAILABLE'},503):undefined));
+ mount();await screen.findByRole('option',{name:'Case #15'});
+ const button=screen.getByRole('button',{name:'대화 시작'});expect(button).toBeDisabled();
+ fireEvent.change(screen.getByLabelText('새 대화 제목'),{target:{value:'생성 재시도'}});
+ fireEvent.change(screen.getByRole('combobox'),{target:{value:'15'}});fireEvent.click(button);
+ await screen.findByRole('alert');await waitFor(()=>expect(button).toBeEnabled());
+ expect(screen.getByLabelText('새 대화 제목')).toHaveValue('생성 재시도');expect(screen.getByRole('combobox')).toHaveValue('15');
+ fail=false;fireEvent.click(button);await waitFor(()=>expect(button).toBeEnabled());
+ expect((await chatApi(app.api,3).list(1)).items[0].title).toBe('생성 재시도');
+});
+
+it('uses server history pages without sending or discarding the composer draft',async()=>{
+ const api=chatApi(app.api,3),chat=await api.create('21개 기록',15),detail=await api.detail(chat.chatId,1);
+ const pages:number[]=[];server.use(http.get(`${testApiUrl}/workplaces/3/chats/${chat.chatId}`,({request})=>{
+  const page=Number(new URL(request.url).searchParams.get('page'));pages.push(page);
+  return apiResponse({...detail,messages:{page,size:20,total:21,items:[{messageId:page,role:'USER',content:`기록 페이지 ${page}`,status:'COMPLETED',scope:{scopeType:'CASE',caseId:15},sources:[],resultRefs:[],runId:null,errorCode:null,sourceMayBeOutdated:false}]}});
+ }));
+ mount(chat.chatId);await screen.findByText('기록 페이지 1');fireEvent.change(screen.getByLabelText('질문'),{target:{value:'미전송 초안'}});
+ fireEvent.click(screen.getByRole('button',{name:'다음 기록'}));await screen.findByText('기록 페이지 2');expect(screen.getByLabelText('질문')).toHaveValue('미전송 초안');expect(screen.getByRole('button',{name:'다음 기록'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:'이전 기록'}));await screen.findByText('기록 페이지 1');expect(pages).toEqual([1,2,1]);expect(screen.getByLabelText('질문')).toHaveValue('미전송 초안');
 });

@@ -1,0 +1,44 @@
+.v2-chat-shell { max-width:765px; min-width:0; overflow-wrap:anywhere; }
+.v2-chat-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.v2-chat-top a { display:inline-flex; align-items:center; min-height:44px; color:#596b86; }
+.v2-chat-intro { text-align:center; padding:28px 0; }
+.v2-chat-orb { display:grid; place-items:center; width:48px; height:48px; margin:0 auto 18px; border-radius:17px; background:linear-gradient(135deg,#668be6,#8b75df); color:white; font-size:28px; box-shadow:0 11px 25px #6e8cdc38; }
+.v2-chat-intro h2 { font-size:clamp(24px,3vw,33px); font-weight:800; line-height:1.3; letter-spacing:-.05em; }
+.v2-chat-intro p { margin-top:12px; color:#647386; }
+.v2-chat-start { display:grid; gap:16px; padding:24px 0 32px; }
+.v2-chat-start label { display:grid; gap:8px; font-weight:600; }
+.v2-chat-list { min-width:0; }
+.v2-chat-list h2 { font-weight:800; margin-bottom:12px; }
+.v2-chat-session { display:block; padding:16px 4px; border-bottom:1px solid #e5eaf2; }
+.v2-chat-session[aria-current=page] { background:#e9effd; border-radius:10px; padding-inline:12px; }
+.v2-chat-session strong { display:block; }
+.v2-chat-session small { color:#647386; }
+.v2-chat-list nav { font-size:13px; }
+.v2-chat-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.v2-chat-header h1 { font-size:20px; font-weight:800; letter-spacing:-.03em; }
+.v2-chat-drawer > div { display:block !important; }
+.v2-chat-context { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:8px 14px; border:1px solid #e6ebf2; border-radius:14px; background:white; color:#52627a; }
+.v2-chat-context summary { min-height:44px; cursor:pointer; display:flex; align-items:center; color:#405ea9; font-weight:600; }
+.v2-chat-context details[open] { flex-basis:100%; }
+.v2-chat-context label { display:flex; align-items:center; min-height:44px; gap:10px; }
+.v2-chat-conversation { display:flex; flex-direction:column; gap:12px; height:var(--chat-height,70dvh); min-height:0; }
+.v2-chat-messages { flex:1; min-height:0; min-width:0; overflow-y:auto; overscroll-behavior:contain; padding:12px 2px; }
+.v2-chat-bubble { width:fit-content; max-width:92%; min-width:0; padding:16px 18px; margin:0 0 20px; border-radius:17px; background:white; border:1px solid #e5eaf2; border-top-left-radius:5px; line-height:1.85; }
+.v2-chat-user { margin-left:auto; max-width:80%; background:#e9effd; border:0; border-radius:17px 5px 17px 17px; }
+.v2-chat-bubble h3 { font-size:13px; color:#526cad; font-weight:700; margin-bottom:6px; }
+.v2-chat-bubble summary { cursor:pointer; min-height:44px; padding-top:10px; color:#52627a; font-size:13px; }
+.v2-chat-evidence { border-top:1px solid #e5eaf2; margin-top:12px; font-size:13px; }
+.v2-chat-evidence > div { display:grid; gap:12px; }
+.v2-chat-warning { color:#865014; background:#fff6e6; border-radius:8px; padding:8px 10px; margin-top:8px; }
+.v2-chat-composer { flex-shrink:0; border:1px solid #dce3ef; border-radius:20px; background:white; padding:12px 16px; box-shadow:0 10px 28px #172a4610; }
+.v2-chat-composer textarea { width:100%; min-height:54px; max-height:120px; resize:vertical; padding:8px 0; border:0; background:transparent; }
+.v2-chat-footer { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
+.v2-chat-footer small { margin-right:auto; }
+.v2-chat-footer small,.v2-chat-disclaimer { color:#647386; font-size:12px; }
+.v2-chat-disclaimer { text-align:center; margin-top:12px; }
+.v2-chat-history { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px; align-items:center; font-size:12px; }
+.v2-chat-history button { min-height:44px; padding:6px 8px; text-decoration:underline; }
+.v2-chat-management { margin:8px 0; }
+.v2-chat-management summary { min-height:44px; cursor:pointer; color:#647386; }
+.v2-chat-management form { display:flex; flex-wrap:wrap; gap:8px; padding-bottom:12px; }
+@media(max-width:690px) { .v2-chat-intro { padding:18px 0; } .v2-chat-start { padding-top:12px; } .v2-chat-bubble { max-width:96%; padding:12px 14px; } .v2-chat-user { max-width:88%; } .v2-chat-footer small { display:none; } }
