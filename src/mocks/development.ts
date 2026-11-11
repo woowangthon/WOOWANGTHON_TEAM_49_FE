@@ -57,7 +57,9 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
       const c = path.match(/\/cases\/(\d+)/)?.[1];
       const w = path.match(/\/workplaces\/(\d+)/)?.[1];
       const d = path.match(/\/documents\/(\d+)/)?.[1];
-      if (request.headers.get("Content-Type")?.includes("application/json") && request.method !== "GET") {
+      // Case writes validate the complete P0 body in management handlers before ownership lookup.
+      const caseWrite = (request.method === "POST" && /\/cases$/.test(path)) || (request.method === "PATCH" && /\/cases\/[^/]+$/.test(path));
+      if (!caseWrite && request.headers.get("Content-Type")?.includes("application/json") && request.method !== "GET") {
         const body = await request.clone().json().catch(() => ({})) as Record<string, unknown>;
         if (typeof body.documentId === "number" && !documents.some(v => v.documentId === body.documentId)) return fail("RESOURCE_NOT_FOUND", 404);
         if (typeof body.workplaceId === "number" && !management.getWorkplace(body.workplaceId)) return fail("RESOURCE_NOT_FOUND", 404);
