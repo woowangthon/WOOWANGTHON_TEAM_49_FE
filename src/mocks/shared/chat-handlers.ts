@@ -42,9 +42,12 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
   const caseRef=answer.scope.scopeType==='CASE'?references?.(answer.scope.caseId):undefined;
   const captured=caseRef?structuredClone(caseRef):undefined;if(captured)inputVersions.set(answer.messageId,captured.inputVersion);
   const run={runId:answer.runId,message:answer,cancelled:false};active.set(chat.chatId,run);
+  let connected=true;
   return new HttpResponse(new ReadableStream<Uint8Array>({async start(controller){
-   const enc=new TextEncoder();let connected=true;
-   const emit=(event:string,data:unknown)=>{if(!connected)return;try{const frame=`event: ${event}\r\ndata: ${JSON.stringify(data)}\r\n\r\n`;receipt.frames.push(frame);const bytes=enc.encode(frame);for(let i=0;i<bytes.length;i+=7)controller.enqueue(bytes.slice(i,i+7));}catch{connected=false;}};
+   const enc=new TextEncoder();
+   // Persist generated events independently of the current transport. A disconnected
+   // reader must not leave a settled receipt without its terminal event.
+   const emit=(event:string,data:unknown)=>{const frame=`event: ${event}\r\ndata: ${JSON.stringify(data)}\r\n\r\n`;receipt.frames.push(frame);if(!connected)return;try{const bytes=enc.encode(frame);for(let i=0;i<bytes.length;i+=7)controller.enqueue(bytes.slice(i,i+7));}catch{connected=false;}};
    const identity={runId:run.runId,messageId:answer.messageId};
    try{
     emit('message_start',{...identity,role:'ASSISTANT',scope:answer.scope,aiMode:'mock'});
@@ -56,7 +59,7 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
     if(!run.cancelled){answer.sources=body.content==='삭제 출처'?[{documentId:99999,page:1}]:captured?.sources??(answer.scope.scopeType==='CASE'?[{documentId:101,page:1,caseId:answer.scope.caseId}]:[]);answer.resultRefs=captured?.resultRefs??[];if(body.content==='없는 스냅샷')answer.resultRefs=[{type:'calculation',snapshotId:99999,version:1,...(answer.scope.scopeType==='CASE'?{caseId:answer.scope.caseId}:{})}];emit('sources',{sources:answer.sources,resultRefs:answer.resultRefs});}
     answer.status=run.cancelled?'CANCELLED':'COMPLETED';emit('message_done',{...identity,status:answer.status});
    }finally{receipt.done=true;chat.updatedAt=new Date().toISOString();chat.lastMessagePreview=answer.content;active.delete(chat.chatId);try{controller.close();}catch{connected=false;}}
-  }}),{headers:{'Content-Type':'text/event-stream'}});
+  },cancel(){connected=false;}}),{headers:{'Content-Type':'text/event-stream'}});
  }
  return {chats,handlers:[
  http.get(root,({params,request})=>apiResponse(page([...chats.values()].filter(c=>c.workplaceId===Number(params.w)).map(summary),request))),
