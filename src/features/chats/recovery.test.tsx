@@ -38,3 +38,15 @@ it('allows selecting a Case after the first hundred without silently keeping the
  const select=within(desktop).getByRole('combobox');await within(desktop).findByRole('option',{name:`Case #${sample.caseId}`});fireEvent.change(select,{target:{value:String(sample.caseId)}});
  fireEvent.click(within(desktop).getByRole('button',{name:'다음 Case 목록'}));await within(desktop).findByRole('option',{name:'Case #999'});expect(select).toHaveValue('');expect(within(desktop).getByRole('button',{name:'다음 Case 목록'})).toBeDisabled();
 });
+it('preserves the question draft through history disclosure and IME Enter',async()=>{
+ const chat=await chatApi(app.api,3).create('입력 보존',15);mount(chat.chatId);await screen.findByRole('heading',{name:'입력 보존'});
+ const input=screen.getByLabelText('질문');fireEvent.change(input,{target:{value:'작성 중인 질문'}});
+ fireEvent.click(screen.getByText('대화 관리 · 제목 수정 및 삭제'));expect(input).toHaveValue('작성 중인 질문');
+ fireEvent.keyDown(input,{key:'Enter',isComposing:true});expect(input).toHaveValue('작성 중인 질문');expect(screen.getByRole('button',{name:'전송'})).toBeEnabled();
+ expect(screen.getByText('아직 메시지가 없습니다. 확인할 자료나 질문을 작성하세요.')).toBeVisible();
+});
+it('keeps long history previews compact without truncating stored source text',async()=>{
+ const api=chatApi(app.api,3);const chat=await api.create('긴 미리보기',15);const list=await api.list(1);list.items.find(c=>c.chatId===chat.chatId)!.lastMessagePreview='긴 답변 '.repeat(300);
+ server.use(http.get(`${testApiUrl}/workplaces/3/chats`,()=>apiResponse(list)));mount(chat.chatId);await screen.findByRole('heading',{name:'긴 미리보기'});
+ const previews=await screen.findAllByText(('긴 답변 '.repeat(300)).trim());expect(previews.every(e=>e.classList.contains('line-clamp-2'))).toBe(true);
+});

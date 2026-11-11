@@ -69,3 +69,10 @@ it("requires explicit report confirmation, selects originals, prevents duplicate
  await waitFor(()=>expect(screen.getByRole("button",{name:"PDF 다운로드"})).toBeEnabled(),{timeout:8000});
  const seen=details;await act(async()=>{await new Promise(r=>setTimeout(r,2300))});expect(details).toBe(seen);
 },15000);
+it("confirms replacing only the local draft, preserves cancel without another API call",async()=>{
+ let calls=0;server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,()=>{calls++;return apiResponse({text:"서버 새 원문",requiresUserReview:true})}));
+ mount(<InquiryScreen caseId={15}/>);fireEvent.click(screen.getByRole('button',{name:'서버 초안 생성'}));await screen.findByText('서버 새 원문');
+ fireEvent.change(screen.getByRole('textbox'),{target:{value:'보존할 작성본'}});const trigger=screen.getByRole('button',{name:'작성본 교체 확인'});trigger.focus();fireEvent.click(trigger);
+ expect(screen.getByRole('dialog')).toHaveTextContent('기존 작성 내용은 사라집니다');fireEvent.click(screen.getByRole('button',{name:'취소'}));expect(screen.getByRole('textbox')).toHaveValue('보존할 작성본');
+ fireEvent.click(trigger);fireEvent.click(screen.getByRole('button',{name:'작성본 교체'}));expect(screen.getByRole('textbox')).toHaveValue('서버 새 원문');expect(calls).toBe(1);expect(screen.queryByRole('dialog')).toBeNull();
+});
