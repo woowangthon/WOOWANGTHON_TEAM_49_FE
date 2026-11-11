@@ -77,6 +77,9 @@ describe("dashboard and management user flows with MSW", () => {
     mount(<DashboardScreen />);
     expect(await screen.findByRole("heading", { name: "내 급여, 이어서 살펴볼까요" })).toBeVisible();
     await screen.findByText("확인 필요 여부가 제공된 20건 기준");
+    const current = screen.getByRole("region", { name: "현재 검토" });
+    const step = within(current).getByRole("link", { current: "step" });
+    expect(within(current).getByRole("link", { name: "현재 사례 이어가기" })).toHaveAttribute("href", step.getAttribute("href"));
     const heading = screen.getByRole("heading", { name: "전체 근무지" });
     expect(within(heading.parentElement!).getByText("21개")).toBeVisible();
     expect(screen.getByText("작업 완료", { exact: true })).toBeVisible();
@@ -91,7 +94,9 @@ describe("dashboard and management user flows with MSW", () => {
   it("offers first-workplace and first-Case CTAs for empty dashboard data", async () => {
     const { mount } = await setup(true);
     mount(<DashboardScreen />);
-    expect(await screen.findByRole("link", { name: "첫 근무지 등록" })).toHaveAttribute("href", "/workplaces/new");
+    const onboarding = await screen.findByRole("region", { name: "첫 근무지를 등록해 주세요" });
+    expect(within(onboarding).getByRole("link", { name: "첫 근무지 등록" })).toHaveAttribute("href", "/workplaces/new");
+    expect(screen.queryByRole("link", { name: "현재 사례 이어가기" })).toBeNull();
     expect(await screen.findByRole("link", { name: "첫 사례 준비하기" })).toHaveAttribute("href", "/workplaces/new");
   });
 
