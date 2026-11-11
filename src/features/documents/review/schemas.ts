@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { processingSchema } from "../schemas";
+import { caseDocumentSchema, processingSchema } from "../schemas";
 const id = z.number().int().positive();
 export const valueSchema = z.json();
 export const fieldStatusSchema = z.enum(["UNCONFIRMED", "CONFIRMED", "MISSING", "UNREADABLE", "CONFLICTED", "DEFERRED", "NEEDS_RECONFIRMATION"]);
@@ -36,15 +36,33 @@ export const reviewSchema = z.object({
   confirmedFieldCount: z.number().int().nonnegative().optional(), totalFieldCount: z.number().int().nonnegative().optional(),
   unconfirmedFieldIds: z.array(id).optional(), reasonCodes: z.array(z.string()).optional(), confirmed: z.boolean().optional(),
 }).extend(updateMetaSchema.shape);
-// P0 names replacementId without specifying its scalar type. Preserve opaque string IDs as well as numeric IDs.
-export const replacementIdSchema = z.union([id, z.string().min(1).max(200)]);
-export const replacementCreatedSchema = z.object({replacementId: replacementIdSchema, documentId: id, originalLinkRetained: z.literal(true)});
-// P0 describes processing state and fields but omits the full GET DTO; require these before permitting confirmation.
-export const replacementSchema = z.object({
-  replacementId: replacementIdSchema, documentId: id, processingStatus: processingSchema,
-  fields: z.array(fieldSchema).optional(), originalLinkRetained: z.boolean().optional(),
+// OpenAPI fixes the path scalar; response internals below are HTML supplements.
+export const replacementIdSchema = z.number().int();
+export const replacementCreatedSchema = z.object({
+  replacementId: replacementIdSchema, documentId: id.optional(),
+  originalLinkRetained: z.boolean().optional(),
 });
-export const replacementConfirmedSchema = updateMetaSchema.extend({documentId: id.optional(), replacementId: replacementIdSchema.optional()});
+export const rawFieldSchema = z.object({
+  fieldId: id.optional(), key: z.string().optional(), label: z.string().optional(),
+  value: valueSchema.optional(), valueType: z.string().optional(), status: z.string().optional(),
+  editedByUser: z.boolean().optional(), effectiveValueOrigin: z.string().optional(),
+  hasCaseOverride: z.boolean().optional(), confirmedAt: z.string().nullable().optional(),
+  source: sourceSchema.nullable().optional(),
+});
+export const replacementWireSchema = z.object({
+  replacementId: replacementIdSchema, status: z.string().optional(),
+  original: caseDocumentSchema.nullish(), candidate: caseDocumentSchema.nullish(),
+  fields: z.array(rawFieldSchema).nullish(),
+});
+export function replacementView(wire: z.infer<typeof replacementWireSchema>) {
+  return {...wire, documentId: wire.candidate?.documentId,
+    processingStatus: wire.candidate?.processingStatus,
+    fields: wire.fields ?? undefined};
+}
+export const replacementSchema = replacementWireSchema.transform(replacementView);
+export const replacementConfirmedSchema = updateMetaSchema.extend({
+  documentId: id.optional(), replacementId: replacementIdSchema.optional(), status: z.string().optional(),
+});
 export type ExtractedField = z.infer<typeof fieldSchema>;
 export type FieldValue = z.infer<typeof valueSchema>;
 export type SourceDto = z.infer<typeof sourceSchema>;

@@ -8,7 +8,7 @@ import { validateFile, validateImageDimensions } from "../../file-validation";
 import { isProcessing, statusLabels } from "../../view-models";
 import { useReplacement, useReviewAction } from "../queries";
 import { replacementCreatedSchema, type ReplacementId, type ReviewContext, type SourceDto } from "../schemas";
-import { fieldView, reviewError } from "../view-models";
+import { reviewError } from "../view-models";
 import { OriginalViewer } from "./original-viewer";
 export function ReplacementPanel({context,version,replacementId,onCreated,onConfirmed,onDirty,disabled,onReset}:{context:ReviewContext;version:number;replacementId?:ReplacementId;onCreated:(id:ReplacementId)=>void;onReset?:()=>void;onConfirmed:(documentId:number)=>void;onDirty:(value:boolean)=>void;disabled:boolean}){
   const id=useId();const [file,setFile]=useState<File>();const [error,setError]=useState("");const [busy,setBusy]=useState(false);
@@ -32,20 +32,23 @@ export function ReplacementPanel({context,version,replacementId,onCreated,onConf
   </section>;
 }
 function ReplacementCandidate({context,replacementId,onConfirmed,disabled,onReset}:{context:ReviewContext;replacementId:ReplacementId;onConfirmed:(documentId:number)=>void;disabled:boolean;onReset?:()=>void}){
+  const confirmLock=useRef(false);const [compareOriginal,setCompareOriginal]=useState(false);
   const q=useReplacement(context.caseId,replacementId);const mutation=useReviewAction(context);const latest=useCase(context.caseId);
   const [source,setSource]=useState<SourceDto|null>();const [originalReady,setOriginalReady]=useState(false);const [confirmVersion,setConfirmVersion]=useState<number>();const [checked,setChecked]=useState(false);const [dialog,setDialog]=useState(false);
   const [error,setError]=useState("");const [conflict,setConflict]=useState(false);
   if(q.isPending)return <QueryFeedback pending />;if(q.isError)return <QueryFeedback error={q.error} retry={()=>{void q.refetch();}} />;
   const data=q.data;
   if(String(data.replacementId)!==String(replacementId)||data.documentId===context.documentId)return <p role="alert">교체 요청과 새 원본 식별 정보가 일치하지 않습니다. 확정을 중단했습니다.</p>;
-  const canConfirm=originalReady&&["READY","REVIEW_REQUIRED"].includes(data.processingStatus)&&data.fields!==undefined&&data.originalLinkRetained!==false;
+  const candidateId=data.documentId;
+  const canConfirm=originalReady&&candidateId!==undefined&&["READ_READY","READY","REVIEW_REQUIRED"].includes(data.processingStatus??"")&&data.status==="CANDIDATE"&&data.original?.documentId===context.documentId&&data.candidate?.workplaceId===context.workplaceId&&data.fields!==undefined&&data.fields.every(f=>f.fieldId!==undefined&&f.key!==undefined&&f.label!==undefined&&f.value!==undefined&&f.status!==undefined);
   return <section className={`${cardStyle} space-y-5`} aria-label="교체 원본 확인"><h2 className="text-title font-bold">원본 교체 · 2단계 새 원문과 필드 확인</h2>
-    <p className="text-body">교체 요청 #{replacementId} · 새 문서 #{data.documentId} · {statusLabels[data.processingStatus]}</p>
+    <p className="text-body">교체 요청 #{replacementId} · 새 문서 #{data.documentId} · {data.processingStatus?statusLabels[data.processingStatus]:"후보 정보 대기"}</p>
     <p className="text-body">확정 전에는 기존 사례 연결을 유지합니다. 확정은 이 사례의 연결만 새 원본으로 바꾸고 다른 사례와 기존 원본을 보존합니다.</p>
     {q.isFetching&&isProcessing(data.processingStatus)&&<p role="status">새 원본 처리 상태 확인 중…</p>}
-    <div className="grid min-w-0 gap-5 xl:grid-cols-2"><OriginalViewer workplaceId={context.workplaceId} documentId={data.documentId} source={source} onReady={setOriginalReady} />
+    <details onToggle={e=>setCompareOriginal(e.currentTarget.open)}><summary>기존 원문 비교</summary>{compareOriginal&&<OriginalViewer workplaceId={context.workplaceId} documentId={context.documentId} />}</details>
+    <div className="grid min-w-0 gap-5 xl:grid-cols-2">{candidateId===undefined?<p role="status">교체 후보 원문이 아직 제공되지 않았습니다.</p>:<OriginalViewer workplaceId={context.workplaceId} documentId={candidateId} source={source} onReady={setOriginalReady} />}
       <section className="min-w-0 space-y-3" aria-label="교체 후보 추출 필드"><h3 className="text-title font-bold">새 원본의 추출 필드</h3>
-        {data.fields===undefined?<p>새 필드가 아직 제공되지 않았습니다. 확인할 수 있을 때까지 확정할 수 없습니다.</p>:!data.fields.length?<p>추출 필드가 없습니다. 원문을 직접 확인해 주세요.</p>:data.fields.map(field=>{const vm=fieldView(field);return <article aria-label={field.label} className="rounded-control border border-border p-4" key={field.fieldId}><h4 className="break-words font-bold">{field.label}</h4><p className="break-all">{vm.valueLabel} · {vm.statusLabel}</p><p className="break-words">{field.source?.text??"근거 문구 미제공"}</p><button className={`mt-2 ${secondaryButton}`} onClick={()=>setSource(field.source)}>새 원문 근거 보기</button></article>;})}
+        {data.fields===undefined?<p>새 필드가 아직 제공되지 않았습니다. 확인할 수 있을 때까지 확정할 수 없습니다.</p>:!data.fields.length?<p>추출 필드가 없습니다. 원문을 직접 확인해 주세요.</p>:data.fields.map((field,index)=>{const vm={valueLabel:field.value===undefined?"값 미제공":typeof field.value==="string"?field.value:JSON.stringify(field.value),statusLabel:field.status??"정보 미제공"};return <article aria-label={field.label} className="rounded-control border border-border p-4" key={field.fieldId??index}><h4 className="break-words font-bold">{field.label??field.key??"정보 미제공"}</h4><p className="break-all">{vm.valueLabel} · {vm.statusLabel}</p><p className="break-words">{field.source?.text??"근거 문구 미제공"}</p><button className={`mt-2 ${secondaryButton}`} onClick={()=>setSource(field.source??null)}>새 원문 근거 보기</button></article>;})}
       </section>
     </div>
     {data.processingStatus==="FAILED"&&<p role="alert">교체 후보 처리에 실패했습니다. 기존 연결은 유지됩니다. 후보의 별도 재처리 API는 제공되지 않아 새 파일로 교체를 다시 요청할 수 있습니다.</p>}
@@ -56,9 +59,9 @@ function ReplacementCandidate({context,replacementId,onConfirmed,disabled,onRese
     {conflict&&<button className={secondaryButton} disabled={q.isFetching||latest.isFetching} onClick={async()=>{const results=await Promise.all([q.refetch(),latest.refetch()]);if(results.every(r=>!r.isError)){setConflict(false);setChecked(false);setError("");}}}>최신 교체 상태와 버전 다시 확인</button>}
     <button className={primaryButton} disabled={!checked||!canConfirm||conflict||mutation.isPending||disabled||!latest.data} onClick={()=>{setConfirmVersion(latest.data?.inputVersion);setDialog(true);}}>원본 교체 확정</button>
     {dialog&&<ConfirmDialog title="이 사례의 원본 연결 교체" busy={mutation.isPending} onClose={()=>setDialog(false)} action={<button className={primaryButton} disabled={mutation.isPending||!latest.data} onClick={async()=>{
-      if(confirmVersion===undefined)return;
-      try{await mutation.mutateAsync({type:"confirm-replacement",replacementId,version:confirmVersion});setDialog(false);onConfirmed(data.documentId);}
-      catch(e){setError(reviewError(e));setConflict(true);setChecked(false);setDialog(false);}
+      if(confirmVersion===undefined||candidateId===undefined||confirmLock.current)return;confirmLock.current=true;
+      try{await mutation.mutateAsync({type:"confirm-replacement",replacementId,version:confirmVersion});setDialog(false);onConfirmed(candidateId);}
+      catch(e){setError(reviewError(e));setConflict(true);setChecked(false);setDialog(false);}finally{confirmLock.current=false;}
     }}>새 원본으로 연결 교체 확인</button>}><p>이 사례의 기존 연결을 문서 #{data.documentId}로 교체합니다. 다른 사례와 공유 원본은 유지됩니다.</p></ConfirmDialog>}
   </section>;
 }

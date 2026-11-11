@@ -1,6 +1,6 @@
 import type { ApiClient } from "@/lib/api/client";
 import { decodeWith, pageSchema, paginationSearch } from "@/lib/api/schema";
-import { fieldUpdatedSchema, fieldsSchema, historySchema, overrideRemovedSchema, previewSchema, replacementConfirmedSchema, replacementCreatedSchema, replacementSchema, reviewSchema, type FieldPatch, type ReplacementId } from "./schemas";
+import { fieldUpdatedSchema, fieldsSchema, historySchema, overrideRemovedSchema, previewSchema, replacementIdSchema, replacementConfirmedSchema, replacementCreatedSchema, replacementSchema, reviewSchema, type FieldPatch, type ReplacementId } from "./schemas";
 export const caseDocumentPath = (caseId: number, documentId: number) => `/cases/${caseId}/documents/${documentId}`;
 export function reviewApi(api: ApiClient) {
   return {
@@ -17,7 +17,7 @@ export function reviewApi(api: ApiClient) {
       const formData = new FormData();formData.set("file",file);formData.set("expectedInputVersion",String(version));
       return api.requestJson(`${caseDocumentPath(c,d)}/replace`, decodeWith(replacementCreatedSchema), {expectedStatus:202,method:"POST",formData,signal});
     },
-    replacement: (c: number, r: ReplacementId, signal?: AbortSignal) => api.requestJson(`/cases/${c}/document-replacements/${encodeURIComponent(r)}`, decodeWith(replacementSchema), {signal,expectedStatus:200}),
-    confirmReplacement: (c: number, r: ReplacementId, version: number) => api.requestJson(`/cases/${c}/document-replacements/${encodeURIComponent(r)}/confirm`, decodeWith(replacementConfirmedSchema), {expectedStatus:200,method:"POST",body:{confirmed:true,expectedInputVersion:version}}),
+    replacement: (c: number, r: ReplacementId, signal?: AbortSignal) => api.requestJson(`/cases/${c}/document-replacements/${encodeURIComponent(replacementIdSchema.parse(r))}`, decodeWith(replacementSchema), {signal,expectedStatus:200}),
+    confirmReplacement: (c: number, r: ReplacementId, version: number) => api.requestJson(`/cases/${c}/document-replacements/${encodeURIComponent(replacementIdSchema.parse(r))}/confirm`, decodeWith(replacementConfirmedSchema), {expectedStatus:200,method:"POST",body:{confirmed:true,expectedInputVersion:version}}),
   };
 }
