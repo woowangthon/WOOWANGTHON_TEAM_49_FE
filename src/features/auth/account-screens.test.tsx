@@ -31,12 +31,12 @@ describe("account recovery UI", () => {
  });
  it("rejects a password mismatch before sending reset", async () => {
   let calls=0;server.use(http.post(testApiUrl+'/auth/reset-password',()=>{calls++;return new HttpResponse(null,{status:204})}));
-  mount(true);await userEvent.type(document.querySelector('#reset-token')!,'test');await userEvent.type(document.querySelector('#new-password')!,'new');await userEvent.type(document.querySelector('#confirm-password')!,'other');await userEvent.click(document.querySelector('form button')!);
+  mount(true);await userEvent.type(document.querySelector('#reset-token')!,'test-token-value-123456');await userEvent.type(document.querySelector('#new-password')!,'new-password');await userEvent.type(document.querySelector('#confirm-password')!,'other');await userEvent.click(document.querySelector('form button')!);
   expect(document.querySelector('#confirm-password')).toHaveFocus();expect(calls).toBe(0);
  });
  it("clears credentials and navigates only after reset 204", async () => {
   server.use(http.post(testApiUrl+'/auth/reset-password',()=>new HttpResponse(null,{status:204})));
-  const app=mount(true);app.session.start('old');await userEvent.type(document.querySelector('#reset-token')!,'test');await userEvent.type(document.querySelector('#new-password')!,'new');await userEvent.type(document.querySelector('#confirm-password')!,'new');await userEvent.click(document.querySelector('form button')!);
+  const app=mount(true);app.session.start('old');await userEvent.type(document.querySelector('#reset-token')!,'test-token-value-123456');await userEvent.type(document.querySelector('#new-password')!,'new-password');await userEvent.type(document.querySelector('#confirm-password')!,'new-password');await userEvent.click(document.querySelector('form button')!);
   await waitFor(()=>expect(replace).toHaveBeenCalledWith('/login'));expect(app.session.getSnapshot().accessToken).toBeNull();
  });
  it("fetches receipt once without polling or bearer", async () => {

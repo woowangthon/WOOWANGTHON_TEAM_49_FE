@@ -94,12 +94,12 @@ describe("authentication UI with React Testing Library + MSW", () => {
     expect(navigation.router.replace).not.toHaveBeenCalled();
   });
 
-  it("maps server password policy errors without inventing a client length rule", async () => {
+  it("maps server password policy errors after passing P0 client constraints", async () => {
     server.use(http.post(`${testApiUrl}/auth/signup`, () => apiResponse({
       errorCode: "VALIDATION_ERROR", errors: [{ field: "password", reason: "비밀번호가 서버 정책에 맞지 않습니다." }],
     }, 422)));
     mount("signup");
-    const user = await fill("signup", "a");
+    const user = await fill("signup", "abcdefgh");
     await user.click(screen.getByRole("button", { name: "가입하기" }));
     expect(await screen.findByText("비밀번호가 서버 정책에 맞지 않습니다.")).toBeVisible();
     expect(screen.getByLabelText("비밀번호")).toHaveFocus();

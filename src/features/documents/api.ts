@@ -2,7 +2,7 @@ import { versionSchema } from "@/features/results/schemas";
 import { z } from "zod";
 import type { ApiClient } from "@/lib/api/client";
 import { decodeWith, pageSchema, paginationSearch } from "@/lib/api/schema";
-import { caseDocumentSchema, documentSchema, impactSchema, linkSchema, mutationSchema, statusSchema, uploadSchema, type DocumentDto, type DocumentContext, type DocumentFilters, type LinkInput } from "./schemas";
+import { linkCreateSchema, linkPatchSchema, caseDocumentSchema, documentSchema, impactSchema, linkSchema, mutationSchema, statusSchema, uploadSchema, type DocumentDto, type DocumentContext, type DocumentFilters, type LinkInput } from "./schemas";
 
 export function documentPath(context: DocumentContext) {
   return context.kind === "library" ? "/documents" : `/${context.kind === "case" ? "cases" : "workplaces"}/${context.id}/documents`;
@@ -31,8 +31,8 @@ export function documentApi(api: ApiClient) {
       formData.set("file", file); formData.set("documentType", documentType);
       return api.requestJson(documentPath(context), decodeWith(uploadSchema), { expectedStatus: 202, method: "POST", formData, signal });
     },
-    connect: (caseId: number, documentId: number, body: LinkInput) => api.requestJson(`/cases/${caseId}/document-links`, decodeWith(linkSchema.extend(mutationSchema.shape)), { expectedStatus: 201, method: "POST", body: { documentId, ...body } }),
-    updateLink: (caseId: number, linkId: number, body: LinkInput) => api.requestJson(`/cases/${caseId}/document-links/${linkId}`, decodeWith(linkSchema.extend(mutationSchema.shape)), { expectedStatus: 200, method: "PATCH", body: { ...body } }),
+    connect: (caseId: number, documentId: number, body: LinkInput) => api.requestJson(`/cases/${caseId}/document-links`, decodeWith(linkSchema.extend(mutationSchema.shape)), { expectedStatus: 201, method: "POST", body: linkCreateSchema.parse({ documentId, ...body }) }),
+    updateLink: (caseId: number, linkId: number, body: LinkInput) => api.requestJson(`/cases/${caseId}/document-links/${linkId}`, decodeWith(linkSchema.extend(mutationSchema.shape)), { expectedStatus: 200, method: "PATCH", body: linkPatchSchema.parse(body) }),
     unlink: (caseId: number, linkId: number, _expectedInputVersion: number) => api.requestNoContent(`/cases/${caseId}/document-links/${linkId}`, (void _expectedInputVersion, { method: "DELETE" })),
     retry: (caseId: number, documentId: number) => api.requestJson(`/cases/${caseId}/documents/${documentId}/retry`, decodeWith(statusSchema), { expectedStatus: 202, method: "POST" }),
     impact: (workplaceId: number, documentId: number, signal?: AbortSignal) => api.requestJson(`/workplaces/${workplaceId}/documents/${documentId}/deletion-impact`, decodeWith(impactSchema), { signal, expectedStatus: 200 }),

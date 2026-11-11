@@ -31,7 +31,7 @@ export function LinkForm({ caseId, documentId, link, inputVersion, onDone }: { c
       setError("root.server", { message: documentError(error) });
     }
   })}>
-    <TextField id={`${id}-purpose`} label="연결 목적" list={`${id}-purposes`} placeholder="사용 목적을 입력하거나 선택" disabled={isSubmitting} error={errors.purpose?.message} {...register("purpose")} />
+    <TextField id={`${id}-purpose`} label="연결 목적" list={`${id}-purposes`} placeholder="사용 목적을 입력하거나 선택" disabled={isSubmitting} error={errors.purpose?.message} maxLength={100} {...register("purpose")} />
     <datalist id={`${id}-purposes`}><option value="CONTRACT_FOR_PERIOD">산정기간에 적용할 계약서</option></datalist>
     <p className="text-caption text-muted">이 자료를 사례에서 사용하는 목적을 입력하거나 선택해 주세요.</p>
     <div className="grid min-w-0 gap-4 sm:grid-cols-2">

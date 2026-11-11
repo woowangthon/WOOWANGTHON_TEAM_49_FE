@@ -14,7 +14,7 @@ import { mockEnabled } from "@/lib/config/mock";
 import { applyAuthError, type AuthFormValues } from "../form-errors";
 import { useAuth } from "../hooks/use-auth";
 import { loginHref, safeReturnTo } from "../redirect";
-import { loginRequestSchema, signupRequestSchema } from "../schemas";
+import { loginRequestSchema, signupFormSchema } from "../schemas";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const signup = mode === "signup";
@@ -26,7 +26,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const id = useId();
   const errorSummary = useRef<HTMLParagraphElement>(null);
   const [completed, setCompleted] = useState(false);
-  const schema = signup ? signupRequestSchema : loginRequestSchema.extend({ name: z.string() });
+  const schema = signup ? signupFormSchema : loginRequestSchema.extend({ name: z.string() });
   const { register, handleSubmit, setError, setFocus, resetField, formState: { errors, isSubmitting } } = useForm<AuthFormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "", name: "" },
@@ -67,9 +67,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       {!signup && params.get("registered") === "1" && <p role="status" className="mt-5 rounded-control bg-success-soft p-4 text-body">회원가입이 완료되었습니다. 로그인해 주세요.</p>}
       {notice && <p role="status" className="mt-5 rounded-control bg-neutral-soft p-4 text-body">{notice}</p>}
       <form noValidate onSubmit={handleSubmit(submit)} aria-busy={busy} className="mt-8 space-y-5">
-        {signup && <TextField label="이름" id={`${id}-name`} autoComplete="name" required disabled={busy} error={errors.name?.message} {...register("name")} />}
-        <TextField label="이메일" id={`${id}-email`} type="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required disabled={busy} placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
-        <TextField label="비밀번호" id={`${id}-password`} type="password" autoComplete={signup ? "new-password" : "current-password"} required disabled={busy} error={errors.password?.message} {...register("password")} />
+        {signup && <TextField label="이름" id={`${id}-name`} autoComplete="name" required disabled={busy} error={errors.name?.message} maxLength={100} {...register("name")} />}
+        <TextField label="이메일" id={`${id}-email`} type="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required disabled={busy} placeholder="name@example.com" error={errors.email?.message} maxLength={signup ? 254 : undefined} {...register("email")} />
+        <TextField label="비밀번호" id={`${id}-password`} type="password" autoComplete={signup ? "new-password" : "current-password"} required disabled={busy} error={errors.password?.message} minLength={signup ? 8 : undefined} maxLength={signup ? 128 : undefined} {...register("password")} />
         {errors.root?.server?.message && <p ref={errorSummary} tabIndex={-1} role="alert" className="rounded-control border border-danger bg-danger-soft p-4 text-body">{errors.root.server.message}</p>}
         {completed && <p role="status" className="text-body">{signup ? "가입을 완료했습니다." : "로그인되었습니다."} 페이지를 이동합니다.</p>}
         <button type="submit" disabled={busy} className="min-h-12 w-full rounded-control bg-primary px-4 py-3 text-body font-bold text-surface disabled:cursor-wait disabled:opacity-60">

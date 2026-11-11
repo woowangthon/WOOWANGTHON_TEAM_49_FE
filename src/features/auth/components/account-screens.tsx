@@ -14,7 +14,7 @@ import { useAppServices, useSessionGeneration } from "@/hooks/use-app-services";
 import { ApiError } from "@/lib/api/error";
 import { mockEnabled } from "@/lib/config/mock";
 import { useCurrentUser } from "../hooks/use-auth";
-import { loginRequestSchema } from "../schemas";
+import { forgotPasswordRequestSchema, resetPasswordRequestSchema } from "../schemas";
 import { deletionDescription, deletionPollInterval } from "../deletion";
 
 function errorText(error: unknown) {
@@ -26,7 +26,7 @@ function errorText(error: unknown) {
   }
   return "요청을 완료하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.";
 }
-const recoverySchema = z.object({ email: loginRequestSchema.shape.email, token: z.string(), newPassword: z.string(), confirm: z.string() });
+const recoverySchema = z.object({ email: z.string().trim().pipe(forgotPasswordRequestSchema.shape.email), token: z.string(), newPassword: z.string(), confirm: z.string() });
 export function RecoveryScreen({ reset = false }: { reset?: boolean }) {
   const { authApi, session } = useAppServices();
   const router = useRouter();
@@ -34,7 +34,7 @@ export function RecoveryScreen({ reset = false }: { reset?: boolean }) {
   const [mockToken, setMockToken] = useState("");
   const errorSummary = useRef<HTMLParagraphElement>(null);
   const lock = useRef(false);
-  const schema = reset ? recoverySchema.extend({ email: z.string(), token: z.string().min(1, "재설정 토큰을 입력해 주세요."), newPassword: z.string().min(1, "새 비밀번호를 입력해 주세요.") }).refine(v => v.newPassword === v.confirm, { path: ["confirm"], message: "비밀번호가 일치하지 않습니다." }) : recoverySchema;
+  const schema = reset ? recoverySchema.extend({ email: z.string(), ...resetPasswordRequestSchema.shape }).refine(v => v.newPassword === v.confirm, { path: ["confirm"], message: "비밀번호가 일치하지 않습니다." }) : recoverySchema;
   const { register, handleSubmit, setValue, setError, resetField, formState: { errors, isSubmitting } } = useForm<z.infer<typeof recoverySchema>>({ resolver: zodResolver(schema), defaultValues: { email: "", token: "", newPassword: "", confirm: "" } });
   useEffect(() => {
     if (!isSubmitting && errors.root) errorSummary.current?.focus();
@@ -63,9 +63,9 @@ export function RecoveryScreen({ reset = false }: { reset?: boolean }) {
   return <section className="t8-auth-card"><h1 className="text-[30px] font-extrabold tracking-tight">{reset ? "비밀번호 재설정" : "비밀번호 찾기"}</h1>
     <p className="mt-4">현재 복구 방식은 로컬 outbox 전용이며 실제 이메일을 발송하지 않습니다. 개발자가 확인한 토큰을 사용하세요.</p>
     <form noValidate onSubmit={(event) => { void handleSubmit(submit)(event); }} aria-busy={isSubmitting} className="mt-6 space-y-4">
-      {reset ? <><TextField id="reset-token" label="재설정 토큰" type="password" autoComplete="off" required disabled={isSubmitting || done} error={errors.token?.message} {...register("token")} />
-      <TextField id="new-password" label="새 비밀번호" type="password" autoComplete="new-password" required disabled={isSubmitting || done} error={errors.newPassword?.message} {...register("newPassword")} />
-      <TextField id="confirm-password" label="새 비밀번호 확인" type="password" autoComplete="new-password" required disabled={isSubmitting || done} error={errors.confirm?.message} {...register("confirm")} /></> : <TextField id="recovery-email" label="이메일" type="email" autoComplete="email" required disabled={isSubmitting || done} error={errors.email?.message} {...register("email")} />}
+      {reset ? <><TextField id="reset-token" label="재설정 토큰" type="password" autoComplete="off" required disabled={isSubmitting || done} error={errors.token?.message} minLength={20} maxLength={200} {...register("token")} />
+      <TextField id="new-password" label="새 비밀번호" type="password" autoComplete="new-password" required disabled={isSubmitting || done} error={errors.newPassword?.message} minLength={8} maxLength={128} {...register("newPassword")} />
+      <TextField id="confirm-password" label="새 비밀번호 확인" type="password" autoComplete="new-password" required disabled={isSubmitting || done} error={errors.confirm?.message} maxLength={128} {...register("confirm")} /></> : <TextField id="recovery-email" label="이메일" type="email" autoComplete="email" required disabled={isSubmitting || done} error={errors.email?.message} maxLength={254} {...register("email")} />}
       {errors.root && <p ref={errorSummary} tabIndex={-1} role="alert" className="rounded-control bg-danger-soft p-4">{errors.root.message}</p>}
       {done && <p role="status">요청을 접수했습니다. 계정 존재 여부는 안내하지 않습니다. 비밀번호는 재설정을 완료해야 변경됩니다.</p>}
       <button className={primaryButton} disabled={isSubmitting || done}>{isSubmitting ? "처리 중…" : reset ? "비밀번호 재설정" : "복구 요청"}</button>

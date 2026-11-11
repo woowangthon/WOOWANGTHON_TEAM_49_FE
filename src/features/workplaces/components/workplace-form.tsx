@@ -51,9 +51,9 @@ export function WorkplaceForm({ initial, onSaved, onCancel }: { initial?: Workpl
     <form noValidate onSubmit={handleSubmit(submit)} aria-busy={pending} className="min-w-0 space-y-5">
       <fieldset disabled={pending} className="grid min-w-0 gap-5 sm:grid-cols-2">
         <legend className="sr-only">근무지 정보</legend>
-        <div className="sm:col-span-2"><TextField id={`${id}-name`} label="사업장명" required error={errors.name?.message} {...register("name")} /></div>
-        <TextField id={`${id}-industry`} label="업종 (선택)" error={errors.industry?.message} {...register("industry")} />
-        <TextField id={`${id}-region`} label="지역 (선택)" error={errors.region?.message} {...register("region")} />
+        <div className="sm:col-span-2"><TextField id={`${id}-name`} label="사업장명" required error={errors.name?.message} maxLength={200} {...register("name")} /></div>
+        <TextField id={`${id}-industry`} label="업종 (선택)" error={errors.industry?.message} maxLength={200} {...register("industry")} />
+        <TextField id={`${id}-region`} label="지역 (선택)" error={errors.region?.message} maxLength={200} {...register("region")} />
         <SelectField id={`${id}-employment`} label="재직 상태" error={errors.employmentStatus?.message} {...register("employmentStatus")}><option value="CURRENT">재직 중</option><option value="FORMER">퇴사</option></SelectField>
       </fieldset>
       {errors.root?.server?.message && <p ref={summary} tabIndex={-1} role="alert" className="rounded-control bg-danger-soft p-4 text-body">{errors.root.server.message}</p>}

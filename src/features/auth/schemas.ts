@@ -6,8 +6,19 @@ export const loginRequestSchema = z.object({
   password: z.string().min(1, "비밀번호를 입력해 주세요."),
 });
 
-export const signupRequestSchema = loginRequestSchema.extend({
-  name: z.string().trim().min(1, "이름을 입력해 주세요."),
+// Request DTOs preserve P0 values; form normalization is separate.
+const email = z.string().min(3, "입력 길이 또는 형식을 확인해 주세요.").max(254, "입력 길이 또는 형식을 확인해 주세요.").regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "입력 길이 또는 형식을 확인해 주세요.");
+const password = z.string().min(8, "입력 길이 또는 형식을 확인해 주세요.").max(128, "입력 길이 또는 형식을 확인해 주세요.");
+export const signupRequestSchema = z.strictObject({
+  email, password, name: z.string().min(1, "이름을 입력해 주세요.").max(100, "입력 길이 또는 형식을 확인해 주세요."),
+});
+export const signupFormSchema = signupRequestSchema.extend({
+  email: z.string().trim().pipe(email), name: z.string().trim().pipe(signupRequestSchema.shape.name),
+});
+export const forgotPasswordRequestSchema = z.strictObject({ email });
+export const resetPasswordRequestSchema = z.strictObject({
+  token: z.string().min(20, "입력 길이 또는 형식을 확인해 주세요.").max(200, "입력 길이 또는 형식을 확인해 주세요."),
+  newPassword: password,
 });
 
 /** P0 login user fields only; createdAt and other P4 fields are not assumed. */

@@ -1,3 +1,4 @@
+import { chatCreateSchema, chatPatchSchema } from "@/features/chats/api";
 ﻿import { http,HttpResponse } from 'msw';
 import { apiResponse } from './response';
 import { scopeSchema,type Message } from '@/features/chats/api';
@@ -46,9 +47,9 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
  }
  return {chats,handlers:[
  http.get(root,({params,request})=>apiResponse(page([...chats.values()].filter(c=>c.workplaceId===Number(params.w)).map(summary),request))),
- http.post(root,async({params,request})=>{const b=await request.json() as {title:string;defaultScope:unknown};const scope=scopeSchema.safeParse(b.defaultScope);if(!b.title?.trim()||!scope.success||scope.data.scopeType!=='CASE')return fail('VALIDATION_ERROR',422);const caseId=scope.data.caseId;if(!getCases().some(c=>c.workplaceId===Number(params.w)&&c.caseId===caseId))return fail('RESOURCE_NOT_FOUND',404);const c={chatId:++seq,workplaceId:Number(params.w),title:b.title,defaultScope:scope.data,updatedAt:new Date().toISOString(),lastMessagePreview:'',messages:[]};chats.set(c.chatId,c);return apiResponse(summary(c),201);}),
+ http.post(root,async({params,request})=>{const b=await request.json() as {title:string;defaultScope:unknown};const scope=scopeSchema.safeParse(b.defaultScope);if(!chatCreateSchema.safeParse(b).success||!scope.success)return fail('VALIDATION_ERROR',422);const caseId=scope.data.scopeType==='CASE'?scope.data.caseId:undefined;if(caseId!==undefined&&!getCases().some(c=>c.workplaceId===Number(params.w)&&c.caseId===caseId))return fail('RESOURCE_NOT_FOUND',404);const c={chatId:++seq,workplaceId:Number(params.w),title:b.title??'?? ??',defaultScope:scope.data,updatedAt:new Date().toISOString(),lastMessagePreview:'',messages:[]};chats.set(c.chatId,c);return apiResponse(summary(c),201);}),
  http.get(`${root}/:c`,({params,request})=>{const c=find(params.w,params.c);return c?apiResponse({session:summary(c),messages:page(c.messages,request)}):fail('RESOURCE_NOT_FOUND',404);}),
- http.patch(`${root}/:c`,async({params,request})=>{const c=find(params.w,params.c);if(!c)return fail('RESOURCE_NOT_FOUND',404);const b=await request.json() as {title:string};if(!b.title?.trim())return fail('VALIDATION_ERROR',422);c.title=b.title;c.updatedAt=new Date().toISOString();return apiResponse(summary(c));}),
+ http.patch(`${root}/:c`,async({params,request})=>{const c=find(params.w,params.c);if(!c)return fail('RESOURCE_NOT_FOUND',404);const b=await request.json() as {title:string};if(!chatPatchSchema.safeParse(b).success)return fail('VALIDATION_ERROR',422);c.title=b.title;c.updatedAt=new Date().toISOString();return apiResponse(summary(c));}),
  http.delete(`${root}/:c`,({params})=>{const c=find(params.w,params.c);if(!c)return fail('RESOURCE_NOT_FOUND',404);if(active.has(c.chatId))return fail('CHAT_RUN_ALREADY_ACTIVE',409);chats.delete(c.chatId);return new HttpResponse(null,{status:204});}),
  http.post(`${root}/:c/messages`,({params,request})=>execute(params.w,params.c,request)),
  http.post(`${root}/:c/messages/:m/retry`,({params,request})=>execute(params.w,params.c,request,Number(params.m))),

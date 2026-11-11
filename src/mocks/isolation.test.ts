@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createDevelopmentScenario, clearMockSession, demoAccount } from "./development";
 import { server, testApiUrl } from "@/test/server";
 import { createAppServices } from "@/lib/app-services";
-const a={email:'a@example.com',password:'pass',name:'A'}, b={email:'b@example.com',password:'pass',name:'B'};
+const a={email:'a@example.com',password:'password123',name:'A'}, b={email:'b@example.com',password:'password123',name:'B'};
 describe('independent development business stores',()=>{
  let app:ReturnType<typeof createAppServices>;
  beforeEach(async()=>{ const nativeForm=await new Response(new URLSearchParams()).formData(); vi.stubGlobal("FormData",nativeForm.constructor);vi.stubGlobal("File",NodeFile);clearMockSession();server.use(...createDevelopmentScenario(testApiUrl).handlers);app=createAppServices(testApiUrl);await app.authApi.signup(a);await app.authApi.signup(b);await app.auth.login(a)});

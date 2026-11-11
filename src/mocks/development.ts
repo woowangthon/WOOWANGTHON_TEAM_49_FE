@@ -1,3 +1,4 @@
+import { signupRequestSchema, forgotPasswordRequestSchema, resetPasswordRequestSchema } from "@/features/auth/schemas";
 import { caseDocumentResponse } from "./shared/document-handlers";
 import { getResponse, http, HttpResponse } from "msw";
 import { supportMocks } from "./shared/support-handlers";
@@ -143,8 +144,8 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   const issue = () => { token = `mock-only-${crypto.randomUUID()}`; return { accessToken: token, tokenType: "Bearer", expiresIn: 1800, user: { userId: activeUser.userId, email: activeUser.email, name: activeUser.name } }; };
   const handlers = [
     http.post(`${baseUrl}/auth/forgot-password`, async ({ request }) => {
-      const body = await request.json() as { email?: string };
-      if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return fail("VALIDATION_ERROR", 422);
+      const body = await request.json() as { email: string };
+      if (!forgotPasswordRequestSchema.safeParse(body).success) return fail("VALIDATION_ERROR", 422);
       if (users.has(body.email) && !deleted.has(body.email)) {
         latestResetToken = crypto.randomUUID();
         resets.set(latestResetToken, { email: body.email, expires: Date.now() + 30 * 60_000, used: false });
@@ -153,6 +154,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     }),
     http.post(`${baseUrl}/auth/reset-password`, async ({ request }) => {
       const body = await request.json() as { token?: string; newPassword?: string };
+      if (!resetPasswordRequestSchema.safeParse(body).success) return fail("VALIDATION_ERROR", 422);
       const reset = body.token && resets.get(body.token);
       if (!reset || reset.used || reset.expires <= Date.now() || !body.newPassword || deleted.has(reset.email)) return fail("VALIDATION_ERROR", 422);
       users.get(reset.email)!.password = body.newPassword;
@@ -164,7 +166,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     http.get(`${baseUrl}/users/me/deletion`, () => receipt ? apiResponse({ status: "LEGAL_HOLD", normalStoragePurgeDueAt: null }) : fail("AUTH_REQUIRED", 401)),
     http.post(`${baseUrl}/auth/signup`, async ({ request }) => {
       const body = await request.json() as typeof demoAccount;
-      if (!body.email || !body.password || !body.name) return fail("VALIDATION_ERROR", 422);
+      if (!signupRequestSchema.safeParse(body).success) return fail("VALIDATION_ERROR", 422);
       if (users.has(body.email)) return fail("EMAIL_ALREADY_EXISTS", 409);
       users.set(body.email, { ...body, userId: users.size + 7 });
       stores.set(users.get(body.email)!.userId, createBusinessScenario(baseUrl, false, users.get(body.email)!.userId * 100000));

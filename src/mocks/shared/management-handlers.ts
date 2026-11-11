@@ -1,3 +1,4 @@
+import { workplaceCreateSchema, workplacePatchSchema } from "@/features/workplaces/schemas";
 import { http, HttpResponse } from "msw";
 
 import type { CaseDetailDto } from "@/features/cases/schemas";
@@ -46,6 +47,7 @@ export function managementMocks({ empty = false, count = 21, idOffset = 0, baseU
     }),
     http.post(`${testApiUrl}/workplaces`, async ({ request }) => {
       const body = await record(request);
+      if (!workplaceCreateSchema.safeParse(body).success) return apiResponse({ errorCode: "VALIDATION_ERROR" }, 422);
       const workplaceId = Math.max(2 + idOffset, ...workplaces.map((row) => row.workplaceId)) + 1;
       workplaces.push({ workplaceId, name: body.name as string, industry: body.industry as string | null, region: body.region as string | null, employmentStatus: body.employmentStatus as "CURRENT" | "FORMER", createdAt: "2026-11-09", updatedAt: "2026-11-09", caseCount: 0 });
       return apiResponse({ workplaceId }, 201);
@@ -56,6 +58,7 @@ export function managementMocks({ empty = false, count = 21, idOffset = 0, baseU
     }),
     http.patch(`${testApiUrl}/workplaces/:id`, async ({ request, params }) => {
       const body = await record(request);
+      if (!workplacePatchSchema.safeParse(body).success) return apiResponse({ errorCode: "VALIDATION_ERROR" }, 422);
       const item = workplaces.find((row) => row.workplaceId === Number(params.id));
       if (!item) return missing();
       Object.assign(item, body);

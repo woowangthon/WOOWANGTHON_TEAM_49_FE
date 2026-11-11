@@ -20,13 +20,13 @@ describe("account lifecycle on isolated MSW", () => {
     await expect(app.authApi.getMe()).rejects.toBeDefined();
     await expect(app.authApi.login(demoAccount)).rejects.toMatchObject({ status: 401 });
     await expect(app.authApi.login({ email: demoAccount.email, password: "replacement" })).resolves.toBeDefined();
-    await expect(app.authApi.resetPassword(token, "again")).rejects.toMatchObject({ status: 422 });
+    await expect(app.authApi.resetPassword(token, "again-password")).rejects.toMatchObject({ status: 422 });
   });
-  it("rejects invalid reset tokens", async () => { await expect(app.authApi.resetPassword("invalid", "new")).rejects.toMatchObject({ status: 422 }); });
+  it("rejects invalid reset tokens", async () => { await expect(app.authApi.resetPassword("invalid-token-value-long", "new-password")).rejects.toMatchObject({ status: 422 }); });
   it("rejects tokens after thirty minutes", async () => {
     await app.authApi.forgotPassword(demoAccount.email); const token = readDevelopmentResetToken();
     const now = Date.now(); const clock = vi.spyOn(Date, "now").mockReturnValue(now + 31 * 60_000);
-    try { await expect(app.authApi.resetPassword(token, "new")).rejects.toMatchObject({ status: 422 }); } finally { clock.mockRestore(); }
+    try { await expect(app.authApi.resetPassword(token, "new-password")).rejects.toMatchObject({ status: 422 }); } finally { clock.mockRestore(); }
   });
   it("deletion accepts 202 and receipt works without restoring access", async () => {
     await app.auth.login(demoAccount); await app.authApi.deleteAccount(); app.session.clear();
@@ -42,7 +42,7 @@ describe("account lifecycle on isolated MSW", () => {
   });
   it("does not refresh a missing receipt", async () => { await expect(app.authApi.deletionStatus()).rejects.toMatchObject({ status: 401 }); });
   it("isolates new accounts from seed business data", async () => {
-    const user = { email: "new@example.com", password: "new", name: "New" };
+    const user = { email: "new@example.com", password: "new-password", name: "New" };
     await app.authApi.signup(user); await app.auth.login(user);
     await expect(app.api.requestJson("/cases", v => v)).resolves.toMatchObject({ items: [], total: 0 });
     await expect(app.authApi.getMe()).resolves.toMatchObject({ email: user.email });
