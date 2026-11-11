@@ -41,6 +41,20 @@ async function setup(){const m=managementMocks();const d=documentMocks(m.getCase
  return {app,mocks,m,d,mount,user:userEvent.setup()};}
 const noop=()=>{};
 describe("P0 document review via MSW",()=>{
+ it.each(["DEFERRED","NEEDS_RECONFIRMATION"] as const)("preserves %s structured values through JSON editor and MSW",async status=>{
+   const {mount,mocks,user,app}=await setup();const field=mocks.fields(15,101)[0];
+   field.value={items:[null,0,false,{name:"base"}]};field.status=status;
+   mount(<FieldEditor field={field} scope="case" context={context} version={7} onClose={noop} onDirty={noop} onSaved={noop}/>);
+   const editor=screen.getByRole("textbox",{name:"구조형 값 (JSON)"});
+   expect(JSON.parse((editor as HTMLTextAreaElement).value)).toEqual(field.value);
+   expect(screen.queryByLabelText("수정값")).toBeNull();
+   fireEvent.change(editor,{target:{value:'{"items":[0,null,{"nested":[false]}]}'}});
+   await user.click(screen.getByRole("button",{name:"수정값 저장"}));
+   await waitFor(()=>expect(mocks.requests.some(r=>r.method==="PATCH")).toBe(true));
+   const saved=await reviewApi(app.api).fields(15,101);
+   expect(saved.fields[0].value).toEqual({items:[0,null,{nested:[false]}]});
+ });
+
  it("requests metadata and original Blob with Bearer, ignoring private previewUrl",async()=>{const {mount,mocks}=await setup();mount(<OriginalViewer workplaceId={3} documentId={101} />);expect(await screen.findByRole("img",{name:"문서 원문 1페이지"})).toHaveAttribute("src","blob:local-review-resource");expect(mocks.requests.filter(r=>/preview|file$/.test(r.path))).toHaveLength(2);expect(mocks.requests.every(r=>r.authorization==="Bearer msw-access-token")).toBe(true);expect(document.body.innerHTML).not.toContain("must-not-follow");});
  it("releases Blob URLs and file cache on unmount",async()=>{const {mount,app}=await setup();const v=mount(<OriginalViewer workplaceId={3} documentId={101} />);await screen.findByRole("img",{name:"문서 원문 1페이지"});const revoke=URL.revokeObjectURL;v.unmount();expect(revoke).toHaveBeenCalledWith("blob:local-review-resource");await waitFor(()=>expect(app.queryClient.getQueryData(reviewKeys.file(app.session.getSnapshot().generation,3,101))).toBeUndefined());});
  it("retries original failures and displays image decoding errors",async()=>{const {mount,user}=await setup();server.use(http.get(`${testApiUrl}/workplaces/3/documents/101/file`,()=>apiResponse({},403)));mount(<OriginalViewer workplaceId={3} documentId={101} />);expect(await screen.findByRole("alert")).toHaveTextContent("권한");server.use(http.get(`${testApiUrl}/workplaces/3/documents/101/file`,()=>new HttpResponse(new Uint8Array([1]),{headers:{"Content-Type":"image/png"}})));await user.click(screen.getByRole("button",{name:"다시 시도"}));fireEvent.error(await screen.findByRole("img",{name:"문서 원문 1페이지"}));expect(screen.getByRole("alert")).toHaveTextContent("이미지를 표시할 수 없습니다");});

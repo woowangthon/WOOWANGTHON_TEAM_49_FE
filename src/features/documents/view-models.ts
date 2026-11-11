@@ -2,7 +2,7 @@ import { ApiError } from "@/lib/api/error";
 import { businessErrorMessage } from "@/lib/api/form-errors";
 import type { DocumentDto, DocumentStatusDto } from "./schemas";
 export const typeLabels = { CONTRACT: "근로계약서", ATTENDANCE: "근태 자료", PAYSLIP: "급여명세서", DEPOSIT: "입금 자료" };
-export const statusLabels = { UPLOADED: "처리 대기", PROCESSING: "처리 중", READY: "처리 완료", REVIEW_REQUIRED: "검토 필요", FAILED: "처리 실패" };
+export const statusLabels = { UPLOADED: "처리 대기", PROCESSING: "처리 중", READ_READY: "읽기 완료 · 원문과 필드 검토 필요", READY: "처리 완료", REVIEW_REQUIRED: "검토 필요", FAILED: "처리 실패" };
 export const reviewLabels = { NOT_STARTED: "검토 전", IN_PROGRESS: "검토 중", CONFIRMED: "검토 확인 완료" };
 export const isProcessing = (status?: string) => status === "UPLOADED" || status === "PROCESSING";
 export function documentCard(dto: DocumentDto, status?: DocumentStatusDto) {

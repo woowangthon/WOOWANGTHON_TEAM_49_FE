@@ -13,6 +13,9 @@ export function reviewMocks(cases:CaseDetailDto[],documents:DocumentDto[], testA
   ];
   const initialFields=baseFields(101);
   if(development)initialFields.push(...Array.from({length:10},(_,i)=>({...initialFields[0],fieldId:504+i,key:`reviewSample${i+1}`,label:`검토 예시 ${i+1}`,value:i===9?null:i,status:i===9?"CONFLICTED" as const:"UNCONFIRMED" as const})));
+  if(development)initialFields.push(
+    {...initialFields[0],fieldId:520,key:"structuredDeferred",label:"보류·재확인 세부 내역",value:{items:[0,null,{label:"기본급"}]},valueType:"JSON",status:"DEFERRED"},
+    {...initialFields[0],fieldId:521,key:"structuredReconfirm",label:"보류·재확인 세부 내역",value:[0,false,null,{amount:100}],valueType:"JSON",status:"NEEDS_RECONFIRMATION"});
   originals.set(101,initialFields);
   const overrides=new Map<string,ExtractedField>();const requests:{method:string;path:string;body?:Record<string,unknown>;authorization:string|null}[]=[];
   const histories:{historyId:number;fieldId:number;previousValue:FieldValue;newValue:FieldValue;changedAt:string;changedBy:string;scope:string}[]=Array.from({length:21},(_,i)=>({historyId:i+1,fieldId:501,previousValue:i===0?null:0,newValue:0,changedAt:"2026-11-09T00:00:00+00:00",changedBy:"USER",scope:"CASE_OVERRIDE"}));

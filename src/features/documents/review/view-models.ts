@@ -1,8 +1,15 @@
 import { ApiError } from "@/lib/api/error";
 import { documentError } from "../view-models";
 import type { ExtractedField, FieldValue, PreviewDto, SourceDto } from "./schemas";
-export const fieldStatusLabels = {UNCONFIRMED:"미확인",CONFIRMED:"확인됨",MISSING:"값 없음",UNREADABLE:"판독 불가",CONFLICTED:"상충"};
-export function displayValue(value: FieldValue) {return value === null ? "값 없음" : typeof value === "boolean" ? value ? "예" : "아니요" : String(value);}
+export const fieldStatusLabels = {UNCONFIRMED:"미확인",CONFIRMED:"확인됨",MISSING:"값 없음",UNREADABLE:"판독 불가",CONFLICTED:"상충",DEFERRED:"보류",NEEDS_RECONFIRMATION:"재확인 필요"};
+export function displayValue(value: FieldValue) {return value === null ? "값 없음" : typeof value === "boolean" ? value ? "예" : "아니요" : typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);}
+export function fieldEditorView(field: ExtractedField, unknownShared = false) {
+  const structured = field.value !== null && typeof field.value === "object";
+  return {kind: structured ? "structured" as const : "scalar" as const,
+    text: unknownShared || field.value === null ? "" : structured ? JSON.stringify(field.value, null, 2) : String(field.value),
+    empty: !unknownShared && field.value === null, confirmed: false,
+    scalar: typeof field.value === "number" || field.valueType === "MONEY_KRW" ? "number" as const : typeof field.value === "boolean" ? "boolean" as const : "string" as const};
+}
 export function fieldView(field: ExtractedField) {
   return { ...field, valueLabel: displayValue(field.value), unitLabel: field.valueType === "MONEY_KRW" ? "원" : field.valueType,
     statusLabel: fieldStatusLabels[field.status], scopeLabel: field.effectiveValueOrigin === "CASE_OVERRIDE" ? "이 사례의 재정의" : "근무지 공유 기본값",
@@ -23,6 +30,7 @@ export function highlightBox(preview: PreviewDto, source: SourceDto | null | und
   return {left:`${x*100}%`,top:`${y*100}%`,width:`${width*100}%`,height:`${height*100}%`};
 }
 export function parseFieldValue(field: ExtractedField, text: string, empty: boolean, scalar?: "string"|"number"|"boolean"): FieldValue {
+  if(field.value !== null && typeof field.value === "object") throw new Error("구조형 값은 JSON 편집기를 사용해 주세요.");
   if(empty) return null;
   // Preserve established JSON scalar types. P0 specifies MONEY_KRW; unknown null-valued types require an explicit scalar selection in the form.
   if((scalar??typeof field.value) === "number" || field.valueType === "MONEY_KRW") {

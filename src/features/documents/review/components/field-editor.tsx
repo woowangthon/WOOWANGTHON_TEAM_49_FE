@@ -11,14 +11,13 @@ import { useCase } from "@/features/cases/queries";
 import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { ApiError } from "@/lib/api/error";
 import { useReviewAction, useFields } from "../queries";
-import { updateMetaSchema } from "../schemas";
+import { updateMetaSchema, valueSchema } from "../schemas";
 import type { ExtractedField, FieldPatch, ReviewContext, UpdateMeta } from "../schemas";
-import { parseFieldValue, reviewError } from "../view-models";
+import { fieldEditorView, parseFieldValue, reviewError } from "../view-models";
 const editorSchema=z.object({text:z.string(),empty:z.boolean(),confirmed:z.boolean(),scalar:z.enum(["string","number","boolean"])});
 type EditorValues=z.infer<typeof editorSchema>;
 function defaults(field:ExtractedField,unknownShared=false):EditorValues {
-  return {text:unknownShared?"":field.value===null?"":String(field.value),empty:!unknownShared&&field.value===null,confirmed:false,
-    scalar:typeof field.value==="number"||field.valueType==="MONEY_KRW"?"number":typeof field.value==="boolean"?"boolean":"string"};
+  return fieldEditorView(field,unknownShared);
 }
 export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved,linkedCaseIds}:{field:ExtractedField;scope:"case"|"shared";context:ReviewContext;version:number;onClose:()=>void;onDirty:(dirty:boolean)=>void;onSaved:(meta:UpdateMeta)=>void;linkedCaseIds?:number[]}){
   const id=useId();const mutation=useReviewAction(context);const latestCase=useCase(context.caseId);const latestFields=useFields(context.caseId,context.documentId);
@@ -27,6 +26,7 @@ export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved
   const form=useForm<EditorValues>({resolver:zodResolver(editorSchema),defaultValues:defaults(field,scope==="shared"&&field.hasCaseOverride)});
   const {register,handleSubmit,setError,setFocus,reset,formState:{errors,isSubmitting,isDirty}}=form;
   const empty=useWatch({control:form.control,name:"empty"}),scalar=useWatch({control:form.control,name:"scalar"});
+  const structured=fieldEditorView(field).kind==="structured";
   const busy=isSubmitting||mutation.isPending;
   const summary=useFormErrorFocus(errors,busy,setFocus,["text","empty","confirmed","scalar"]);
   useEffect(()=>{onDirty(isDirty||!!prepared);},[isDirty,prepared,onDirty]);
@@ -42,7 +42,7 @@ export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved
   };
   return <form aria-label={`${scope==="case"?"사례 재정의":"공유 기본값"} 편집`} className="mt-4 min-w-0 space-y-4 rounded-control border border-border p-4" onSubmit={event=>{void handleSubmit(async values=>{
     if(conflict||locked.current)return;
-    let value;try{value=parseFieldValue(field,values.text,values.empty,values.scalar);}catch(error){setError("text",{message:error instanceof Error?error.message:"값을 확인해 주세요."});return;}
+    let value;try{value=structured?valueSchema.parse(JSON.parse(values.text)):parseFieldValue(field,values.text,values.empty,values.scalar);}catch(error){setError("text",{message:error instanceof Error?error.message:"값을 확인해 주세요."});return;}
     if(value===null&&values.confirmed){setError("confirmed",{message:"값 없음은 확인할 수 없습니다."});return;}
     const patch:FieldPatch={value,...(values.confirmed?{confirmed:true}:{})};
     if(scope==="shared")setPrepared(patch);else await save(patch);
@@ -51,8 +51,8 @@ export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved
     <p className="text-caption text-muted">{scope==="shared"?"재정의가 없는 연결 사례에 영향을 줄 수 있습니다. 다른 사례의 재정의를 변경하지 않습니다.":"공유 기본값과 다른 사례의 값은 유지됩니다."}</p>
     {scope==="shared"&&field.hasCaseOverride&&<p className="text-caption">현재 보이는 값은 이 사례의 재정의입니다. 공유 기본값을 대신 채우지 않았습니다. 새 공유값을 직접 입력해 주세요.</p>}
     {field.value===null&&field.valueType!=="MONEY_KRW"&&<SelectField label="입력값 형식" id={`${id}-scalar`} {...register("scalar")}><option value="string">문자</option><option value="number">숫자</option><option value="boolean">예/아니요</option></SelectField>}
-    {scalar==="boolean"?<SelectField id={`${id}-value`} label="수정값" disabled={empty||busy} error={errors.text?.message} {...register("text")}><option value="">선택해 주세요</option><option value="true">예</option><option value="false">아니요</option></SelectField>:<TextField id={`${id}-value`} label="수정값" inputMode={scalar==="number"?"decimal":undefined} disabled={empty||busy} error={errors.text?.message} {...register("text")} />}
-    <label className="flex min-h-11 items-center gap-3"><input type="checkbox" className="size-5" disabled={busy} {...register("empty",{onChange:event=>{if(event.target.checked)form.setValue("confirmed",false);}})} /><span>값 없음 (null)</span></label>
+    {structured?<div><label htmlFor={`${id}-json`}>구조형 값 (JSON)</label><textarea id={`${id}-json`} className="min-h-48 w-full min-w-0 rounded-control border p-3 font-mono" disabled={busy} aria-invalid={!!errors.text} aria-describedby={errors.text?`${id}-json-error`:undefined} {...register("text")} /><p>배열·객체 구조와 null, 0을 유지하여 저장합니다.</p>{errors.text&&<p id={`${id}-json-error`} role="alert">올바른 JSON 값을 입력해 주세요.</p>}</div>:scalar==="boolean"?<SelectField id={`${id}-value`} label="수정값" disabled={empty||busy} error={errors.text?.message} {...register("text")}><option value="">선택해 주세요</option><option value="true">예</option><option value="false">아니요</option></SelectField>:<TextField id={`${id}-value`} label="수정값" inputMode={scalar==="number"?"decimal":undefined} disabled={empty||busy} error={errors.text?.message} {...register("text")} />}
+    <label className="flex min-h-11 items-center gap-3"><input type="checkbox" className="size-5" disabled={busy||structured} {...register("empty",{onChange:event=>{if(event.target.checked)form.setValue("confirmed",false);}})} /><span>값 없음 (null)</span></label>
     <label className="flex min-h-11 items-center gap-3"><input type="checkbox" className="size-5" disabled={busy||empty} {...register("confirmed")} /><span>수정한 값을 함께 확인</span></label>
     <p className="text-caption text-muted">확인을 선택하지 않고 값을 저장하면 미확인 상태로 돌아갑니다. 미확인은 0이 아닙니다.</p>
     {errors.confirmed&&<p role="alert">{errors.confirmed.message}</p>}{errors.root?.server&&<p ref={summary} tabIndex={-1} role="alert">{errors.root.server.message}</p>}

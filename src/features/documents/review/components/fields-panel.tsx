@@ -36,6 +36,8 @@ export function FieldsPanel({fields,context,inputVersion,onSource,onDirty,dirty,
       <div className="flex flex-wrap justify-between gap-2"><h3 className="break-words text-body font-bold">{field.label}</h3><span className="text-caption">{vm.statusLabel}</span></div>
       <p className="break-all text-body font-bold">{vm.valueLabel}{field.value!==null&&<span className="ml-2 text-caption font-normal">{vm.unitLabel}</span>}</p>
       <p className="text-caption text-muted">{vm.scopeLabel}</p>
+      {field.status==="DEFERRED"&&<p>보류된 값입니다. 원문을 검토한 뒤 수정하거나 명시적으로 확인해 주세요.</p>}
+      {field.status==="NEEDS_RECONFIRMATION"&&<p>재확인이 필요한 값입니다. 최신 원문과 값을 대조한 뒤 확인해 주세요.</p>}
       <div className="flex flex-wrap gap-2"><button className={secondaryButton} onClick={()=>onSource(field.source)}>원문 근거 보기</button>
         {field.status!=="CONFIRMED"&&<button className={secondaryButton} disabled={field.value===null||mutation.isPending||conflict||dirty} onClick={()=>{void perform(field,true);}}>값만 확인</button>}
 

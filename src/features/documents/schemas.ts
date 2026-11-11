@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const id = z.number().int().positive();
 export const documentTypes = ["CONTRACT", "ATTENDANCE", "PAYSLIP", "DEPOSIT"] as const;
-export const processingStatuses = ["UPLOADED", "PROCESSING", "READY", "REVIEW_REQUIRED", "FAILED"] as const;
+export const processingStatuses = ["UPLOADED", "PROCESSING", "READ_READY", "READY", "REVIEW_REQUIRED", "FAILED"] as const;
 export const processingSchema = z.enum(processingStatuses);
 export const linkSchema = z.object({
   linkId: id, caseId: id, documentId: id, purpose: z.string(),

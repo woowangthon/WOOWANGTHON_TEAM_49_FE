@@ -110,7 +110,7 @@ describe("document flows with MSW, never a live backend", () => {
     fireEvent.drop(zone,{dataTransfer:{files:[pdf()]}}); expect(screen.getByText("새자료.pdf")).toBeVisible();
     expect(mocks.requests).toHaveLength(0);
   });
-  it.each(["READY","REVIEW_REQUIRED","FAILED"] as const)("polls every 2s and stops on %s and unmount", async terminal => {
+  it.each(["READ_READY","READY","REVIEW_REQUIRED","FAILED"] as const)("polls every 2s and stops on %s and unmount", async terminal => {
     const {mount, mocks} = await setup(); const dto = {...mocks.getDocuments()[0], processingStatus:"UPLOADED" as const}; let calls=0;
     server.use(http.get(`${testApiUrl}/cases/15/documents/101`, () => { calls++; return apiResponse({documentId:101, processingStatus:calls===1 ? "PROCESSING" : terminal, reviewStatus:"NOT_STARTED", progress: calls===1 ? 40 : null}); }));
     const view = mount(<DocumentCard dto={dto} context={{kind:"case",id:15}} />);

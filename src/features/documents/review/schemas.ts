@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { processingSchema } from "../schemas";
 const id = z.number().int().positive();
-export const valueSchema = z.union([z.string(), z.number().finite(), z.boolean(), z.null()]);
-export const fieldStatusSchema = z.enum(["UNCONFIRMED", "CONFIRMED", "MISSING", "UNREADABLE", "CONFLICTED"]);
+export const valueSchema = z.json();
+export const fieldStatusSchema = z.enum(["UNCONFIRMED", "CONFIRMED", "MISSING", "UNREADABLE", "CONFLICTED", "DEFERRED", "NEEDS_RECONFIRMATION"]);
 export const reviewStatusSchema = z.enum(["NOT_STARTED", "IN_PROGRESS", "CONFIRMED"]);
 export const sourceSchema = z.object({
   documentId: id, page: id.nullable(), text: z.string().nullable().optional(),
@@ -14,7 +14,7 @@ export const fieldSchema = z.object({
   editedByUser: z.boolean(), effectiveValueOrigin: z.enum(["SHARED_DEFAULT", "CASE_OVERRIDE"]), hasCaseOverride: z.boolean(),
   confirmedAt: z.iso.datetime({offset: true}).nullable(), source: sourceSchema.nullable(),
 });
-export const fieldsSchema = z.object({documentId: id, caseId: id, processingStatus: processingSchema, reviewStatus: reviewStatusSchema, fields: z.array(fieldSchema)});
+export const fieldsSchema = z.object({documentId: id, caseId: id, processingStatus: z.string(), reviewStatus: reviewStatusSchema, fields: z.array(fieldSchema)});
 export const previewSchema = z.object({
   documentId: id, mediaType: z.string(), pageCount: id,
   coordinateSystem: z.string().nullable(), rotationDegrees: z.number().nullable(), supportsHighlight: z.boolean(),

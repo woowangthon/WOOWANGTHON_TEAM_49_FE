@@ -3,7 +3,7 @@ import type { DocumentDto } from "@/features/documents/schemas";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 import { apiResponse } from "./response";
 export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0.0.1:8000/api/v1", development = false, idOffset = 0) {
-  const documents: DocumentDto[] = Array.from({length: 21}, (_, i) => ({ documentId: 101 + i, workplaceId: 3, workplaceName: "카페 나무", documentType: i === 0 ? "CONTRACT" : "PAYSLIP", fileName: i === 0 ? "근로계약서.pdf" : `급여명세서-${i}.pdf`, processingStatus: "READY", reviewStatus: "NOT_STARTED", progress: null, linkedCaseIds: i === 0 ? [15, 16] : [], uploadedAt: "2026-11-09T00:00:00+00:00" }));
+  const documents: DocumentDto[] = Array.from({length: 21}, (_, i) => ({ documentId: 101 + i, workplaceId: 3, workplaceName: "카페 나무", documentType: i === 0 ? "CONTRACT" : "PAYSLIP", fileName: i === 0 ? "근로계약서.pdf" : `급여명세서-${i}.pdf`, processingStatus: development && i === 1 ? "READ_READY" : "READY", reviewStatus: "NOT_STARTED", progress: null, linkedCaseIds: i === 0 ? [15, 16] : [], uploadedAt: "2026-11-09T00:00:00+00:00" }));
   let links = [{ linkId: 777, caseId: 15, documentId: 101, purpose: "CONTRACT_FOR_PERIOD", applicableFrom: "2026-10-03", applicableTo: "2026-11-02", overrideCount: 0 }];
   const requests: {method: string; path: string; body?: Record<string, unknown>}[] = [];
   const record = (request: Request, body?: Record<string, unknown>) => !development && requests.push({method: request.method, path: new URL(request.url).pathname + new URL(request.url).search, body});
