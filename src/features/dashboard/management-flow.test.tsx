@@ -25,8 +25,8 @@ import { managementMocks } from "@/test/management-handlers";
 
 import { DashboardScreen } from "./dashboard-screen";
 
-const navigation = vi.hoisted(() => ({ router: { replace: vi.fn() } }));
-vi.mock("next/navigation", () => ({ useRouter: () => navigation.router, usePathname: () => "/dashboard", useSearchParams: () => new URLSearchParams() }));
+const navigation = vi.hoisted(() => ({ router: { replace: vi.fn() }, pathname: "/dashboard" }));
+vi.mock("next/navigation", () => ({ useRouter: () => navigation.router, usePathname: () => navigation.pathname, useSearchParams: () => new URLSearchParams() }));
 
 const apps: AppServices[] = [];
 beforeAll(() => {
@@ -34,7 +34,7 @@ beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open", ""); };
   HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); };
 });
-beforeEach(() => navigation.router.replace.mockReset());
+beforeEach(() => { navigation.router.replace.mockReset(); navigation.pathname = "/dashboard"; });
 afterEach(() => { cleanup(); apps.splice(0).forEach((app) => { app.session.clear(); app.queryClient.clear(); }); });
 
 async function setup(empty = false) {
@@ -56,6 +56,10 @@ describe("dashboard and management user flows with MSW", () => {
     const heading = screen.getByRole("heading", { name: "전체 근무지" });
     expect(within(heading.parentElement!).getByText("21개")).toBeVisible();
     expect(screen.getByText("작업 완료", { exact: true })).toBeVisible();
+    const scope = screen.getByText("목록과 통계의 조회 범위");
+    expect(scope.closest("details")).not.toHaveAttribute("open");
+    await userEvent.click(scope);
+    expect(scope.closest("details")).toHaveAttribute("open");
     expect(screen.getByText(/첫 페이지에 조회된 최대 20건/)).toBeVisible();
     expect(screen.getByText(/작업 단계는 검사 완료나 결과 일치를 의미하지 않습니다/)).toBeVisible();
   });
@@ -324,8 +328,20 @@ it("provides all case tasks without workflow locks and preserves workplace route
   expect(within(tasks).getByRole("link", { name: "상담 준비" })).toHaveAttribute("href", "/cases/15/questions");
   expect(within(tasks).getAllByRole("link")).toHaveLength(6);
   expect(screen.getByRole("link", { name: "급여 사례 전체 목록" })).toHaveAttribute("href", "/cases");
-  await screen.findByText("카페 나무", { selector: "summary" });
+  const workplaceName = await screen.findByText("카페 나무", { selector: "summary strong" });
+  expect(workplaceName.closest("summary")).toHaveTextContent("급여 사례");
   expect(screen.getAllByRole("link", { hidden: true }).some(link => link.getAttribute("href") === "/workplaces/3/documents")).toBe(true);
+});
+it("marks only the create route active and keeps workplace tree destinations accessible", async () => {
+  const { mount, user } = await setup();
+  navigation.pathname = "/cases/new";
+  mount(<WorkspaceNavigation />);
+  expect(screen.getByRole("link", { name: "새 검토" })).toHaveAttribute("aria-current", "page");
+  expect(screen.getByRole("link", { name: "급여 사례 전체 목록" })).not.toHaveAttribute("aria-current");
+  const workplace = (await screen.findByText("카페 나무", { selector: "summary strong" })).closest("details")!;
+  await user.click(within(workplace).getByText("카페 나무"));
+  expect(workplace).toHaveAttribute("open");
+  expect(within(workplace).getByRole("link", { name: "AI 자료 도우미" })).toHaveAttribute("href", "/workplaces/3/chats");
 });
 
 it("keeps overlapping attention/recent cases and server totals distinct", async () => {

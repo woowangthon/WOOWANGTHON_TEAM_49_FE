@@ -17,9 +17,9 @@ export function StatusBadge({ children, tone = "neutral" }: { children: ReactNod
   return <span className={`inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1 text-caption font-bold ${tones[tone]}`}>{children}</span>;
 }
 export function Notice({ children, tone = "neutral", role }: { children: ReactNode; tone?: keyof typeof tones; role?: "alert" | "status" }) {
-  return <div role={role} className={`rounded-control border border-current p-4 text-body ${tones[tone]}`}>{children}</div>;
+  return <div role={role} className={`ui-notice rounded-control p-4 text-body ${tones[tone]}`}>{children}</div>;
 }
 // Native details keeps keyboard operation and children mounted while collapsed.
 export function Disclosure({ summary, children, ...props }: ComponentProps<"details"> & { summary: ReactNode }) {
-  return <details {...props} className={`rounded-panel border border-border p-4 ${props.className ?? ""}`}><summary className="min-h-11 content-center font-bold">{summary}</summary><div className="mt-3 min-w-0">{children}</div></details>;
+  return <details {...props} className={`ui-disclosure rounded-panel border border-border p-4 ${props.className ?? ""}`}><summary className="min-h-11 content-center font-bold">{summary}</summary><div className="mt-3 min-w-0">{children}</div></details>;
 }

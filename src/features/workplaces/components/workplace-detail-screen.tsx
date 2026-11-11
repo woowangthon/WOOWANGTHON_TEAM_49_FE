@@ -27,13 +27,15 @@ export function WorkplaceDetailScreen({ id }: { id: number }) {
     <div className="space-y-6">
       <Link href="/workplaces" className="inline-flex min-h-11 items-center text-body underline">근무지 목록</Link>
       <PageHeading title={workplace.name} description={`${workplace.industry} · ${workplace.region} · ${workplace.employment}`} action={<Link href={`/cases/new?workplaceId=${id}`} className={primaryButton}>이 근무지에서 사례 시작</Link>} />
+      <nav aria-label="근무지 자료와 도우미" className="workplace-quick-actions"><Link href={`/workplaces/${id}/documents`} className={secondaryButton}>근무지 공유 자료함</Link><Link href={`/workplaces/${id}/chats`} className={secondaryButton}>AI 자료 도우미</Link></nav>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-title font-extrabold">이 근무지의 급여 사례</h2><p className="text-caption text-muted">등록된 급여 사례 {workplace.caseCount}개</p></div>
+      <CaseList workplaceId={id} />
       {saved && <p role="status" className="rounded-control bg-success-soft p-4 text-body">근무지 정보를 저장했습니다.</p>}
       <section className={cardStyle} aria-label="근무지 정보 관리">
+        <h2 className="mb-4 text-body font-bold text-muted">근무지 정보 관리</h2>
         {editing ? <WorkplaceForm initial={query.data} onSaved={() => { setEditing(false); setSaved(true); }} onCancel={() => setEditing(false)} /> : <div className="flex flex-wrap items-center justify-between gap-4"><p className="text-body">등록된 급여 사례 {workplace.caseCount}개</p><div className="flex flex-wrap gap-3"><button type="button" className={secondaryButton} onClick={() => { setEditing(true); setSaved(false); }}>근무지 수정</button><DeleteWorkplace id={id} /></div></div>}
       </section>
-      <Link href={`/workplaces/${id}/documents`} className={secondaryButton}>근무지 공유 자료함</Link>
-      <h2 className="text-title font-extrabold">이 근무지의 급여 사례</h2>
-      <Link href={`/workplaces/${id}/chats`} className={secondaryButton}>AI 자료 도우미</Link><CaseList workplaceId={id} /><details className={cardStyle}><summary className="font-bold">근무지 지급 거래 관리</summary><PaymentScreen workplaceId={id}/></details>
+      <details className={cardStyle}><summary className="font-bold">근무지 지급 거래 관리</summary><PaymentScreen workplaceId={id}/></details>
     </div>
   );
 }

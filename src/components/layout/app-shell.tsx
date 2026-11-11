@@ -19,7 +19,7 @@ export function AppShell({
         <Link href="/" className="inline-flex min-h-11 min-w-11 items-center text-lg font-extrabold tracking-tight text-primary workspace-brand">월급잇다</Link>
         <nav aria-label="주 메뉴" className="flex flex-1 flex-col">{menu}</nav>
       </aside>
-      <div className="min-w-0">
+      <div className="workspace-canvas min-w-0">
         <header className="workspace-mobile-header">
           <Link href="/" className="inline-flex min-h-11 min-w-11 items-center text-lg font-extrabold tracking-tight text-primary workspace-brand">월급잇다</Link>
           <MobileNavigation breakpoint="691px"><nav aria-label="주 메뉴" className="flex flex-1 flex-col">{menu}</nav></MobileNavigation>
