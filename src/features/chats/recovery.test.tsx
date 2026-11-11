@@ -21,6 +21,13 @@ beforeEach(async()=>{
 });
 afterEach(()=>{cleanup();app.session.clear();app.queryClient.clear();vi.unstubAllGlobals()});
 function mount(id?:number){return render(<AppServicesContext value={app}><QueryClientProvider client={app.queryClient}><ChatScreen workplaceId={3} chatId={id}/></QueryClientProvider></AppServicesContext>)}
+it('explains how to start a scoped conversation without inventing messages',async()=>{
+ mount();expect(screen.getByRole('region',{name:'AI 대화 시작 안내'})).toBeVisible();
+ expect(screen.getByRole('heading',{name:'이 근무지의 자료, 무엇이 궁금하세요?'})).toBeVisible();
+ expect(screen.getByText(/대화 목록에서 참조할 급여 사례와 제목을 정해 시작하세요/)).toBeVisible();
+ expect(screen.queryByRole('region',{name:'대화 메시지'})).toBeNull();
+ await screen.findAllByRole('option',{name:'Case #15'});
+});
 it('keeps received text visible when the saved history refresh fails and offers retry',async()=>{
  const chat=await chatApi(app.api,3).create('복구 테스트',15);let failed=false;
  server.use(http.post(`${testApiUrl}/workplaces/3/chats/:id/messages`,()=>{failed=true}),http.get(`${testApiUrl}/workplaces/3/chats/:id`,()=>failed?apiResponse({errorCode:'UPSTREAM_UNAVAILABLE'},503):undefined));

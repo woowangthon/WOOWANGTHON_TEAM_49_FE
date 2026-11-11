@@ -62,6 +62,7 @@ function ChatWorkspace({workplaceId:w,chatId:id}:{workplaceId:number;chatId?:num
  return <div className="t7-chat min-w-0 space-y-4 [overflow-wrap:anywhere]">
  <Link href={`/workplaces/${w}`} className="inline-flex min-h-11 min-w-11 items-center underline">근무지로 돌아가기</Link><p className="text-caption text-muted">근무지 #{w} · AI 상담 준비</p><h1 className="text-[28px] min-[691px]:text-[33px] font-extrabold tracking-tight">AI 자료 도우미</h1>
  <p>AI 설명은 공식 임금 계산 결과와 구분됩니다. 저장된 모든 과거 대화가 모델에 전달된다는 의미는 아닙니다.</p>
+ {!id&&<section aria-label="AI 대화 시작 안내" className="mx-auto max-w-[765px] space-y-4 rounded-panel border border-border bg-surface px-5 py-8 text-center"><span aria-hidden="true" className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-linear-to-br from-[#6f8fe8] to-[#7963c7] text-2xl text-white shadow-card">✦</span><h2 className="text-title font-extrabold">이 근무지의 자료, 무엇이 궁금하세요?</h2><p className="text-body text-muted">대화 목록에서 참조할 급여 사례와 제목을 정해 시작하세요. 답변의 근거는 원문과 공식 결과에서 다시 확인할 수 있습니다.</p></section>}
  <MobileNavigation label="채팅 목록" title="대화 목록">{chatList}</MobileNavigation>
  {error&&<p role="alert">{error}</p>}
  <div className="grid min-w-0 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">

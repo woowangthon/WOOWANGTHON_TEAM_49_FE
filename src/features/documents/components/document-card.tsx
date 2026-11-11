@@ -24,7 +24,7 @@ export function DocumentCard({ dto, context, inputVersion, selectableCaseId, can
     {active && item.progress != null && <label className="mt-3 block text-caption">서버 문서 처리 {item.progress}%<progress className="mt-2 block w-full" max={100} value={item.progress} /></label>}
     {status.isError && <div role="alert" className="mt-3 text-body">{documentError(status.error)}<button className={`mt-2 ${secondaryButton}`} onClick={() => { void status.refetch(); }}>상태 다시 조회</button></div>}
     <p className="mt-3 text-caption text-muted">{item.uploadedLabel}</p>
-    <Link className="mt-2 min-h-11 break-all text-body underline" href={`/workplaces/${dto.workplaceId}/documents`}>{dto.workplaceName ?? `근무지 #${dto.workplaceId}`} 자료함</Link>
+    <Link className="mt-2 inline-flex min-h-11 items-center break-all text-body underline" href={`/workplaces/${dto.workplaceId}/documents`}>{dto.workplaceName ?? `근무지 #${dto.workplaceId}`} 자료함</Link>
     {dto.linkedCaseIds === undefined ? <p className="text-caption text-muted">연결 사례 정보 미제공</p> : <div className="text-caption"><p>연결 사례 {dto.linkedCaseIds.length}개</p><div className="flex flex-wrap gap-x-3">{dto.linkedCaseIds.map(id => <Link className="inline-flex min-h-11 items-center underline" key={id} href={`/cases/${id}/upload`}>사례 #{id}</Link>)}</div></div>}
     {caseId&&<Link className={`mt-3 ${secondaryButton}`} href={`/cases/${caseId}/review?documentId=${dto.documentId}`}>원문·추출값 검토</Link>}
     {dto.link && <div className="mt-3 break-words text-body"><p>이 사례에 연결됨 · 목적: {dto.link.purpose}</p><p>적용기간: {dto.link.applicableFrom ?? "시작 미지정"} ~ {dto.link.applicableTo ?? "종료 미지정"}</p></div>}
