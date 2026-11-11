@@ -31,7 +31,7 @@ export class ApiError extends Error {
 
   constructor(
     status: number,
-    options: ApiErrorData & {
+    options: Partial<ApiErrorData> & {
       kind?: ErrorKind;
       retryAfter?: string | null;
     } = {},
@@ -42,7 +42,9 @@ export class ApiError extends Error {
     this.status = status;
     this.kind = options.kind ?? httpKinds[status] ?? (status >= 500 ? "server" : "http");
     this.errorCode = options.errorCode;
-    this.details = options.details;
+    // UI consumers inspect named properties only; free JSON belongs to the wire DTO.
+    this.details = options.details !== null && typeof options.details === "object" && !Array.isArray(options.details)
+      ? options.details : undefined;
     this.fieldErrors = options.errors ?? [];
     this.retryAfter = options.retryAfter ?? null;
   }

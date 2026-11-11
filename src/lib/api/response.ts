@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ApiErrorData } from "@/types/api";
 
 import { ApiError } from "./error";
 
@@ -8,10 +9,10 @@ const envelopeSchema = z.object({
   data: z.unknown(),
 });
 
-const errorDataSchema = z.object({
-  errorCode: z.string().optional(),
-  details: z.record(z.string(), z.unknown()).optional(),
-  errors: z.array(z.object({ field: z.string(), reason: z.string() })).optional(),
+export const errorDataSchema = z.object({
+  errorCode: z.string(),
+  details: z.json().optional(),
+  errors: z.array(z.object({ field: z.string(), reason: z.string() })).nullable().optional(),
 });
 
 export function protocolError(): ApiError {
@@ -48,13 +49,20 @@ export async function readJsonData(response: Response): Promise<unknown> {
 }
 
 export async function readApiError(response: Response): Promise<ApiError> {
-  let data = {};
+  let data: Partial<ApiErrorData> = {};
   if (hasMediaType(response, "application/json")) {
     try {
       const envelope = envelopeSchema.safeParse(await response.json());
       if (envelope.success) {
         const parsed = errorDataSchema.safeParse(envelope.data.data);
         if (parsed.success) data = parsed.data;
+        else {
+          // Recover the business code without accepting a malformed wire DTO.
+          const code = z.object({ errorCode: z.string() }).safeParse(envelope.data.data);
+          if (code.success) data = code.data;
+          const ancillary = errorDataSchema.omit({ errorCode: true }).safeParse(envelope.data.data);
+          if (ancillary.success) data = { ...data, ...ancillary.data };
+        }
       }
     } catch {
       // Proxies may return an empty/malformed error body. HTTP status remains authoritative.

@@ -10,10 +10,11 @@ export interface ApiFieldError {
   reason: string;
 }
 
+/** Wire DTO: P0 ErrorData. UI normalization belongs in ApiError. */
 export interface ApiErrorData {
-  errorCode?: string;
-  details?: Record<string, unknown>;
-  errors?: ApiFieldError[];
+  errorCode: string;
+  details?: JsonValue;
+  errors?: ApiFieldError[] | null;
 }
 
 export type JsonValue =
