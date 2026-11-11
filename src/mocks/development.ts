@@ -1,3 +1,4 @@
+import { loginValidator } from "./shared/auth-validation";
 import { signupRequestSchema, forgotPasswordRequestSchema, resetPasswordRequestSchema } from "@/features/auth/schemas";
 import { caseDocumentResponse } from "./shared/document-handlers";
 import { getResponse, http, HttpResponse } from "msw";
@@ -11,7 +12,8 @@ import { apiResponse } from "./shared/response";
 import { samplePdf } from "./sample";
 import { inputMocks } from "./shared/input-handlers";
 
-export const demoAccount = { email: "worker@example.com", password: "password1234", name: "가상 근로자" };
+export const demoProfile = { email: "worker@example.com", password: "password1234", name: "가상 근로자" };
+export const demoAccount = { email: demoProfile.email, password: demoProfile.password };
 // This cookie is an inert development marker, never an authentication credential.
 const marker = "wageitda_mock_session";
 let latestResetToken = "";
@@ -135,7 +137,7 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
 export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   const seed = createBusinessScenario(baseUrl, true, 0);
   const stores = new Map([[7, seed]]);
-  const users = new Map([[demoAccount.email, { ...demoAccount, userId: 7 }]]);
+  const users = new Map([[demoAccount.email, { ...demoProfile, userId: 7 }]]);
   let activeUser = users.get(demoAccount.email)!;
   let token = "";
   latestResetToken = "";
@@ -167,7 +169,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     // P4 conditional receipt fixture. No artificial physical purge completion.
     http.get(`${baseUrl}/users/me/deletion`, () => receipt ? apiResponse({ status: "LEGAL_HOLD", normalStoragePurgeDueAt: null }) : fail("AUTH_REQUIRED", 401)),
     http.post(`${baseUrl}/auth/signup`, async ({ request }) => {
-      const body = await request.json() as typeof demoAccount;
+      const body = await request.json() as typeof demoProfile;
       if (!signupRequestSchema.safeParse(body).success) return fail("VALIDATION_ERROR", 422);
       if (users.has(body.email)) return fail("EMAIL_ALREADY_EXISTS", 409);
       users.set(body.email, { ...body, userId: users.size + 7 });
@@ -175,7 +177,8 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       return apiResponse({ userId: users.get(body.email)!.userId, email: body.email, name: body.name }, 201);
     }),
     http.post(`${baseUrl}/auth/login`, async ({ request }) => {
-      const body = await request.json() as typeof demoAccount;
+      const body: unknown = await request.json().catch(() => undefined);
+      if (!loginValidator(body)) return fail("VALIDATION_ERROR", 422);
       const user = users.get(body.email);
       if (!user || deleted.has(user.email) || user.password !== body.password) return fail("INVALID_CREDENTIALS", 401);
       receipt = false;

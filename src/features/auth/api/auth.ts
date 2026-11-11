@@ -20,7 +20,7 @@ export function createAuthApi(api: ApiClient, baseUrl: string) {
       "/auth/signup", () => undefined, { method: "POST", body: signupRequestSchema.parse(body), auth: "none", signal, expectedStatus: 201 },
     ),
     login: (body: LoginRequest, signal?: AbortSignal) => api.requestJson(
-      "/auth/login", decode(loginResponseSchema), { method: "POST", body, auth: "none", signal, expectedStatus: 200 },
+      "/auth/login", decode(loginResponseSchema), { method: "POST", body: { email: body.email, password: body.password }, auth: "none", signal, expectedStatus: 200 },
     ),
     forgotPassword: (email: string) => api.requestAccepted("/auth/forgot-password", { method: "POST", body: forgotPasswordRequestSchema.parse({ email }), auth: "none" }),
     resetPassword: (token: string, newPassword: string) => api.requestNoContent("/auth/reset-password", { method: "POST", body: resetPasswordRequestSchema.parse({ token, newPassword }), auth: "none" }),

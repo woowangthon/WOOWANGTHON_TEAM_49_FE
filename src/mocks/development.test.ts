@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
 import { server, testApiUrl } from "@/test/server";
-import { clearMockSession, createDevelopmentScenario, demoAccount } from "./development";
+import { clearMockSession, createDevelopmentScenario, demoAccount, demoProfile } from "./development";
 
 describe("browser development scenario through the existing MSW infrastructure", () => {
   let token: string;
@@ -21,7 +21,7 @@ describe("browser development scenario through the existing MSW infrastructure",
   });
   it("rejects wrong passwords and duplicate signup", async () => {
     expect((await fetch(`${testApiUrl}/auth/login`, { method: "POST", body: JSON.stringify({ ...demoAccount, password: "wrong" }) })).status).toBe(401);
-    expect((await fetch(`${testApiUrl}/auth/signup`, { method: "POST", body: JSON.stringify(demoAccount) })).status).toBe(409);
+    expect((await fetch(`${testApiUrl}/auth/signup`, { method: "POST", body: JSON.stringify(demoProfile) })).status).toBe(409);
   });
   it("keeps newly created resources visible and returns 404 after deletion", async () => {
     const response = await request("/workplaces", token, "POST", { name: "가상 근무지", employmentStatus: "CURRENT", industry: null, region: null });
