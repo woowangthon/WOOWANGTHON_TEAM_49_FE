@@ -50,7 +50,8 @@ describe('independent P0 contracts', () => {
   });
   it('checks method, concrete path ID, query ranges, unknown query/body and media type', () => {
     expect(api.request({ method: 'GET', url: '/api/v1/documents?page=1&size=100' }).valid).toBe(true);
-    for (const url of ['/api/v1/documents?page=0', '/api/v1/documents?size=101', '/api/v1/documents?processingStatus=READY', '/api/v1/document-replacements/replacement-1', '/unknown']) expect(api.request({ method: 'GET', url }).valid).toBe(false);
+    for (const url of ['/api/v1/documents?page=0', '/api/v1/documents?size=101', '/api/v1/document-replacements/replacement-1', '/unknown']) expect(api.request({ method: 'GET', url }).valid).toBe(false);
+    expect(api.request({ method: 'GET', url: '/api/v1/documents?processingStatus=READY' })).toMatchObject({valid: true, undeclaredQuery: ['processingStatus']});
     expect(api.request({ method: 'TRACE', url: '/health' }).valid).toBe(false);
     expect(api.request({ method: 'GET', url: '/health', body: {} }).valid).toBe(false);
     expect(api.request({ ...patch, body: {}, contentType: 'text/plain' }).valid).toBe(false);

@@ -20,7 +20,10 @@ describe("replacement OpenAPI transport (independent of FE schemas)",()=>{
   expect(api.response(get,200,{code:200,message:"ok",data:{}})).toMatchObject({valid:true,coverage:"free-json"});
   expect(api.response(get,202,{}).valid).toBe(false);
   const upload={method:"POST",url:"/api/v1/cases/15/documents/101/replace"};
-  expect(api.request({...upload,contentType:"multipart/form-data",body:{file:"binary",expectedInputVersion:7}}).valid).toBe(true);
+  const body=new FormData();
+  body.set("file",new File(["synthetic bytes"],"replacement.pdf",{type:"application/pdf"}));
+  body.set("expectedInputVersion","7");
+  expect(api.request({...upload,body}).valid).toBe(true);
   expect(api.response(upload,202,{code:202,message:"ok",data:{}}).valid).toBe(true);
   expect(api.response(upload,200,{}).valid).toBe(false);
  });
