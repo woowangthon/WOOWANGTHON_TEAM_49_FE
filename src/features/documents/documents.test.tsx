@@ -52,8 +52,8 @@ describe("document flows with MSW, never a live backend", () => {
     await user.selectOptions(screen.getByLabelText("문서 유형 필터"), "CONTRACT");
     expect(await screen.findByRole("article", {name: "근로계약서.pdf"})).toBeVisible();
     await user.selectOptions(screen.getByLabelText("처리 상태 필터"), "FAILED");
-    expect(await screen.findByText("등록된 자료가 없습니다")).toBeVisible();
-    expect(mocks.requests.some(r => r.path.includes("documentType=CONTRACT&processingStatus=FAILED"))).toBe(true);
+    expect(await screen.findByText("현재 페이지에 검색 결과가 없습니다.")).toBeVisible();
+    expect(mocks.requests.some(r => r.path.includes("processingStatus=FAILED"))).toBe(false);
     expect(mocks.requests.some(r => r.path.includes("page=2&size=20"))).toBe(true);
   });
   it("filters workplaces and confines filename search to the current page", async () => {

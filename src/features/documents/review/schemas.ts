@@ -27,12 +27,14 @@ export const updateMetaSchema = z.object({
 });
 export const fieldUpdatedSchema = updateMetaSchema.extend({fieldId: id, value: valueSchema, status: fieldStatusSchema});
 export const overrideRemovedSchema = updateMetaSchema.extend({fieldId: id, effectiveValueOrigin: z.literal("SHARED_DEFAULT")});
-export const historySchema = z.object({
-  historyId: id, fieldId: id, previousValue: valueSchema, newValue: valueSchema,
-  changedAt: z.iso.datetime({offset:true}), changedBy: z.string(), scope: z.string(),
-});
+// HTML API-047 supplement; P0 only declares free JSON here.
+const historyValueSchema = z.object({value: valueSchema, status: z.string(), origin: z.string().optional(), originalDocumentId: z.number().int().optional()});
+export const historyWireSchema = z.object({historyId: id, scope: z.string(), previous: historyValueSchema, new: historyValueSchema, createdAt: z.string()});
+export const historySchema = historyWireSchema.transform(wire=>({...wire, previousValue:wire.previous.value, newValue:wire.new.value, changedAt:wire.createdAt}));
+export const historyListSchema = z.object({items:z.array(historySchema)});
+export const reviewConfirmedSchema = z.object({documentId:id, reviewStatus:reviewStatusSchema, unconfirmedFieldIds:z.array(id)}).extend(updateMetaSchema.shape);
 export const reviewSchema = z.object({
-  documentId: id, caseId: id, processingStatus: processingSchema, reviewStatus: reviewStatusSchema,
+  documentId: id, caseId: id.optional(), processingStatus: processingSchema, reviewStatus: reviewStatusSchema,
   confirmedFieldCount: z.number().int().nonnegative().optional(), totalFieldCount: z.number().int().nonnegative().optional(),
   unconfirmedFieldIds: z.array(id).optional(), reasonCodes: z.array(z.string()).optional(), confirmed: z.boolean().optional(),
 }).extend(updateMetaSchema.shape);
