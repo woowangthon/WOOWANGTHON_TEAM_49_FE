@@ -22,6 +22,9 @@ beforeEach(async()=>{
 afterEach(()=>{cleanup();services.session.clear();services.queryClient.clear();vi.unstubAllGlobals();vi.restoreAllMocks()});
 function mount(node:ReactNode){return render(<AppServicesContext value={services}><QueryClientProvider client={services.queryClient}>{node}</QueryClientProvider></AppServicesContext>)}
 it("preserves selected originals across local pages without a mutation",async()=>{
+ const mock=createDevelopmentScenario(testApiUrl);
+ server.use(...mock.handlers);
+ await services.auth.login({email:"worker@example.com",password:"password1234"});
  let posts=0;
  server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:Array.from({length:11},(_,i)=>({documentId:i+201,workplaceId:3,documentType:"PAYSLIP",fileName:`original-${i+1}.pdf`,processingStatus:"READY",link:{linkId:i+1,caseId:15,documentId:i+201,purpose:"PAYSLIP",applicableFrom:null,applicableTo:null}})),total:11,page:1,size:100})),http.post(`${testApiUrl}/cases/15/reports`,()=>{posts++;return apiResponse({},500)}));
  mount(<ReportsScreen caseId={15}/>);

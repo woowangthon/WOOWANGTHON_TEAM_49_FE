@@ -22,6 +22,7 @@ import { createAppServices, type AppServices } from "@/lib/app-services";
 import { businessKeys as keys } from "@/lib/query/business-keys";
 import { apiResponse, server, testApiUrl } from "@/test/server";
 import { managementMocks } from "@/test/management-handlers";
+import { inputMocks } from "@/mocks/shared/input-handlers";
 
 import { DashboardScreen } from "./dashboard-screen";
 import { caseApi } from "@/features/cases/api";
@@ -30,17 +31,28 @@ const navigation = vi.hoisted(() => ({ router: { replace: vi.fn() }, pathname: "
 vi.mock("next/navigation", () => ({ useRouter: () => navigation.router, usePathname: () => navigation.pathname, useSearchParams: () => new URLSearchParams() }));
 
 const apps: AppServices[] = [];
+const unhandledRequests: string[] = [];
 beforeAll(() => {
+  server.events.on("request:unhandled", ({ request }) => {
+    unhandledRequests.push(`${request.method} ${request.url}`);
+  });
   // jsdom does not implement modal presentation. Native keyboard/focus is checked in Edge.
   HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open", ""); };
   HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); };
 });
 beforeEach(() => { navigation.router.replace.mockReset(); navigation.pathname = "/dashboard"; });
-afterEach(() => { cleanup(); apps.splice(0).forEach((app) => { app.session.clear(); app.queryClient.clear(); }); });
+afterEach(() => {
+  cleanup();
+  apps.splice(0).forEach((app) => { app.session.clear(); app.queryClient.clear(); });
+  expect(unhandledRequests.splice(0)).toEqual([]);
+});
 
 async function setup(empty = false) {
   const mocks = managementMocks({ empty });
-  server.use(...mocks.handlers);
+  // Detail screens also mount payment/comparison queries inside disclosures.
+  // Share the management store so these requests exercise consistent Case data.
+  const inputs = inputMocks(mocks.getCases, testApiUrl);
+  server.use(...mocks.handlers, ...inputs.handlers);
   const app = createAppServices();
   apps.push(app);
   await app.auth.login({ email: "worker@example.com", password: "password1234" });
