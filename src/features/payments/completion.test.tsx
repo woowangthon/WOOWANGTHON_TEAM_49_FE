@@ -14,11 +14,35 @@ import { paymentsApi } from "./api";
 import { caseInputsApi } from "@/features/case-inputs/api";
 import { ComparisonValues,DepositComparisonPanel } from "./comparison-panel";
 import { PaymentScreen } from "./payment-screen";
+import { createOpenApiContract } from "@/test/openapi/contract";
 const apps:AppServices[]=[];
 afterEach(()=>{cleanup();apps.splice(0).forEach(a=>{a.session.clear();a.queryClient.clear();});});
 async function setup(){const management=managementMocks();const mock=inputMocks(management.getCases);server.use(...mock.handlers,...management.handlers);const app=createAppServices();apps.push(app);await app.auth.login({email:"worker@example.com",password:"password1234"});const api=paymentsApi(app.api);const c=management.getCases().find(c=>c.caseId===15)!;return {app,api,mock,c,mount:(node:React.ReactNode)=>render(<AppServicesContext value={app}><QueryClientProvider client={app.queryClient}>{node}</QueryClientProvider></AppServicesContext>)};}
 const input={paymentMethod:"BANK_TRANSFER" as const,transactionDate:"2026-11-10",amount:100,source:"USER_INPUT" as const,confirmationStatus:"USER_REPORTED" as const};
 describe("deposit completion",()=>{
+ it("creates and edits from the form with independently validated actual requests",async()=>{
+  const {c,mount,api}=await setup();const contract=createOpenApiContract();const requests:unknown[]=[];
+  const listener=async({request}:{request:Request})=>{
+   if(!request.url.includes("payment-transactions") || !["POST","PATCH"].includes(request.method))return;
+   const body=await request.clone().json();requests.push(body);
+   expect(contract.request({method:request.method,url:request.url,body}).errors).toEqual([]);
+   if(request.method==="PATCH")expect(body).not.toHaveProperty("source");
+  };
+  server.events.on("request:start",listener);
+  try {
+   mount(<PaymentScreen workplaceId={c.workplaceId}/>);
+   fireEvent.change(screen.getByLabelText("\uac70\ub798\uc77c"),{target:{value:"2026-11-10"}});
+   fireEvent.change(screen.getByLabelText("\uae08\uc561 (\uc6d0, 0\uc6d0 \ud5c8\uc6a9)"),{target:{value:"100"}});
+   fireEvent.click(screen.getByRole("button",{name:"\uac70\ub798 \ub4f1\ub85d"}));
+   fireEvent.click(await screen.findByRole("button",{name:"\uc0c1\uc138\u00b7\uc218\uc815"}));
+   await waitFor(()=>expect(screen.getByRole("button",{name:"\uac70\ub798 \uc218\uc815 \uc800\uc7a5"})).toBeEnabled());
+   fireEvent.change(screen.getByLabelText("\uae08\uc561 (\uc6d0, 0\uc6d0 \ud5c8\uc6a9)"),{target:{value:"0"}});
+   fireEvent.click(screen.getByRole("button",{name:"\uac70\ub798 \uc218\uc815 \uc800\uc7a5"}));
+   await waitFor(()=>expect(screen.getByRole("button",{name:"\uac70\ub798 \ub4f1\ub85d"})).toBeVisible());
+   expect((await api.list(c.workplaceId)).items[0].amount).toBe(0);
+   expect(requests).toHaveLength(2);
+  } finally {server.events.removeListener("request:start",listener);}
+ });
  it("does not prefill an unknown transaction amount with zero",async()=>{const {c,mount}=await setup();mount(<PaymentScreen workplaceId={c.workplaceId}/>);expect(screen.getByLabelText("금액 (원, 0원 허용)")).toHaveValue(null);});
  it("loads allocations past the first page before deciding create versus update",async()=>{
  const {api,c}=await setup();
