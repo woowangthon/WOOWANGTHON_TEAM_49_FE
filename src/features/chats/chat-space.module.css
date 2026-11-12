@@ -1,0 +1,28 @@
+.shell { margin-inline: auto; width: 100%; max-width: 800px; }
+.shell :global(.v2-chat-intro) { padding: 12px 0 28px; }
+.shell :global(.v2-chat-orb) { width: 58px; height: 58px; border-radius: 20px; margin-bottom: 20px; }
+.shell :global(.v2-chat-intro) h2 { font-size: clamp(23px, 3.3cqi, 30px); line-height: 1.5; word-break: keep-all; }
+.shell :global(.v2-chat-intro) p { font-size: 14px; line-height: 1.8; word-break: keep-all; }
+.shell :global(.v2-chat-start) { margin-bottom: 30px; padding: 28px; border: 1px solid #dfe6f2; border-radius: 24px; background: white; gap: 24px; }
+.shell :global(.v2-chat-start) label { font-size: 16px; font-weight: 700; }
+.shell :global(.v2-chat-start) .stepLabel { color: var(--color-nav-foreground); font-size: 12px; font-weight: 650; }
+.shell :global(.v2-chat-start) input, .shell :global(.v2-chat-start) select { min-width: 0; width: 100%; max-width: 100%; min-height: 52px; margin-top: 5px; padding: 12px; border: 1px solid var(--color-border); border-radius: 13px; font-size: 14px; font-weight: 450; background: #fafbfe; }
+.shell :global(.v2-chat-start) > button { border-radius: 14px; min-height: 50px; }
+.titleStep > .stepLabel { display: block; margin-bottom: 8px; }
+.history { padding: 0 4px; }
+.history :global(.v2-chat-list) h2 { margin-bottom: 16px; font-size: 18px; }
+.history :global(.v2-chat-list) > p { padding: 26px; border: 1px dashed var(--color-border); border-radius: 18px; color: var(--color-review-foreground); font-size: 14px; text-align: center; }
+.shell :global(.v2-chat-session) { padding: 18px 16px; border-radius: 14px; }
+.shell :global(.v2-chat-session) strong { font-size: 15px; margin-bottom: 5px; }
+.shell :global(.v2-chat-session) small { line-height: 1.7; }
+.shell :global(.v2-chat-session) time { margin-top: 5px; font-size: 12px; }
+.shell :global(.v2-chat-header) { margin-bottom: 8px; }
+.shell :global(.v2-chat-context) { background: #eef2fc; border-color: #dfe7fa; font-size: 13px; }
+.shell :global(.v2-chat-composer) { border-radius: 22px; box-shadow: 0 6px 22px #26323808; }
+.shell :global(.v2-chat-disclaimer) { margin-top: 20px; line-height: 1.8; }
+.shell :global(.v2-chat-bubble) { box-shadow: 0 3px 12px #26323803; }
+.shell [aria-label="답변 표"] table { width: 100%; min-width: 300px; border-collapse: collapse; font-size: 13px; }
+.shell [aria-label="답변 표"] th { background: #f1f4fc; color: #52627a; text-align: left; }
+.shell [aria-label="답변 표"] th, .shell [aria-label="답변 표"] td { min-width: 100px; border-color: #e1e7f1; word-break: keep-all; }
+@media (hover: hover) { .shell :global(.v2-chat-session):hover { background: #edf2ff; } }
+@container (max-width: 28rem) { .shell :global(.v2-chat-start) { padding: 20px; border-radius: 20px; } .shell :global(.v2-chat-intro) { padding-top: 0; } .shell :global(.v2-chat-intro) h2 { font-size: 23px; } .shell :global(.v2-chat-start) label { font-size: 15px; } }
