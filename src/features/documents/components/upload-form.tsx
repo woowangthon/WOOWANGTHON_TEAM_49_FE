@@ -6,11 +6,11 @@ import { z } from "zod";
 import { UploadCloud } from "lucide-react";
 import { SelectField } from "@/components/ui/select-field";
 import { cardStyle, primaryButton, secondaryButton } from "@/components/ui/styles";
-import { documentTypes, uploadSchema, type DocumentContext } from "../schemas";
+import { uploadDocumentTypes, uploadSchema, type DocumentContext } from "../schemas";
 import { useDocumentAction } from "../queries";
 import { documentError, typeLabels } from "../view-models";
 import { validateFile, validateImageDimensions } from "../file-validation";
-const formSchema = z.object({ documentType: z.enum(documentTypes) });
+const formSchema = z.object({ documentType: z.enum(uploadDocumentTypes) });
 export function UploadForm({ context, disabled = false }: { context: Exclude<DocumentContext, {kind: "library"}>; disabled?: boolean }) {
   const id = useId();
   const [file, setFile] = useState<File>();
@@ -23,7 +23,7 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
   const mounted = useRef(true);
   const input = useRef<HTMLInputElement>(null);
   const mutation = useDocumentAction();
-  const { register, handleSubmit } = useForm({ resolver: zodResolver(formSchema), defaultValues: { documentType: "PAYSLIP" as const } });
+  const { register, handleSubmit } = useForm({ resolver: zodResolver(formSchema), defaultValues: { documentType: "AUTO" as const } });
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; controller.current?.abort(); }; }, []);
   const choose = (files: FileList | null) => {
     if (locked.current || disabled) return;
@@ -49,8 +49,8 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
   })(event); }}>
     <h2 className="text-title font-bold">새 파일 업로드</h2>
     <p className="text-body text-muted">불필요한 민감정보는 가린 뒤 등록해 주세요. 원본은 근무지에 보관됩니다.</p>
-    <SelectField id={`${id}-type`} label="문서 유형" disabled={busy || disabled} {...register("documentType")}>
-      {documentTypes.map(type => <option key={type} value={type}>{typeLabels[type]}</option>)}
+    <SelectField id={`${id}-type`} label="문서 유형" hint="자동 인식은 AI가 문서 유형을 판단해 값을 추출합니다. 판단하지 못하거나 직접 고른 유형과 다르면 유형을 다시 선택하도록 안내합니다." disabled={busy || disabled} {...register("documentType")}>
+      {uploadDocumentTypes.map(type => <option key={type} value={type}>{type === "AUTO" ? "자동 인식 (AI가 유형 판단)" : typeLabels[type]}</option>)}
     </SelectField>
     <div onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); choose(e.dataTransfer.files); }} className="min-w-0 rounded-panel border-2 border-dashed border-border bg-neutral-soft p-5 text-center">
       <UploadCloud aria-hidden="true" className="mx-auto mb-3 size-8" />

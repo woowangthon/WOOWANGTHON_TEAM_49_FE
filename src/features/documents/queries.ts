@@ -60,6 +60,7 @@ export type DocumentAction =
  | { type: "update"; caseId: number; linkId: number; body: LinkInput }
  | { type: "unlink"; caseId: number; linkId: number; expectedInputVersion: number }
  | { type: "retry"; caseId: number; documentId: number }
+ | { type: "changeType"; workplaceId: number; documentId: number; documentType: string }
  | { type: "remove"; workplaceId: number; documentId: number };
 export function useDocumentAction() {
   const s = useSessionScope();
@@ -73,11 +74,14 @@ export function useDocumentAction() {
         case "update": return api.updateLink(action.caseId, action.linkId, action.body);
         case "unlink": return api.unlink(action.caseId, action.linkId, action.expectedInputVersion);
         case "retry": return api.retry(action.caseId, action.documentId);
+        case "changeType": return api.changeType(action.workplaceId, action.documentId, action.documentType);
         case "remove": return api.remove(action.workplaceId, action.documentId);
       }
     },
     onSettled: async (_data, _error, action) => {
       if (s.session.getSnapshot().generation !== s.generation) return;
+      // A finished status poll would otherwise keep showing the previous type error over the refreshed list.
+      if (action.type === "changeType") s.queryClient.removeQueries({ queryKey: documentKeys.root(s.generation), predicate: q => q.queryKey[3] === "status" && q.queryKey[5] === action.documentId });
       // Mutation failures can have reached the server, so refresh authoritative state too.
       if (action.type === "remove" || action.type === "unlink") {
         await s.queryClient.cancelQueries({ queryKey: documentKeys.root(s.generation) });

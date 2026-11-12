@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styles from "./original-viewer.module.css";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { cardStyle, secondaryButton } from "@/components/ui/styles";
 import { useOriginalFile, usePreview } from "../queries";
@@ -21,6 +22,8 @@ export function OriginalViewer({workplaceId,documentId,source,onReady}:{workplac
   return <ViewerContent key={`${documentId}-${retryKey}`} url={url} preview={preview.data} source={source} onRetry={retry} onReady={onReady} />;
 }
 export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;preview:PreviewDto;source?:SourceDto|null;onRetry:()=>void;onReady?:(ready:boolean)=>void}){
+  const scrollArea=useRef<HTMLDivElement>(null);
+  const marker=useRef<HTMLDivElement>(null);
   const [manualPage,setManualPage]=useState<{page:number;source:SourceDto|null|undefined}>();
   const [zoom,setZoom]=useState(1);
   const [imageError,setImageError]=useState(false);
@@ -33,6 +36,20 @@ export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;p
   const rendered=preview.mediaType==="application/pdf"?pdfReady?.page===page:imageLoaded;
   useEffect(()=>{onReady?.(rendered&&!imageError);return()=>onReady?.(false);},[rendered,imageError,onReady]);
   const box=rendered?highlightBox(preview,source,page,preview.mediaType==="application/pdf"?(pdfReady?.rotation??NaN):0):undefined;
+  const hasBox=!!box;
+  useEffect(()=>{
+    const area=scrollArea.current;
+    if(!area||!hasBox)return;
+    const reveal=()=>{
+      const target=marker.current;if(!target)return;
+      const container=area.getBoundingClientRect(),rect=target.getBoundingClientRect();
+      area.scrollTo({top:Math.max(0,area.scrollTop+rect.top-container.top-(area.clientHeight-rect.height)/2),left:Math.max(0,area.scrollLeft+rect.left-container.left-(area.clientWidth-rect.width)/2),behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
+    };
+    const frame=requestAnimationFrame(reveal);
+    const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(reveal):undefined;
+    observer?.observe(area);
+    return()=>{cancelAnimationFrame(frame);observer?.disconnect();};
+  },[source,page,zoom,hasBox]);
   const radians=(preview.rotationDegrees??0)*Math.PI/180;
   const rotatedSize=imageSize&&preview.rotationDegrees?{
     width:Math.abs(imageSize.width*Math.cos(radians))+Math.abs(imageSize.height*Math.sin(radians)),
@@ -48,7 +65,7 @@ export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;p
       {sourcePage&&<button className={secondaryButton} onClick={()=>setManualPage(undefined)}>선택한 근거 페이지</button>}
       <button className={secondaryButton} onClick={onRetry}>원문 다시 불러오기</button>
     </div>
-    <div className="max-w-full overflow-auto rounded-control border border-border bg-neutral-soft" tabIndex={0} aria-label="확대한 원문 스크롤 영역">
+    <div ref={scrollArea} className={`${styles.viewport} max-w-full overflow-auto rounded-control border border-border bg-neutral-soft`} tabIndex={0} aria-label="확대한 원문 스크롤 영역">
       <div className="relative origin-top-left" style={{width:`${zoom*100}%`}}>
         {preview.mediaType==="application/pdf"?<PdfCanvas url={url} page={page} pageCount={preview.pageCount} rotation={preview.rotationDegrees} onRendered={reportRendered} />:<>
           {!imageLoaded&&!imageError&&<p role="status">원문 이미지 불러오는 중…</p>}
@@ -59,7 +76,7 @@ export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;p
           </div>
           {imageError&&<p role="alert">이미지를 표시할 수 없습니다. 원문을 다시 불러와 주세요.</p>}
         </>}
-        {box&&!imageError&&<div role="img" aria-label="선택한 필드의 원문 위치" className="pointer-events-none absolute border-2 border-primary bg-primary/15" style={box} />}
+        {box&&!imageError&&<div key={JSON.stringify(source)} ref={marker} role="img" aria-label="선택한 필드의 원문 위치" className={styles.highlight} style={box} />}
       </div>
     </div>
     <div className="break-words text-body text-muted"><p>근거 페이지: {source?.page??"미제공"}</p><p>근거 문구: {source?.text??"미제공"}</p>

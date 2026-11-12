@@ -1,6 +1,6 @@
 import { loginValidator } from "./shared/auth-validation";
 import { signupRequestSchema, forgotPasswordRequestSchema, resetPasswordRequestSchema } from "@/features/auth/schemas";
-import { caseDocumentResponse } from "./shared/document-handlers";
+import { caseDocumentResponse, settleMockDocument } from "./shared/document-handlers";
 import { getResponse, http, HttpResponse } from "msw";
 import { supportMocks } from "./shared/support-handlers";
 import { chatMocks } from './shared/chat-handlers';
@@ -80,7 +80,7 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
         if (!doc || (w && doc.workplaceId !== Number(w)) || (c && !doc.linkedCaseIds?.includes(Number(c)))) return fail("RESOURCE_NOT_FOUND", 404);
         if (request.method === "GET" && /\/documents\/\d+$/.test(path) && ["UPLOADED", "PROCESSING"].includes(doc.processingStatus)) {
           const count = (polls.get(doc.documentId) ?? 0) + 1; polls.set(doc.documentId, count);
-          doc.processingStatus = count > 1 ? "READY" : "PROCESSING"; doc.progress = count > 1 ? 100 : 50;
+          if (count > 1) settleMockDocument(doc); else { doc.processingStatus = "PROCESSING"; doc.progress = 50; }
         }
       }
       if (request.method === "POST" && /\/(documents|replace)$/.test(path)) {

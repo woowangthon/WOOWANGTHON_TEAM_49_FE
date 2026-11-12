@@ -27,7 +27,7 @@
 .contextIdentity a { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; max-width: 100%; color: var(--color-nav-foreground); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
 .contextIdentity svg { flex-shrink: 0; }
 .contextStep { padding: 7px 11px; border-radius: 9px; background: var(--color-nav-active); font-size: 11px; color: var(--color-nav-foreground); }
-.navigation:global(.case-task-navigation) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 6px; border: 1px solid var(--color-border); border-radius: 17px; background: var(--color-surface); }
+.navigation:global(.case-task-navigation) { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 6px; border: 1px solid var(--color-border); border-radius: 17px; background: var(--color-surface); }
 .navigation:global(.case-task-navigation) > a { display: flex; justify-content: center; min-width: 0; min-height: 44px; padding: 10px 6px; border: 0; border-radius: 11px; color: var(--color-review-foreground); font-size: 13px; font-weight: 600; }
 .navigation:global(.case-task-navigation) > a[aria-current="page"] { color: var(--color-nav-foreground); background: var(--color-nav-active); box-shadow: none; font-weight: 750; }
 .hero { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 144px; padding: 22px 26px; overflow: hidden; border: 1px solid var(--color-border); border-radius: 26px; background: linear-gradient(115deg, var(--color-nav-active), #f0edfb 75%, #f7f8fd); }
@@ -99,7 +99,7 @@
 .workspace a:focus-visible, .workspace button:focus-visible, .workspace summary:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
 
 @container (min-width: 42rem) {
-  .navigation:global(.case-task-navigation) { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .navigation:global(.case-task-navigation) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .content [aria-label="기능별 실행 가능성"] > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .content [data-case-support] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
@@ -131,3 +131,7 @@
 @media (prefers-reduced-motion: reduce) {
   .content :global(.ui-button) { transition: none; }
 }
+
+@container (max-width: 34rem) { .navigation:global(.case-task-navigation) > a { font-size: 11px; padding: 8px 2px; } .navigation small { display: none; } }
+
+.navigation:global(.case-task-navigation) > a > span { word-break: keep-all; }

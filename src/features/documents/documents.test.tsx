@@ -92,7 +92,8 @@ describe("document flows with MSW, never a live backend", () => {
     await user.upload(screen.getByLabelText("파일 선택 또는 이곳에 끌어 놓기"), pdf());
     await user.click(screen.getByRole("button", {name: "파일 업로드"}));
     expect(await screen.findByText(/업로드가 접수되었습니다/)).toBeVisible();
-    expect(mocks.requests.find(r => r.method === "POST")?.body).toMatchObject({documentType: "PAYSLIP", fileName: "새자료.pdf"});
+    // AUTO is the default: the agent classifies the document.
+    expect(mocks.requests.find(r => r.method === "POST")?.body).toMatchObject({documentType: "AUTO", fileName: "새자료.pdf"});
     cacheKeys.forEach(key => expect(app.queryClient.getQueryState(key)?.isInvalidated).toBe(true));
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
@@ -207,6 +208,43 @@ describe("document flows with MSW, never a live backend", () => {
     const {mount,user,mocks} = await setup(); const dto={...mocks.getDocuments()[0],processingStatus:"FAILED" as const};
     mount(<DocumentCard dto={dto} context={{kind:"case",id:15}} />); await user.click(screen.getByRole("button",{name:"문서 재처리"}));
     await waitFor(()=>expect(mocks.requests.some(r=>r.path.endsWith("/documents/101/retry"))).toBe(true));
+  });
+  it("still sends an explicitly chosen document type", async () => {
+    const {mount, user, mocks} = await setup(); mount(<UploadForm context={{kind: "case", id: 15}} />);
+    expect(screen.getByLabelText("문서 유형")).toHaveValue("AUTO");
+    await user.selectOptions(screen.getByLabelText("문서 유형"), "PAYSLIP");
+    await user.upload(screen.getByLabelText("파일 선택 또는 이곳에 끌어 놓기"), pdf());
+    await user.click(screen.getByRole("button", {name: "파일 업로드"}));
+    expect(await screen.findByText(/업로드가 접수되었습니다/)).toBeVisible();
+    expect(mocks.requests.find(r => r.method === "POST")?.body).toMatchObject({documentType: "PAYSLIP"});
+  });
+  it("offers the detected type on DOCUMENT_TYPE_MISMATCH and re-extracts through PATCH", async () => {
+    const {mount, user, mocks} = await setup(); const doc = mocks.getDocuments()[1];
+    Object.assign(doc, {processingStatus: "REVIEW_REQUIRED", errorCode: "DOCUMENT_TYPE_MISMATCH", aiMetadata: {detectedType: "DEPOSIT"}});
+    mount(<DocumentCard dto={{...doc}} context={{kind: "case", id: 15}} />);
+    expect(screen.getByText(/AI가 이 문서를 입금 자료\(으\)로 판단했습니다/)).toBeVisible();
+    expect(screen.getByText(/선택한 유형\(급여명세서\)/)).toBeVisible();
+    expect(screen.queryByRole("button", {name: "문서 재처리"})).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: "입금 자료(으)로 바꿔 다시 추출"}));
+    await waitFor(() => expect(mocks.requests.find(r => r.method === "PATCH")).toMatchObject({path: `/api/v1/workplaces/3/documents/${doc.documentId}`, body: {documentType: "DEPOSIT"}}));
+    expect(doc).toMatchObject({documentType: "DEPOSIT", processingStatus: "PROCESSING", errorCode: null});
+  });
+  it("lets the user choose a type when classification failed, and explains a refusal", async () => {
+    const {mount, user, mocks} = await setup(); const doc = mocks.getDocuments()[1];
+    Object.assign(doc, {documentType: "AUTO", processingStatus: "REVIEW_REQUIRED", errorCode: "DOCUMENT_TYPE_UNRESOLVED", aiMetadata: {}});
+    server.use(http.patch(`${testApiUrl}/workplaces/:w/documents/:d`, () => apiResponse({errorCode: "DOCUMENT_REVIEW_STARTED"}, 409)));
+    mount(<DocumentCard dto={{...doc}} context={{kind: "case", id: 15}} />);
+    expect(screen.getByText("유형 자동 인식 전")).toBeVisible();
+    expect(screen.getByText(/문서 유형을 판단하지 못했습니다/)).toBeVisible();
+    const submit = screen.getByRole("button", {name: "이 유형으로 다시 추출"}); expect(submit).toBeDisabled();
+    await user.selectOptions(screen.getByLabelText("문서 유형"), "CONTRACT"); await user.click(submit);
+    expect(await screen.findByRole("alert")).toHaveTextContent("이미 확인하거나 수정한 값이 있어 문서 유형을 바꿀 수 없습니다");
+  });
+  it("lists AUTO documents and filters unclassified ones", async () => {
+    const {mount, user, mocks} = await setup(); Object.assign(mocks.getDocuments()[0], {documentType: "AUTO"});
+    mount(<LibraryScreen />); expect(await screen.findByRole("article", {name: "근로계약서.pdf"})).toHaveTextContent("유형 자동 인식 전");
+    await user.selectOptions(screen.getByLabelText("문서 유형 필터"), "AUTO");
+    await waitFor(() => expect(mocks.requests.some(r => r.path.includes("documentType=AUTO"))).toBe(true));
   });
   it("handles 403/404 without repeated polling and supports explicit list retry", async () => {
     const {mount,user} = await setup(); server.use(http.get(`${testApiUrl}/documents`,()=>apiResponse({},404)));

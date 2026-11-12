@@ -11,6 +11,7 @@ import { createDevelopmentScenario } from '@/mocks/development';
 import { caseApi } from '@/features/cases/api';
 import { ChatScreen } from './chat-screen';
 import { chatApi } from './api';
+import { CaseChat } from './case-chat';
 vi.mock('next/navigation',()=>({useRouter:()=>({push:vi.fn(),replace:vi.fn()})}));
 let app:ReturnType<typeof createAppServices>;
 beforeEach(async()=>{
@@ -18,9 +19,35 @@ beforeEach(async()=>{
  app=createAppServices(testApiUrl);await app.auth.login({email:'worker@example.com',password:'password1234'});
  vi.stubGlobal('matchMedia',()=>({matches:false,addEventListener:vi.fn(),removeEventListener:vi.fn()}));
  HTMLElement.prototype.scrollIntoView=vi.fn();
+ HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+ HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new Event('close'));};
 });
 afterEach(()=>{cleanup();app.session.clear();app.queryClient.clear();vi.unstubAllGlobals()});
 function mount(id?:number){return render(<AppServicesContext value={app}><QueryClientProvider client={app.queryClient}><ChatScreen workplaceId={3} chatId={id}/></QueryClientProvider></AppServicesContext>)}
+it('keeps a scoped floating conversation across close and reopen and clears it on session change',async()=>{
+ render(<AppServicesContext value={app}><QueryClientProvider client={app.queryClient}><CaseChat caseId={15}/></QueryClientProvider></AppServicesContext>);
+ const trigger=await screen.findByRole('button',{name:'AI 자료 도우미 열기'});
+ fireEvent.click(trigger);
+ expect(screen.getByRole('combobox')).toHaveValue('15');
+ expect(screen.getByRole('combobox')).toBeDisabled();
+ expect(screen.queryByRole('navigation',{name:'근무지 화면'})).toBeNull();
+ fireEvent.change(screen.getByLabelText('새 대화 제목'),{target:{value:'사례 질문'}});
+ await waitFor(()=>expect(screen.getByRole('button',{name:'대화 시작'})).toBeEnabled());
+ fireEvent.click(screen.getByRole('button',{name:'대화 시작'}));
+ await screen.findByRole('heading',{name:'사례 질문'});
+ fireEvent.change(screen.getByLabelText('질문'),{target:{value:'유지할 질문'}});
+ fireEvent.click(screen.getByRole('button',{name:'AI 자료 도우미 닫기'}));
+ expect(document.activeElement).toBe(trigger);
+ fireEvent.click(trigger);
+ expect(screen.getByLabelText('질문')).toHaveValue('유지할 질문');
+ fireEvent.submit(screen.getByLabelText('질문').closest('form')!);
+ expect(await screen.findByText('유지할 질문')).toBeVisible();
+ await waitFor(()=>expect(screen.getByRole('button',{name:'전송'})).toBeDisabled());
+ fireEvent(screen.getByRole('dialog',{name:'현재 급여 사례 AI 자료 도우미'}),new Event('cancel',{cancelable:true}));
+ expect(trigger).toHaveAttribute('aria-expanded','false');
+ app.session.clear();
+ await waitFor(()=>expect(screen.queryByRole('button',{name:'AI 자료 도우미 열기'})).toBeNull());
+});
 it('explains how to start a scoped conversation without inventing messages',async()=>{
  mount();expect(screen.getByRole('region',{name:'AI 대화 시작 안내'})).toBeVisible();
  expect(screen.getByRole('heading',{name:'이 근무지의 자료, 무엇이 궁금하세요?'})).toBeVisible();
@@ -37,6 +64,17 @@ it('explains how to start a scoped conversation without inventing messages',asyn
  expect(screen.getByLabelText('새 대화 제목')).not.toBeVisible();
  fireEvent.change(screen.getByRole('combobox'),{target:{value:'15'}});
  expect(screen.getByLabelText('새 대화 제목')).toHaveValue('유지할 제목');
+});
+it('replaces the floating context and draft when moving to another Case',async()=>{
+ const content=(id:number)=><AppServicesContext value={app}><QueryClientProvider client={app.queryClient}><CaseChat caseId={id}/></QueryClientProvider></AppServicesContext>;
+ const view=render(content(15));
+ fireEvent.click(await screen.findByRole('button',{name:'AI 자료 도우미 열기'}));
+ fireEvent.change(screen.getByLabelText('새 대화 제목'),{target:{value:'이전 사례 초안'}});
+ view.rerender(content(16));
+ await waitFor(()=>expect(screen.queryByRole('dialog',{name:'현재 급여 사례 AI 자료 도우미'})).toBeNull());
+ fireEvent.click(await screen.findByRole('button',{name:'AI 자료 도우미 열기'}));
+ expect(screen.getByRole('combobox')).toHaveValue('16');
+ expect(screen.getByLabelText('새 대화 제목')).toHaveValue('');
 });
 it('keeps received text visible when the saved history refresh fails and offers retry',async()=>{
  const chat=await chatApi(app.api,3).create('복구 테스트',15);let failed=false;
