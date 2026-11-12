@@ -1,0 +1,22 @@
+.screen { min-width: 0; }
+.upload { margin-bottom: 26px; }
+.upload > form { box-shadow: none; border: 1px solid var(--color-border); border-radius: 22px; }
+.list { display: grid; min-width: 0; gap: 22px; }
+.filters { min-width: 0; }
+.filterControls { display: grid; min-width: 0; gap: 20px; }
+.filterControls > div:last-child { max-width: 360px; }
+.filterControls input { min-height: 48px; border-color: var(--color-border); border-radius: 13px; background: white; }
+.types { display: flex; overflow-x: auto; gap: 8px; max-width: 100%; padding: 4px; scrollbar-width: thin; }
+.types button { flex-shrink: 0; min-height: 44px; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--color-border); background: white; color: var(--color-review-foreground); font-size: 13px; font-weight: 600; }
+.types button[aria-pressed=true] { color: var(--color-nav-foreground); background: var(--color-nav-active); border-color: #bdcff6; }
+.screen :global(.document-rows) { overflow: visible; border: 1px solid #e1e8f4; border-radius: 22px; background: white; }
+.screen :global(.document-row) { padding: 24px; background: transparent; box-shadow: none; }
+.screen :global(.document-row) h3 { font-size: 16px; }
+.screen :global(.document-row) > div:first-child > svg { box-sizing: content-box; padding: 11px; width: 23px; height: 23px; border-radius: 14px; background: var(--color-nav-active); color: var(--color-nav-foreground); }
+.screen :global(.document-status) { gap: 7px; font-size: 12px; }
+.screen :global(.document-management) > summary { color: var(--color-nav-foreground); font-size: 13px; }
+.screen :global(.document-management[open]) { padding-top: 16px; border-top: 1px solid var(--color-border); }
+.notice { margin-top: 28px; color: var(--color-review-foreground); font-size: 13px; line-height: 1.8; }
+.notice summary { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.notice p { max-width: 640px; margin-top: 8px; }
+@container (max-width: 28rem) { .screen :global(.document-row) { padding: 19px; } .types button { padding-inline: 13px; } .filterControls > div:last-child { max-width: none; } }
