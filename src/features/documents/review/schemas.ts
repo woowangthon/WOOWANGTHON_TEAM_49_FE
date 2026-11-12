@@ -26,24 +26,30 @@ export const previewSchema = z.object({
   coordinateSystem: z.string().nullable(), rotationDegrees: z.number().nullable(), supportsHighlight: z.boolean(),
   // previewUrl is intentionally not retained or followed. Only the documented authenticated /file is used.
 });
-const recomputeSchema = z.object({scheduled: z.boolean(), jobId: z.string().nullable().optional()});
+const recomputeSchema = z.object({scheduled: z.boolean(), jobId: z.string().nullable().optional(), affectedChecks: z.array(z.string()).optional()});
 export const updateMetaSchema = z.object({
   inputVersion: id.optional(), affectedCaseIds: z.array(id).optional(), recompute: recomputeSchema.optional(),
   caseUpdates: z.array(z.object({caseId: id, inputVersion: id, recompute: recomputeSchema.optional()})).optional(),
 });
-export const fieldUpdatedSchema = updateMetaSchema.extend({fieldId: id, value: valueSchema, status: fieldStatusSchema});
-export const overrideRemovedSchema = updateMetaSchema.extend({fieldId: id, effectiveValueOrigin: z.literal("SHARED_DEFAULT")});
+// API_REFERENCE CaseMutation is a map keyed by Case ID, not an array.
+// Convert only after validating the wire shape. UI receipts keep an explicit caseId.
+const caseUpdatesWireSchema = z.record(z.string().regex(/^[1-9]\d*$/).refine(key => Number.isSafeInteger(Number(key))), z.object({inputVersion:id, recompute:recomputeSchema})).transform(updates => Object.entries(updates).map(([caseId, update]) => ({caseId:Number(caseId), ...update})));
+const mutationMetaWireSchema = updateMetaSchema.extend({caseUpdates:caseUpdatesWireSchema.optional()});
+export const fieldUpdatedSchema = mutationMetaWireSchema.extend({fieldId: id, previousValue:valueSchema, value: valueSchema, status: fieldStatusSchema, editedByUser:z.boolean(), hasCaseOverride:z.boolean(), effectiveValueOrigin:z.enum(["SHARED_DEFAULT","CASE_OVERRIDE"]), affectedCaseIds:z.array(id), caseUpdates:caseUpdatesWireSchema});
+export const caseFieldUpdatedSchema = fieldUpdatedSchema.extend({inputVersion:id, recompute:recomputeSchema, hasCaseOverride:z.literal(true), effectiveValueOrigin:z.literal("CASE_OVERRIDE")});
+export const sharedFieldUpdatedSchema = fieldUpdatedSchema.extend({hasCaseOverride:z.literal(false), effectiveValueOrigin:z.literal("SHARED_DEFAULT")});
+export const overrideRemovedSchema = mutationMetaWireSchema.extend({fieldId: id, effectiveValueOrigin: z.literal("SHARED_DEFAULT")});
 // HTML API-047 supplement; P0 only declares free JSON here.
 const historyValueSchema = z.object({value: valueSchema, status: z.string(), origin: z.string().optional(), originalDocumentId: z.number().int().optional()});
 export const historyWireSchema = z.object({historyId: id, scope: z.string(), previous: historyValueSchema, new: historyValueSchema, createdAt: z.string()});
 export const historySchema = historyWireSchema.transform(wire=>({...wire, previousValue:wire.previous.value, newValue:wire.new.value, changedAt:wire.createdAt}));
 export const historyListSchema = z.object({items:z.array(historySchema)});
-export const reviewConfirmedSchema = z.object({documentId:id, reviewStatus:reviewStatusSchema, unconfirmedFieldIds:z.array(id)}).extend(updateMetaSchema.shape);
+export const reviewConfirmedSchema = z.object({documentId:id, reviewStatus:reviewStatusSchema, unconfirmedFieldIds:z.array(id)}).extend(mutationMetaWireSchema.shape);
 export const reviewSchema = z.object({
   documentId: id, caseId: id.optional(), processingStatus: processingSchema, reviewStatus: reviewStatusSchema,
   confirmedFieldCount: z.number().int().nonnegative().optional(), totalFieldCount: z.number().int().nonnegative().optional(),
   unconfirmedFieldIds: z.array(id).optional(), reasonCodes: z.array(z.string()).optional(), confirmed: z.boolean().optional(),
-}).extend(updateMetaSchema.shape);
+}).extend(mutationMetaWireSchema.shape);
 // OpenAPI fixes the path scalar; response internals below are HTML supplements.
 export const replacementIdSchema = z.number().int();
 export const replacementCreatedSchema = z.object({
@@ -68,7 +74,7 @@ export function replacementView(wire: z.infer<typeof replacementWireSchema>) {
     fields: wire.fields ?? undefined};
 }
 export const replacementSchema = replacementWireSchema.transform(replacementView);
-export const replacementConfirmedSchema = updateMetaSchema.extend({
+export const replacementConfirmedSchema = mutationMetaWireSchema.extend({
   documentId: id.optional(), replacementId: replacementIdSchema.optional(), status: z.string().optional(),
 });
 export type ExtractedField = z.infer<typeof fieldSchema>;

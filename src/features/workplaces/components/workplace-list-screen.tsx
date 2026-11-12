@@ -79,9 +79,9 @@ export function WorkplaceListScreen() {
                   <div className={styles.titleRow}><h3 id={titleId}>{item.name}</h3></div>
                   <p className={styles.meta}><MapPin size={14} aria-hidden="true" /><span>{item.region} · {item.industry}</span></p>
                 </div>
-                <span id={actionId} className={styles.action}>{hasCases ? <>급여 사례 <strong>{item.caseCount}개</strong> 보기</> : "첫 급여 사례 만들기"}<ArrowRight size={18} aria-hidden="true" /></span>
+                <span id={actionId} className={styles.action}>{hasCases ? <>급여 내역 <strong>{item.caseCount}개</strong> 보기</> : "첫 급여 내역 만들기"}<ArrowRight size={18} aria-hidden="true" /></span>
               </Link>
-              {!hasCases && <div className={styles.cardFoot}><p>아직 등록한 급여 사례가 없어요</p><Link href={`/workplaces/${item.id}`} aria-label={`${item.name} 근무지 정보`}>근무지 정보</Link></div>}
+              {!hasCases && <div className={styles.cardFoot}><p>아직 등록한 급여 내역이 없어요</p><Link href={`/workplaces/${item.id}`} aria-label={`${item.name} 근무지 정보`}>근무지 정보</Link></div>}
             </li>;
           })}</ul> : <div className={styles.noResults}><Search size={28} aria-hidden="true" /><h3>현재 페이지에 검색 결과가 없습니다</h3><p>검색어를 바꾸거나 다른 페이지를 확인해 주세요.</p><button type="button" className={secondaryButton} onClick={clearSearch}>현재 페이지 전체 보기</button></div>}
 

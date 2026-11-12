@@ -23,7 +23,7 @@ export function ManualScreen({ caseId }: { caseId: number }) {
   const [page, setPage] = useState(1); const [type, setType] = useState<RecordType>("CONTRACT");
   const [selected, setSelected] = useState<number>(); const [receipt, setReceipt] = useState<ManualSaved>(); const [formKeys, setFormKeys] = useState<Partial<Record<RecordType, number>>>({});
   const list = useManuals(caseId, page);
-  if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 사례입니다.</p>;
+  if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 내역입니다.</p>;
   if (owner.isPending) return <QueryFeedback pending />;
   if (owner.isError) return <QueryFeedback error={owner.error} retry={() => { void owner.refetch(); }} />;
   return <div className="min-w-0 space-y-6"><CaseStageHeader stage="manual" title="수기 자료 입력·관리" description="파일이 없어도 알고 있는 근무·급여 정보를 기록할 수 있어요. 빈칸과 실제 0은 구분해서 입력해 주세요." />
@@ -38,7 +38,7 @@ export function ManualScreen({ caseId }: { caseId: number }) {
       {!list.data.items.length && <p className={cardStyle}>이 페이지에 수기 기록이 없습니다.</p>}
       <ul className="space-y-3">{list.data.items.map(r => <li key={r.recordId} className={`${cardStyle} flex flex-wrap items-center justify-between gap-3`}><span>{typeLabels[r.recordType]} #{r.recordId} · 원본 없음 · 사용자 직접 입력</span><button className={secondaryButton} onClick={() => { setSelected(r.recordId); setOpened(ids => ids.includes(r.recordId) ? ids : [...ids, r.recordId]); }}>기록 #{r.recordId} 상세·수정</button></li>)}</ul><Pagination page={list.data.page} size={list.data.size} total={list.data.total} onPage={setPage} busy={list.isFetching} /></>}
     </section>{opened.map(recordId => <div key={recordId} hidden={mode !== "records" || selected !== recordId}><ManualDetail caseId={caseId} recordId={recordId} periodStart={owner.data.periodStart} periodEnd={owner.data.periodEnd} onClose={() => setSelected(undefined)} onDeleted={() => { setSelected(undefined); setOpened(ids => ids.filter(id => id !== recordId)); }} onSaved={setReceipt} /></div>)}
-    <nav data-case-next aria-label="사례 자료 탐색"><div><h2>기록을 저장했다면</h2><p>계산에 필요한 조건을 확인해요.</p></div><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>계산 조건 확인</Link></nav><details className={cardStyle}><summary>실행 가능성·자동 갱신 상태</summary><InputStatus caseId={caseId} /><Link className={secondaryButton} href={`/cases/${caseId}/upload`}>문서 자료 등록</Link></details>
+    <nav data-case-next aria-label="내역 자료 탐색"><div><h2>기록을 저장했다면</h2><p>계산에 필요한 조건을 확인해요.</p></div><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>계산 조건 확인</Link></nav><details className={cardStyle}><summary>실행 가능성·자동 갱신 상태</summary><InputStatus caseId={caseId} /><Link className={secondaryButton} href={`/cases/${caseId}/upload`}>문서 자료 등록</Link></details>
   </div>;
 }
 function ManualDetail({ caseId, recordId, periodStart, periodEnd, onClose, onDeleted, onSaved }: { caseId: number; recordId: number; periodStart: string; periodEnd: string; onClose: () => void; onDeleted: () => void; onSaved: (r: ManualSaved) => void }) {

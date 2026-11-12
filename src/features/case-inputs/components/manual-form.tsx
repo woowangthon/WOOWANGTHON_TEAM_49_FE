@@ -43,7 +43,7 @@ export function ManualForm({ caseId, type, periodStart, periodEnd, initial, onSa
     <h2 className="text-title font-bold">{typeLabels[type]} {initial ? "수정" : "수기 입력"}</h2><p>원본 문서 없이 직접 알려주신 기록입니다. 선택 항목의 빈칸은 미확인으로 남깁니다. 실제 0만 0으로 입력하세요.</p>
     {type === "ATTENDANCE" && <p>근무일 {periodStart} ~ {periodEnd}. 출퇴근 입력은 한국시간 UTC+09:00으로 전송합니다.</p>}
     {type === "PAYSLIP" && <p>개별 지급·공제 목록에는 소계·합계를 제외하고 빠짐없이 확인한 금액만 입력하세요. 불완전한 목록은 빈칸으로 남깁니다.</p>}
-    {type === "DEPOSIT" && <p>수령 사실은 사용자 신고(USER_REPORTED)입니다. 서버가 거래와 이 사례의 전액 배분을 생성하며, 일반 수기 목록에 중복 저장하지 않습니다.</p>}
+    {type === "DEPOSIT" && <p>수령 사실은 사용자 신고(USER_REPORTED)입니다. 서버가 거래와 이 내역의 전액 배분을 생성하며, 일반 수기 목록에 중복 저장하지 않습니다.</p>}
     <p className="text-muted">{isDirty ? "미저장 변경사항이 있습니다." : "입력 후 마지막 확인 단계에서 저장하세요."}</p>
     <StepFormNavigation steps={[...steps.map(s => s.label), "확인"]} current={step} onChange={setStep} busy={isSubmitting} errors={steps.map(s => s.keys.some(key => !!errors.values?.[key]))} />
     {step === steps.length && <section aria-label="입력 내용 확인" className="space-y-3"><h3 className="font-bold">저장 전 확인</h3><dl className="grid gap-3 sm:grid-cols-2">{manualFields[type].map(f => <div key={f.key}><dt className="text-muted">{f.label}</dt><dd className="break-words">{form.getValues(`values.${f.key}`) || "미확인"}</dd></div>)}</dl></section>}

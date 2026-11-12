@@ -98,7 +98,7 @@ export function SettingsScreen() {
   return <div className="min-w-0 max-w-[760px] space-y-6"><section className={cardStyle}><h1 className="text-2xl font-bold">계정 설정</h1>
     {user.isPending ? <p role="status">계정 정보 조회 중…</p> : user.isError ? <><p role="alert">{errorText(user.error)}</p><button className={primaryButton} onClick={() => void user.refetch()}>다시 시도</button></> : <dl className="mt-4 grid gap-3 divide-y divide-border [&_dt]:pt-3 [&_dt]:font-bold [&_dd]:pb-3"><dt>이름</dt><dd className="break-all">{user.data.name}</dd><dt>이메일</dt><dd className="break-all">{user.data.email}</dd></dl>}
     <button className={primaryButton + " mt-4"} onClick={() => void auth.logout()}>로그아웃</button></section>
-    <section className={`${cardStyle} border border-danger/40`}><p className="text-caption font-bold">위험한 작업</p><h2 className="text-xl font-bold">회원 탈퇴</h2><p className="my-4">접수 후 모든 기존 세션이 무효화되고 자료 접근이 차단됩니다. 근무지, 사례, 원본 문서, 보고서, AI 대화 등 연결 자료에 영향을 줍니다. 요청 접수는 파기 완료를 뜻하지 않습니다. 파기 일정과 보존 범위는 확인이 필요합니다.</p>
+    <section className={`${cardStyle} border border-danger/40`}><p className="text-caption font-bold">위험한 작업</p><h2 className="text-xl font-bold">회원 탈퇴</h2><p className="my-4">접수 후 모든 기존 세션이 무효화되고 자료 접근이 차단됩니다. 근무지, 내역, 원본 문서, 보고서, AI 대화 등 연결 자료에 영향을 줍니다. 요청 접수는 파기 완료를 뜻하지 않습니다. 파기 일정과 보존 범위는 확인이 필요합니다.</p>
     <button className={dangerButton} onClick={() => setConfirm(true)}>회원 탈퇴 안내 및 확인</button></section>
     {confirm && <ConfirmDialog title="회원 탈퇴를 요청할까요?" busy={busy} onClose={() => setConfirm(false)} action={<button className={dangerButton} disabled={busy} onClick={() => void remove()}>탈퇴 요청 확인</button>}><p>일반 로그아웃과 다릅니다. 계정 자료에 접근할 수 없게 됩니다.</p>{error && <p role="alert">{error}</p>}</ConfirmDialog>}
   </div>;

@@ -14,7 +14,23 @@ import { DocumentCard } from "./document-card";
 import styles from "./workplace-documents.module.css";
 import libraryStyles from "./library.module.css";
 
-export function DocumentList({ context, inputVersion, selectableCaseId, canConnect, variant = "default" }: { variant?: "default" | "workplace" | "library"; context: DocumentContext; inputVersion?: number; selectableCaseId?: number; canConnect?: boolean }) {
+export function DocumentList(props: Parameters<typeof FilteredDocumentList>[0]) {
+  return props.context.kind === "case" ? <ConnectedDocumentList {...props} /> : <FilteredDocumentList {...props} />;
+}
+
+function ConnectedDocumentList({context, inputVersion}: Parameters<typeof FilteredDocumentList>[0]) {
+  const [page, setPage] = useState(1);
+  const [editing, setEditing] = useState(false);
+  const query = useDocuments(context, {page, size:20});
+  return <div className="min-w-0 space-y-4">
+    {query.isPending ? <QueryFeedback pending /> : query.isError ? <QueryFeedback error={query.error} retry={() => { void query.refetch(); }} /> : <>
+      {query.data.items.length ? <div className="document-rows min-w-0">{query.data.items.map(dto => <DocumentCard key={dto.documentId} dto={dto} context={context} inputVersion={inputVersion} onEditingChange={setEditing} />)}</div> : <p className={cardStyle}>연결된 자료가 없습니다. 위에서 첫 파일을 등록해 주세요.</p>}
+      {(query.data.total > query.data.size || query.data.page > 1) && <Pagination page={query.data.page} size={query.data.size} total={query.data.total} busy={query.isFetching || editing} onPage={setPage} />}
+    </>}
+  </div>;
+}
+
+function FilteredDocumentList({ context, inputVersion, selectableCaseId, canConnect, variant = "default" }: { variant?: "default" | "workplace" | "library"; context: DocumentContext; inputVersion?: number; selectableCaseId?: number; canConnect?: boolean }) {
   const id = useId();
   const [editing, setEditing] = useState(false);
   const [page, setPage] = useState(1);
@@ -46,7 +62,6 @@ export function DocumentList({ context, inputVersion, selectableCaseId, canConne
       </details>}
       <div className={libraryView ? libraryStyles.controls : workplaceView ? styles.filterControls : "grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3"}>
         {workplaceView ? <div className={styles.types} role="group" aria-label="문서 유형 필터">{[["", "전체"], ...documentTypes.map(type => [type, typeLabels[type]])].map(([value, label]) => <button key={value} type="button" aria-pressed={documentType === value} onClick={() => { setDocumentType(value); setPage(1); }}>{label}</button>)}</div> : context.kind !== "case" && <SelectField id={`${id}-type`} label="문서 유형 필터" value={documentType} onChange={e => { setDocumentType(e.target.value); setPage(1); }}><option value="">전체 유형</option>{documentTypes.map(t => <option key={t} value={t}>{typeLabels[t]}</option>)}</SelectField>}
-        {context.kind === "library" && <p className="text-caption">처리 상태 필터는 현재 페이지에만 적용됩니다.</p>}
         {context.kind === "library" && <SelectField id={`${id}-status`} label="처리 상태 필터" value={processingStatus} onChange={e => { setProcessingStatus(e.target.value); setPage(1); }}><option value="">전체 상태</option>{processingStatuses.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}</SelectField>}
         <TextField id={`${id}-search`} label="현재 페이지 파일명 검색" placeholder={workplaceView || libraryView ? "파일 이름으로 찾아보세요" : undefined} value={search} onChange={e => setSearch(e.target.value)} />
       </div>

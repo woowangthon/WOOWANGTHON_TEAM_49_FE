@@ -80,7 +80,7 @@ describe("document flows with MSW, never a live backend", () => {
   it("renders workplace shared originals and its upload form", async () => {
     const {mount, user} = await setup(); mount(<WorkplaceDocumentsScreen id={3} />);
     expect(await screen.findByRole("heading", {name: "근무지 자료함"})).toBeVisible();
-    expect(await screen.findByRole("article", {name: "근로계약서.pdf"})).toHaveTextContent("연결 사례 2개");
+    expect(await screen.findByRole("article", {name: "근로계약서.pdf"})).toHaveTextContent("연결 내역 2개");
     await user.click(screen.getByText("자료 추가",{exact:true}));
     expect(screen.getByRole("form", {name: "새 파일 업로드"})).toBeVisible();
   });
@@ -162,15 +162,15 @@ describe("document flows with MSW, never a live backend", () => {
   });
   it("unlinks only the Case link, preserving original and other Case references", async () => {
     const {mount,user,mocks} = await setup(); mount(<DocumentCard dto={{...mocks.getDocuments()[0],linkId:mocks.getLinks()[0].linkId}} context={{kind:"case",id:15}} inputVersion={7} />);
-    await user.click(screen.getByRole("button",{name:"이 사례 연결 해제"}));
-    expect(screen.getByRole("dialog")).toHaveTextContent("공유 원본과 다른 사례의 연결은 보존");
+    await user.click(screen.getByRole("button",{name:"이 내역 연결 해제"}));
+    expect(screen.getByRole("dialog")).toHaveTextContent("공유 원본과 다른 내역의 연결은 보존");
     await user.click(screen.getByRole("button",{name:"연결만 해제"})); await waitFor(()=>expect(mocks.getLinks()).toHaveLength(0));
     expect(mocks.getDocuments()[0].linkedCaseIds).toEqual([16]); expect(mocks.requests.find(r=>r.method==="DELETE")?.path).toContain("document-links/777");
   });
   it("requires fresh impact and explicit acknowledgement before original deletion", async () => {
     const {mount,user,mocks} = await setup(); mount(<DocumentCard dto={mocks.getDocuments()[0]} context={{kind:"library"}} />);
     await user.click(screen.getByText("자료 관리 상세",{exact:true})); await user.click(screen.getByRole("button",{name:"공유 원본 삭제"}));
-    const dialog=screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 사례: 2개");
+    const dialog=screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 내역: 2개");
     expect(within(dialog).getByRole("button",{name:"공유 원본 삭제 요청"})).toBeDisabled();
     await user.click(within(dialog).getByRole("checkbox")); await user.click(within(dialog).getByRole("button",{name:"공유 원본 삭제 요청"}));
     await waitFor(()=>expect(mocks.getDocuments()).toHaveLength(20));
@@ -186,7 +186,7 @@ describe("document flows with MSW, never a live backend", () => {
     const {mount,user,mocks} = await setup(); mount(<DocumentCard dto={mocks.getDocuments()[0]} context={{kind:"library"}} />);
     await user.click(screen.getByText("자료 관리 상세",{exact:true}));
     await user.click(screen.getByRole("button",{name:"공유 원본 삭제"}));
-    const dialog = screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 사례: 2개");
+    const dialog = screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 내역: 2개");
     await user.click(within(dialog).getByRole("button",{name:"취소"}));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(mocks.getDocuments()).toHaveLength(21);
@@ -197,7 +197,7 @@ describe("document flows with MSW, never a live backend", () => {
     const card = await screen.findByRole("article", {name:"근로계약서.pdf"});
     await user.click(within(card).getByText("자료 관리 상세",{exact:true}));
     await user.click(within(card).getByRole("button",{name:"공유 원본 삭제"}));
-    const dialog=screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 사례: 2개");
+    const dialog=screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 내역: 2개");
     await user.click(within(dialog).getByRole("checkbox"));
     await user.click(within(dialog).getByRole("button",{name:"공유 원본 삭제 요청"}));
     await waitFor(()=>expect(screen.queryByRole("article",{name:"근로계약서.pdf"})).not.toBeInTheDocument());
@@ -219,14 +219,18 @@ describe("document flows with MSW, never a live backend", () => {
     mount(<LibraryScreen />); await waitFor(()=>expect(app.session.getSnapshot().accessToken).toBeNull());
     expect(app.queryClient.getQueryCache().findAll({queryKey:documentKeys.root(1)})).toHaveLength(0);
   });
-  it("renders Case upload, linked and existing-original sections", async () => {
-    const {mount,user} = await setup(); mount(<CaseUploadScreen id={15} />);
-    expect(await screen.findByRole("heading",{name:"카페 나무 자료 등록"})).toBeVisible();
-    await user.click(screen.getByRole("button",{name:"기존 자료 연결"}));
-    expect(await screen.findByRole("region",{name:"근무지 기존 원본 연결"})).toBeVisible();
-    expect(screen.getByRole("region",{name:"이 사례에 연결된 자료"})).toBeVisible();
-    await user.click(screen.getByText("자료함·등록 안내"));
-    expect(await screen.findByText(/작업 종료는 모든 계산의 완료나 일치를 뜻하지 않습니다/)).toBeVisible();
+  it("shows upload only, one review guide and an always visible linked list", async () => {
+    const {mount} = await setup(); mount(<CaseUploadScreen id={15} />);
+    await screen.findByRole("heading",{name:"카페 나무 자료 등록"});
+    expect(screen.getByRole("form",{name:"새 파일 업로드"})).toBeVisible();
+    expect(screen.queryByRole("button",{name:"기존 자료 연결"})).not.toBeInTheDocument();
+    expect(screen.queryByRole("region",{name:"직접 입력"})).not.toBeInTheDocument();
+    const linked=screen.getByRole("region",{name:"이 내역에 연결된 자료"});
+    expect(linked).toBeVisible(); expect(linked.closest("details")).toBeNull();
+    expect(screen.queryByRole("textbox",{name:"현재 페이지 파일명 검색"})).not.toBeInTheDocument();
+    expect(screen.getAllByRole("heading",{name:"자료를 준비했다면"})).toHaveLength(1);
+    expect(screen.getByRole("link",{name:"원문·추출값 검토"})).toHaveAttribute("href","/cases/15/review");
+    expect(screen.queryByText("자료함·등록 안내")).not.toBeInTheDocument();
   });
   it("rejects missing required metadata and null progress", () => {
  expect(documentSchema.safeParse({documentId:1,workplaceId:3,documentType:"PAYSLIP",fileName:"a.pdf",processingStatus:"READY",progress:null}).success).toBe(false);
@@ -249,18 +253,17 @@ describe("document flows with MSW, never a live backend", () => {
     mount(<DocumentCard dto={mocks.getDocuments()[0]} context={{kind:"library"}} />);
     await user.click(screen.getByText("자료 관리 상세",{exact:true})); await user.click(screen.getByRole("button",{name:"공유 원본 삭제"})); await screen.findByRole("checkbox");
     await user.click(screen.getByRole("checkbox")); await user.click(screen.getByRole("button",{name:"공유 원본 삭제 요청"}));
-    expect(await screen.findByText(/다른 사례의 참조가 변경되었습니다/)).toBeVisible();
+    expect(await screen.findByText(/다른 내역의 참조가 변경되었습니다/)).toBeVisible();
     expect(screen.getByRole("button",{name:"공유 원본 삭제 요청"})).toBeDisabled();
     await user.click(screen.getByRole("button",{name:"삭제 영향 다시 확인"}));
     expect(screen.getByRole("checkbox")).not.toBeChecked(); expect(deletes).toBe(1);
   });
   it("disables Case additions at the 20-link limit", async () => {
-    const {mount,mocks,user}=await setup();
+    const {mount,mocks}=await setup();
     server.use(http.get(`${testApiUrl}/cases/15/documents`,()=>apiResponse({items:[caseDocumentResponse(mocks.getDocuments()[0], mocks.getLinks()[0].linkId)],page:1,size:20,total:20})));
-    mount(<CaseUploadScreen id={15} />); await screen.findByText(/사례에는 문서를 최대 20개/);
+    mount(<CaseUploadScreen id={15} />); await screen.findByText(/내역에는 문서를 최대 20개/);
     expect(screen.getByRole("button",{name:"파일 업로드"})).toBeDisabled();
-    await user.click(screen.getByRole("button",{name:"기존 자료 연결"}));
-    await waitFor(()=>expect(screen.getAllByRole("button",{name:"기존 원본 선택"}).every(button=>button.hasAttribute("disabled"))).toBe(true));
+    expect(screen.queryByRole("button",{name:"기존 자료 연결"})).not.toBeInTheDocument();
   });
   it("prevents duplicate upload submits and permits cancelling the request wait", async () => {
     const {mount,user}=await setup(); let uploads=0;
@@ -304,15 +307,11 @@ describe("document flows with MSW, never a live backend", () => {
 
 });
 
-it("preserves the upload selection across all three modes without mutations", async()=>{
+it("preserves upload selection before submitting without mutations", async()=>{
  const {mount,user,mocks}=await setup();mount(<CaseUploadScreen id={15}/>);
  await screen.findByRole("heading",{name:"카페 나무 자료 등록"});
  const file=screen.getByLabelText("파일 선택 또는 이곳에 끌어 놓기") as HTMLInputElement;
  await waitFor(()=>expect(file).toBeEnabled()); await user.upload(file,pdf());
- await user.click(screen.getByRole("button",{name:"기존 자료 연결"}));
- await user.click(screen.getByRole("button",{name:"직접 입력"}));
- expect(within(screen.getByRole("region",{name:"직접 입력"})).getByRole("link")).toHaveAttribute("href","/cases/15/manual-records");
- await user.click(screen.getByRole("button",{name:"새 파일 업로드"}));
  expect(screen.getByText("새자료.pdf",{exact:true})).toBeVisible();
  expect(mocks.requests.filter(r=>r.method!=="GET")).toHaveLength(0);
 });
@@ -322,12 +321,12 @@ it("keeps compact row metadata separate and reveals linked cases five at a time"
  mount(<DocumentCard dto={{...mocks.getDocuments()[0], linkedCaseIds:[1,2,3,4,5,6]}} context={{kind:"library"}} />);
  expect(await screen.findByText(/^처리:/)).toBeVisible();
  expect(screen.getByText(/^검토:/)).toBeVisible();
- expect(screen.getByRole("link",{name:"사례 #1"}).closest("details")).not.toHaveAttribute("open");
+ expect(screen.getByRole("link",{name:"내역 #1"}).closest("details")).not.toHaveAttribute("open");
  await user.click(screen.getByText("자료 관리 상세",{exact:true}));
- expect(screen.getByRole("link",{name:"사례 #5"})).toBeVisible();
- expect(screen.queryByRole("link",{name:"사례 #6"})).not.toBeInTheDocument();
- await user.click(screen.getByRole("button",{name:"연결 사례 더 보기"}));
- expect(screen.getByRole("link",{name:"사례 #6"})).toBeVisible();
+ expect(screen.getByRole("link",{name:"내역 #5"})).toBeVisible();
+ expect(screen.queryByRole("link",{name:"내역 #6"})).not.toBeInTheDocument();
+ await user.click(screen.getByRole("button",{name:"연결 내역 더 보기"}));
+ expect(screen.getByRole("link",{name:"내역 #6"})).toBeVisible();
  expect(mocks.requests.filter(r=>r.method!=="GET")).toHaveLength(0);
 });
 
@@ -345,7 +344,7 @@ it.each([null, 777])("A05 lists and opens details without a nested link (%s)", a
   await user.click(screen.getByText("\uC790\uB8CC \uAD00\uB9AC \uC0C1\uC138"));
   expect(screen.getByRole("link",{name:"\uC6D0\uBB38\u00B7\uCD94\uCD9C\uAC12 \uAC80\uD1A0"})).toHaveAttribute("href","/cases/15/review?documentId=101");
   expect(screen.queryByRole("button",{name:"\uC5F0\uACB0 \uC815\uBCF4 \uC218\uC815"})).toBeNull();
-  const unlink = screen.queryByRole("button",{name:"\uC774 \uC0AC\uB840 \uC5F0\uACB0 \uD574\uC81C"});
+  const unlink = screen.queryByRole("button",{name:"\uC774 \uB0B4\uC5ED \uC5F0\uACB0 \uD574\uC81C"});
   expect(Boolean(unlink)).toBe(linkId !== null);
   if (unlink) {
     await user.click(unlink);

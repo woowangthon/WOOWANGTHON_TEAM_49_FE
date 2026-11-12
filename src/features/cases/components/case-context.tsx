@@ -14,7 +14,7 @@ export function TaskNavigation({ id }: { id: number }) {
   const allReviewed = !!docs.data?.total && docs.data.items.length === docs.data.total && docs.data.items.every(d => d.reviewStatus === "CONFIRMED");
   const steps = [["", "개요", ""], ["upload", "자료 모으기", "UPLOAD"], ["review", "내용 확인", "REVIEW"], ["conditions", "조건 확인", "CONDITIONS"], ["compare", "자료 대조", "COMPARE"], ["result", "결과 보기", "RESULT"]];
   const current = steps.findIndex(step => step[2] === dto?.currentStep);
-  return <div className={styles.stickyNavigation}><nav aria-label="사례 작업" className={`case-task-navigation ${styles.navigation}`}>{steps.map(([path, label, step], index) => {
+  return <div className={styles.stickyNavigation}><nav aria-label="내역 작업" className={`case-task-navigation ${styles.navigation}`}>{steps.map(([path, label, step], index) => {
     const href = `/cases/${id}${path ? `/${path}` : ""}`;
     const active = pathname === href || (path === "upload" && pathname === `/cases/${id}/manual-records`);
     const status = !dto ? "상태 확인 중" : path === "" ? "전체 흐름" : path === "review" && allReviewed ? "✓ 검토 완료" : path === "review" && docs.data?.items.some(d => d.reviewStatus !== "CONFIRMED") ? "! 확인 필요" : path === "upload" && dto.documentCount > 0 ? `${dto.documentCount}개 등록` : path === "result" && dto.latestCalculationId !== null ? "결과 있음" : dto.currentStep === step ? "현재 진행 단계" : index > current ? "진행 전" : "완료 여부 미확인";
@@ -27,7 +27,7 @@ export function CaseContext({ id }: { id: number }) {
   const item = query.data ? caseCard(query.data) : null;
   // The overview presents its own case header and the same task navigation.
   if (pathname === `/cases/${id}`) return null;
-  return <section aria-label="현재 급여 사례" className={styles.context}>
+  return <section aria-label="현재 급여 내역" className={styles.context}>
     {item && <div className={styles.contextMeta}><div className={styles.contextIdentity}><Link href={`/workplaces/${query.data!.workplaceId}`} className="inline-flex min-h-11 items-center font-bold"><Building2 size={17} aria-hidden="true" />{item.workplaceName}</Link><p className="text-body text-muted">{item.period} · {item.payType}</p></div><p className={styles.contextStep}>현재 작업: {item.step}</p></div>}
   </section>;
 }

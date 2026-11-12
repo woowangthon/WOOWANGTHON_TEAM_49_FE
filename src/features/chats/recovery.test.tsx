@@ -24,9 +24,9 @@ function mount(id?:number){return render(<AppServicesContext value={app}><QueryC
 it('explains how to start a scoped conversation without inventing messages',async()=>{
  mount();expect(screen.getByRole('region',{name:'AI 대화 시작 안내'})).toBeVisible();
  expect(screen.getByRole('heading',{name:'이 근무지의 자료, 무엇이 궁금하세요?'})).toBeVisible();
- expect(screen.getByText('급여 사례를 선택하면, 그 기록을 바탕으로 대화할 수 있어요.')).toBeVisible();
+ expect(screen.getByText('급여 내역을 선택하면, 그 기록을 바탕으로 대화할 수 있어요.')).toBeVisible();
  expect(screen.queryByRole('region',{name:'대화 메시지'})).toBeNull();
- await screen.findAllByRole('option',{name:/사례 #15$/});
+ await screen.findAllByRole('option',{name:/내역 #15$/});
  expect(screen.getByLabelText('새 대화 제목')).not.toBeVisible();
  fireEvent.change(screen.getByRole('combobox'),{target:{value:'15'}});
  expect(screen.getByLabelText('새 대화 제목')).toBeVisible();
@@ -52,8 +52,8 @@ it('allows selecting a Case after the first hundred without silently keeping the
  const sample=(await caseApi(app.api).list({page:1,size:20},3)).items[0];
  server.use(http.get(`${testApiUrl}/workplaces/3/cases`,({request})=>{const page=Number(new URL(request.url).searchParams.get('page'));return apiResponse({items:page===1?[sample]:[{...sample,caseId:999}],page,size:100,total:101})}));
  mount();const desktop=screen.getByRole('combobox').closest('form')!;
- const select=within(desktop).getByRole('combobox');await within(desktop).findByRole('option',{name:new RegExp('사례 #'+sample.caseId+'$')});fireEvent.change(select,{target:{value:String(sample.caseId)}});
- fireEvent.click(within(desktop).getByRole('button',{name:'다음 사례 목록'}));await within(desktop).findByRole('option',{name:/사례 #999$/});expect(select).toHaveValue('');expect(within(desktop).getByRole('button',{name:'다음 사례 목록'})).toBeDisabled();
+ const select=within(desktop).getByRole('combobox');await within(desktop).findByRole('option',{name:new RegExp('내역 #'+sample.caseId+'$')});fireEvent.change(select,{target:{value:String(sample.caseId)}});
+ fireEvent.click(within(desktop).getByRole('button',{name:'다음 내역 목록'}));await within(desktop).findByRole('option',{name:/내역 #999$/});expect(select).toHaveValue('');expect(within(desktop).getByRole('button',{name:'다음 내역 목록'})).toBeDisabled();
 });
 it('preserves the question draft through history disclosure and IME Enter',async()=>{
  const chat=await chatApi(app.api,3).create('입력 보존',15);mount(chat.chatId);await screen.findByRole('heading',{name:'입력 보존'});
@@ -94,16 +94,16 @@ it('keeps SSE running through disclosures, locks scope, and restores saved messa
 
 it('keeps the creation form and explains Case lookup failures',async()=>{
  server.use(http.get(`${testApiUrl}/workplaces/3/cases`,()=>apiResponse({errorCode:'UPSTREAM_UNAVAILABLE'},503)));
- mount();await screen.findByRole('button',{name:'급여 사례 다시 조회'});
+ mount();await screen.findByRole('button',{name:'급여 내역 다시 조회'});
  expect(screen.getByLabelText('새 대화 제목')).not.toBeVisible();
  expect(screen.getByRole('button',{name:'대화 시작'})).toBeDisabled();
- fireEvent.click(screen.getByRole('button',{name:'급여 사례 다시 조회'}));
+ fireEvent.click(screen.getByRole('button',{name:'급여 내역 다시 조회'}));
  expect(screen.getByRole('combobox')).toHaveValue('');
 });
 
 it('preserves required creation inputs after a server error and allows retry',async()=>{
  let fail=true;server.use(http.post(`${testApiUrl}/workplaces/3/chats`,()=>fail?apiResponse({errorCode:'UPSTREAM_UNAVAILABLE'},503):undefined));
- mount();await screen.findByRole('option',{name:/사례 #15$/});
+ mount();await screen.findByRole('option',{name:/내역 #15$/});
  const button=screen.getByRole('button',{name:'대화 시작'});expect(button).toBeDisabled();
  fireEvent.change(screen.getByRole('combobox'),{target:{value:'15'}});
  fireEvent.change(screen.getByLabelText('새 대화 제목'),{target:{value:'생성 재시도'}});fireEvent.click(button);

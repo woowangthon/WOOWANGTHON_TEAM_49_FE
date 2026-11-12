@@ -65,7 +65,7 @@ export function DashboardScreen() {
             <p className={styles.period}><CalendarDays size={16} aria-hidden="true" />{card.period}</p>
             <p className={styles.caseStatus}><strong>{card.status}</strong><span>{card.payType}</span></p>
             <Link href={caseTaskHref(current)} className={styles.primaryButton}>
-              현재 사례 이어가기 <ArrowRight size={17} aria-hidden="true" />
+              현재 내역 이어가기 <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
           <div className={styles.stepsPanel}>
@@ -77,7 +77,7 @@ export function DashboardScreen() {
       ) : cases.data && workplaces.isSuccess && !firstWorkplace && (
         <section className={styles.quietPanel}>
           <h2>현재 검토</h2>
-          <p>조회 범위에 진행 중인 사례가 없습니다.</p>
+          <p>조회 범위에 진행 중인 내역이 없습니다.</p>
         </section>
       )}
 
@@ -110,11 +110,11 @@ export function DashboardScreen() {
             <strong>{workplaces.data ? `${workplaces.data.total}개` : "—"}</strong>
           </div>
           <div className={styles.stat}>
-            <Files aria-hidden="true" /><h3>전체 급여 사례</h3>
+            <Files aria-hidden="true" /><h3>전체 급여 내역</h3>
             <strong>{cases.data ? `${cases.data.total}개` : "—"}</strong>
           </div>
           <div className={styles.stat}>
-            <ClipboardList aria-hidden="true" /><h3>조회한 사례 중 확인 필요</h3>
+            <ClipboardList aria-hidden="true" /><h3>조회한 내역 중 확인 필요</h3>
             <strong>{knownAttention ? `${attention?.length}개` : "정보 없음"}</strong>
           </div>
           {cases.data && <p className={styles.note}>확인 필요 여부가 제공된 {knownAttention}건 기준</p>}
@@ -123,24 +123,24 @@ export function DashboardScreen() {
 
       <section className={styles.panel} aria-labelledby="recent-heading">
         <div className={styles.sectionHead}>
-          <h2 id="recent-heading">최근 업데이트한 사례</h2>
-          <Link href="/cases" className={styles.textLink}>모든 사례 보기 <ChevronRight size={16} aria-hidden="true" /></Link>
+          <h2 id="recent-heading">최근 업데이트한 내역</h2>
+          <Link href="/cases" className={styles.textLink}>모든 내역 보기 <ChevronRight size={16} aria-hidden="true" /></Link>
         </div>
         {recent?.length ? (
           <div className={styles.recentList}><CaseCards items={recent} /></div>
         ) : cases.data && (
           <div className={styles.quietPanel}>
-            <h3>아직 급여 사례가 없습니다</h3>
+            <h3>아직 급여 내역이 없습니다</h3>
             <p>산정기간을 정해 급여 자료를 모아 보세요.</p>
             <Link href={workplaces.data?.total === 0 ? "/workplaces/new" : "/cases/new"} className={styles.textLink}>
-              첫 사례 준비하기 <ArrowRight size={16} aria-hidden="true" />
+              첫 내역 준비하기 <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         )}
         <details className={styles.scope}>
           <summary>목록과 통계의 조회 범위</summary>
-          <p>첫 페이지에 조회된 최대 20건 중 업데이트 순서입니다. 확인할 작업과 최근 목록에는 같은 사례가 표시될 수 있습니다.</p>
-          <p>전체 근무지와 전체 사례 수는 서버에서 제공한 총계입니다. 작업 완료 상태가 검사 일치를 뜻하지는 않습니다.</p>
+          <p>첫 페이지에 조회된 최대 20건 중 업데이트 순서입니다. 확인할 작업과 최근 목록에는 같은 내역이 표시될 수 있습니다.</p>
+          <p>전체 근무지와 전체 내역 수는 서버에서 제공한 총계입니다. 작업 완료 상태가 검사 일치를 뜻하지는 않습니다.</p>
         </details>
       </section>
       <footer><Link href="/settings" className={styles.textLink}>계정 설정 <ChevronRight size={15} aria-hidden="true" /></Link></footer>

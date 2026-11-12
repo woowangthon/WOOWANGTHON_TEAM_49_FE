@@ -16,9 +16,9 @@ export function CaseCards({ items, compact = false, variant = "default" }: { ite
     return <li key={card.id} className={workplaceStyles.caseCard}>
       <div className={workplaceStyles.caseTop}><span className={workplaceStyles.calendar} aria-hidden="true"><CalendarDays size={23} /></span><span className={workplaceStyles.badge}>{card.status}</span></div>
       <h3><Link href={`/cases/${card.id}`}><span>{dto.periodStart}</span><span>~ {dto.periodEnd}</span></Link></h3>
-      <p className={workplaceStyles.caseMeta}>{card.payType} · 사례 #{card.id}</p>
+      <p className={workplaceStyles.caseMeta}>{card.payType} · 내역 #{card.id}</p>
       <p className={workplaceStyles.caseAttention} data-attention={dto.attentionRequired}>{card.attention}</p>
-      <div className={workplaceStyles.caseBottom}><p><span>현재 작업</span><strong>{card.step}</strong></p><Link href={caseTaskHref(dto)} aria-label={`사례 #${card.id} 이어가기`}>사례 이어가기<ChevronRight size={15} aria-hidden="true" /></Link></div>
+      <div className={workplaceStyles.caseBottom}><p><span>현재 작업</span><strong>{card.step}</strong></p><Link href={`/cases/${card.id}`} aria-label={`내역 #${card.id} 시작하기`}>시작하기<ChevronRight size={15} aria-hidden="true" /></Link></div>
     </li>;
   })}</ul>;
   if (variant === "explorer") {
@@ -46,7 +46,7 @@ export function CaseCards({ items, compact = false, variant = "default" }: { ite
               </div>
               <div className={styles.caseAction}>
                 <p className={styles.step}><span>현재 작업</span><strong>{card.step}</strong></p>
-                <Link href={caseTaskHref(dto)} aria-describedby={`case-explorer-period-${card.id}`} className={styles.continue}>사례 이어가기<ChevronRight size={16} aria-hidden="true" /></Link>
+                <Link href={`/cases/${card.id}`} aria-describedby={`case-explorer-period-${card.id}`} className={styles.continue}>시작하기<ChevronRight size={16} aria-hidden="true" /></Link>
               </div>
             </li>
           );
@@ -61,7 +61,7 @@ export function CaseCards({ items, compact = false, variant = "default" }: { ite
       return <li key={card.id} className="case-row">
         <div className="min-w-0"><h3 className="font-bold"><Link href={`/cases/${card.id}`} className="inline-flex min-h-11 items-center underline underline-offset-4">{card.workplaceName}</Link></h3><p className="text-caption text-muted">{card.period}</p><p className="text-caption text-muted">{card.payType}</p></div>
         <div className="min-w-0 space-y-2"><span data-case-status={dto.status} className="inline-block rounded-control bg-neutral-soft px-3 py-1 text-caption font-bold">{card.status}</span><p data-attention={dto.attentionRequired} className="text-caption text-muted">{card.attention}</p></div>
-        <div className="min-w-0"><p className="text-caption text-muted">현재 작업: {card.step}</p><Link href={caseTaskHref(dto)} className="inline-flex min-h-11 items-center font-bold underline underline-offset-4">사례 이어가기 →</Link></div>
+        <div className="min-w-0"><p className="text-caption text-muted">현재 작업: {card.step}</p><Link href={`/cases/${card.id}`} className="inline-flex min-h-11 items-center font-bold underline underline-offset-4">시작하기 →</Link></div>
       </li>;
     })}
   </ul>;

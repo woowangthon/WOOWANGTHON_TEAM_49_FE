@@ -24,7 +24,7 @@ const reasons: Record<string, string> = { workplace_size: "사업장 규모에 �
 const valuesOf = (data: Conditions) => Object.fromEntries(data.conditions.map(c => [c.conditionId, c.value === null ? "" : String(c.value)]));
 export function ConditionsScreen({ caseId }: { caseId: number }) {
   const owner = useCase(caseId); const removal = useCaseRemoval(caseId); const query = useConditions(caseId);
-  if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 사례입니다.</p>;
+  if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 내역입니다.</p>;
   if (owner.isPending || query.isPending) return <QueryFeedback pending />;
   if (owner.isError || (query.isError && !query.data)) return <QueryFeedback error={owner.error ?? query.error} retry={() => { void owner.refetch(); void query.refetch(); }} />;
   return <div className="min-w-0 space-y-6"><CaseStageHeader stage="conditions" title="계산 조건 확인" description="계산에 필요한 조건을 하나씩 확인해요. 아는 내용부터 답하고, 모르는 값은 모름으로 남겨 주세요." />

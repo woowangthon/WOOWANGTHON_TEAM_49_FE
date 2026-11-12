@@ -24,7 +24,7 @@ export function documentError(error: unknown) {
     if (error.status === 415) return "PDF, JPEG, PNG 파일만 지원합니다. 실제 파일 형식과 확장자를 확인해 주세요.";
     if (error.errorCode === "DUPLICATE_DOCUMENT_LINK") return "이미 연결된 문서입니다. 기존 연결을 확인해 주세요.";
     if (error.errorCode === "DOCUMENT_NOT_RETRYABLE") return "실패한 문서만 재처리할 수 있습니다. 최신 상태를 확인해 주세요.";
-    if (error.errorCode === "DOCUMENT_SHARED_REFERENCES_EXIST") return "다른 사례의 참조가 변경되었습니다. 삭제 영향을 다시 확인해 주세요.";
+    if (error.errorCode === "DOCUMENT_SHARED_REFERENCES_EXIST") return "다른 내역의 참조가 변경되었습니다. 삭제 영향을 다시 확인해 주세요.";
     if (error.status === 422) return "파일 또는 입력값이 서버 검증을 통과하지 못했습니다. PDF 50페이지, 암호화·손상 여부, 이미지 각 축 10000px 및 적용기간을 확인해 주세요.";
   }
   return businessErrorMessage(error);

@@ -73,7 +73,7 @@ describe("dashboard and management user flows with MSW", () => {
     mount(<WorkplaceListScreen />);
     const previous = await screen.findByRole("link", { name: "이전 근무지" });
     expect(previous).toHaveAttribute("href", "/workplaces/3");
-    expect(previous).toHaveAccessibleDescription("급여 사례 2개 보기");
+    expect(previous).toHaveAccessibleDescription("급여 내역 2개 보기");
     expect(within(previous).getByText("퇴사", { exact: true })).toBeVisible();
     expect(screen.getByRole("link", { name: "새 근무지" })).toHaveAttribute("href", "/cases/new?workplaceId=4");
     expect(screen.getByRole("link", { name: "새 근무지 근무지 정보" })).toHaveAttribute("href", "/workplaces/4");
@@ -116,7 +116,7 @@ describe("dashboard and management user flows with MSW", () => {
     await screen.findByText("확인 필요 여부가 제공된 20건 기준");
     const current = screen.getByRole("region", { name: "현재 검토" });
     const step = within(current).getByRole("link", { current: "step" });
-    expect(within(current).getByRole("link", { name: "현재 사례 이어가기" })).toHaveAttribute("href", step.getAttribute("href"));
+    expect(within(current).getByRole("link", { name: "현재 내역 이어가기" })).toHaveAttribute("href", step.getAttribute("href"));
     const heading = screen.getByRole("heading", { name: "전체 근무지" });
     expect(within(heading.parentElement!).getByText("21개")).toBeVisible();
     expect(screen.getByText("작업 완료", { exact: true })).toBeVisible();
@@ -133,8 +133,8 @@ describe("dashboard and management user flows with MSW", () => {
     mount(<DashboardScreen />);
     const onboarding = await screen.findByRole("region", { name: "첫 근무지를 등록해 주세요" });
     expect(within(onboarding).getByRole("link", { name: "첫 근무지 등록" })).toHaveAttribute("href", "/workplaces/new");
-    expect(screen.queryByRole("link", { name: "현재 사례 이어가기" })).toBeNull();
-    expect(await screen.findByRole("link", { name: "첫 사례 준비하기" })).toHaveAttribute("href", "/workplaces/new");
+    expect(screen.queryByRole("link", { name: "현재 내역 이어가기" })).toBeNull();
+    expect(await screen.findByRole("link", { name: "첫 내역 준비하기" })).toHaveAttribute("href", "/workplaces/new");
   });
 
   it("searches only the current workplace page and supports server pagination", async () => {
@@ -220,7 +220,7 @@ describe("dashboard and management user flows with MSW", () => {
     await user.click(await screen.findByText("근무지 관리", { selector: "summary" }));
     await user.click(await screen.findByRole("button", { name: "근무지 삭제" }));
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText(/등록된 급여 사례는 21개/)).toBeVisible();
+    expect(within(dialog).getByText(/등록된 급여 내역은 21개/)).toBeVisible();
     await user.click(within(dialog).getByRole("checkbox"));
     await user.click(within(dialog).getByRole("button", { name: "근무지 삭제 요청" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("연결된 자료나 현재 상태");
@@ -235,7 +235,7 @@ describe("dashboard and management user flows with MSW", () => {
     await user.selectOptions(screen.getByLabelText("급여 형태"), "MONTHLY");
     fireEvent.change(screen.getByLabelText("산정 시작일"), { target: { value: "2026-10-03" } });
     fireEvent.change(screen.getByLabelText("산정 종료일"), { target: { value: "2026-11-02" } });
-    await user.click(screen.getByRole("button", { name: "사례 만들기" }));
+    await user.click(screen.getByRole("button", { name: "내역 만들기" }));
     await waitFor(() => expect(navigation.router.replace).toHaveBeenCalledWith("/cases/36/upload"));
     expect(mocks.requests.find((item) => item.method === "POST")?.body).toEqual({ workplaceId: 3, payType: "MONTHLY", periodStart: "2026-10-03", periodEnd: "2026-11-02", scheduledPayDate: null });
     expect(mocks.requests.some((item) => /calculations|comparisons|conditions/.test(item.path))).toBe(false);
@@ -247,7 +247,7 @@ describe("dashboard and management user flows with MSW", () => {
     await screen.findByText("선택한 근무지: 카페 나무");
     fireEvent.change(screen.getByLabelText("산정 시작일"), { target: { value: "2026-11-02" } });
     fireEvent.change(screen.getByLabelText("산정 종료일"), { target: { value: "2026-10-03" } });
-    await user.click(screen.getByRole("button", { name: "사례 만들기" }));
+    await user.click(screen.getByRole("button", { name: "내역 만들기" }));
     expect(await screen.findByText("종료일은 시작일보다 빠를 수 없습니다.")).toBeVisible();
     expect(mocks.requests.some((item) => item.method === "POST")).toBe(false);
   });
@@ -257,20 +257,20 @@ describe("dashboard and management user flows with MSW", () => {
     server.use(http.get(`${testApiUrl}/workplaces/3`, () => apiResponse({}, 500)));
     mount(<CaseForm defaultWorkplaceId={3} />);
     const retry = await screen.findByRole("button", { name: "선택한 근무지 다시 확인" });
-    expect(screen.getByRole("button", { name: "사례 만들기" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "내역 만들기" })).toBeDisabled();
     server.use(...mocks.handlers);
     await user.click(retry);
     expect(await screen.findByText("선택한 근무지: 카페 나무")).toBeVisible();
-    expect(screen.getByRole("button", { name: "사례 만들기" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "내역 만들기" })).toBeEnabled();
   });
 
   it("updates a Case with its draft version and only the changed field", async () => {
     const { mount, mocks, user } = await setup();
     mount(<CaseDetailScreen id={15} />);
-    await user.click(await screen.findByRole("button", { name: "사례 수정" }));
+    await user.click(await screen.findByRole("button", { name: "내역 수정" }));
     await user.selectOptions(screen.getByLabelText("급여 형태"), "MONTHLY");
     await user.click(screen.getByRole("button", { name: "변경 저장" }));
-    expect(await screen.findByText("사례 정보를 저장했습니다.")).toBeVisible();
+    expect(await screen.findByText("내역 정보를 저장했습니다.")).toBeVisible();
     expect(mocks.requests.find((item) => item.method === "PATCH")?.body).toEqual({ payType: "MONTHLY", expectedInputVersion: 7 });
     expect(mocks.getCases()[0].inputVersion).toBe(8);
   });
@@ -278,7 +278,7 @@ describe("dashboard and management user flows with MSW", () => {
   it("preserves a conflicting draft, blocks resend, and adopts a new version only after explicit reload", async () => {
     const { mount, mocks, user } = await setup();
     mount(<CaseDetailScreen id={15} />);
-    await user.click(await screen.findByRole("button", { name: "사례 수정" }));
+    await user.click(await screen.findByRole("button", { name: "내역 수정" }));
     mocks.getCases()[0].inputVersion = 8;
     await user.selectOptions(screen.getByLabelText("급여 형태"), "MONTHLY");
     await user.click(screen.getByRole("button", { name: "변경 저장" }));
@@ -290,7 +290,7 @@ describe("dashboard and management user flows with MSW", () => {
     await waitFor(() => expect(screen.getByLabelText("급여 형태")).toHaveValue("HOURLY"));
     await user.selectOptions(screen.getByLabelText("급여 형태"), "MONTHLY");
     await user.click(screen.getByRole("button", { name: "변경 저장" }));
-    await screen.findByText("사례 정보를 저장했습니다.");
+    await screen.findByText("내역 정보를 저장했습니다.");
     expect(mocks.requests.filter((item) => item.method === "PATCH").at(-1)?.body).toEqual({ payType: "MONTHLY", expectedInputVersion: 8 });
   });
 
@@ -298,12 +298,12 @@ describe("dashboard and management user flows with MSW", () => {
     const { app, mount, mocks, user } = await setup();
     const generation = app.session.getSnapshot().generation;
     mount(<CaseDetailScreen id={15} />);
-    await user.click(await screen.findByRole("button", { name: "사례 삭제" }));
+    await user.click(await screen.findByRole("button", { name: "내역 삭제" }));
     const dialog = await screen.findByRole("dialog");
-    await within(dialog).findByText("근무지의 원본 문서는 보존됩니다. 다른 사례에서 다시 사용할 수 있습니다.");
-    expect(within(dialog).getByRole("button", { name: "사례 삭제 확인" })).toBeDisabled();
+    await within(dialog).findByText("근무지의 원본 문서는 보존됩니다. 다른 내역에서 다시 사용할 수 있습니다.");
+    expect(within(dialog).getByRole("button", { name: "내역 삭제 확인" })).toBeDisabled();
     await user.click(within(dialog).getByRole("checkbox"));
-    await user.click(within(dialog).getByRole("button", { name: "사례 삭제 확인" }));
+    await user.click(within(dialog).getByRole("button", { name: "내역 삭제 확인" }));
     await waitFor(() => expect(navigation.router.replace).toHaveBeenCalledWith("/cases"));
     const events = mocks.requests.filter((item) => /cases\/15/.test(item.path));
     expect(events.map((item) => item.method)).toEqual(["GET", "DELETE"]);
@@ -316,11 +316,11 @@ describe("dashboard and management user flows with MSW", () => {
     const { mount, mocks, user } = await setup();
     server.use(http.get(`${testApiUrl}/cases/15/deletion-impact`, () => apiResponse({ linkedDocumentCount: 1, sharedDocumentCount: 1, reportCount: 0, willUnlinkSharedDocuments: true, willDeleteSharedOriginals: true, willRevokeCaseAccessImmediately: true })));
     mount(<CaseDetailScreen id={15} />);
-    await user.click(await screen.findByRole("button", { name: "사례 삭제" }));
+    await user.click(await screen.findByRole("button", { name: "내역 삭제" }));
     const dialog = await screen.findByRole("dialog");
     await within(dialog).findByRole("alert");
     await user.click(within(dialog).getByRole("checkbox"));
-    expect(within(dialog).getByRole("button", { name: "사례 삭제 확인" })).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "내역 삭제 확인" })).toBeDisabled();
     expect(mocks.requests.some((item) => item.method === "DELETE")).toBe(false);
   });
 
@@ -328,18 +328,18 @@ describe("dashboard and management user flows with MSW", () => {
     const { mount, mocks, user } = await setup();
     server.use(http.get(`${testApiUrl}/cases/15/deletion-impact`, () => apiResponse({}, 503)));
     mount(<CaseDetailScreen id={15} />);
-    await user.click(await screen.findByRole("button", { name: "사례 삭제" }));
+    await user.click(await screen.findByRole("button", { name: "내역 삭제" }));
     const dialog = await screen.findByRole("dialog");
     await within(dialog).findByRole("alert");
     await user.click(within(dialog).getByRole("checkbox"));
-    expect(within(dialog).getByRole("button", { name: "사례 삭제 확인" })).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "내역 삭제 확인" })).toBeDisabled();
     expect(mocks.requests.some((item) => item.method === "DELETE")).toBe(false);
   });
 
   it("links Case details to the document registration route", async () => {
     const { mount } = await setup();
     mount(<CaseDetailScreen id={15} />);
-    await screen.findByRole("heading", { name: /급여 사례$/ });
+    await screen.findByRole("heading", { name: /급여 내역$/ });
     expect(screen.queryByText("다른 작업으로 이동")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /이어서 검토하기/ })).toHaveAttribute("href", "/cases/15/upload");
     expect(document.querySelector('input[type="file"]')).toBeNull();
@@ -376,20 +376,19 @@ describe("dashboard and management user flows with MSW", () => {
   });
 });
 
-it("keeps payment drafts and mounted inputs when the management disclosure closes", async () => {
-  const { mount, user } = await setup();
+it("returns to the current workplace and never requests removed payment cards", async () => {
+  const { mount } = await setup();
+  const requests: string[] = [];
+  const record = ({request}: {request: Request}) => { requests.push(new URL(request.url).pathname); };
+  server.events.on("request:start",record);
+  try {
   mount(<CaseDetailScreen id={15} />);
-  await screen.findByRole("heading", { name: /급여 사례$/ });
-  const disclosure = screen.getByText("지급 거래·사례 배분 관리").closest("details")!;
-  expect(disclosure.open).toBe(false);
-  await user.click(within(disclosure).getByText("지급 거래·사례 배분 관리"));
-  const input = within(disclosure).getByLabelText("입금자");
-  await user.type(input, "보존할 초안");
-  await user.click(within(disclosure).getByText("지급 거래·사례 배분 관리"));
-  expect(disclosure.open).toBe(false);
-  await user.click(within(disclosure).getByText("지급 거래·사례 배분 관리"));
-  expect(within(disclosure).getByLabelText("입금자")).toBe(input);
-  expect(input).toHaveValue("보존할 초안");
+  await screen.findByRole("heading", {name:/급여 내역$/});
+  expect(screen.getByRole("link",{name:"급여 확인 내역"})).toHaveAttribute("href","/workplaces/3");
+  expect(screen.queryByText("입금 대조 확인")).not.toBeInTheDocument();
+  expect(screen.queryByText("입금 거래와 급여별 연결 관리")).not.toBeInTheDocument();
+  expect(requests.some(path=>/payment-transactions|payment-allocations|deposit-comparisons/.test(path))).toBe(false);
+  } finally { server.events.removeListener("request:start",record); }
 });
 
 it("requires an explicit consultation case and links all existing support features", async () => {
@@ -399,7 +398,7 @@ it("requires an explicit consultation case and links all existing support featur
   expect(screen.queryByRole("navigation", { name: "후속 확인" })).not.toBeInTheDocument();
   await user.click(screen.getAllByRole("radio")[0]);
   const links = screen.getByRole("navigation", { name: "후속 확인" });
-  const selected = Number(screen.getAllByRole("radio")[0].closest("label")!.textContent!.match(/사례 #(\d+)/)![1]);
+  const selected = Number(screen.getAllByRole("radio")[0].closest("label")!.textContent!.match(/내역 #(\d+)/)![1]);
   expect(within(links).getByRole("link", {name:"확인 질문"})).toHaveAttribute("href", `/cases/${selected}/questions`);
   expect(within(links).getByRole("link", {name:"회사 문의 초안"})).toHaveAttribute("href", `/cases/${selected}/company-inquiry`);
   expect(within(links).getByRole("link", {name:"보고서"})).toHaveAttribute("href", `/cases/${selected}/reports`);
@@ -421,21 +420,21 @@ it("keeps the five primary destinations in the requested order", async () => {
 it("provides all case tasks without workflow locks and preserves workplace routes", async () => {
   const { mount } = await setup();
   mount(<><WorkspaceNavigation /><TaskNavigation id={15} /></>);
-  const tasks = screen.getByRole("navigation", { name: "사례 작업" });
+  const tasks = screen.getByRole("navigation", { name: "내역 작업" });
   expect(within(tasks).getByRole("link", { name: /결과 보기/ })).toHaveAttribute("href", "/cases/15/result");
   expect(within(tasks).queryByRole("link", { name: "상담 준비" })).not.toBeInTheDocument();
   expect(within(tasks).getAllByRole("link")).toHaveLength(6);
   expect(screen.getByRole("link", { name: "상담 준비" })).toHaveAttribute("href", "/consultation");
   const workplaceName = await screen.findByText("카페 나무", { selector: "summary strong" });
-  expect(workplaceName.closest("summary")).toHaveTextContent("급여 사례");
+  expect(workplaceName.closest("summary")).toHaveTextContent("급여 내역");
   expect(screen.getAllByRole("link", { hidden: true }).some(link => link.getAttribute("href") === "/workplaces/3/documents")).toBe(false);
 });
 it("marks only the create route active and keeps workplace tree destinations accessible", async () => {
   const { mount, user } = await setup();
   navigation.pathname = "/cases/new";
   mount(<WorkspaceNavigation />);
-  expect(screen.getByRole("link", { name: "새검토" })).toHaveAttribute("aria-current", "page");
-  expect(screen.queryByRole("link", { name: "급여 사례 전체 목록" })).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "새 급여" })).toHaveAttribute("aria-current", "page");
+  expect(screen.queryByRole("link", { name: "급여 내역 전체 목록" })).not.toBeInTheDocument();
   const workplace = (await screen.findByText("카페 나무", { selector: "summary strong" })).closest("details")!;
   await user.click(within(workplace).getByText("카페 나무"));
   expect(workplace).toHaveAttribute("open");
@@ -448,9 +447,9 @@ it("keeps overlapping attention/recent cases and server totals distinct", async 
   await screen.findByText("확인 필요 여부가 제공된 20건 기준");
   expect(screen.getByRole("heading", { name: "현재 검토" })).toBeVisible();
   expect(screen.getByRole("heading", { name: "확인할 작업" })).toBeVisible();
-  const total = screen.getByRole("heading", { name: "전체 급여 사례" });
+  const total = screen.getByRole("heading", { name: "전체 급여 내역" });
   expect(within(total.parentElement!).getByText("21개")).toBeVisible();
-  expect(screen.getByRole("link", { name: "현재 사례 이어가기" })).toHaveAttribute("href", expect.stringMatching(/^\/cases\/\d+\//));
+  expect(screen.getByRole("link", { name: "현재 내역 이어가기" })).toHaveAttribute("href", expect.stringMatching(/^\/cases\/\d+\//));
   expect(screen.queryByText(/원$/)).not.toBeInTheDocument();
 });
 it("renders one case with omitted attention and step without inventing results", async () => {
@@ -461,4 +460,11 @@ it("renders one case with omitted attention and step without inventing results",
   server.use(http.get(`${testApiUrl}/cases`, () => apiResponse({ items: [item], page: 1, size: 20, total: 1 })));
   mount(<DashboardScreen />);
   expect(await screen.findByRole("alert")).toBeVisible();
+});
+
+it("opens the exact case overview from every list action", async () => {
+ const {mount}=await setup(); mount(<CaseList />);
+ const links=await screen.findAllByRole("link",{name:"시작하기"});
+ expect(links.length).toBeGreaterThan(0);
+ for(const link of links) expect(link.getAttribute("href")).toMatch(/^\/cases\/\d+$/);
 });

@@ -17,7 +17,7 @@ export function AccountOverview() {
       <dl className="mt-6 grid min-w-0 gap-2 text-body">
         <dt className="font-bold">이메일</dt><dd className="min-w-0 break-all text-muted">{user.data.email}</dd>
       </dl>
-      <p className="mt-6 text-body text-muted">근무지와 산정기간별 사례를 확인하고 필요한 자료를 차근차근 준비하세요.</p>
+      <p className="mt-6 text-body text-muted">근무지와 산정기간별 내역을 확인하고 필요한 자료를 차근차근 준비하세요.</p>
     </section>
   );
 }

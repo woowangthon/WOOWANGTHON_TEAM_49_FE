@@ -29,11 +29,13 @@ export function reviewMocks(cases:CaseDetailDto[],documents:DocumentDto[], testA
   const record=(request:Request,body?:Record<string,unknown>)=>!development&&requests.push({method:request.method,path:new URL(request.url).pathname+new URL(request.url).search,body,authorization:request.headers.get("Authorization")});
   const current=(c:number)=>cases.find(v=>v.caseId===c)!;
   const error=(code:string,status=409)=>apiResponse({errorCode:code},status);
-  const bump=(ids:number[])=>ids.map(caseId=>{const inputVersion=++current(caseId).inputVersion;return {caseId,inputVersion,recompute:{scheduled:true,jobId:onInputChanged?.(caseId).jobId ?? "review-job"}};});
+  const bump=(ids:number[])=>Object.fromEntries(ids.map(caseId=>{const inputVersion=++current(caseId).inputVersion;return [String(caseId),{inputVersion,recompute:{scheduled:true,jobId:onInputChanged?.(caseId).jobId ?? "review-job",affectedChecks:["PAYSLIP_VALIDATION"]}}];}));
   const review=(c:number,d:number)=>{const fs=fields(c,d);const unconfirmedFieldIds=fs.filter(f=>f.status!=="CONFIRMED").map(f=>f.fieldId);return {documentId:d,caseId:c,processingStatus:"READY",reviewStatus:reviewStates.get(`${c}:${d}`)??"NOT_STARTED",confirmedFieldCount:fs.length-unconfirmedFieldIds.length,totalFieldCount:fs.length,unconfirmedFieldIds};};
   const patch=async(request:Request,c:number|undefined,d:number,fid:number)=>{
     const body=await request.json() as Record<string,unknown>;record(request,body);
-    if(c&&body.expectedInputVersion!==current(c).inputVersion)return error("INPUT_VERSION_CONFLICT");
+    if(!c&&Object.hasOwn(body,"expectedInputVersion"))return error("CASE_VERSION_NOT_APPLICABLE",422);
+    if(body.confirmed===false)return error("CANDIDATE_CONFIRMATION_INVALID",422);
+    if(c&&body.expectedInputVersion!==undefined&&body.expectedInputVersion!==current(c).inputVersion)return error("INPUT_VERSION_CONFLICT");
     const shared=sharedFields(d).find(f=>f.fieldId===fid)!;const old=c?(overrides.get(key(c,d,fid))??shared):shared;
     const previousValue=old.value;
     const value=Object.hasOwn(body,"value")?body.value as FieldValue:old.value;
@@ -45,7 +47,7 @@ export function reviewMocks(cases:CaseDetailDto[],documents:DocumentDto[], testA
     affected.forEach(id=>reviewStates.set(`${id}:${d}`,"IN_PROGRESS"));
     historyContexts.set(histories.length+1,`${c??"shared"}:${d}`);
     histories.unshift({historyId:histories.length+1,fieldId:fid,previousValue,newValue:value,changedAt:"2026-11-09T00:00:00+00:00",changedBy:"USER",scope:c?"CASE_OVERRIDE":"SHARED_DEFAULT"});
-    return apiResponse({...updated,affectedCaseIds:affected,caseUpdates,...(c?{inputVersion:current(c).inputVersion}:{}),recompute:c?caseUpdates.find(v=>v.caseId===c)?.recompute:{scheduled:true,jobId:"review-job"}});
+    return apiResponse({...updated,previousValue,affectedCaseIds:affected,caseUpdates,...(c?{inputVersion:current(c).inputVersion,recompute:caseUpdates[String(c)].recompute}:{})});
   };
   const handlers=[
     http.get(`${testApiUrl}/workplaces/:w/documents/:d/preview`,({request,params})=>{record(request);return apiResponse({documentId:Number(params.d),mediaType:"image/png",pageCount:1,previewUrl:"https://must-not-follow.invalid/private-original",coordinateSystem:"RELATIVE_0_1",rotationDegrees:0,supportsHighlight:true});}),

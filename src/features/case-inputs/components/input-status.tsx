@@ -11,7 +11,7 @@ import { checkTypes, type Readiness } from "../schemas";
 
 export const checkLabels = { WAGE_CALCULATION: "임금 계산", CONTRACT_ATTENDANCE_COMPARISON: "계약·근태 대조", PAYSLIP_VALIDATION: "명세서 합계 검사", DEPOSIT_COMPARISON: "입금 대조" };
 const resultLabels: Record<string, string> = { calculation: "임금 계산", comparison: "계약·근태 대조", payslipValidation: "명세서 합계 검사", depositComparison: "입금 대조" };
-const missingLabels: Record<string, string> = { contract_wage: "계약상 임금", regular_minutes: "소정근로시간", contract: "계약 자료", attendance: "근태 자료", comparison_basis_confirmation: "비교 기준 확인", confirmed_payslip_totals_and_items: "명세서 총액과 개별 금액", payslip_net_pay: "명세서 실수령액", allocated_payment: "이 사례에 배분한 입금", verified_statutory_rules: "검증된 법정수당 규칙", overtime_hours: "연장근로시간" };
+const missingLabels: Record<string, string> = { contract_wage: "계약상 임금", regular_minutes: "소정근로시간", contract: "계약 자료", attendance: "근태 자료", comparison_basis_confirmation: "비교 기준 확인", confirmed_payslip_totals_and_items: "명세서 총액과 개별 금액", payslip_net_pay: "명세서 실수령액", allocated_payment: "이 내역에 배분한 입금", verified_statutory_rules: "검증된 법정수당 규칙", overtime_hours: "연장근로시간" };
 export function ReadinessView({ data, caseId, compact = false }: { data: Readiness; caseId: number; compact?: boolean }) {
   return <section aria-label="기능별 실행 가능성" className="min-w-0 space-y-4"><h2 className="text-title font-bold">기능별 실행 가능성</h2><p>서버 입력 버전 {data.inputVersion}. 실행 가능은 결과의 일치·검사 완료를 뜻하지 않습니다. 작업 단계와 별개입니다.</p>
     <div className={`grid min-w-0 gap-4 ${compact ? "grid-cols-1" : "sm:grid-cols-2"}`}>{checkTypes.map(type => {

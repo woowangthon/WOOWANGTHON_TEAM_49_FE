@@ -36,7 +36,7 @@ export function WorkplaceDetailScreen({ id }: { id: number }) {
         </section>
       </details>
       </WorkplaceHeader><p>이 근무지의 급여를 기간별로 모아 보고, 하던 검토를 이어가세요.</p></div>
-      <section className={explorer.panel}><div className={styles.sectionHead}><div><h2>급여 사례 목록</h2><p>{workplace.name} · {workplace.caseCount}개</p></div><Link href={`/cases/new?workplaceId=${id}`} className={styles.create}><Plus size={17} aria-hidden="true" />새 급여 사례</Link></div>
+      <section className={explorer.panel}><div className={styles.sectionHead}><div><h2>급여 확인 내역</h2><p>{workplace.name} · {workplace.caseCount}개</p></div><Link href={`/cases/new?workplaceId=${id}`} className={styles.create}><Plus size={17} aria-hidden="true" />새 급여 내역</Link></div>
       <CaseList workplaceId={id} />
       </section>
       {saved && <p role="status" className="rounded-control bg-success-soft p-4 text-body">근무지 정보를 저장했습니다.</p>}

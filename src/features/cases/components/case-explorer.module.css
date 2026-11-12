@@ -23,9 +23,9 @@
   padding: 36px 40px;
   overflow: hidden;
   border-radius: 30px;
-  color: white;
-  background: linear-gradient(115deg, #314da0 0%, #425ab1 56%, #6552a7 100%);
-  box-shadow: 0 12px 30px -18px rgb(70 101 187 / 35%);
+  color: var(--ink);
+  background: linear-gradient(115deg, var(--color-neutral-soft), var(--color-surface));
+  border: 1px solid var(--rule);
 }
 .header::before {
   content: "";
@@ -41,10 +41,10 @@
   pointer-events: none;
 }
 .heroCopy { position: relative; z-index: 2; min-width: 0; }
-.eyebrow { display: flex; align-items: center; gap: 7px; margin-bottom: 14px; color: #e7f0ff; font-size: .8125rem; font-weight: 600; }
+.eyebrow { display: flex; align-items: center; gap: 7px; margin-bottom: 14px; color: var(--blue); font-size: .8125rem; font-weight: 600; }
 .eyebrow > span { width: 6px; height: 6px; border-radius: 50%; background: #a1e7ff; box-shadow: 0 0 0 4px rgb(161 231 255 / 12%); }
 .header h1 { font-size: clamp(1.875rem, 4.7cqi, 2.75rem); font-weight: 780; line-height: 1.25; letter-spacing: -.055em; }
-.intro { margin-top: 16px; color: #f2f6ff; font-size: .9375rem; line-height: 1.75; letter-spacing: -.015em; }
+.intro { margin-top: 16px; color: var(--muted); font-size: .9375rem; line-height: 1.75; letter-spacing: -.015em; }
 .create, .heroCreate, .continue {
   display: inline-flex;
   align-items: center;
@@ -63,7 +63,7 @@
 .create:hover { background: var(--color-foreground); }
 .create:active, .heroCreate:active, .continue:active { transform: scale(.97); }
 .create svg, .heroCreate svg, .continue svg, .period svg, .attention svg, .note svg { flex-shrink: 0; }
-.header .heroCreate:focus-visible { outline-color: white; outline-offset: 5px; }
+.header .heroCreate:focus-visible { outline-color: var(--blue); outline-offset: 5px; }
 
 .heroArt { position: relative; justify-self: center; width: 280px; height: 240px; pointer-events: none; animation: artEnter 700ms var(--ease) both; }
 .artHalo { position: absolute; width: 230px; height: 230px; top: 5px; left: 25px; border-radius: 50%; background: radial-gradient(circle, rgb(198 220 255 / 28%), rgb(198 220 255 / 3%) 70%); }

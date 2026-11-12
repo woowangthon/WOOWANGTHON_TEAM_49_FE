@@ -31,7 +31,7 @@ export function ReviewScreen({id,initialDocumentId,initialReplacementId}:{id:num
     if(dirty&&!discardChanges())return;setEditDirty(false);setFileDirty(false);setSelected(documentId);setReplacement(undefined);
     window.history.replaceState(null,"",`/cases/${id}/review?documentId=${documentId}`);
   };
-  if(removal.pending||removal.removed)return <p role="status">삭제 중이거나 삭제된 사례입니다.</p>;
+  if(removal.pending||removal.removed)return <p role="status">삭제 중이거나 삭제된 내역입니다.</p>;
   if(c.isPending||documents.isPending)return <QueryFeedback pending />;
   if(c.isError||documents.isError)return <QueryFeedback error={c.error??documents.error} retry={()=>{void c.refetch();void documents.refetch();}} />;
   const dto=documents.data.items.find(d=>d.documentId===(selected??documents.data.items[0]?.documentId));

@@ -25,7 +25,7 @@ export function manualFormSchema(type: RecordType, periodStart: string, periodEn
     }
     if (type === "DEPOSIT" && values.amount?.trim() && Number(values.amount) < 0) error("amount", "음수·환입 거래는 지원하지 않습니다.");
     if (type === "ATTENDANCE") {
-      if (values.workDate && (values.workDate < periodStart || values.workDate > periodEnd)) error("workDate", "사례 산정기간 안의 근무일을 선택해 주세요.");
+      if (values.workDate && (values.workDate < periodStart || values.workDate > periodEnd)) error("workDate", "내역 산정기간 안의 근무일을 선택해 주세요.");
       const duration = (Date.parse(values.clockOut + "+09:00") - Date.parse(values.clockIn + "+09:00")) / 60_000;
       if (Number.isFinite(duration) && duration <= 0) error("clockOut", "퇴근 시각은 출근 시각보다 늦어야 합니다.");
       if (Number.isFinite(duration) && values.breakMinutes?.trim() && Number(values.breakMinutes) > duration) error("breakMinutes", "휴게시간은 출퇴근 사이의 시간을 초과할 수 없습니다.");

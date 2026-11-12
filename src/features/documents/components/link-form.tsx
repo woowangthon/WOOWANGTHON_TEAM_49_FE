@@ -33,7 +33,7 @@ export function LinkForm({ caseId, documentId, link, inputVersion, onDone }: { c
   })}>
     <TextField id={`${id}-purpose`} label="연결 목적" list={`${id}-purposes`} placeholder="사용 목적을 입력하거나 선택" disabled={isSubmitting} error={errors.purpose?.message} maxLength={100} {...register("purpose")} />
     <datalist id={`${id}-purposes`}><option value="CONTRACT_FOR_PERIOD">산정기간에 적용할 계약서</option></datalist>
-    <p className="text-caption text-muted">이 자료를 사례에서 사용하는 목적을 입력하거나 선택해 주세요.</p>
+    <p className="text-caption text-muted">이 자료를 내역에서 사용하는 목적을 입력하거나 선택해 주세요.</p>
     <div className="grid min-w-0 gap-4 sm:grid-cols-2">
       <TextField id={`${id}-from`} label="적용 시작일 (선택)" type="date" disabled={isSubmitting} error={errors.applicableFrom?.message} {...register("applicableFrom")} />
       <TextField id={`${id}-to`} label="적용 종료일 (선택)" type="date" disabled={isSubmitting} error={errors.applicableTo?.message} {...register("applicableTo")} />

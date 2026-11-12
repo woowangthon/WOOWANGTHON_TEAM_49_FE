@@ -40,16 +40,16 @@ export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved
       setError("root.server",{message:reviewError(error)});setPrepared(undefined);
     }finally{locked.current=false;}
   };
-  return <form aria-label={`${scope==="case"?"사례 재정의":"공유 기본값"} 편집`} className="mt-4 min-w-0 space-y-4 rounded-control border border-border p-4" onSubmit={event=>{void handleSubmit(async values=>{
+  return <form aria-label={`${scope==="case"?"내역 재정의":"공유 기본값"} 편집`} className="mt-4 min-w-0 space-y-4 rounded-control border border-border p-4" onSubmit={event=>{void handleSubmit(async values=>{
     if(conflict||locked.current)return;
     let value;try{value=structured?valueSchema.parse(JSON.parse(values.text)):parseFieldValue(field,values.text,values.empty,values.scalar);}catch(error){setError("text",{message:error instanceof Error?error.message:"값을 확인해 주세요."});return;}
     if(value===null&&values.confirmed){setError("confirmed",{message:"값 없음은 확인할 수 없습니다."});return;}
     const patch:FieldPatch={value,...(values.confirmed?{confirmed:true}:{})};
     if(scope==="shared")setPrepared(patch);else await save(patch);
   })(event);}}>
-    <h4 className="text-body font-bold">{scope==="case"?"이 사례에만 적용할 값":"근무지 공유 기본값"}</h4>
-    <p className="text-caption text-muted">{scope==="shared"?"재정의가 없는 연결 사례에 영향을 줄 수 있습니다. 다른 사례의 재정의를 변경하지 않습니다.":"공유 기본값과 다른 사례의 값은 유지됩니다."}</p>
-    {scope==="shared"&&field.hasCaseOverride&&<p className="text-caption">현재 보이는 값은 이 사례의 재정의입니다. 공유 기본값을 대신 채우지 않았습니다. 새 공유값을 직접 입력해 주세요.</p>}
+    <h4 className="text-body font-bold">{scope==="case"?"이 내역에만 적용할 값":"근무지 공유 기본값"}</h4>
+    <p className="text-caption text-muted">{scope==="shared"?"재정의가 없는 연결 내역에 영향을 줄 수 있습니다. 다른 내역의 재정의를 변경하지 않습니다.":"공유 기본값과 다른 내역의 값은 유지됩니다."}</p>
+    {scope==="shared"&&field.hasCaseOverride&&<p className="text-caption">현재 보이는 값은 이 내역의 재정의입니다. 공유 기본값을 대신 채우지 않았습니다. 새 공유값을 직접 입력해 주세요.</p>}
     {field.value===null&&field.valueType!=="MONEY_KRW"&&<SelectField label="입력값 형식" id={`${id}-scalar`} {...register("scalar")}><option value="string">문자</option><option value="number">숫자</option><option value="boolean">예/아니요</option></SelectField>}
     {structured?<div><label htmlFor={`${id}-json`}>구조형 값 (JSON)</label><textarea id={`${id}-json`} className="min-h-48 w-full min-w-0 rounded-control border p-3 font-mono" disabled={busy} aria-invalid={!!errors.text} aria-describedby={errors.text?`${id}-json-error`:undefined} {...register("text")} /><p>배열·객체 구조와 null, 0을 유지하여 저장합니다.</p>{errors.text&&<p id={`${id}-json-error`} role="alert">올바른 JSON 값을 입력해 주세요.</p>}</div>:scalar==="boolean"?<SelectField id={`${id}-value`} label="수정값" disabled={empty||busy} error={errors.text?.message} {...register("text")}><option value="">선택해 주세요</option><option value="true">예</option><option value="false">아니요</option></SelectField>:<TextField id={`${id}-value`} label="수정값" inputMode={scalar==="number"?"decimal":undefined} disabled={empty||busy} error={errors.text?.message} {...register("text")} />}
     <label className="flex min-h-11 items-center gap-3"><input type="checkbox" className="size-5" disabled={busy||structured} {...register("empty",{onChange:event=>{if(event.target.checked)form.setValue("confirmed",false);}})} /><span>값 없음 (null)</span></label>
@@ -62,9 +62,9 @@ export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved
     }}>최신 값으로 초안 다시 불러오기</button>}
     <div className="flex flex-wrap gap-2"><button type="submit" className={primaryButton} disabled={busy||conflict}>수정값 저장</button><button type="button" className={secondaryButton} disabled={busy} onClick={()=>{if(!isDirty||window.confirm("저장하지 않은 변경을 버릴까요?"))onClose();}}>편집 닫기</button></div>
     {prepared&&<ConfirmDialog title="공유 기본값 변경 영향" busy={mutation.isPending} onClose={()=>setPrepared(undefined)} action={<button type="button" className={primaryButton} disabled={mutation.isPending} onClick={()=>{void save(prepared);}}>공유 기본값 저장 확인</button>}>
-      <p>공유 기본값을 사용하는 연결 사례의 입력과 검사가 갱신될 수 있습니다. Case별 재정의는 유지됩니다.</p>
-      <p>{linkedCaseIds?`연결 사례: ${linkedCaseIds.map(c=>`#${c}`).join(", ")||"없음"}`:"연결 사례 목록은 제공되지 않았습니다."}</p>
-      <p>실제 영향받은 사례와 버전은 저장 후 서버 응답으로 확인합니다.</p>
+      <p>공유 기본값을 사용하는 연결 내역의 입력과 검사가 갱신될 수 있습니다. Case별 재정의는 유지됩니다.</p>
+      <p>{linkedCaseIds?`연결 내역: ${linkedCaseIds.map(c=>`#${c}`).join(", ")||"없음"}`:"연결 내역 목록은 제공되지 않았습니다."}</p>
+      <p>실제 영향받은 내역과 버전은 저장 후 서버 응답으로 확인합니다.</p>
     </ConfirmDialog>}
   </form>;
 }
