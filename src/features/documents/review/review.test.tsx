@@ -26,6 +26,8 @@ import { documentApi } from "../api";
 import { reviewApi } from "./api";
 import { reviewKeys } from "./query-keys";
 import { displayValue,fieldView,highlightBox,parseFieldValue } from "./view-models";
+import { groupReviewFields } from "./field-groups";
+import type { ExtractedField } from "./schemas";
 const navigation=vi.hoisted(()=>({replace:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>navigation,usePathname:()=>"/cases/15/review",useSearchParams:()=>new URLSearchParams()}));
 const apps:AppServices[]=[];const NativeURL=URL;
@@ -36,7 +38,7 @@ beforeEach(async()=>{
   vi.stubGlobal("URL",class extends NativeURL {static createObjectURL=vi.fn(()=>"blob:local-review-resource");static revokeObjectURL=vi.fn();});
 });
 afterEach(()=>{cleanup();apps.splice(0).forEach(a=>{a.session.clear();a.queryClient.clear();});vi.unstubAllGlobals();});
-async function setup(){const m=managementMocks();const d=documentMocks(m.getCases());const mocks=reviewMocks(m.getCases(),d.getDocuments());server.use(...mocks.handlers,...d.handlers,...m.handlers);const app=createAppServices();apps.push(app);await app.auth.login({email:"worker@example.com",password:"password1234"});
+async function setup(){const m=managementMocks();const d=documentMocks(m.getCases());d.getDocuments()[0].documentType="PAYSLIP";const mocks=reviewMocks(m.getCases(),d.getDocuments());server.use(...mocks.handlers,...d.handlers,...m.handlers);const app=createAppServices();apps.push(app);await app.auth.login({email:"worker@example.com",password:"password1234"});
  const mount=(node:ReactNode)=>render(<AppServicesContext value={app}><QueryClientProvider client={app.queryClient}><AuthGate mode="protected">{node}</AuthGate></QueryClientProvider></AppServicesContext>);
  return {app,mocks,m,d,mount,user:userEvent.setup()};}
 const noop=()=>{};
@@ -44,11 +46,55 @@ describe("P0 document review via MSW",()=>{
  it("requests metadata and original Blob with Bearer, ignoring private previewUrl",async()=>{const {mount,mocks}=await setup();mount(<OriginalViewer workplaceId={3} documentId={101} />);expect(await screen.findByRole("img",{name:"문서 원문 1페이지"})).toHaveAttribute("src","blob:local-review-resource");expect(mocks.requests.filter(r=>/preview|file$/.test(r.path))).toHaveLength(2);expect(mocks.requests.every(r=>r.authorization==="Bearer msw-access-token")).toBe(true);expect(document.body.innerHTML).not.toContain("must-not-follow");});
  it("releases Blob URLs and file cache on unmount",async()=>{const {mount,app}=await setup();const v=mount(<OriginalViewer workplaceId={3} documentId={101} />);await screen.findByRole("img",{name:"문서 원문 1페이지"});const revoke=URL.revokeObjectURL;v.unmount();expect(revoke).toHaveBeenCalledWith("blob:local-review-resource");await waitFor(()=>expect(app.queryClient.getQueryData(reviewKeys.file(app.session.getSnapshot().generation,3,101))).toBeUndefined());});
  it("retries original failures and displays image decoding errors",async()=>{const {mount,user}=await setup();server.use(http.get(`${testApiUrl}/workplaces/3/documents/101/file`,()=>apiResponse({},403)));mount(<OriginalViewer workplaceId={3} documentId={101} />);expect(await screen.findByRole("alert")).toHaveTextContent("권한");server.use(http.get(`${testApiUrl}/workplaces/3/documents/101/file`,()=>new HttpResponse(new Uint8Array([1]),{headers:{"Content-Type":"image/png"}})));await user.click(screen.getByRole("button",{name:"다시 시도"}));fireEvent.error(await screen.findByRole("img",{name:"문서 원문 1페이지"}));expect(screen.getByRole("alert")).toHaveTextContent("이미지를 표시할 수 없습니다");});
- it("displays zero, missing values, source and independent review statuses",async()=>{const {mount,user}=await setup();mount(<ReviewScreen id={15} initialDocumentId={101} />);const fields=await screen.findByRole("region",{name:"OCR 추출 필드"});expect(within(fields).getAllByRole("article")).toHaveLength(1);await user.click(within(within(fields).getByRole("article",{name:"지급총액"})).getByText("근거·이력·공유 설정"));expect(within(fields).getByText(/지급총액 2,300,000원/)).toBeVisible();await user.click(within(fields).getByRole("button",{name:"다음"}));expect(within(fields).getByRole("article",{name:"공제액"})).toHaveTextContent("값 없음");await user.click(within(fields).getByRole("button",{name:"다음"}));expect(within(fields).getByRole("article",{name:"추가 지급액"})).toHaveTextContent("0");expect(await screen.findByText("문서 처리: 처리 완료 · 사용자 검토: 검토 전")).toBeVisible();});
+ it("shows essential amounts together and preserves zero, missing values and original evidence",async()=>{
+  const {mount,user}=await setup();mount(<ReviewScreen id={15} initialDocumentId={101} />);
+  const fields=await screen.findByRole("region",{name:"OCR 추출 필드"});const essential=within(fields).getByRole("region",{name:"필수 확인"});
+  expect(within(essential).getAllByRole("article")).toHaveLength(2);
+  expect(within(essential).getByRole("article",{name:"지급총액"})).toHaveTextContent("2,300,000");
+  expect(within(essential).getByRole("article",{name:"공제액"})).toHaveTextContent("값 없음");
+  expect(within(essential).getByText("검토 대상 기간")).toBeVisible();
+  await user.click(within(within(fields).getByRole("article",{name:"지급총액"})).getByText("근거·이력·공유 설정"));
+  expect(within(fields).getByText(/지급총액 2,300,000원/)).toBeVisible();
+  expect(within(fields).queryByRole("article",{name:"추가 지급액"})).not.toBeInTheDocument();
+  await user.click(within(fields).getByRole("button",{name:/세부 항목 확인/}));
+  expect(within(fields).getByRole("article",{name:"추가 지급액"})).toHaveTextContent("0");
+  expect(await screen.findByText("문서 처리: 처리 완료")).toBeVisible();
+  expect(screen.getByText("사용자 검토: 검토 전")).toBeVisible();
+ });
  it("preserves all five field status labels and scalar null/zero semantics",async()=>{const {mocks}=await setup();const f=mocks.fields(15,101)[0];expect(displayValue(null)).toBe("값 없음");expect(displayValue(0)).toBe("0");expect(displayValue(false)).toBe("아니요");expect(["UNCONFIRMED","CONFIRMED","MISSING","UNREADABLE","CONFLICTED"].map(status=>fieldView({...f,status:status as typeof f.status}).statusLabel)).toEqual(["미확인","확인됨","값 없음","판독 불가","상충"]);expect(parseFieldValue(f,"0",false)).toBe(0);expect(parseFieldValue(f,"",true)).toBeNull();expect(()=>parseFieldValue(f,"",false)).toThrow();});
+ it("surfaces extraction gaps in the core group while preserving zero and false as values",async()=>{
+  const {mount,mocks,user}=await setup();const base=mocks.fields(15,101)[0];
+  const gaps:ExtractedField[]=[
+   {...base,fieldId:801,key:"unlistedNull",label:"추출되지 않은 수당",value:null},
+   {...base,fieldId:802,key:"unlistedMissing",label:"누락된 시간",value:15,status:"MISSING"},
+   {...base,fieldId:803,key:"unlistedUnreadable",label:"읽지 못한 기간",value:"후보값",status:"UNREADABLE"},
+  ];
+  const zero={...base,fieldId:804,key:"deductions",label:"확인할 0원",value:0};
+  const negative={...base,fieldId:805,key:"unlistedBoolean",label:"해당 여부",value:false,valueType:"BOOLEAN"};
+  const fields=[base,...gaps,zero,negative];const groups=groupReviewFields(fields,"PAYSLIP");
+  expect(groups.essential.map(field=>field.fieldId)).toEqual([501,801,802,803,804]);
+  expect(groups.details.map(field=>field.fieldId)).toEqual([805]);
+  mount(<FieldsPanel fields={fields} context={context} inputVersion={7} onSource={noop} onDirty={noop} dirty={false} />);
+  const essential=screen.getByRole("region",{name:"필수 확인"});
+  for(const field of gaps){
+   const article=within(essential).getByRole("article",{name:field.label});
+   expect(within(article).getByText("추출 안 된 값")).toBeVisible();
+   expect(within(article).getByRole("button",{name:"값만 확인"})).toBeDisabled();
+  }
+  const zeroArticle=within(essential).getByRole("article",{name:zero.label});
+  expect(zeroArticle.querySelector("[data-review-value]")).toHaveTextContent("0");
+  expect(within(zeroArticle).queryByText("추출 안 된 값")).not.toBeInTheDocument();
+  expect(within(zeroArticle).getByRole("button",{name:"값만 확인"})).toBeEnabled();
+  await user.click(screen.getByRole("button",{name:/세부 항목 확인/}));
+  const booleanArticle=screen.getByRole("article",{name:negative.label});
+  expect(booleanArticle.querySelector("[data-review-value]")).toHaveTextContent("아니요");
+  expect(within(booleanArticle).queryByText("추출 안 된 값")).not.toBeInTheDocument();
+  expect(within(booleanArticle).getByRole("button",{name:"값만 확인"})).toBeEnabled();
+  expect(mocks.requests.some(request=>request.method==="PATCH")).toBe(false);
+ });
  it("only highlights valid matching relative coordinates; rotated or absent coordinates fall back",()=>{const p={documentId:101,mediaType:"image/png",pageCount:2,coordinateSystem:"RELATIVE_0_1",rotationDegrees:0,supportsHighlight:true};const s={documentId:101,page:1,boundingBox:[0.1,0.2,0.3,0.1] as [number,number,number,number],coordinateSystem:"RELATIVE_0_1"};expect(highlightBox(p,s,1)).toEqual({left:"10%",top:"20%",width:"30%",height:"10%"});expect(highlightBox(p,s,2)).toBeUndefined();expect(highlightBox({...p,rotationDegrees:90},s,1)).toBeUndefined();expect(highlightBox(p,s,1,90)).toBeUndefined();expect(highlightBox(p,{...s,boundingBox:[0.9,0.2,0.4,0.1]},1)).toBeUndefined();expect(highlightBox(p,{...s,documentId:102},1)).toBeUndefined();});
  it("keeps a relative overlay stable during zoom and page changes",async()=>{const {mount,user}=await setup();mount(<ViewerContent url="blob:local" preview={{documentId:101,mediaType:"image/png",pageCount:2,coordinateSystem:"RELATIVE_0_1",rotationDegrees:0,supportsHighlight:true}} source={{documentId:101,page:1,text:"근거",boundingBox:[0.1,0.2,0.3,0.1],coordinateSystem:"RELATIVE_0_1"}} onRetry={noop} />);fireEvent.load(screen.getByRole("img",{name:"문서 원문 1페이지"}));expect(screen.getByRole("img",{name:"선택한 필드의 원문 위치"})).toHaveStyle({left:"10%"});await user.click(screen.getByRole("button",{name:"확대"}));expect(screen.getByText("125%")).toBeVisible();expect(screen.getByRole("img",{name:"선택한 필드의 원문 위치"})).toHaveStyle({left:"10%"});await user.click(screen.getByRole("button",{name:"다음 페이지"}));expect(screen.queryByRole("img",{name:"선택한 필드의 원문 위치"})).not.toBeInTheDocument();});
- it("confirms only a field without resending its value; null cannot be confirmed",async()=>{const {mount,mocks,user}=await setup();mount(<FieldsPanel fields={mocks.fields(15,101)} context={context} inputVersion={7} onSource={noop} onDirty={noop} dirty={false} />);const card=screen.getByRole("article",{name:"지급총액"});await user.click(within(card).getByRole("button",{name:"값만 확인"}));await waitFor(()=>expect(mocks.requests.some(r=>r.method==="PATCH")).toBe(true));expect(mocks.requests.find(r=>r.method==="PATCH")?.body).toEqual({confirmed:true,expectedInputVersion:7});await waitFor(()=>expect(screen.getByRole("button",{name:"다음"})).toBeEnabled());await user.click(screen.getByRole("button",{name:"다음"}));expect(within(screen.getByRole("article",{name:"공제액"})).getByRole("button",{name:"값만 확인"})).toBeDisabled();});
+ it("confirms only a field without resending its value; null cannot be confirmed",async()=>{const {mount,mocks,user}=await setup();mount(<FieldsPanel fields={mocks.fields(15,101)} context={context} inputVersion={7} onSource={noop} onDirty={noop} dirty={false} />);const card=screen.getByRole("article",{name:"지급총액"});await user.click(within(card).getByRole("button",{name:"값만 확인"}));await waitFor(()=>expect(mocks.requests.some(r=>r.method==="PATCH")).toBe(true));expect(mocks.requests.find(r=>r.method==="PATCH")?.body).toEqual({confirmed:true,expectedInputVersion:7});expect(within(screen.getByRole("article",{name:"공제액"})).getByRole("button",{name:"값만 확인"})).toBeDisabled();});
  it("saves value edits without implicit confirmation and carries expected version",async()=>{const {mount,mocks,user}=await setup();const done=vi.fn();mount(<FieldEditor field={mocks.fields(15,101)[0]} scope="case" context={context} version={7} onClose={done} onDirty={noop} onSaved={noop} />);await user.clear(screen.getByLabelText("수정값"));await user.type(screen.getByLabelText("수정값"),"0");await user.click(screen.getByRole("button",{name:"수정값 저장"}));await waitFor(()=>expect(done).toHaveBeenCalled());expect(mocks.requests.find(r=>r.method==="PATCH")?.body).toEqual({value:0,expectedInputVersion:7});expect(mocks.fields(15,101)[0].status).toBe("UNCONFIRMED");});
  it("sends confirmed true when explicitly selected and false for unconfirmation",async()=>{const {app,mocks}=await setup();await reviewApi(app.api).patchCase(15,101,501,{value:2000000,confirmed:true},7);expect(mocks.fields(15,101)[0].status).toBe("CONFIRMED");await reviewApi(app.api).patchCase(15,101,501,{confirmed:false},8);expect(mocks.fields(15,101)[0].status).toBe("UNCONFIRMED");});
  it("handles 409 with preserved draft and explicit reload of latest values/version",async()=>{const {mount,mocks,m,user}=await setup();m.getCases()[0].inputVersion=8;mount(<FieldEditor field={mocks.fields(15,101)[0]} scope="case" context={context} version={7} onClose={noop} onDirty={noop} onSaved={noop} />);await user.clear(screen.getByLabelText("수정값"));await user.type(screen.getByLabelText("수정값"),"1");await user.click(screen.getByRole("button",{name:"수정값 저장"}));expect(await screen.findByText(/다른 변경이 먼저/)).toBeVisible();expect(screen.getByLabelText("수정값")).toHaveValue("1");expect(screen.getByRole("button",{name:"수정값 저장"})).toBeDisabled();await user.click(screen.getByRole("button",{name:"최신 값으로 초안 다시 불러오기"}));await waitFor(()=>expect(screen.getByLabelText("수정값")).toHaveValue("2300000"));await user.click(screen.getByRole("button",{name:"수정값 저장"}));await waitFor(()=>expect(mocks.requests.filter(r=>r.method==="PATCH").at(-1)?.body?.expectedInputVersion).toBe(8));});
@@ -86,21 +132,40 @@ describe("P0 document review via MSW",()=>{
 
  it("uses newly supplied P0 204 contracts for original deletion and Case unlink",async()=>{const {app}=await setup();server.use(http.delete(`${testApiUrl}/workplaces/3/documents/101`,()=>new HttpResponse(null,{status:204})),http.delete(`${testApiUrl}/cases/15/document-links/777`,()=>new HttpResponse(null,{status:204})));await expect(documentApi(app.api).remove(3,101)).resolves.toBeUndefined();await expect(documentApi(app.api).unlink(15,777,7)).resolves.toBeUndefined();});
 
- it("preserves an edited draft and exposes unresolved fields across local pages without mutations",async()=>{
+ it("keeps detail drafts visible and never confirms fields by expanding or collapsing groups",async()=>{
  const {mount,mocks,user}=await setup();const base=mocks.fields(15,101)[0];
- const fields=Array.from({length:13},(_,i)=>({...base,fieldId:701+i,label:`검토 항목 ${i+1}`}));
+ const fields=Array.from({length:13},(_,i)=>({...base,fieldId:701+i,key:i===0?"grossPay":`detail${i}`,label:`검토 항목 ${i+1}`}));
  mount(<FieldsPanel fields={fields} context={context} inputVersion={7} onSource={noop} onDirty={noop} dirty={false} />);
  expect(screen.getAllByRole("article")).toHaveLength(1);
- await user.click(within(screen.getByRole("article",{name:"검토 항목 1"})).getByRole("button",{name:"이 사례 값 수정"}));
+ const toggle=screen.getByRole("button",{name:/세부 항목 확인/});expect(toggle).toHaveAttribute("aria-expanded","false");
+ expect(toggle).toHaveTextContent("아직 확인하지 않은 항목 12개");await user.click(toggle);
+ expect(screen.getAllByRole("article")).toHaveLength(13);
+ await user.click(within(screen.getByRole("article",{name:"검토 항목 13"})).getByRole("button",{name:"이 사례 값 수정"}));
  await user.clear(screen.getByLabelText("수정값"));await user.type(screen.getByLabelText("수정값"),"123");
- await user.click(screen.getByRole("button",{name:"다음"}));
- expect(screen.getByRole("button",{name:"다음"})).toBeDisabled();
- expect(screen.getByLabelText("수정값")).toHaveValue("123");expect(screen.getByRole("article",{name:"검토 항목 1"})).toBeVisible();
+ expect(toggle).toBeDisabled();await user.click(toggle);
+ expect(screen.getByLabelText("수정값")).toHaveValue("123");expect(screen.getByRole("article",{name:"검토 항목 13"})).toBeVisible();
  const confirm=vi.spyOn(window,"confirm").mockReturnValue(false);await user.click(screen.getByRole("button",{name:"편집 닫기"}));expect(screen.getByLabelText("수정값")).toHaveValue("123");
  confirm.mockReturnValue(true);await user.click(screen.getByRole("button",{name:"편집 닫기"}));confirm.mockRestore();
- await user.click(screen.getByText("검토 필요 13개 · 상충 0개 · 전체 13개"));await user.click(screen.getByRole("button",{name:"검토 항목 13 · 미확인"}));
- expect(screen.getAllByRole("article")).toHaveLength(1);await waitFor(()=>expect(screen.getByRole("article",{name:"검토 항목 13"})).toHaveFocus());
+ await user.click(toggle);expect(screen.getAllByRole("article")).toHaveLength(1);
  expect(screen.queryByLabelText("수정값")).not.toBeInTheDocument();expect(mocks.requests.some(r=>r.method==="PATCH")).toBe(false);
+ });
+
+ it("groups fields by document type and retains unknown keys as details",async()=>{
+  const {mocks}=await setup();const base=mocks.fields(15,101)[0];
+  for(const [type,keys] of Object.entries({PAYSLIP:["grossPay","deductions","totalDeductions","netPay"],CONTRACT:["hourlyWage","monthlyBasePay"],ATTENDANCE:["workDate","clockIn","clockOut","breakMinutes"],DEPOSIT:["transactionDate","amount","sender"]}) as ["PAYSLIP"|"CONTRACT"|"ATTENDANCE"|"DEPOSIT",string[]][]){
+    const fields=[...keys,"futureField"].map((key,i)=>({...base,key,fieldId:800+i}));
+    const groups=groupReviewFields(fields,type);expect(groups.essential.map(f=>f.key)).toEqual(keys);expect(groups.details.map(f=>f.key)).toEqual(["futureField"]);
+  }
+ });
+
+ it("keeps collapsed unresolved details in the authoritative whole-document review",async()=>{
+  const {mount,mocks,user}=await setup();mocks.originals.get(101)![2].status="UNCONFIRMED";
+  mount(<ReviewScreen id={15} initialDocumentId={101} />);
+  const toggle=await screen.findByRole("button",{name:/세부 항목 확인/});expect(toggle).toHaveAttribute("aria-expanded","false");
+  expect(await screen.findByText(/세부 항목에도 미확인 값이 1개/)).toBeVisible();
+  await user.click(await screen.findByRole("button",{name:"문서 검토 완료 요청"}));
+  expect(await screen.findByText(/연결 문서 검토: 검토 중/)).toBeVisible();expect(screen.getByText(/미완료 항목: 지급총액, 공제액, 추가 지급액/)).toBeVisible();
+  expect(toggle).toHaveAttribute("aria-expanded","false");
  });
 
 });

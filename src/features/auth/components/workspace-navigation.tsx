@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronRight, FolderOpen, House, ListChecks, LogOut, Plus, Settings, Building2, type LucideIcon } from "lucide-react";
+import { ChevronRight, FolderOpen, House, ListChecks, LogOut, Plus, Search, Settings, Building2, type LucideIcon } from "lucide-react";
 import { useAppServices } from "@/hooks/use-app-services";
 import { useWorkplaces } from "@/features/workplaces/queries";
 import { QueryFeedback } from "@/components/ui/query-feedback";
@@ -16,7 +16,7 @@ export function WorkspaceNavigation() {
   const link = (href: string, label: string, exact = false, Icon?: LucideIcon, extra = "") => <Link href={href} aria-current={(pathname === href || (!exact && pathname.startsWith(`${href}/`))) ? "page" : undefined} className={`workspace-nav-link ${extra}`}>{Icon && <Icon aria-hidden="true" className="workspace-nav-icon" />}<span>{label}</span></Link>;
   return <div className="workspace-navigation">
     {link("/cases/new", "새 검토", true, Plus, "workspace-new-review")}
-    <div className="workspace-primary-nav">{link("/dashboard", "내 홈", false, House)}{link("/library", "전체 자료함", false, FolderOpen)}</div>
+    <div className="workspace-primary-nav">{link("/dashboard", "내 홈", false, House)}{link("/employers", "사업장 찾기", false, Search)}{link("/library", "전체 자료함", false, FolderOpen)}</div>
     <section aria-label="내 근무지 탐색" className="space-y-2">
       <div className="workspace-section-label"><h2>내 근무지</h2>{query.data && <span>{query.data.total}곳</span>}</div>
       {query.isPending ? <QueryFeedback pending /> : query.isError ? <QueryFeedback error={query.error} retry={() => { void query.refetch(); }} /> : <>

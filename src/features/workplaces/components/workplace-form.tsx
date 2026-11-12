@@ -15,15 +15,22 @@ import { useCreateWorkplace, useUpdateWorkplace } from "../queries";
 import { workplaceFormSchema, type WorkplaceDto, type WorkplaceFormValues, type WorkplaceWrite } from "../schemas";
 
 const fields = ["name", "industry", "region", "employmentStatus"] as const;
-export function WorkplaceForm({ initial, onSaved, onCancel }: { initial?: WorkplaceDto; onSaved?: () => void; onCancel?: () => void }) {
+export function WorkplaceForm({ initial, prefill, onCreated, onSaved, onCancel }: {
+  initial?: WorkplaceDto;
+  prefill?: Pick<WorkplaceFormValues, "name" | "industry" | "region">;
+  onCreated?: (workplaceId: number) => void;
+  onSaved?: () => void;
+  onCancel?: () => void;
+}) {
   const id = useId();
   const router = useRouter();
   const create = useCreateWorkplace();
   const update = useUpdateWorkplace(initial?.workplaceId ?? 0);
   const [completed, setCompleted] = useState(false);
+  const defaults = initial ?? prefill;
   const { register, handleSubmit, setError, setFocus, formState: { errors, dirtyFields, isDirty } } = useForm<WorkplaceFormValues>({
     resolver: zodResolver(workplaceFormSchema),
-    defaultValues: { name: initial?.name ?? "", industry: initial?.industry ?? "", region: initial?.region ?? "", employmentStatus: initial?.employmentStatus ?? "CURRENT" },
+    defaultValues: { name: defaults?.name ?? "", industry: defaults?.industry ?? "", region: defaults?.region ?? "", employmentStatus: initial?.employmentStatus ?? "CURRENT" },
   });
   const pending = create.isPending || update.isPending || completed;
   const summary = useFormErrorFocus(errors, pending, setFocus, fields);
@@ -43,7 +50,8 @@ export function WorkplaceForm({ initial, onSaved, onCancel }: { initial?: Workpl
       } else {
         const result = await create.mutateAsync(body);
         setCompleted(true);
-        router.replace(`/workplaces/${result.workplaceId}`);
+        if (onCreated) onCreated(result.workplaceId);
+        else router.replace(`/workplaces/${result.workplaceId}`);
       }
     } catch (error) { applyBusinessFormError(error, setError, fields); }
   }
@@ -57,7 +65,7 @@ export function WorkplaceForm({ initial, onSaved, onCancel }: { initial?: Workpl
         <SelectField id={`${id}-employment`} label="재직 상태" error={errors.employmentStatus?.message} {...register("employmentStatus")}><option value="CURRENT">재직 중</option><option value="FORMER">퇴사</option></SelectField>
       </fieldset>
       {errors.root?.server?.message && <p ref={summary} tabIndex={-1} role="alert" className="rounded-control bg-danger-soft p-4 text-body">{errors.root.server.message}</p>}
-      {completed && <p role="status" className="text-body">근무지를 등록했습니다. 상세 화면으로 이동합니다.</p>}
+      {completed && <p role="status" className="text-body">근무지를 등록했습니다. 다음 화면으로 이동합니다.</p>}
       <div className="flex flex-wrap gap-3">
         <button type="submit" className={primaryButton} disabled={pending || Boolean(initial && !isDirty)}>{pending ? "저장 중…" : initial ? "변경 저장" : "근무지 등록"}</button>
         {onCancel && <button type="button" className={secondaryButton} disabled={pending} onClick={onCancel}>수정 취소</button>}

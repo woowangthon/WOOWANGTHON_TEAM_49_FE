@@ -1,95 +1,202 @@
 "use client";
-import { CaseFocusNavigation } from "@/features/cases/components/case-focus-navigation";
+
 import Link from "next/link";
-import { useId, useLayoutEffect, useRef, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { ArrowLeft, ArrowRight, Check, FileText } from "lucide-react";
 import { useCase, useCaseRemoval } from "@/features/cases/queries";
 import { QueryFeedback } from "@/components/ui/query-feedback";
-import { CaseStageHeader } from "@/features/cases/components/case-stage-header";
-import { TextField } from "@/components/ui/text-field";
-import { SelectField } from "@/components/ui/select-field";
-import { cardStyle, primaryButton, secondaryButton } from "@/components/ui/styles";
 import { ApiError } from "@/lib/api/error";
 import { businessErrorMessage } from "@/lib/api/form-errors";
 import { useConditions, useInputAction } from "../queries";
-import { conditionAnswerSchema, conditionIds, type Conditions } from "../schemas";
-import { InputStatus } from "./input-status";
+import { type Condition, type Conditions } from "../schemas";
+import { answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation, conditionTitle, conditionValues, editableCondition } from "../condition-presentation";
+import { ConditionDuration } from "./condition-duration";
+import styles from "./conditions-screen.module.css";
 
-const labels = { REQUIRED: "추가 응답 필요", ANSWERED: "응답 완료", UNKNOWN: "모름·확인 예정", NOT_APPLICABLE: "해당 없음" };
-const optionLabels: Record<string, string> = { LESS_THAN_5: "5인 미만", AT_LEAST_5: "5인 이상", UNKNOWN: "모름·확인 예정", true: "예", false: "아니요" };
-const checkLabels: Record<string, string> = { WAGE_CALCULATION: "임금 계산", PAYSLIP_VALIDATION: "명세서 합계 검사", DEPOSIT_COMPARISON: "입금 대조", CONTRACT_ATTENDANCE_COMPARISON: "계약·근태 대조" };
-const reasons: Record<string, string> = { workplace_size: "사업장 규모에 따른 수당 적용 여부를 확인하는 데 필요합니다.", regular_minutes: "이 기간의 약정 근로시간과 실제 기록을 비교하는 데 필요합니다.", base_scope_confirmed: "임금의 적용 범위를 확인하는 데 필요합니다." };
-const valuesOf = (data: Conditions) => Object.fromEntries(data.conditions.map(c => [c.conditionId, c.value === null ? "" : String(c.value)]));
+type Phase = "overview" | "questions" | "review" | "saved";
+const needsAnswer = (condition: Condition) => editableCondition(condition) && condition.status === "REQUIRED";
+
 export function ConditionsScreen({ caseId }: { caseId: number }) {
   const owner = useCase(caseId); const removal = useCaseRemoval(caseId); const query = useConditions(caseId);
   if (removal.pending || removal.removed) return <p role="status">삭제 중이거나 삭제된 사례입니다.</p>;
   if (owner.isPending || query.isPending) return <QueryFeedback pending />;
-  if (owner.isError || (query.isError && !query.data)) return <QueryFeedback error={owner.error ?? query.error} retry={() => { void owner.refetch(); void query.refetch(); }} />;
-  return <div className="min-w-0 space-y-6"><CaseStageHeader stage="conditions" title="계산 조건 확인" description="계산에 필요한 조건을 하나씩 확인해요. 아는 내용부터 답하고, 모르는 값은 모름으로 남겨 주세요." />
-    <div className="grid min-w-0 items-start gap-6"><ConditionsForm caseId={caseId} initial={query.data!} reload={async () => { const r = await query.refetch(); if (r.isError || !r.data) throw r.error; return r.data; }} /><details id="readiness" className={cardStyle}><summary>실행 가능성·자동 갱신 상태</summary><InputStatus caseId={caseId} compact /></details><details className={cardStyle}><summary>자료 보완하기</summary><nav className="flex flex-wrap gap-3" aria-label="계산 조건 탐색"><Link className={secondaryButton} href={`/cases/${caseId}/manual-records`}>수기 자료 입력·관리</Link><Link className={secondaryButton} href={`/cases/${caseId}/upload`}>문서 자료 등록</Link></nav></details></div>
-  </div>;
+  if ((owner.isError && !owner.data) || (query.isError && !query.data)) return <QueryFeedback error={owner.error ?? query.error} retry={() => { void owner.refetch(); void query.refetch(); }} />;
+  return <ConditionsForm key={caseId} caseId={caseId} initial={query.data!} reload={async () => { const result = await query.refetch(); if (result.isError || !result.data) throw result.error; return result.data; }} />;
 }
+
 export function ConditionsForm({ caseId, initial, reload }: { caseId: number; initial: Conditions; reload: () => Promise<Conditions> }) {
-  const [page, setPage] = useState(0);
-  const [base, setBase] = useState(initial); const [conflict, setConflict] = useState(false); const [notice, setNotice] = useState("");
-  const id = useId(); const summary = useRef<HTMLParagraphElement>(null); const lock = useRef(false); const mutation = useInputAction(caseId);
-  const schema = z.object({ values: z.record(z.string(), z.string()) }).superRefine(({ values }, ctx) => {
-    for (const c of base.conditions) {
-      const text = values[c.conditionId] ?? "";
-      if (text === String(c.value ?? "")) continue;
-      const parsed = conditionAnswerSchema.safeParse({ conditionId: c.conditionId, value: c.type === "NUMBER" && text !== "UNKNOWN" && text.trim() !== "" ? Number(text) : c.type === "BOOLEAN" && text !== "UNKNOWN" ? (text === "true" ? true : text === "false" ? false : text) : text });
-      if (!parsed.success || text.trim() === "" || (c.type === "NUMBER" && text !== "UNKNOWN" && !/^\d+$/.test(text.trim()))) ctx.addIssue({ code: "custom", path: ["values", c.conditionId], message: "허용된 응답을 입력하거나 모름을 선택하세요. 분은 0~1000000 정수입니다." });
+  const initialQuestions = initial.conditions.map((condition, index) => needsAnswer(condition) ? index : -1).filter(index => index >= 0);
+  const [base, setBase] = useState(initial);
+  const [phase, setPhase] = useState<Phase>(initialQuestions.length === 1 ? "questions" : "overview");
+  const [page, setPage] = useState(initialQuestions[0] ?? 0);
+  const [editing, setEditing] = useState(false);
+  const [conflict, setConflict] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
+  const [resetEpoch, setResetEpoch] = useState(0);
+  const heading = useRef<HTMLHeadingElement>(null), errorSummary = useRef<HTMLParagraphElement>(null);
+  const lock = useRef(false), allowLeave = useRef(false), saveToResult = useRef(false);
+  const router = useRouter(); const id = useId(); const mutation = useInputAction(caseId);
+  const schema = z.object({ values: z.record(z.string(), z.string()) }).superRefine(({ values }, context) => {
+    for (const condition of base.conditions.filter(editableCondition)) {
+      const value = values[condition.conditionId] ?? "";
+      if (value === String(condition.value ?? "") && (!needsAnswer(condition) || value === "")) continue;
+      if (value.trim() === "" || (condition.type === "NUMBER" && value !== "UNKNOWN" && !/^\d+$/.test(value)) || !conditionAnswer(condition, value).success) {
+        context.addIssue({ code: "custom", path: ["values", condition.conditionId], message: condition.type === "NUMBER" ? "시간은 0 이상의 정수, 분은 0~59로 입력해 주세요. 합계는 1,000,000분까지 입력할 수 있어요." : "답변을 선택하거나 잘 모르겠어요를 선택해 주세요." });
+      }
     }
   });
-  const form = useForm({ resolver: zodResolver(schema), defaultValues: { values: valuesOf(base) } });
-  const { register, handleSubmit, setError, setFocus, reset, formState: { errors, isSubmitting, isDirty } } = form;
-  const currentValues = useWatch({ control: form.control, name: "values" });
-  useLayoutEffect(() => { if (isSubmitting) return; const field = Object.keys(errors.values ?? {})[0]; if (field) { const target = base.conditions.findIndex(c => c.conditionId === field); if (target === page) setFocus(`values.${field}`); } else if (errors.root?.server) summary.current?.focus(); }, [errors, isSubmitting, setFocus, page, base.conditions]);
-  const refresh = async () => { const latest = await reload(); setBase(latest); setPage(current => Math.min(current, Math.max(0, latest.conditions.length - 1))); reset({ values: valuesOf(latest) }); setConflict(false); setNotice("최신 질문과 답변을 불러왔습니다."); };
-  return <form data-case-conditions noValidate aria-label="계산 조건 폼" className="min-w-0 space-y-5" onSubmit={event => { void handleSubmit(async ({ values }) => {
+  const form = useForm({ resolver: zodResolver(schema), defaultValues: { values: conditionValues(base) } });
+  const { control, handleSubmit, reset, trigger, setError, setFocus, formState: { errors, isSubmitting, isDirty } } = form;
+  const values = useWatch({ control, name: "values" });
+  const hasDraft = isDirty || confirmedIds.length > 0;
+  const questions = base.conditions.map((condition, index) => needsAnswer(condition) ? index : -1).filter(index => index >= 0);
+  const current = base.conditions[page];
+  const disabled = isSubmitting || conflict;
+  const title = phase === "questions" && current ? conditionTitle(current) : phase === "review" ? "알려주신 내용을 확인해 주세요" : phase === "saved" ? "조건을 저장했어요" : base.conditions.length === 0 ? "추가로 확인할 조건이 없어요" : questions.length ? "급여를 살펴보기 전에 몇 가지만 확인할게요" : "알려주신 조건을 살펴볼까요?";
+
+  useLayoutEffect(() => { heading.current?.focus(); }, [phase, page]);
+  useLayoutEffect(() => {
+    if (isSubmitting) return;
+    const key = Object.keys(errors.values ?? {})[0];
+    if (key && phase === "questions" && current?.conditionId === key) setFocus(`values.${key}`);
+    else if (errors.root?.server) errorSummary.current?.focus();
+  }, [errors, isSubmitting, current?.conditionId, phase, setFocus]);
+  useEffect(() => {
+    if (!hasDraft) return;
+    const message = "저장하지 않은 답변이 있어요. 이 화면을 나갈까요?";
+    function beforeUnload(event: BeforeUnloadEvent) { if (!allowLeave.current) { event.preventDefault(); event.returnValue = ""; } }
+    function leavingLink(event: MouseEvent) {
+      if (allowLeave.current || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+      if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
+      const target = new URL(link.href, window.location.href);
+      if (target.pathname === window.location.pathname && target.search === window.location.search) return;
+      if (!window.confirm(message)) { event.preventDefault(); event.stopPropagation(); }
+    }
+    function traverse(event: Event) {
+      if (allowLeave.current || !("navigationType" in event) || event.navigationType !== "traverse" || !event.cancelable) return;
+      if (!window.confirm(message)) event.preventDefault();
+    }
+    const navigation = (window as Window & { navigation?: EventTarget }).navigation;
+    window.addEventListener("beforeunload", beforeUnload); document.addEventListener("click", leavingLink, true); navigation?.addEventListener("navigate", traverse);
+    return () => { window.removeEventListener("beforeunload", beforeUnload); document.removeEventListener("click", leavingLink, true); navigation?.removeEventListener("navigate", traverse); };
+  }, [hasDraft]);
+
+  async function refresh() {
+    const latest = await reload(); setBase(latest); reset({ values: conditionValues(latest) }); setConfirmedIds([]); setResetEpoch(previous => previous + 1); setConflict(false); setEditing(false); setPhase("review"); setNotice("최신 질문과 답변을 불러왔습니다.");
+  }
+  async function nextQuestion() {
+    if (!current || !values[current.conditionId] || !await trigger(`values.${current.conditionId}`)) return;
+    if (needsAnswer(current)) setConfirmedIds(previous => previous.includes(current.conditionId) ? previous : [...previous, current.conditionId]);
+    if (editing) { setEditing(false); setPhase("review"); return; }
+    const next = questions[questions.indexOf(page) + 1];
+    if (next === undefined) setPhase("review"); else setPage(next);
+  }
+  function openQuestion(index: number) { setPage(index); setEditing(true); setPhase("questions"); }
+  const save = (event: FormEvent<HTMLFormElement>) => handleSubmit(async ({ values: submitted }) => {
     if (lock.current || conflict) return; lock.current = true; setNotice("");
     let accepted = false;
-    const answers = base.conditions.filter(c => values[c.conditionId] !== String(c.value ?? "")).map(c => conditionAnswerSchema.parse({ conditionId: c.conditionId, value: c.type === "NUMBER" && values[c.conditionId] !== "UNKNOWN" ? Number(values[c.conditionId]) : c.type === "BOOLEAN" && values[c.conditionId] !== "UNKNOWN" ? values[c.conditionId] === "true" : values[c.conditionId] }));
+    const answers = base.conditions.filter(condition => editableCondition(condition) && (confirmedIds.includes(condition.conditionId) || submitted[condition.conditionId] !== String(condition.value ?? ""))).map(condition => {
+      const parsed = conditionAnswer(condition, submitted[condition.conditionId]);
+      if (!parsed.success) throw new Error("Invalid condition answer");
+      return parsed.data;
+    });
     try {
-      if (!answers.length) { setNotice("변경된 답변이 없습니다."); return; }
-      await mutation.mutateAsync({ type: "conditions", body: { answers, expectedInputVersion: base.inputVersion } });
-      accepted = true;
-      await refresh(); setNotice("변경된 조건을 저장했습니다. 서버가 관련 검사 상태를 자동 갱신합니다.");
-    } catch (e) {
+      if (answers.length) {
+        await mutation.mutateAsync({ type: "conditions", body: { answers, expectedInputVersion: base.inputVersion } }); accepted = true;
+        await refresh(); setNotice("변경된 조건을 저장했습니다. 서버가 관련 검사 상태를 자동 갱신합니다.");
+      }
+      if (saveToResult.current) { allowLeave.current = true; router.push(`/cases/${caseId}/result`); }
+      else setPhase("saved");
+    } catch (error) {
       if (accepted) { setConflict(true); setError("root.server", { message: "조건은 저장했지만 최신 질문 조회에 실패했습니다. 다시 저장하지 말고 최신 질문·답변을 불러와 주세요." }); return; }
-      if (e instanceof ApiError && e.errorCode === "INPUT_VERSION_CONFLICT") setConflict(true);
+      if (error instanceof ApiError && error.errorCode === "INPUT_VERSION_CONFLICT") setConflict(true);
       let firstInvalid: string | undefined;
-      if (e instanceof ApiError && e.status === 422) for (const issue of e.fieldErrors) {
+      if (error instanceof ApiError && error.status === 422) for (const issue of error.fieldErrors) {
         const index = Number(issue.field.match(/answers\.(\d+)/)?.[1]);
-        const key = Number.isInteger(index) ? answers[index]?.conditionId : base.conditions.find(c => issue.field.includes(c.conditionId))?.conditionId;
+        const key = Number.isInteger(index) ? answers[index]?.conditionId : base.conditions.find(condition => issue.field.includes(condition.conditionId))?.conditionId;
         if (key) { setError(`values.${key}`, { message: issue.reason }); firstInvalid ??= key; }
       }
-      if (firstInvalid) setPage(base.conditions.findIndex(c => c.conditionId === firstInvalid));
-      setError("root.server", { message: businessErrorMessage(e) });
+      if (firstInvalid) { setPage(base.conditions.findIndex(condition => condition.conditionId === firstInvalid)); setEditing(true); setPhase("questions"); }
+      setError("root.server", { message: businessErrorMessage(error) });
     } finally { lock.current = false; }
-  }, invalid => { const field = Object.keys(invalid.values ?? {})[0]; if (field) setPage(base.conditions.findIndex(c => c.conditionId === field)); })(event); }}>
-    <p data-case-focus-hint>한 번에 한 질문씩 확인해요. 질문 이동은 저장하지 않으며, 답변한 내용만 모아 저장할 수 있어요.</p>
+  }, invalid => {
+    const key = Object.keys(invalid.values ?? {})[0];
+    if (key) { setPage(base.conditions.findIndex(condition => condition.conditionId === key)); setEditing(true); setPhase("questions"); }
+  })(event);
 
-    {!base.conditions.length && <p className={cardStyle}>서버가 요청한 조건 질문이 없습니다.</p>}
-    {base.conditions.map((c, index) => {
-      const known = (conditionIds as readonly string[]).includes(c.conditionId);
-      const disabled = isSubmitting || conflict || c.status === "NOT_APPLICABLE" || !known || c.type === "TEXT";
-      const props = { id: `${id}-${c.conditionId}`, label: c.question, disabled, error: errors.values?.[c.conditionId]?.message, ...register(`values.${c.conditionId}`) };
-      return <section hidden={index !== page} key={c.conditionId} aria-label={`${c.question} 조건`} className={`${cardStyle} min-w-0 break-words space-y-3`}>
-        <p className="inline-flex rounded-full bg-soft px-3 py-1 text-caption font-bold">{c.status === "NOT_APPLICABLE" ? labels[c.status] : currentValues[c.conditionId] === "UNKNOWN" ? labels.UNKNOWN : currentValues[c.conditionId] === "" ? "미응답" : "답변 완료"}</p><p className="text-muted">{reasons[c.conditionId] ?? "아래 검사의 적용 조건을 확인하는 데 필요한 질문입니다."}</p>
-        {c.type === "SELECT" || c.type === "BOOLEAN" ? <SelectField {...props}><option value="">미응답·선택 필요</option>{(c.type === "BOOLEAN" ? ["true", "false", "UNKNOWN"] : c.options ?? []).map(o => <option key={o} value={o}>{optionLabels[o] ?? o}</option>)}</SelectField> : <><TextField {...props} inputMode={c.type === "NUMBER" ? "numeric" : undefined} /><button className={secondaryButton} type="button" disabled={disabled} onClick={() => form.setValue(`values.${c.conditionId}`, "UNKNOWN", { shouldDirty: true, shouldValidate: true })}>모름으로 응답</button></>}
-        <details><summary className="min-h-11 cursor-pointer font-bold">관련 검사·근거</summary><p>필요한 검사: {c.requiredFor.map(key => checkLabels[key] ?? "기타 검사 (상세 참고)").join(", ") || "서버 미지정"}</p></details><details className="border-t border-border pt-3"><summary className="min-h-11 cursor-pointer font-bold">조건 출처·기술 상세</summary><p>{labels[c.status]} · {c.type} · {c.conditionId}</p><p>검사 식별자: {c.requiredFor.join(", ") || "미지정"}</p><p>출처: {c.source ? `문서 #${c.source.documentId} · ${c.source.page ?? "미제공"}페이지 · ${c.source.text ?? "근거 문구 미제공"}` : "문서 출처 미제공"}</p></details>
-        {(!known || c.type === "TEXT") && <p>현재 P0의 허용 조건 ID·응답 타입에 포함되지 않아 저장하지 않습니다. 서버 계약 확인이 필요합니다.</p>}
-      </section>;
-    })}
-    <CaseFocusNavigation label="질문" index={page} count={base.conditions.length} onChange={setPage} busy={isSubmitting} emphasizeNext />
-    {base.conditions.length > 0 && <details className={`${cardStyle} min-w-0`}><summary className="min-h-11 cursor-pointer font-bold">조건 질문 바로가기 ({base.conditions.length}개)</summary><nav aria-label="조건 질문 바로가기"><ol className="space-y-2">{base.conditions.map(c => <li key={c.conditionId}><button type="button" disabled={isSubmitting} className="min-h-11 text-left underline" onClick={() => { setPage(base.conditions.indexOf(c)); requestAnimationFrame(() => document.getElementById(`${id}-${c.conditionId}`)?.focus()); }}>{c.question}</button></li>)}</ol></nav></details>}
-    <p className="text-muted">{isDirty ? "미저장 답변이 있습니다. 질문 이동은 저장하지 않습니다." : "저장된 답변을 기준으로 표시합니다."}</p>
-    {conflict && <p role="alert">버전 충돌로 저장을 중단했습니다. 초안은 보존했습니다. 최신 질문을 불러온 뒤 변경 내용을 다시 검토해 주세요.</p>}
-    {errors.root?.server && <p role="alert" ref={summary} tabIndex={-1}>{errors.root.server.message}</p>}{notice && <p role="status">{notice}</p>}
-    <div className="flex flex-wrap gap-3"><button className={page >= base.conditions.length - 1 ? primaryButton : secondaryButton} disabled={isSubmitting || conflict || !isDirty} type="submit">{isSubmitting ? "조건 저장 중…" : "변경된 조건 저장"}</button><button className={secondaryButton} type="button" hidden={!conflict && !errors.root?.server} disabled={isSubmitting} onClick={() => { if (!isDirty || window.confirm("편집 초안을 버리고 최신 질문과 답변을 불러올까요?")) void refresh().catch(e => setError("root.server", { message: businessErrorMessage(e) })); }}>최신 질문·답변 다시 불러오기</button></div>
-    <Link className={secondaryButton} href={`/cases/${caseId}/result`}>결과 확인</Link><details className="border-t border-border pt-3"><summary className="min-h-11 cursor-pointer font-bold">저장 방식·입력 버전</summary><p>현재 편집 기준 입력 버전 {base.inputVersion}. 변경한 답변만 부분 병합합니다. 저장하면 서버가 관련 검사를 자동 갱신합니다.</p></details>
-  </form>;
+  return <div className={styles.screen}>
+    <form data-condition-flow noValidate aria-label="계산 조건 폼" onSubmit={event => {
+      if (phase !== "review") { event.preventDefault(); if (phase === "questions") void nextQuestion(); return; }
+      void save(event);
+    }}>
+      <header className={styles.header}>
+        <p className={styles.eyebrow}>계산 전 확인{phase === "questions" && !editing && <span>질문 {questions.indexOf(page) + 1} / {questions.length}</span>}</p>
+        {phase === "questions" && !editing && <progress className={styles.progress} aria-label="조건 질문 진행" value={questions.indexOf(page)} max={questions.length} />}
+        <h1 ref={heading} tabIndex={-1} id={`${id}-title`}>{title}</h1>
+        {phase === "overview" && <p>자료에서 확인되지 않은 내용만 물어볼게요.<br />모르는 내용은 나중에 확인해도 괜찮아요.</p>}
+        {phase === "questions" && current && <p>{conditionExplanation(current)}</p>}
+        {phase === "review" && <p>모르는 내용은 그대로 두어도 괜찮아요.<br />아는 내용부터 저장하고 가능한 결과를 살펴보세요.</p>}
+        {phase === "saved" && <p>계산할 수 있는 범위는 자료와 조건에 따라 달라요.<br />최신 결과와 남은 확인 사항을 살펴보세요.</p>}
+      </header>
+
+      {(phase === "overview" || phase === "review" || phase === "saved") && <>
+        <ul className={styles.answerList} aria-label="계산 조건 목록">{base.conditions.map((condition, index) => <li key={condition.conditionId}>
+          <div><p className={styles.answerTitle}>{conditionTitle(condition)}</p><p className={styles.answerValue}>{needsAnswer(condition) && condition.value !== null && !confirmedIds.includes(condition.conditionId) && values[condition.conditionId] === String(condition.value) && "확인 필요 · 후보: "}{answerLabel(condition, values[condition.conditionId] ?? "")}{(confirmedIds.includes(condition.conditionId) || values[condition.conditionId] !== String(condition.value ?? "")) && <span className={styles.draft}> · 미저장</span>}</p>{!editableCondition(condition) && condition.status !== "NOT_APPLICABLE" && <p className={styles.hint}>현재 화면에서는 답변할 수 없는 질문이에요. 자료 확인은 계속할 수 있어요.</p>}</div>
+          {editableCondition(condition) && <button type="button" className={styles.textButton} disabled={disabled} aria-label={`${conditionTitle(condition)} 수정`} onClick={() => openQuestion(index)}>수정</button>}
+        </li>)}</ul>
+        {base.conditions.length === 0 && <p className={styles.note}>추가 질문이 없어도 계산에 필요한 자료가 부족할 수 있어요. 결과에서 확인 가능한 범위를 살펴보세요.</p>}
+        {phase === "review" && <p className={styles.note}>모든 질문에 답해도 계산이 보류될 수 있어요. 조건을 저장하면 서버가 관련 검사 상태를 갱신해요.</p>}
+      </>}
+
+      {base.conditions.map((condition, index) => {
+        const visible = phase === "questions" && index === page;
+        const fieldId = `${id}-${condition.conditionId}`;
+        const readOnly = !editableCondition(condition);
+        const error = errors.values?.[condition.conditionId]?.message;
+        return <section key={`${condition.conditionId}-${base.inputVersion}-${resetEpoch}`} hidden={!visible} aria-label={`${conditionTitle(condition)} 조건`} className={styles.question}>
+          {needsAnswer(condition) && condition.value !== null && !confirmedIds.includes(condition.conditionId) && <p className={styles.candidate}>자료의 후보값: {answerLabel(condition, String(condition.value))}<br />아직 확인하지 않은 값이에요. 내용을 살펴본 뒤 다음으로 이동해 주세요.</p>}
+          <Controller name={`values.${condition.conditionId}`} control={control} render={({ field }) => condition.type === "NUMBER" && !readOnly ? <ConditionDuration id={fieldId} value={field.value} onChange={field.onChange} onBlur={field.onBlur} inputRef={field.ref} disabled={disabled} error={error} /> : condition.type === "SELECT" || condition.type === "BOOLEAN" ? <fieldset className={styles.choices} disabled={disabled || readOnly} aria-label={conditionTitle(condition)} aria-describedby={error ? `${fieldId}-error` : undefined}>
+            <legend className="sr-only">{conditionTitle(condition)}</legend>
+            {(condition.type === "BOOLEAN" ? ["true", "false", "UNKNOWN"] : condition.options ?? []).map((option, optionIndex) => {
+              const comparison = condition.conditionId !== "base_scope_confirmed";
+              const label = option === "UNKNOWN" ? "잘 모르겠어요" : option === "true" ? comparison ? "같은 기준이에요" : "예, 확인했어요" : option === "false" ? comparison ? "기준이 달라요" : "아니요, 확인하지 못했어요" : ({ LESS_THAN_5: "5인 미만", AT_LEAST_5: "5인 이상" } as Record<string, string>)[option] ?? option;
+              return <label className={styles.choice} key={option}><input ref={optionIndex === 0 ? field.ref : undefined} type="radio" name={field.name} value={option} checked={field.value === option} onBlur={field.onBlur} onChange={() => field.onChange(option)} /><span>{label}</span>{field.value === option && <Check size={19} aria-hidden="true" />}</label>;
+            })}
+          </fieldset> : <input ref={field.ref} className="ui-control" aria-label={condition.question} value={field.value} disabled readOnly />} />
+          {condition.type !== "NUMBER" && error && <p className={styles.error} id={`${fieldId}-error`} role="alert">{error}</p>}
+          {condition.conditionId === "workplace_size" && <details className={styles.help}><summary>상시 근로자 수를 잘 모르겠다면</summary><p>현재 눈에 보이는 인원과 다를 수 있어요. 정확히 알기 어렵다면 ‘잘 모르겠어요’를 선택해 주세요.</p></details>}
+          <div className={styles.source}>
+            <p><FileText size={17} aria-hidden="true" />확인할 자료</p>
+            {condition.source ? <><blockquote>{condition.source.text || "이 자료에는 근거 문구가 제공되지 않았어요."}</blockquote><Link href={`/cases/${caseId}/review?documentId=${condition.source.documentId}`} target="_blank" rel="noopener noreferrer">문서 #{condition.source.documentId}{condition.source.page ? ` · ${condition.source.page}쪽` : ""} 원문 보기<span className="sr-only"> (새 탭)</span><ArrowRight size={15} aria-hidden="true" /></Link></> : <p className={styles.hint}>질문에 연결된 원문 근거가 아직 없어요. 자료를 확인하기 어렵다면 모름으로 남겨 주세요.</p>}
+            {condition.requiredFor.length > 0 && <p className={styles.hint}>이 답변을 사용하는 검사: {condition.requiredFor.map(key => conditionCheckLabels[key] ?? "추가 검사").join(", ")}</p>}
+          </div>
+        </section>;
+      })}
+
+      {conflict && <p role="alert" className={styles.error}>최신 입력과 달라 저장을 중단했어요. 편집한 답변은 남아 있어요. 최신 질문·답변을 불러온 뒤 다시 확인해 주세요.</p>}
+      {errors.root?.server && <p role="alert" ref={errorSummary} tabIndex={-1} className={styles.error}>{errors.root.server.message}</p>}
+      {notice && <p role="status" className={styles.notice}>{notice}</p>}
+      <footer className={styles.footer}>
+        {hasDraft && <p className={styles.hint}>미저장 답변이 있어요. 질문 이동은 저장하지 않아요.</p>}
+        {phase === "overview" && (questions.length ? <button type="button" className={styles.primary} onClick={() => { setPage(questions[0]); setEditing(false); setPhase("questions"); }}>조건 확인하기<ArrowRight size={19} aria-hidden="true" /></button> : base.conditions.length ? <button type="button" className={styles.primary} onClick={() => setPhase("review")}>답변 검토하기</button> : <Link href={`/cases/${caseId}/result`} className={styles.primary}>결과 확인</Link>)}
+        {phase === "questions" && <>
+          <p className={styles.hint}>답변은 마지막에 한 번에 저장해요.</p>
+          <button type="button" className={styles.primary} disabled={disabled || !current || !editableCondition(current) || !values[current.conditionId]} onClick={() => { void nextQuestion(); }}>{editing ? "검토로 돌아가기" : questions.indexOf(page) === questions.length - 1 ? "답변 검토하기" : "다음"}<ArrowRight size={19} aria-hidden="true" /></button>
+          <div className={styles.footerLinks}>{!editing && questions.indexOf(page) > 0 && <button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => setPage(questions[questions.indexOf(page) - 1])}><ArrowLeft size={16} aria-hidden="true" />이전</button>}<button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => { setEditing(false); setPhase("review"); }}>지금까지 답변 검토</button></div>
+        </>}
+        {phase === "review" && <>
+          {hasDraft ? <><button type="submit" className={styles.primary} disabled={disabled} onClick={() => { saveToResult.current = true; }}>{isSubmitting ? "조건 저장 중…" : "답변 저장하고 결과 보기"}<ArrowRight size={19} aria-hidden="true" /></button><button type="submit" className={styles.textButton} disabled={disabled} onClick={() => { saveToResult.current = false; }}>조건만 저장</button></> : <Link href={`/cases/${caseId}/result`} className={styles.primary}>결과 확인<ArrowRight size={19} aria-hidden="true" /></Link>}
+          <button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => setPhase("overview")}>전체 조건 보기</button>
+        </>}
+        {phase === "saved" && <><Link href={`/cases/${caseId}/result`} className={styles.primary}>결과 확인<ArrowRight size={19} aria-hidden="true" /></Link><button type="button" className={styles.textButton} onClick={() => setPhase("review")}>답변 다시 살펴보기</button></>}
+        {(conflict || errors.root?.server) && <button className={styles.textButton} type="button" disabled={isSubmitting} onClick={() => { if (!hasDraft || window.confirm("편집 초안을 버리고 최신 질문과 답변을 불러올까요?")) void refresh().catch(error => setError("root.server", { message: businessErrorMessage(error) })); }}>최신 질문·답변 다시 불러오기</button>}
+      </footer>
+    </form>
+  </div>;
 }

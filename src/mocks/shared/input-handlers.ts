@@ -1,7 +1,7 @@
 import { paymentMocks } from "./payment-handlers";
 import { http, HttpResponse } from "msw";
 import type { CaseDetailDto } from "@/features/cases/schemas";
-import { conditionsPutSchema, manualInputSchema, checkTypes, type Condition, type ManualRecord, type RecordType } from "@/features/case-inputs/schemas";
+import { conditionsPutSchema, manualInputSchema, checkTypes, type Condition, type ManualInput, type ManualRecord, type RecordType } from "@/features/case-inputs/schemas";
 import { manualDefaults, manualFormSchema } from "@/features/case-inputs/manual-fields";
 import { buildResultScenario, type MockEvidence } from "./result-scenario";
 import type { DepositComparison } from "@/features/payments/comparison-schemas";
@@ -181,5 +181,19 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
       return apiResponse({caseId:c.caseId,currentInputVersion:c.inputVersion,pending:s.job?.status==="PENDING"?1:0,running:s.job?.status==="RUNNING"?1:0,activeJob:active?s.job:null,latestJob:s.job,results:refs.versions});
     }),
   ];
-  return { handlers, requests, state, getResult(caseId:number) { const c=current(caseId); return c?structuredClone(result(c)):undefined; }, notifyInputChange(c:number) {const owner=current(c);if(!owner)throw new Error("Unknown mock Case");return schedule(owner,false).recompute;}, setJobStatus(c: number, status: string) { const owner = current(c); if (!owner) return; const s = state(owner); if (!s.job) schedule(owner, false); s.job!.status = status; if(["PARTIAL","SUCCEEDED"].includes(status))publish(owner); } };
+  function seedInputs(caseId:number, inputs:ManualInput[], answers:Record<string,Condition["value"]>) {
+    const c=current(caseId);if(!c)throw new Error("Unknown mock Case");
+    const s=state(c);if(history(c).length||s.records.length)throw new Error("Mock inputs must be seeded before result snapshots");
+    const now=new Date().toISOString();
+    for(const value of inputs) {
+      const input=manualInputSchema.parse(value);
+      if(input.recordType==="DEPOSIT")s.transactions.push({...payments.manual(c,input.data),data:structuredClone(input.data)});
+      else s.records.push({recordId:nextRecord++,caseId,recordType:input.recordType,data:structuredClone(input.data),source:input.source,createdAt:now,updatedAt:now});
+    }
+    for(const condition of s.conditions)if(Object.hasOwn(answers,condition.conditionId)) {
+      condition.value=answers[condition.conditionId];
+      condition.status=condition.value===null?"REQUIRED":condition.value==="UNKNOWN"?"UNKNOWN":"ANSWERED";
+    }
+  }
+  return { handlers, requests, state, seedInputs, getResult(caseId:number) { const c=current(caseId); return c?structuredClone(result(c)):undefined; }, notifyInputChange(c:number) {const owner=current(c);if(!owner)throw new Error("Unknown mock Case");return schedule(owner,false).recompute;}, setJobStatus(c: number, status: string) { const owner = current(c); if (!owner) return; const s = state(owner); if (!s.job) schedule(owner, false); s.job!.status = status; if(["PARTIAL","SUCCEEDED"].includes(status))publish(owner); } };
 }

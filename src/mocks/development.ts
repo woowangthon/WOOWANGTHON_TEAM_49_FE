@@ -8,6 +8,7 @@ import { reviewMocks } from "./shared/review-handlers";
 import { apiResponse } from "./shared/response";
 import { samplePdf } from "./sample";
 import { inputMocks } from "./shared/input-handlers";
+import { resultPreviewAnswers, resultPreviewInputs } from "./shared/result-preview";
 
 export const demoAccount = { email: "worker@example.com", password: "password1234", name: "가상 근로자" };
 // This cookie is an inert development marker, never an authentication credential.
@@ -35,6 +36,7 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
   }, c => inputs.notifyInputChange(c));
   review.histories.splice(0);
   const inputs = inputMocks(management.getCases, baseUrl, c => docs.getLinks().filter(l=>l.caseId===c).flatMap(l=>documents.some(d=>d.documentId===l.documentId && d.documentType==="PAYSLIP")?[{documentId:l.documentId,fields:review.fields(c,l.documentId)}]:[]));
+  if (seed) inputs.seedInputs(16, resultPreviewInputs, resultPreviewAnswers);
   // Seed real positive-ID snapshots through the existing synthetic publish pipeline.
   cases.forEach(c=>{inputs.getResult(c.caseId);inputs.notifyInputChange(c.caseId);inputs.setJobStatus(c.caseId,"PARTIAL");});
   const files = new Map<number, Blob>();

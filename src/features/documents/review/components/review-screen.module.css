@@ -1,0 +1,99 @@
+.screen { min-width: 0; display: grid; gap: 16px; }
+.screen .documentPicker { min-width: 0; padding: 0 20px; border: 1px solid var(--color-border); border-radius: 16px; background: white; }
+.documentPicker > summary { display: flex; align-items: center; gap: 10px; min-height: 62px; list-style: none; }
+.documentPicker > summary::-webkit-details-marker { display: none; }
+.fileIcon { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 44px; border-radius: 12px; background: #edf2fe; color: #4665bb; }
+.fileName { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.fileName small { display: block; margin-bottom: 3px; color: #697586; font-size: 11px; font-weight: 500; }
+.documentCount { color: #526175; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.documentPicker > summary > svg { flex-shrink: 0; color: #7b8796; transition: transform .15s; }
+.documentPicker[open] > summary > svg { transform: rotate(180deg); }
+.documentStatus { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; color: #697586; font-size: 12px; }
+.documentStatus span { display: inline-flex; align-items: center; gap: 6px; }
+.documentStatus svg { color: #5871aa; }
+.screen .tabs { display: flex; gap: 4px; padding: 5px; border-radius: 13px; background: #e9edf3; }
+.tabs button { flex: 1; min-height: 44px; padding: 10px; border-radius: 10px; color: #697586; font-size: 14px; font-weight: 700; }
+.screen .tabs button[aria-selected="true"] { background: white; color: #3e5fae; box-shadow: 0 2px 5px #182d4b08; }
+.screen .comparison { gap: 20px; }
+.original { min-width: 0; }
+.original [aria-label="문서 원문 뷰어"] { padding: 22px; border: 1px solid #e3e6eb; border-radius: 22px; background: white; box-shadow: none; }
+.original h2 { font-size: 18px; letter-spacing: -.5px; }
+.original [aria-label="원문 도구"] { gap: 4px 8px; }
+.original [aria-label="원문 도구"] button { min-height: 36px; padding: 7px 9px; border-radius: 8px; font-size: 11px; }
+.original [aria-label="원문 도구"] p, .original [aria-label="원문 도구"] span { font-size: 11px; }
+.original [aria-label="확대한 원문 스크롤 영역"] { background: #f3f5f8; border-color: #e5e9ee; border-radius: 12px; }
+.original [aria-label="문서 원문 뷰어"] > div:last-child { padding: 12px 14px; border-radius: 12px; background: #f8f9fb; font-size: 11px; line-height: 1.8; }
+.screen .fieldsPanel { min-width: 0; padding: 20px; border: 1px solid #e1e6ee; border-radius: 18px; background: white; }
+.panelHeading { display: flex; gap: 12px; align-items: center; }
+.panelIcon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: #edf2fe; color: #4665bb; }
+.panelHeading h2 { font-size: 19px; font-weight: 800; letter-spacing: -.7px; }
+.panelHeading p { margin-top: 3px; color: #697586; font-size: 13px; }
+.progressArea { margin-block: 16px 18px; }
+.progressArea > p { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin-bottom: 10px; color: #697586; font-size: 12px; }
+.progressArea strong { color: #4665bb; font-weight: 700; }
+.progressArea progress { display: block; width: 100%; height: 5px; overflow: hidden; border: 0; border-radius: 6px; accent-color: #6484da; }
+.progressArea progress::-webkit-progress-bar { background: #edf0f5; }
+.progressArea progress::-webkit-progress-value { border-radius: 6px; background: #6484da; }
+.missingShortcut { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; margin-top: 10px; padding: 9px 12px; border-radius: 10px; background: #fff7ec; color: #8b5a17; text-align: left; font-size: 12px; }
+.missingShortcut span { flex: 1; }
+.missingShortcut strong { color: inherit; }
+.groupHeading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.groupHeading h3 { font-size: 14px; font-weight: 750; }
+.groupHeading > span { color: #697586; font-size: 11px; }
+.period { padding: 10px 12px; border-radius: 10px; background: #f7f8fa; font-size: 11px; color: #697586; }
+.period strong { display: block; margin-block: 4px; color: #394555; font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.screen .fieldsPanel .field { min-width: 0; margin-top: 8px; padding: 12px 14px; border: 1px solid #e4e8ef; border-radius: 12px; scroll-margin-block: 20px; }
+.screen .fieldsPanel .field[data-missing="true"] { border: 1px solid #efdbba; background: #fffbf5; }
+.fieldHeading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.fieldHeading h3 { color: #4d5a6c; font-size: 13px; font-weight: 650; }
+.requiredBadge, .missingBadge, .confirmedBadge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 7px; border-radius: 6px; font-size: 10px; font-weight: 650; white-space: nowrap; }
+.requiredBadge { color: #4564b2; background: #edf2ff; }
+.missingBadge { color: #8b5a17; background: #fff0d7; }
+.confirmedBadge { color: #356b53; background: #edf6f1; }
+.screen .fieldsPanel .fieldValue { margin-top: 4px; color: #1d2939; font-size: clamp(22px, 2.6cqi, 25px); font-weight: 750; line-height: 1.35; letter-spacing: -.7px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.fieldValue > span { margin-left: 5px; font-size: 14px; font-weight: 500; letter-spacing: 0; }
+.screen .fieldsPanel .field[data-missing="true"] .fieldValue { color: #8b5a17; font-size: 20px; }
+.missingHint { margin-top: 4px; color: #896635; font-size: 11px; line-height: 1.65; }
+.fieldActions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.fieldActions > button { white-space: nowrap; }
+.screen .fieldActions .confirmValue { gap: 4px; min-height: 36px; padding: 7px 9px; border-radius: 8px; background: #edf2ff; color: #4564b2; font-size: 12px; }
+.screen .fieldActions .confirmValue:disabled { color: #7b8492; background: #f0f1f3; cursor: not-allowed; }
+.screen .fieldActions .editValue, .screen .fieldActions .enterValue { min-height: 36px; padding: 7px 9px; border-radius: 8px; font-size: 12px; }
+.screen .fieldActions .enterValue { border-color: #d9b77f; background: white; color: #815415; }
+.sourceButton { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-height: 36px; padding: 6px 2px; color: #62738b; font-size: 11px; }
+.fieldMore { margin-top: 2px; }
+.fieldMore > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; padding-top: 2px; list-style: none; color: #737f8e; font-size: 10px; }
+.fieldMore > summary::-webkit-details-marker { display: none; }
+.fieldMore[open] > summary svg { transform: rotate(180deg); }
+.details { margin-top: 16px; border-top: 1px solid #e8ecf2; }
+.detailsToggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 64px; width: 100%; padding-block: 12px; text-align: left; font-size: 13px; }
+.detailsToggle > svg { flex-shrink: 0; color: #7c899a; }
+.chevronOpen { transform: rotate(180deg); }
+.footnote { margin-top: 8px; color: #788392; font-size: 11px; line-height: 1.8; }
+.screen .confirmation { display: grid; grid-template-columns: minmax(0,1fr); align-items: center; gap: 14px; padding: 20px; border: 1px solid #dce4f3; border-radius: 16px; background: #f4f7fd; box-shadow: none; }
+.confirmation h2 { font-size: 18px; font-weight: 750; letter-spacing: -.5px; }
+.confirmationCopy { min-width: 0; display: grid; gap: 6px; font-size: 12px; color: #526175; }
+.confirmationAction { display: grid; gap: 9px; }
+.screen .confirmationAction > button { width: 100%; min-height: 48px; padding: 13px 18px; border-radius: 12px; color: white; background: #4665bb; font-size: 13px; }
+.confirmationAction p { color: #697586; font-size: 11px; text-align: center; }
+.screen .nextLink { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; color: #526175; font-size: 13px; font-weight: 650; }
+.screen .replacement { padding: 18px 22px; border: 1px solid #e3e6eb; border-radius: 16px; box-shadow: none; }
+.replacement > summary { min-height: 30px; color: #697586; font-size: 12px; }
+@container (min-width: 760px) {
+  .screen .tabs { display: none; }
+  .screen .comparison { grid-template-columns: minmax(0,1fr) minmax(0,1.08fr); }
+  .original { position: sticky; top: 20px; }
+  .screen .confirmation { grid-template-columns: minmax(0,1fr) minmax(200px,.55fr); gap: 32px; }
+}
+@container (max-width: 34rem) {
+  .screen { gap: 16px; }
+  .screen .documentPicker { padding-inline: 14px; }
+  .fileIcon { width: 32px; height: 38px; }
+  .documentCount { font-size: 11px; }
+  .screen .fieldsPanel, .original [aria-label="문서 원문 뷰어"] { padding: 16px 14px; border-radius: 16px; }
+  .screen .fieldsPanel .field { padding: 11px 10px; }
+  .screen .confirmation { padding: 16px; }
+  .fieldActions { gap: 6px; }
+  .screen .fieldActions .confirmValue, .screen .fieldActions .editValue, .screen .fieldActions .enterValue { flex: 1 0 auto; }
+  .sourceButton { flex-basis: auto; justify-content: flex-start; }
+}

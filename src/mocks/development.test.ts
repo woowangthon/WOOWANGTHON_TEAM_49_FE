@@ -2,6 +2,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { server, testApiUrl } from "@/test/server";
 import { clearMockSession, createDevelopmentScenario, demoAccount } from "./development";
+import { calculationSchema, resultsSchema } from "@/features/results/schemas";
+import { manualRecordSchema } from "@/features/case-inputs/schemas";
 
 describe("browser development scenario through the existing MSW infrastructure", () => {
   let token: string;
@@ -44,6 +46,36 @@ describe("browser development scenario through the existing MSW infrastructure",
     expect(response.headers.get("Content-Type")).toBe("application/pdf");
     expect((await response.text()).startsWith("%PDF-1.4")).toBe(true);
     expect((await request("/cases/15/unsupported-feature", token)).status).toBe(501);
+  });
+  it("seeds only case 16 with scoped preview results and preserves its snapshot after editing inputs", async () => {
+    const loadResult = async (caseId: number) => {
+      const response = await request(`/cases/${caseId}/results`, token);
+      expect(response.status).toBe(200);
+      return resultsSchema.parse((await response.json()).data);
+    };
+    const before = await loadResult(16);
+    expect(before.calculation).toMatchObject({ status: "PARTIAL", calculatedSubtotal: 2200000, grossPay: null });
+    expect(before.comparison?.items[0]).toMatchObject({ status: "DIFFERENCE", contractValue: 12000, payslipValue: 11000, difference: 1000 });
+    expect(before.payslipValidation?.paymentTotal).toMatchObject({ status: "MATCH", difference: 0 });
+    expect(before.payslipValidation?.deductionTotal).toMatchObject({ status: "INSUFFICIENT_INFORMATION", difference: null });
+    expect(before.payslipValidation?.netPay).toMatchObject({ status: "MATCH", difference: 0 });
+    expect(before.depositComparison).toMatchObject({ status: "DIFFERENCE", payslipNetPay: 2100000, linkedPaymentTotal: 2000000, difference: 100000 });
+    expect((await loadResult(15)).calculation?.calculatedSubtotal).toBeNull();
+
+    const records = manualRecordSchema.array().parse((await (await request("/cases/16/manual-records", token)).json()).data.items);
+    const contract = records.find(record => record.recordType === "CONTRACT")!;
+    const update = await request(`/cases/16/manual-records/${contract.recordId}`, token, "PATCH", {
+      recordType: "CONTRACT", source: "USER_INPUT", data: { ...contract.data, monthlyBasePay: 2300000 },
+    });
+    expect(update.status).toBe(200);
+    expect((await loadResult(16)).calculation?.calculatedSubtotal).toBe(2200000);
+    for (let poll = 0; poll < 3; poll++) expect((await request("/cases/16/recompute-status", token)).status).toBe(200);
+    const after = await loadResult(16);
+    expect(after.calculation).toMatchObject({ status: "PARTIAL", calculatedSubtotal: 2300000, grossPay: null });
+    expect(after.resultVersion).toBeGreaterThan(before.resultVersion!);
+    const snapshotResponse = await request(`/cases/16/calculations/${before.calculation!.calculationId}`, token);
+    expect(snapshotResponse.status).toBe(200);
+    expect(calculationSchema.parse((await snapshotResponse.json()).data).calculatedSubtotal).toBe(2200000);
   });
   it("revokes Case document access after deletion while preserving the original", async () => {
     await request("/cases/15", token, "DELETE");
