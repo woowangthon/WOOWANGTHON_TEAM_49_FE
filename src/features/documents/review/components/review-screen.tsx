@@ -11,7 +11,8 @@ import { useCase, useCaseRemoval } from "@/features/cases/queries";
 import { useDocuments, useDocumentStatus, useDocumentAction, useRecomputeStatus } from "../../queries";
 import { recomputeActive } from "../../api";
 import type { DocumentDto } from "../../schemas";
-import { isProcessing, statusLabels } from "../../view-models";
+import { documentTypeIssue, isProcessing, statusLabels } from "../../view-models";
+import { DocumentTypeResolution } from "../../components/document-type-resolution";
 import { useFields } from "../queries";
 import type { ReplacementId, SourceDto } from "../schemas";
 import { recomputeJobLabel, reviewError, reviewStateView } from "../view-models";
@@ -44,6 +45,7 @@ export function ReviewScreen({id,initialDocumentId,initialReplacementId}:{id:num
 function ReviewDocument({dto,caseId,version,dirty,onDirty,onFileDirty,replacementId,onCreated,onReset,onConfirmed}:{dto:DocumentDto;caseId:number;version:number;dirty:boolean;onDirty:(dirty:boolean)=>void;onFileDirty:(dirty:boolean)=>void;replacementId?:ReplacementId;onCreated:(r:ReplacementId)=>void;onReset:()=>void;onConfirmed:(d:number)=>void}){
   const retry=useDocumentAction();const [retryError,setRetryError]=useState("");
   const status=useDocumentStatus({kind:"case",id:caseId},dto);const processing=status.data?.processingStatus??dto.processingStatus;
+  const typeIssue=isProcessing(processing)?undefined:documentTypeIssue(dto,status.data?status.data.errorCode:dto.errorCode);
   const fields=useFields(caseId,dto.documentId,!isProcessing(processing));const recompute=useRecomputeStatus(caseId);
   const [source,setSource]=useState<SourceDto|null>();const [tab,setTab]=useState<"original"|"fields">("fields");
   const sourceTrigger=useRef<HTMLElement|null>(null);
@@ -52,6 +54,7 @@ function ReviewDocument({dto,caseId,version,dirty,onDirty,onFileDirty,replacemen
     <p className="text-body">문서 처리: {statusLabels[processing]} · 사용자 검토: {reviewStateView(processing, fields.data?.reviewStatus??status.data?.reviewStatus??dto.reviewStatus).reviewLabel}</p>
     {status.isError&&<QueryFeedback error={status.error} retry={()=>{void status.refetch();}} />}
     {recompute.isError?<QueryFeedback error={recompute.error} retry={()=>{void recompute.refetch();}} />:<p hidden={!!recompute.data && !recomputeActive(recompute.data) && recompute.data.latestJob?.status !== "FAILED"} role="status" className="text-body text-muted">{!recompute.data?"서버 갱신 상태를 불러오는 중…":recomputeActive(recompute.data)?"입력 변경에 따른 서버 결과 갱신 중입니다. 과거 결과는 유지됩니다.":`서버 갱신: ${recomputeJobLabel(jobText(recompute.data.latestJob?.status??recompute.data.activeJob?.status))}. 작업 종료가 모든 계산의 완료를 뜻하지는 않습니다.`}</p>}
+    {typeIssue&&<div className={cardStyle}><DocumentTypeResolution key={typeIssue.code} dto={dto} issue={typeIssue} disabled={dirty} /></div>}
     {processing==="FAILED"&&<div className={`${cardStyle} space-y-3`}><p>문서 처리에 실패했습니다. 원문 확인이나 교체는 계속 사용할 수 있습니다.</p>{retryError&&<p role="alert">{retryError}</p>}<button className={secondaryButton} disabled={retry.isPending||dirty} onClick={async()=>{setRetryError("");try{await retry.mutateAsync({type:"retry",caseId,documentId:dto.documentId});}catch(error){setRetryError(reviewError(error));}}}>문서 재처리</button></div>}
     <div onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const next=event.key==="Home"?"original":event.key==="End"?"fields":tab==="original"?"fields":"original";setTab(next);document.getElementById(`${next}-tab`)?.focus();}} role="tablist" aria-label="원문과 필드 보기" className="review-tabs flex flex-wrap gap-2"><button id="original-tab" role="tab" tabIndex={tab==="original"?0:-1} aria-selected={tab==="original"} aria-controls="original-panel" className={secondaryButton} onClick={()=>setTab("original")}>원문</button><button id="fields-tab" role="tab" tabIndex={tab==="fields"?0:-1} aria-selected={tab==="fields"} aria-controls="fields-panel" className={secondaryButton} onClick={()=>setTab("fields")}>추출 필드</button></div>
     <div className="review-comparison grid min-w-0 items-start gap-6">

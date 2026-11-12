@@ -5,7 +5,8 @@ import { CircleCheck, CircleAlert, FileText, LoaderCircle } from "lucide-react";
 import { secondaryButton } from "@/components/ui/styles";
 import { useDocumentAction, useDocumentStatus } from "../queries";
 import type { DocumentContext } from "../schemas";
-import { documentCard, documentError, isProcessing, type DocumentViewModel } from "../view-models";
+import { documentCard, documentError, documentTypeIssue, isProcessing, type DocumentViewModel } from "../view-models";
+import { DocumentTypeResolution } from "./document-type-resolution";
 import { DocumentActions } from "./document-actions";
 import { LinkForm } from "./link-form";
 export function DocumentCard({ dto, context, linkDetails, inputVersion, selectableCaseId, canConnect = true, onEditingChange }: DocumentViewModel & { context: DocumentContext; inputVersion?: number; selectableCaseId?: number; canConnect?: boolean; onEditingChange?: (editing: boolean) => void }) {
@@ -20,12 +21,14 @@ export function DocumentCard({ dto, context, linkDetails, inputVersion, selectab
   const caseId = context.kind === "case" ? context.id : undefined;
   const link = linkDetails && linkDetails.linkId === dto.linkId && linkDetails.documentId === dto.documentId && linkDetails.caseId === caseId ? linkDetails : undefined;
   const retryCaseId = caseId ?? dto.linkedCaseIds?.[0];
+  const typeIssue = active ? undefined : documentTypeIssue(dto, item.errorCode);
   return <article className={`document-row min-w-0`} aria-label={dto.fileName}>
     <div className="flex min-w-0 items-start gap-3"><FileText aria-hidden="true" className="mt-1 size-6 shrink-0" /><div className="min-w-0"><h3 className="break-all text-body font-bold">{dto.fileName}</h3><p className="mt-1 text-caption text-muted">{item.typeLabel}{context.kind === "library" && ` · ${dto.workplaceName ?? `근무지 #${dto.workplaceId}`}`}</p></div></div>
     <p className="document-status flex flex-wrap items-center gap-2 text-body"><Icon aria-hidden="true" className={`size-4 shrink-0 ${active ? "animate-spin motion-reduce:animate-none" : ""}`} /><span>처리: {item.statusLabel}</span><span>검토: {item.reviewLabel}</span></p>
     {active && item.progress != null && <label className="mt-3 block text-caption">서버 문서 처리 {item.progress}%<progress className="mt-2 block w-full" max={100} value={item.progress} /></label>}
     {status.isError && <div role="alert" className="mt-3 text-body">{documentError(status.error)}<button className={`mt-2 ${secondaryButton}`} onClick={() => { void status.refetch(); }}>상태 다시 조회</button></div>}
     <p className="document-date text-caption text-muted">{item.uploadedLabel}</p>
+    {typeIssue && <DocumentTypeResolution key={typeIssue.code} dto={dto} issue={typeIssue} />}
     {item.processingStatus === "FAILED" && <div className="mt-3"><p className="break-all text-body">{item.errorCode ?? "처리에 실패했습니다."}</p>{retryCaseId ? <button className={`mt-2 ${secondaryButton}`} disabled={mutation.isPending} onClick={async () => { setError(""); try { await mutation.mutateAsync({ type: "retry", caseId: retryCaseId, documentId: dto.documentId }); } catch (e) { setError(documentError(e)); } }}>문서 재처리</button> : <p className="text-caption">실패 재처리는 내역에 연결한 뒤 사용할 수 있습니다.</p>}</div>}
     {error && <p role="alert" className="mt-3">{error}</p>}
     <details className="document-management mt-3"><summary className="cursor-pointer text-body font-bold">자료 관리 상세</summary>

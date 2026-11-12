@@ -3,7 +3,7 @@ import { versionSchema } from "@/features/results/schemas";
 import { z } from "zod";
 import type { ApiClient } from "@/lib/api/client";
 import { decodeWith, pageSchema, paginationSearch } from "@/lib/api/schema";
-import { linkCreateSchema, linkPatchSchema, caseDocumentSchema, documentSchema, impactSchema, linkSchema, mutationSchema, statusSchema, uploadSchema, type DocumentDto, type DocumentContext, type DocumentFilters, type LinkInput } from "./schemas";
+import { linkCreateSchema, linkPatchSchema, caseDocumentSchema, documentSchema, documentTypePatchSchema, impactSchema, linkSchema, mutationSchema, statusSchema, uploadSchema, type DocumentDto, type DocumentContext, type DocumentFilters, type LinkInput } from "./schemas";
 
 export function documentPath(context: DocumentContext) {
   return context.kind === "library" ? "/documents" : `/${context.kind === "case" ? "cases" : "workplaces"}/${context.id}/documents`;
@@ -36,6 +36,8 @@ export function documentApi(api: ApiClient) {
     updateLink: (caseId: number, linkId: number, body: LinkInput) => api.requestJson(`/cases/${caseId}/document-links/${linkId}`, decodeWith(linkSchema.extend(mutationSchema.shape)), { expectedStatus: 200, method: "PATCH", body: linkPatchSchema.parse(body) }),
     unlink: (caseId: number, linkId: number, _expectedInputVersion: number) => api.requestNoContent(`/cases/${caseId}/document-links/${linkId}`, (void _expectedInputVersion, { method: "DELETE" })),
     retry: (caseId: number, documentId: number) => api.requestJson(`/cases/${caseId}/documents/${documentId}/retry`, decodeWith(statusSchema), { expectedStatus: 202, method: "POST" }),
+    // P0 PATCH /workplaces/{workplace_id}/documents/{document_id}: set the type (or AUTO) and extract again.
+    changeType: (workplaceId: number, documentId: number, documentType: string) => api.requestJson(`/workplaces/${workplaceId}/documents/${documentId}`, decodeWith(documentSchema.refine(v => v.documentId === documentId && v.workplaceId === workplaceId)), { expectedStatus: 202, method: "PATCH", body: documentTypePatchSchema.parse({ documentType }) }),
     impact: (workplaceId: number, documentId: number, signal?: AbortSignal) => api.requestJson(`/workplaces/${workplaceId}/documents/${documentId}/deletion-impact`, decodeWith(impactSchema), { signal, expectedStatus: 200 }),
     // P0 OpenAPI / API-041 specifies 204; no JSON envelope or purge receipt.
     remove: (workplaceId: number, documentId: number) => api.requestNoContent(`/workplaces/${workplaceId}/documents/${documentId}?confirm=true`, { method: "DELETE" }),
