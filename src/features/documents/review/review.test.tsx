@@ -44,6 +44,27 @@ async function setup(){const m=managementMocks();const d=documentMocks(m.getCase
  return {app,mocks,m,d,mount,user:userEvent.setup()};}
 const noop=()=>{};
 describe("P0 document review via MSW",()=>{
+ it("removes replacement management and keeps the next-step card and document URL selection",async()=>{
+  const {mount,user,d,mocks,app}=await setup();
+  await documentApi(app.api).connect(15,102,{purpose:null,applicableFrom:null,applicableTo:null,expectedInputVersion:7});
+  const replace=vi.spyOn(window.history,"replaceState");
+  mount(<ReviewScreen id={15} initialDocumentId={101}/>);
+  await screen.findByRole("region",{name:"OCR 추출 필드"});
+  expect(screen.queryByText("문서 교체 관리")).not.toBeInTheDocument();
+  expect(screen.queryByText("계산 조건 확인으로 이동")).not.toBeInTheDocument();
+  const next=screen.getByRole("navigation",{name:"문서 검토 다음 단계"});
+  expect(next).toHaveAttribute("data-case-next");
+  expect(within(next).getByRole("heading",{name:"문서 내용을 확인했다면"})).toBeVisible();
+  expect(within(next).getByText("이제 근무 조건과 계산에 필요한 정보를 확인해 보세요.")).toBeVisible();
+  expect(within(next).getByRole("link",{name:"계산 조건 확인하기"})).toHaveAttribute("href","/cases/15/conditions");
+  await user.click(document.querySelector("[data-case-document-picker] > summary")!);
+  const other=d.getDocuments().find(doc=>doc.documentId!==101&&doc.linkedCaseIds.includes(15))!;
+  await user.click(screen.getByRole("button",{name:new RegExp(other.fileName)}));
+  expect(replace).toHaveBeenCalledWith(null,"",`/cases/15/review?documentId=${other.documentId}`);
+  await waitFor(()=>expect(mocks.requests.some(r=>r.path.endsWith(`/documents/${other.documentId}/fields`))).toBe(true));
+  expect(mocks.requests.some(r=>r.path.includes("/document-replacements/"))).toBe(false);
+  replace.mockRestore();
+ });
  it("carries one integer ID through create/detail/confirm and independently validates transport",async()=>{
   const {app,mocks}=await setup();const api=reviewApi(app.api);
   const created=await api.replace(15,101,new File(["x"],"new.png",{type:"image/png"}),7);

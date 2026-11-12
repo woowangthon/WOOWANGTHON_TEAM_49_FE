@@ -34,7 +34,6 @@ export function ResultScreen({caseId, selection, returnTo}:{caseId:number;compar
  {!q.data ? <QueryFeedback pending={q.isPending} error={q.error} retry={()=>void q.refetch()}/> : <>
  {q.isError && <><p role="alert">최신 결과 조회에 실패해 직전 조회 결과를 보존합니다. 최신성을 다시 확인해 주세요.</p><QueryFeedback error={q.error} retry={()=>void q.refetch()}/></>}
  <div className={styles.overview}><ResultSummary compare={false} value={{...vm!,title:q.isError?"직전 조회 결과 · 최신성 미확인":vm!.title}}/><ResultNextSteps value={vm!} caseId={caseId}/></div>
- {q.data.interpretation==="interpretation-error" && <p role="alert">&#44208;&#44284; &#54364;&#49884; &#54644;&#49437;&#50640; &#49892;&#54056;&#54664;&#49845;&#45768;&#45796;. &#50896;&#48376; &#45936;&#51060;&#53552;&#45716; &#48372;&#51316;&#54664;&#49845;&#45768;&#45796;.</p>}
  <p className={styles.notice}><Info size={16} aria-hidden="true"/><span>차이 발견은 미지급임금 확정을 의미하지 않습니다. 공제액의 적법성이나 세금·보험료의 적정성을 판단하지 않습니다.</span></p>
  {q.data.freshness.overall==="FAILED"&&<p role="alert">결과 갱신에 실패해 이전 결과를 보여 드려요. <button className={secondaryButton} onClick={()=>{void q.refetch();void status.refetch();}}>갱신 상태 다시 확인</button></p>}
  <ResultExplorer key={caseId} data={q.data} compare={false} showDetailsInitially={false} freshnessUnverified={q.isError}/>

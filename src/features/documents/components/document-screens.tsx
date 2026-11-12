@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FileUp, FolderOpen } from "lucide-react";
+import { CaseNextStep } from "@/features/cases/components/case-next-step";
 import { CaseStageHeader } from "@/features/cases/components/case-stage-header";
 import { WorkplaceHeader } from "@/features/workplaces/components/workplace-header";
 import workplaceStyles from "@/features/workplaces/components/workplace-space.module.css";
 import documentStyles from "./workplace-documents.module.css";
 import libraryStyles from "./library.module.css";
 import { QueryFeedback } from "@/components/ui/query-feedback";
-import { cardStyle, secondaryButton } from "@/components/ui/styles";
+import { cardStyle } from "@/components/ui/styles";
 import { useCase, useCaseRemoval } from "@/features/cases/queries";
 import { useWorkplace, useWorkplaceRemoval } from "@/features/workplaces/queries";
 import { useDocuments } from "../queries";
@@ -52,7 +53,7 @@ function CaseDocuments({ id, workplaceName, inputVersion }: { id: number; workpl
   const canAdd = !!docs.data && !docs.isError && docs.data.total < 20;
   return <div className="document-screen min-w-0 space-y-6">
     <CaseStageHeader stage="upload" title={`${workplaceName} 자료 등록`} description="확인할 자료를 업로드하고 원문과 추출된 내용을 검토해 주세요." />
-    <nav data-case-next aria-label="자료 관련 화면"><div><h2>자료를 준비했다면</h2><p>원문과 추출된 내용을 확인해 주세요.</p></div><Link href={`/cases/${id}/review`} className={secondaryButton}>원문·추출값 검토</Link></nav>
+    <CaseNextStep title="자료를 준비했다면" description="원문과 추출된 내용을 확인해 주세요." href={`/cases/${id}/review`} label="원문·추출값 검토" ariaLabel="자료 관련 화면" />
     {docs.isError && <QueryFeedback error={docs.error} retry={() => { void docs.refetch(); }} />}
     {docs.data && docs.data.total >= 20 && <p role="alert" className={cardStyle}>내역에는 문서를 최대 20개 연결할 수 있습니다. 기존 연결을 해제한 뒤 등록해 주세요.</p>}
     <section data-case-upload aria-label="새 파일 업로드"><UploadForm context={{ kind: "case", id }} disabled={!canAdd} /></section>

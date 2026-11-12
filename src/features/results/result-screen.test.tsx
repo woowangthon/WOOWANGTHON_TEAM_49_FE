@@ -44,7 +44,7 @@ it("keeps valid server amounts and comparison details visible when another field
  const summary = screen.getByRole("region", { name: "임금 결과 요약" });
  expect(within(summary).getByText("0 원")).toBeVisible();
  expect(within(summary).getByText("미확정·확정 불가")).toBeVisible();
- expect(screen.getByText("결과 표시 해석에 실패했습니다. 원본 데이터는 보존했습니다.")).toBeVisible();
+ expect(screen.queryByText("결과 표시 해석에 실패했습니다. 원본 데이터는 보존했습니다.")).not.toBeInTheDocument();
  expect(screen.getByText(/자료상 일치/)).toHaveTextContent("미제공개");
  expect(screen.queryByRole("region", { name: "결과 탐색" })).not.toBeInTheDocument();
  await userEvent.setup().click(screen.getByRole("button", { name: "시급 대조 근거 보기" }));
@@ -56,6 +56,8 @@ it("uses existing fallback for invalid calculation data without hiding valid com
  const wire = fixture();
  const { data } = show({ ...wire, calculation: { ...wire.calculation, grossPay: "invalid" } });
  expect(data.calculation).toBeNull();
+ expect(data.interpretation).toBe("interpretation-error");
+ expect(screen.queryByText("결과 표시 해석에 실패했습니다. 원본 데이터는 보존했습니다.")).not.toBeInTheDocument();
  const summary = screen.getByRole("region", { name: "임금 결과 요약" });
  expect(within(summary).getByText(/계산할 정보가/)).toBeVisible();
  expect(within(summary).queryByText("0 원")).not.toBeInTheDocument();
@@ -68,6 +70,7 @@ it.each(["STALE", "UPDATING", "FAILED"])("preserves %s freshness and version inf
  expect(screen.getAllByText(/이전 입력 기준 결과입니다/).length).toBeGreaterThan(0);
  expect(screen.getByText(/현재 입력 v7 · 결과 v2/)).toBeVisible();
  if (freshness === "FAILED") {
+  expect(screen.getByRole("alert")).toHaveTextContent("결과 갱신에 실패해 이전 결과를 보여 드려요.");
   expect(screen.queryByText(/아래 보조 관리/)).not.toBeInTheDocument();
   await userEvent.setup().click(screen.getByRole("button", { name: "갱신 상태 다시 확인" }));
   expect(refetch).toHaveBeenCalledTimes(2);
@@ -76,6 +79,7 @@ it.each(["STALE", "UPDATING", "FAILED"])("preserves %s freshness and version inf
 
 it("keeps cached results visible with an unverified freshness warning after a query failure", () => {
  show(fixture(), true);
+ expect(screen.getByRole("alert")).toHaveTextContent("최신 결과 조회에 실패해 직전 조회 결과를 보존합니다.");
  expect(screen.getByRole("region", { name: "임금 결과 요약" })).toHaveTextContent("직전 조회 결과 · 최신성 미확인");
  expect(screen.getByRole("heading", { name: "항목별 대조표" })).toBeVisible();
  expect(screen.getByRole("navigation", { name: "결과 관련 화면" })).toBeVisible();

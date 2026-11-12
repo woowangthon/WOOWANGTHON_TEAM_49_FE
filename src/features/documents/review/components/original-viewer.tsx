@@ -83,9 +83,9 @@ export function ViewerContent({url,preview,source,sourceRequest=0,onRetry,onRead
         </>}
         {box&&!imageError&&<div key={JSON.stringify(source)} ref={marker} role="img" aria-label="선택한 필드의 원문 위치" className={styles.highlight} style={box} />}
       </div>
-    </div>
-    <div className="break-words text-body text-muted"><p>근거 페이지: {source?.page??"미제공"}</p><p>근거 문구: {source?.text??"미제공"}</p>
+    <div data-original-evidence className="break-words text-body text-muted"><p>근거 페이지: {source?.page??"미제공"}</p><p>근거 문구: {source?.text??"미제공"}</p>
       {!box&&<p>{rotated?"회전된 원문의 좌표 기준이 확정되지 않아 위치 강조를 표시하지 않습니다.":"일치하는 페이지·좌표 정보가 없거나 강조를 지원하지 않아 위치를 표시하지 않습니다."}</p>}
+    </div>
     </div>
   </section>;
 }

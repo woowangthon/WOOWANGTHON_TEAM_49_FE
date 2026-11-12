@@ -1,4 +1,4 @@
-.screen { min-width: 0; display: grid; gap: 16px; }
+.screen { width: 100%; max-width: 1040px; min-width: 0; margin-inline: auto; display: grid; gap: 16px; }
 .screen .documentPicker { min-width: 0; padding: 0 20px; border: 1px solid var(--color-border); border-radius: 16px; background: white; }
 .documentPicker > summary { display: flex; align-items: center; gap: 10px; min-height: 62px; list-style: none; }
 .documentPicker > summary::-webkit-details-marker { display: none; }
@@ -15,14 +15,14 @@
 .tabs button { flex: 1; min-height: 44px; padding: 10px; border-radius: 10px; color: #697586; font-size: 14px; font-weight: 700; }
 .screen .tabs button[aria-selected="true"] { background: white; color: #3e5fae; box-shadow: 0 2px 5px #182d4b08; }
 .screen .comparison { gap: 20px; }
-.original { min-width: 0; }
+.original, .fields { min-width: 0; min-height: 0; }
 .original [aria-label="문서 원문 뷰어"] { padding: 22px; border: 1px solid #e3e6eb; border-radius: 22px; background: white; box-shadow: none; }
 .original h2 { font-size: 18px; letter-spacing: -.5px; }
 .original [aria-label="원문 도구"] { gap: 4px 8px; }
 .original [aria-label="원문 도구"] button { min-height: 36px; padding: 7px 9px; border-radius: 8px; font-size: 11px; }
 .original [aria-label="원문 도구"] p, .original [aria-label="원문 도구"] span { font-size: 11px; }
 .original [aria-label="확대한 원문 스크롤 영역"] { background: #f3f5f8; border-color: #e5e9ee; border-radius: 12px; }
-.original [aria-label="문서 원문 뷰어"] > div:last-child { padding: 12px 14px; border-radius: 12px; background: #f8f9fb; font-size: 11px; line-height: 1.8; }
+.original [data-original-evidence] { padding: 12px 14px; border-radius: 12px; background: #f8f9fb; font-size: 11px; line-height: 1.8; }
 .screen .fieldsPanel { min-width: 0; padding: 20px; border: 1px solid #e1e6ee; border-radius: 18px; background: white; }
 .fieldList { min-width: 0; }
 .documentPicker > nav { margin-bottom: 12px; }
@@ -78,16 +78,16 @@
 .confirmationAction { display: grid; gap: 9px; }
 .screen .confirmationAction > button { width: 100%; min-height: 48px; padding: 13px 18px; border-radius: 12px; color: white; background: #4665bb; font-size: 13px; }
 .confirmationAction p { color: #697586; font-size: 11px; text-align: center; }
-.screen .nextLink { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; color: #526175; font-size: 13px; font-weight: 650; }
-.screen .replacement { padding: 18px 22px; border: 1px solid #e3e6eb; border-radius: 16px; box-shadow: none; }
-.replacement > summary { min-height: 30px; color: #697586; font-size: 12px; }
 @container (min-width: 760px) {
-  .screen .fieldsPanel { display: flex; flex-direction: column; max-height: 85dvh; }
+  .screen .comparison { height: min(85dvh, 60rem); min-height: 28rem; align-items: stretch; }
+  .original, .fields { height: 100%; }
+  .original [aria-label="문서 원문 뷰어"], .screen .fieldsPanel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .original [aria-label="문서 원문 뷰어"] > :not([aria-label="확대한 원문 스크롤 영역"]) { flex-shrink: 0; }
+  .original [aria-label="확대한 원문 스크롤 영역"] { flex: 1; min-height: 0; max-height: none; }
   .panelHeading, .progressArea { flex-shrink: 0; }
-  .fieldList { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #bac6df transparent; scrollbar-gutter: stable; padding-right: 6px; }
+  .fieldList { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #bac6df transparent; scrollbar-gutter: stable; padding-right: 6px; }
   .screen .tabs { display: none; }
   .screen .comparison { grid-template-columns: minmax(0,1fr) minmax(0,1.08fr); }
-  .original { position: sticky; top: 20px; }
   .screen .confirmation { grid-template-columns: minmax(0,1fr) minmax(200px,.55fr); gap: 32px; }
 }
 @container (max-width: 34rem) {
