@@ -13,7 +13,7 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
  const fail=(errorCode:string,status:number)=>apiResponse({errorCode},status);
  const find=(w:unknown,c:unknown)=>{const chat=chats.get(Number(c));return chat?.workplaceId===Number(w)?chat:undefined;};
  const page=(items:unknown[],request:Request)=>{const q=new URL(request.url).searchParams,p=Math.max(1,Number(q.get('page')??1)),size=20;return {items:items.slice((p-1)*size,p*size),page:p,size,total:items.length};};
- const summary=(c:NonNullable<ReturnType<typeof find>>)=>{for(const m of c.messages){if(m.scope.scopeType==='CASE'&&m.resultRefs.length){const now=references?.(m.scope.caseId);m.sourceMayBeOutdated=!!now&&(inputVersions.get(m.messageId)!==now.inputVersion||!m.resultRefs.every(r=>now.resultRefs.some(n=>n.type===r.type&&n.snapshotId===r.snapshotId&&n.version===r.version)));}}const {messages,...rest}=c;return {...rest,messageCount:messages.length};};
+ const summary=(c:NonNullable<ReturnType<typeof find>>)=>{for(const m of c.messages){if(m.scope.scopeType==='CASE'&&(m.resultRefs ?? []).length){const now=references?.(m.scope.caseId);m.sourceMayBeOutdated=!!now&&(inputVersions.get(m.messageId)!==now.inputVersion||!(m.resultRefs ?? []).every(r=>(now.resultRefs ?? []).some(n=>n.type===r.type&&n.snapshotId===r.snapshotId&&n.version===r.version)));}}const {messages,...rest}=c;return {...rest,messageCount:messages.length};};
  async function execute(w:unknown,c:unknown,request:Request,retry?:number){
   const chat=find(w,c);if(!chat)return fail('RESOURCE_NOT_FOUND',404);
   if(active.has(chat.chatId))return fail('CHAT_RUN_ALREADY_ACTIVE',409);
@@ -56,7 +56,7 @@ export function chatMocks(base:string,getCases:()=>Case[], references?:(caseId:n
      if(!retry&&body.content==='생성 실패'&&i>15){answer.status='FAILED';answer.errorCode='AI_GENERATION_FAILED';emit('error',{...identity,errorCode:answer.errorCode,retryable:true});return;}
      if(body.content==='연결 중단'&&i>15){answer.status='FAILED';answer.errorCode='STREAM_INTERRUPTED';return;}
     }
-    if(!run.cancelled){answer.sources=body.content==='삭제 출처'?[{documentId:99999,page:1}]:captured?.sources??(answer.scope.scopeType==='CASE'?[{documentId:101,page:1,caseId:answer.scope.caseId}]:[]);answer.resultRefs=captured?.resultRefs??[];if(body.content==='없는 스냅샷')answer.resultRefs=[{type:'calculation',snapshotId:99999,version:1,...(answer.scope.scopeType==='CASE'?{caseId:answer.scope.caseId}:{})}];emit('sources',{sources:answer.sources,resultRefs:answer.resultRefs});}
+    if(!run.cancelled){answer.sources=body.content==='삭제 출처'?[{documentId:99999,page:1,caseId:answer.scope.scopeType==='CASE'?answer.scope.caseId:15}]:captured?.sources??(answer.scope.scopeType==='CASE'?[{documentId:101,page:1,caseId:answer.scope.caseId}]:[]);answer.resultRefs=captured?.resultRefs??[];if(body.content==='없는 스냅샷')answer.resultRefs=[{type:'calculation',snapshotId:99999,version:1,...(answer.scope.scopeType==='CASE'?{caseId:answer.scope.caseId}:{})}];emit('sources',{sources:answer.sources,resultRefs:answer.resultRefs});}
     answer.status=run.cancelled?'CANCELLED':'COMPLETED';emit('message_done',{...identity,status:answer.status});
    }finally{receipt.done=true;chat.updatedAt=new Date().toISOString();chat.lastMessagePreview=answer.content;active.delete(chat.chatId);try{controller.close();}catch{connected=false;}}
   },cancel(){connected=false;}}),{headers:{'Content-Type':'text/event-stream'}});

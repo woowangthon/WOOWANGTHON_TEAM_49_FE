@@ -23,6 +23,7 @@ const httpKinds: Record<number, ErrorKind> = {
 
 export class ApiError extends Error {
   readonly status: number;
+  diagnostic?: { phase: string; endpointTemplate?: string; httpStatus?: number; issues?: { path: string; expectedType: string; actualType: string }[] };
   readonly kind: ErrorKind;
   readonly errorCode?: string;
   readonly details?: Record<string, unknown>;

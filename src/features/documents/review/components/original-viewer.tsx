@@ -28,7 +28,7 @@ export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;p
   const [imageSize,setImageSize]=useState<{width:number;height:number}>();
   const [pdfReady,setPdfReady]=useState<{page:number;rotation:number}>();
   const reportRendered=useCallback((page:number,rotation:number)=>setPdfReady({page,rotation}),[]);
-  const sourcePage=source?.documentId===preview.documentId&&source.page&&source.page<=preview.pageCount?source.page:undefined;
+  const sourcePage=source?.documentId===preview.documentId&&source.page&&(preview.pageCount===null||source.page<=preview.pageCount)?source.page:undefined;
   const page=(manualPage?.source===source?manualPage?.page:undefined)??sourcePage??1;
   const rendered=preview.mediaType==="application/pdf"?pdfReady?.page===page:imageLoaded;
   useEffect(()=>{onReady?.(rendered&&!imageError);return()=>onReady?.(false);},[rendered,imageError,onReady]);
@@ -40,9 +40,10 @@ export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;p
   }:undefined;
   const rotated=preview.rotationDegrees!==0||(pdfReady!==undefined&&pdfReady.rotation!==0);
   return <section className={`${cardStyle} space-y-4`} aria-label="문서 원문 뷰어">
+    {preview.pageCount===null&&<p role="status">&#51204;&#52404; &#54168;&#51060;&#51648; &#49688; &#48120;&#54869;&#51221;</p>}
     <h2 className="text-title font-bold">문서 원문</h2>
     <div className="flex flex-wrap gap-2" aria-label="원문 도구">
-      <button className={secondaryButton} disabled={page<=1} onClick={()=>setManualPage({page:page-1,source})}>이전 페이지</button><p className="self-center text-body">{page} / {preview.pageCount} 페이지</p><button className={secondaryButton} disabled={page>=preview.pageCount} onClick={()=>setManualPage({page:page+1,source})}>다음 페이지</button>
+      <button className={secondaryButton} disabled={page<=1} onClick={()=>setManualPage({page:page-1,source})}>이전 페이지</button><p className="self-center text-body">{page} / {preview.pageCount ?? "?"} 페이지</p><button className={secondaryButton} disabled={preview.pageCount===null||page>=preview.pageCount} onClick={()=>setManualPage({page:page+1,source})}>다음 페이지</button>
       <button className={secondaryButton} disabled={zoom<=0.5} onClick={()=>setZoom(v=>Math.max(0.5,v-0.25))}>축소</button><span className="self-center text-body">{Math.round(zoom*100)}%</span><button className={secondaryButton} disabled={zoom>=3} onClick={()=>setZoom(v=>Math.min(3,v+0.25))}>확대</button>
       {sourcePage&&<button className={secondaryButton} onClick={()=>setManualPage(undefined)}>선택한 근거 페이지</button>}
       <button className={secondaryButton} onClick={onRetry}>원문 다시 불러오기</button>

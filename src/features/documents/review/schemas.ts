@@ -16,13 +16,13 @@ export const fieldWireSchema = z.object({
 });
 // P0 source is free JSON; interpret optional HTML location metadata separately.
 export const fieldViewSchema = fieldWireSchema.extend({source:sourceSchema.nullable()});
-export const fieldSchema = fieldWireSchema.transform((value): z.infer<typeof fieldViewSchema> & {rawSource?: Record<string, z.infer<typeof valueSchema>> | null} => {
+export const fieldSchema = fieldWireSchema.transform((value): z.infer<typeof fieldViewSchema> & {sourceInterpretation?: "ready" | "interpretation-error";rawSource?: Record<string, z.infer<typeof valueSchema>> | null} => {
  const source = sourceSchema.safeParse(value.source);
- return {...value, source:source.success ? source.data : null, rawSource:value.source};
+ return {...value, source:source.success ? source.data : null, sourceInterpretation:source.success ? "ready" : "interpretation-error", rawSource:value.source};
 });
 export const fieldsSchema = z.object({documentId: z.number().int(), caseId: z.number().int(), processingStatus: z.string(), reviewStatus: z.string(), fields: z.array(fieldSchema)});
 export const previewSchema = z.object({
-  documentId: id, mediaType: z.string(), pageCount: id,
+  documentId: id, mediaType: z.string(), pageCount: id.nullable(),
   coordinateSystem: z.string().nullable(), rotationDegrees: z.number().nullable(), supportsHighlight: z.boolean(),
   // previewUrl is intentionally not retained or followed. Only the documented authenticated /file is used.
 });

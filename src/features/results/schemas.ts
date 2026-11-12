@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { pageSchema } from "@/lib/api/schema";
+import { decodeWith, pageSchema } from "@/lib/api/schema";
 import { sourceSchema } from "@/features/documents/review/schemas";
 const integer = z.number().int();
 const scalar = z.number().finite();
@@ -53,7 +53,11 @@ export type ResultsWireDto = z.infer<typeof resultsSchema>;
 export const resultItemSchema = resultItemWireSchema;
 
 /** HTML supplements describe presentation only; P0 free objects always survive in wire. */
-export function resultsView(wire: ResultsWireDto): Results {
+export function resultsView(wire: ResultsWireDto): Results & {interpretation: "ready" | "interpretation-error"; interpretationDiagnostic?: import("@/lib/api/error").ApiError["diagnostic"]} {
+ let interpretationDiagnostic: import("@/lib/api/error").ApiError["diagnostic"];
+ try { decodeWith(resultsViewSchema)(wire); } catch(error) {
+  if(error instanceof Error && "diagnostic" in error) interpretationDiagnostic = {...(error as import("@/lib/api/error").ApiError).diagnostic,phase:"view"};
+ }
  const summaryShape = resultsViewSchema.shape.summary.shape;
  const nullable = <T>(schema:z.ZodType<T>, value:unknown):T|null => {const parsed=schema.safeParse(value);return parsed.success?parsed.data:null;};
  const counts = typeof wire.summary.counts === "object" && wire.summary.counts !== null && !Array.isArray(wire.summary.counts) ? wire.summary.counts : {};
@@ -66,7 +70,7 @@ export function resultsView(wire: ResultsWireDto): Results {
  const calculation = calculationSchema.safeParse(wire.calculation);
  const comparison = comparisonSchema.safeParse(wire.comparison);
  const validation = validationSchema.safeParse(wire.payslipValidation);
- return {...wire, wire,
+ return {...wire, wire, interpretationDiagnostic, interpretation: resultsViewSchema.safeParse(wire).success ? "ready" : "interpretation-error",
   summary,
   freshness:freshness.success ? freshness.data : {},
   calculation:calculation.success ? calculation.data : null,

@@ -15,8 +15,10 @@ export const errorDataSchema = z.object({
   errors: z.array(z.object({ field: z.string(), reason: z.string() })).nullable().optional(),
 });
 
-export function protocolError(): ApiError {
-  return new ApiError(0, { kind: "protocol" });
+export function protocolError(status = 0, phase = "status"): ApiError {
+  const error = new ApiError(status, { kind: "protocol" });
+  error.diagnostic = { phase, httpStatus: status };
+  return error;
 }
 
 export function hasMediaType(response: Response, expected: string): boolean {
@@ -25,7 +27,7 @@ export function hasMediaType(response: Response, expected: string): boolean {
 
 export async function readJsonData(response: Response): Promise<unknown> {
   if (response.status === 204 || !hasMediaType(response, "application/json")) {
-    throw protocolError();
+    throw protocolError(response.status, "media-type");
   }
 
   let payload: unknown;
@@ -33,7 +35,7 @@ export async function readJsonData(response: Response): Promise<unknown> {
     payload = await response.json();
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") throw error;
-    throw protocolError();
+    throw protocolError(response.status, "json");
   }
 
   const parsed = envelopeSchema.safeParse(payload);
@@ -42,7 +44,13 @@ export async function readJsonData(response: Response): Promise<unknown> {
     parsed.data.code !== response.status ||
     !Object.prototype.hasOwnProperty.call(payload, "data")
   ) {
-    throw protocolError();
+    const error = protocolError(response.status, "envelope");
+    if(!parsed.success) error.diagnostic!.issues = parsed.error.issues.map(issue=>({
+      path: ["code","message","data"].includes(String(issue.path[0])) ? String(issue.path[0]) : "*",
+      expectedType: "expected" in issue ? String(issue.expected) : issue.code,
+      actualType: typeof payload === "object" && payload !== null ? typeof Reflect.get(payload,issue.path[0] ?? "") : typeof payload,
+    }));
+    throw error;
   }
 
   return parsed.data.data;

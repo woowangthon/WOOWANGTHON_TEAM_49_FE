@@ -141,7 +141,7 @@ describe("server-driven conditions", () => {
   it("supports a final partial group and keeps a seventh unsupported question read only", async () => {
     const { mount, user, api, mock } = await setup();
     const initial = await api.conditions(15);
-    initial.conditions.push({ conditionId: "future_text", question: "추가 읽기 전용 질문", type: "TEXT", requiredFor: [], value: null, status: "NOT_APPLICABLE", source: null });
+    initial.conditions.push({ conditionId: "future_text", question: "추가 읽기 전용 질문", type: "TEXT", options: null, requiredFor: [], value: null, status: "NOT_APPLICABLE", source: null });
     mount(<ConditionsForm caseId={15} initial={initial} reload={async () => initial} />);
     await user.click(screen.getByRole("button", { name: /3\. 질문 7/ }));
     expect(screen.getByLabelText("추가 읽기 전용 질문")).toBeVisible();
@@ -230,7 +230,7 @@ describe("server-driven conditions", () => {
     expect(input).toHaveValue("60");
   });
   it("displays NOT_APPLICABLE and unsupported TEXT without inventing an allowed condition", async () => {
-    const { mount } = await setup(); mount(<ConditionsForm caseId={15} initial={{ inputVersion: 7, conditions: [{ conditionId: "future_text", question: "새 질문", type: "TEXT", requiredFor: [], value: null, status: "NOT_APPLICABLE", source: null }] }} reload={async () => ({ inputVersion: 7, conditions: [] })} />);
+    const { mount } = await setup(); mount(<ConditionsForm caseId={15} initial={{ inputVersion: 7, conditions: [{ conditionId: "future_text", question: "새 질문", type: "TEXT", options: null, requiredFor: [], value: null, status: "NOT_APPLICABLE", source: null }] }} reload={async () => ({ inputVersion: 7, conditions: [] })} />);
     expect(screen.getByLabelText("새 질문")).toBeDisabled(); expect(screen.getByText(/현재 P0의 허용 조건 ID/)).toBeVisible(); expect(screen.getByText("해당 없음", {exact:true})).toBeVisible(); fireEvent.click(screen.getByText("조건 출처·기술 상세")); expect(screen.getByText(/해당 없음 · TEXT/)).toBeVisible();
   });
 });

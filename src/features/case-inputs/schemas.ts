@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sourceSchema, updateMetaSchema } from "@/features/documents/review/schemas";
+import { updateMetaSchema } from "@/features/documents/review/schemas";
 
 const id = z.number().int().positive();
 export const recordTypes = ["CONTRACT", "ATTENDANCE", "PAYSLIP", "DEPOSIT"] as const;
@@ -16,9 +16,9 @@ export const manualSavedSchema = z.union([
 export const conditionIds = ["workplace_size", "regular_minutes", "base_scope_confirmed", "comparison_basis_confirmed", "hours_basis_confirmed", "base_pay_basis_confirmed"] as const;
 export const conditionSchema = z.object({
   conditionId: z.string(), question: z.string(), type: z.enum(["SELECT", "NUMBER", "TEXT", "BOOLEAN"]),
-  options: z.array(z.string()).optional(), requiredFor: z.array(z.string()),
+  options: z.array(z.string()).nullable(), requiredFor: z.array(z.string()),
   value: z.union([z.string(), z.number().finite(), z.boolean(), z.null()]),
-  status: z.enum(["REQUIRED", "ANSWERED", "UNKNOWN", "NOT_APPLICABLE"]), source: sourceSchema.nullable(),
+  status: z.enum(["REQUIRED", "ANSWERED", "UNKNOWN", "NOT_APPLICABLE"]), source: z.string().nullable(),
 });
 export const conditionsSchema = z.object({ conditions: z.array(conditionSchema), inputVersion: id });
 export const conditionAnswerSchema = z.object({

@@ -1,4 +1,6 @@
 ﻿import { z } from 'zod';
+import { ApiError } from '@/lib/api/error';
+import { decodeWith } from '@/lib/api/schema';
 import { readSseFrames } from '@/lib/api/sse';
 import { protocolError } from '@/lib/api/response';
 import { scopeSchema,sourceSchema,refSchema } from './api';
@@ -13,11 +15,11 @@ export const events={
 export type ChatEvent={ [K in keyof typeof events]:{event:K;data:z.infer<(typeof events)[K]>} }[keyof typeof events];
 export async function consumeChat(stream:ReadableStream<Uint8Array>,onEvent:(event:ChatEvent)=>void){
  let start:z.infer<typeof events.message_start>|undefined;
- for await(const frame of readSseFrames(stream)){
+ try { for await(const frame of readSseFrames(stream)){
   if(!Object.hasOwn(events,frame.event))continue;
   const event=frame.event as keyof typeof events;
   const parsed=events[event].safeParse(JSON.parse(frame.data));
-  if(!parsed.success)throw protocolError();
+  if(!parsed.success){decodeWith<unknown>(events[event])(JSON.parse(frame.data));throw protocolError(200,"sse");}
   const value=parsed.data;
   if(event==='message_start'){if(start)throw protocolError();start=events.message_start.parse(value);}
   else if(!start)throw protocolError();
@@ -26,5 +28,10 @@ export async function consumeChat(stream:ReadableStream<Uint8Array>,onEvent:(eve
   if(event==='message_done'||event==='error')return;
  }
  throw new Error('연결이 종료되었지만 답변 완료는 확인되지 않았습니다. 저장 상태를 다시 확인하세요.');
+ } catch (error) {
+  if(error instanceof Error && error.name==="AbortError") throw error;
+  const failure = protocolError(200,"sse");
+  if(error instanceof ApiError) failure.diagnostic = {...error.diagnostic,phase:"sse",httpStatus:200};
+  throw failure;
+ }
 }
-

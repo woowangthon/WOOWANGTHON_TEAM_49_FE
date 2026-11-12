@@ -5,7 +5,7 @@ import { afterEach,it,expect,vi } from 'vitest';
 import { ReportPresentation } from './report-presentation';
 import type { Report } from './schemas';
 afterEach(cleanup);
-const report:Report={reportId:90,version:2,status:'READY',basedOnInputVersion:3,referencedSnapshots:{calculation:12,comparison:null},selectedDocumentIds:[],createdAt:'2026-11-11T01:00:00Z',isCurrent:false};
+const report:Report={reportId:90,version:2,status:'READY',basedOnInputVersion:3,referencedSnapshots: {calculation:{snapshotId:12,version:1,inputVersion:1,createdAt:null,freshness:"CURRENT"},comparison:{snapshotId:null,version:null,inputVersion:1,createdAt:null,freshness:"CURRENT"}},selectedDocumentIds:[],createdAt:'2026-11-11T01:00:00Z',isCurrent:false};
 it('separates old READY files, preserves null snapshots and delegates downloads',()=>{
  const download=vi.fn();render(<ReportPresentation report={report} busy={false} downloadDisabled={false} download={download} feedback={null}/>);
  expect(screen.getByText('과거 입력 기준')).toBeVisible();expect(screen.getByRole('status')).toHaveTextContent('준비 완료');expect(screen.getByRole('list',{name:'보고서 다운로드'})).toBeVisible();expect(screen.getByText(/선택한 원본 없음/)).toBeVisible();

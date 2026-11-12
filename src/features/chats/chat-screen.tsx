@@ -109,16 +109,21 @@ export function StoredMessage({message:m,retry,busy,returnTo,currentScope}:{mess
  {m.status!=='COMPLETED'&&<p role="status">{m.status==='FAILED'?'답변 생성 실패':m.status==='CANCELLED'?'답변 중지됨':'답변 생성 중'}</p>}
  {m.errorCode&&<p className="v2-chat-warning">{m.errorCode}</p>}
  {m.sourceMayBeOutdated&&<p role="note" className="v2-chat-warning">주의: 최신 자료와 다를 수 있는 근거입니다.</p>}
- <details className="v2-chat-evidence"><summary>{m.role==='ASSISTANT'?`출처 ${m.sources.length}건 · 공식 결과 ${m.resultRefs.length}건`:'메시지 정보'}</summary><div>
+ <details className="v2-chat-evidence"><summary>{m.role==='ASSISTANT'?`출처 ${(m.sources?.length ?? "?")}건 · 공식 결과 ${(m.resultRefs?.length ?? "?")}건`:'메시지 정보'}</summary><div>
  <p>참조: {scopeLabel(m.scope)}</p><p>저장 상태: {m.status}</p>
- {!m.sources.length&&<p>연결된 문서 출처가 없습니다.</p>}
- {m.sources.map((source,i)=>{const c=source.caseId??caseId;return c?<ChatSource key={i} caseId={c} value={source} returnTo={returnTo}/>:<p key={i}>출처 #{source.documentId}: Case 정보가 없어 접근할 수 없습니다.</p>;})}
- {m.resultRefs.map((r,i)=>{const c=r.caseId??caseId;return <p key={i}>{r.type} · 스냅샷 #{r.snapshotId} · v{r.version} {c&&<Link className="underline" href={snapshotHref(c,r,returnTo)}>공식 결과 스냅샷 보기</Link>}</p>;})}
+ {m.sources===undefined&&<p>&#52636;&#52376; &#51221;&#48372; &#48120;&#51228;&#44277;</p>}
+ {m.sources?.length===0&&<p>연결된 문서 출처가 없습니다.</p>}
+ {(m.sources ?? []).map((source,i)=>{const c=source.caseId??caseId;return c?<ChatSource key={i} caseId={c} value={source} returnTo={returnTo}/>:<p key={i}>출처 #{source.documentId}: Case 정보가 없어 접근할 수 없습니다.</p>;})}
+ {(m.resultRefs ?? []).map((r,i)=>{const c=r.caseId??caseId;return <p key={i}>{r.type} · 스냅샷 #{r.snapshotId} · v{r.version} {c&&<Link className="underline" href={snapshotHref(c,r,returnTo)}>공식 결과 스냅샷 보기</Link>}</p>;})}
  </div></details>
  {m.role==='ASSISTANT'&&['FAILED','CANCELLED'].includes(m.status)&&<button className={secondaryButton} disabled={busy} onClick={retry}>실패·취소 답변 재시도</button>}</article>;
 }
 
-function ChatSource({caseId,value,returnTo}:{caseId:number;value:Message['sources'][number];returnTo?:string}){
+function ChatSource({caseId,value,returnTo}:{caseId:number;value:NonNullable<Message['sources']>[number];returnTo?:string}){
+ if(value.documentId===null)return <p>&#50896;&#48376; &#47928;&#49436; ID&#44032; &#51228;&#44277;&#46104;&#51648; &#50506;&#50520;&#49845;&#45768;&#45796;.</p>;
+ return <LinkedChatSource caseId={caseId} value={{...value,documentId:value.documentId}} returnTo={returnTo}/>;
+}
+function LinkedChatSource({caseId,value,returnTo}:{caseId:number;value:NonNullable<Message['sources']>[number]&{documentId:number};returnTo?:string}){
  const doc=useSourceDocument(caseId,value.documentId);
  if(doc.isPending||doc.isFetching)return <p>출처 접근 확인 중</p>;
  if(doc.isError||!doc.data)return <p>삭제되었거나 접근할 수 없는 출처입니다.</p>;

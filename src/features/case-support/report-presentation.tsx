@@ -24,7 +24,7 @@ export function ReportPresentation({ report:r, busy, downloadDisabled, download,
    </li>)}
   </ul>:<p>아직 다운로드할 수 없습니다.</p>}
   {busy&&<p role="status">다운로드 요청 중…</p>}
-  <details><summary>참조 스냅샷 · 기술 상세</summary><p>기준 입력 {r.basedOnInputVersion} · 보고서 버전 {r.version}</p><p>포함 원본 ID: {r.selectedDocumentIds.join(', ')||'없음'}</p><p>규칙 버전: {r.ruleSetVersions?.join(', ')??'미제공'}</p><dl>{Object.entries(r.referencedSnapshots).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value??'없음'}</dd></div>)}</dl></details>
+  <details><summary>참조 스냅샷 · 기술 상세</summary><p>기준 입력 {r.basedOnInputVersion} · 보고서 버전 {r.version}</p><p>포함 원본 ID: {r.selectedDocumentIds.join(', ')||'없음'}</p><p>규칙 버전: {r.ruleSetVersions?.join(', ')??'미제공'}</p><dl>{Object.entries(r.referencedSnapshots).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value.snapshotId??'없음'}</dd></div>)}</dl></details>
   {feedback}
  </article>;
 }

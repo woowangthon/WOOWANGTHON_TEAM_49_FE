@@ -16,11 +16,11 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
   const requests: { method: string; path: string; body?: unknown }[] = [];
   const definitions: Pick<Condition, "conditionId" | "question" | "type" | "options" | "requiredFor">[] = [
     { conditionId: "workplace_size", question: "상시 근로자 수를 알고 있나요?", type: "SELECT", options: ["LESS_THAN_5", "AT_LEAST_5", "UNKNOWN"], requiredFor: ["WAGE_CALCULATION"] },
-    { conditionId: "regular_minutes", question: "이 기간의 소정근로시간은 몇 분인가요?", type: "NUMBER", requiredFor: ["WAGE_CALCULATION"] },
-    { conditionId: "base_scope_confirmed", question: "임금의 기본 적용 범위를 확인했나요?", type: "BOOLEAN", requiredFor: ["WAGE_CALCULATION"] },
-    { conditionId: "comparison_basis_confirmed", question: "시급의 기간과 의미가 일치하나요?", type: "BOOLEAN", requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
-    { conditionId: "hours_basis_confirmed", question: "실근로시간의 기간과 의미가 일치하나요?", type: "BOOLEAN", requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
-    { conditionId: "base_pay_basis_confirmed", question: "기본급의 기간과 의미가 일치하나요?", type: "BOOLEAN", requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
+    { conditionId: "regular_minutes", question: "이 기간의 소정근로시간은 몇 분인가요?", type: "NUMBER", options: null, requiredFor: ["WAGE_CALCULATION"] },
+    { conditionId: "base_scope_confirmed", question: "임금의 기본 적용 범위를 확인했나요?", type: "BOOLEAN", options: null, requiredFor: ["WAGE_CALCULATION"] },
+    { conditionId: "comparison_basis_confirmed", question: "시급의 기간과 의미가 일치하나요?", type: "BOOLEAN", options: null, requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
+    { conditionId: "hours_basis_confirmed", question: "실근로시간의 기간과 의미가 일치하나요?", type: "BOOLEAN", options: null, requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
+    { conditionId: "base_pay_basis_confirmed", question: "기본급의 기간과 의미가 일치하나요?", type: "BOOLEAN", options: null, requiredFor: ["CONTRACT_ATTENDANCE_COMPARISON"] },
   ];
   function initialState(c: CaseDetailDto) {
     return { records: [] as ManualRecord[], transactions: [] as { transactionId: number; allocationId: number; data: ManualRecord["data"] }[], conditions: definitions.map(d => ({ ...d, value: null, status: "REQUIRED", source: null } as Condition)), observedVersion: c.inputVersion, job: null as null | { jobId: string; status: string; requestedInputVersion: number; errorCode: string | null }, polls: 0, resultVersion: 0, snapshotInputVersion:c.inputVersion, target:"recompute" };
@@ -148,7 +148,7 @@ export function inputMocks(getCases: () => CaseDetailDto[], baseUrl = "http://12
       const c = current(params.c); if (!c) return missing(); const body = await request.json(); requests.push({ method: request.method, path: new URL(request.url).pathname, body });
       const parsed = conditionsPutSchema.safeParse(body); if (!parsed.success) return apiResponse({ errorCode: "VALIDATION_ERROR", errors: parsed.error.issues.map(i => ({ field: i.path.join("."), reason: i.message })) }, 422);
       if (parsed.data.expectedInputVersion !== c.inputVersion) return apiResponse({ errorCode: "INPUT_VERSION_CONFLICT", details: { currentInputVersion: c.inputVersion, expectedInputVersion: parsed.data.expectedInputVersion } }, 409);
-      result(c); const s = state(c); parsed.data.answers.forEach(a => { const condition = s.conditions.find(v => v.conditionId === a.conditionId)!; condition.value = a.value; condition.status = a.value === "UNKNOWN" ? "UNKNOWN" : "ANSWERED"; });
+      result(c); const s = state(c); parsed.data.answers.forEach(a => { const condition = s.conditions.find(v => v.conditionId === a.conditionId)!; condition.source = "USER_INPUT"; condition.value = a.value; condition.status = a.value === "UNKNOWN" ? "UNKNOWN" : "ANSWERED"; });
       return apiResponse(schedule(c));
     }),
     http.get(`${baseUrl}/cases/:c/readiness`, ({ params }) => {

@@ -115,7 +115,9 @@ export function createApiClient(options: ClientOptions) {
       } catch (error) {
         assertCurrent(initial.generation, signal);
         if (error instanceof Error && error.name === "AbortError") throw error;
-        throw new ApiError(0, { kind: "network" });
+        const failure = new ApiError(0, { kind: "network" });
+        failure.diagnostic = {phase:"network"};
+        throw failure;
       }
       assertCurrent(initial.generation, signal);
       return { response, token };
@@ -135,12 +137,23 @@ export function createApiClient(options: ClientOptions) {
 
     if (!response.ok) {
       const error = await readApiError(response);
+      error.diagnostic = {phase:"http",httpStatus:response.status};
       assertCurrent(initial.generation, signal);
       if (response.status === 401 && authenticated) options.session.clear();
       throw error;
     }
 
-    const result = await read(response);
+    let result: T;
+    try { result = await read(response); }
+    catch (error) {
+      if (error instanceof ApiError && error.kind === "protocol") {
+        const wrapped = new ApiError(response.status, {kind: "protocol"});
+        wrapped.diagnostic = {...error.diagnostic, phase: error.diagnostic?.phase ?? "dto", httpStatus: response.status,
+          endpointTemplate: path.split("?")[0].split("/").map(part => /^\d+$/.test(part) ? "{id}" : ["cases","workplaces","documents","chats","reports","conditions","questions","results","auth","refresh","login","consultation-centers","company-inquiry","messages","preview","file"].includes(part) || !part ? part : "*").join("/")};
+        throw wrapped;
+      }
+      throw error;
+    }
     assertCurrent(initial.generation, signal);
     return result;
   }
@@ -192,7 +205,7 @@ export function createApiClient(options: ClientOptions) {
     },
     requestSse(path: string, init: ApiRequestOptions = {}): Promise<ReadableStream<Uint8Array>> {
       return request(path, init, "text/event-stream", async (response) => {
-        if (response.status !== (init.expectedStatus ?? 200) || !hasMediaType(response, "text/event-stream") || !response.body) throw protocolError();
+        if (response.status !== (init.expectedStatus ?? 200) || !hasMediaType(response, "text/event-stream") || !response.body) throw protocolError(response.status, hasMediaType(response,"text/event-stream") ? "sse" : "media-type");
         return response.body;
       });
     },
