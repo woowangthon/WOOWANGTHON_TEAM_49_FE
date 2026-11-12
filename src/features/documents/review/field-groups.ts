@@ -20,5 +20,9 @@ export function groupReviewFields(fields: ExtractedField[], documentType: Docume
 }
 
 export function isExtractionMissing(field: ExtractedField) {
-  return field.value === null || field.status === "MISSING" || field.status === "UNREADABLE";
+  return hasMissingFieldValue(field) || field.status === "MISSING" || field.status === "UNREADABLE";
+}
+
+export function hasMissingFieldValue(field: ExtractedField) {
+  return field.value == null || (typeof field.value === "string" && field.value.trim() === "");
 }

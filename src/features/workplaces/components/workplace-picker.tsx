@@ -3,7 +3,7 @@ import { translate } from "@/i18n/translate";
 
 
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import { Pagination } from "@/components/ui/pagination";
 import { QueryFeedback } from "@/components/ui/query-feedback";
@@ -11,7 +11,7 @@ import { secondaryButton } from "@/components/ui/styles";
 
 import { useWorkplaces } from "../queries";
 
-export function WorkplacePicker({ value, onChange }: { value: number | null; onChange: (id: number, name: string) => void }) {
+export function WorkplacePicker({ value, onChange, action }: { action?: ReactNode; value: number | null; onChange: (id: number, name: string) => void }) {
   const [page, setPage] = useState(1);
   const id = useId();
   const query = useWorkplaces(page);
@@ -25,7 +25,7 @@ export function WorkplacePicker({ value, onChange }: { value: number | null; onC
         </div>
         <Pagination page={query.data.page} size={query.data.size} total={query.data.total} onPage={(next) => { setPage(next); }} busy={query.isFetching} />
       </>}
-      <Link href="/workplaces/new" className={secondaryButton}>{translate("workplaces.workplacePicker_new_workplace_create")}</Link>
+      <div className="flex flex-wrap items-center gap-2"><Link href="/workplaces/new" className={secondaryButton}>{translate("workplaces.workplacePicker_new_workplace_create")}</Link>{action}</div>
     </fieldset>
   );
 }

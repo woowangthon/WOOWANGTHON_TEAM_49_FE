@@ -12,7 +12,7 @@ import { useFields, useReviewAction } from "../queries";
 import { updateMetaSchema } from "../schemas";
 import type { ExtractedField, ReviewContext, SourceDto, UpdateMeta } from "../schemas";
 import { fieldView, reviewError } from "../view-models";
-import { groupReviewFields, isExtractionMissing } from "../field-groups";
+import { groupReviewFields, hasMissingFieldValue, isExtractionMissing } from "../field-groups";
 import { discardChanges } from "../use-unsaved";
 import { FieldEditor } from "./field-editor";
 import { FieldHistory } from "./field-history";
@@ -33,14 +33,14 @@ export function FieldsPanel({actionsDisabled=false,fields,context,inputVersion,o
     setError("");try{const data=await mutation.mutateAsync({type:"case-field",fieldId:field.fieldId,patch:{confirmed},version:inputVersion});setReceipt(updateMetaSchema.parse(data));}catch(e){setError(reviewError(e));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}
   };
   const edit=(fieldId:number,scope:"case"|"shared")=>{if(dirty&&!discardChanges())return;setEditor({fieldId,scope});};
-  const renderField=(field:ExtractedField)=>{const vm=fieldView(field);const absent=isExtractionMissing(field);return <article id={`review-field-${field.fieldId}`} tabIndex={-1} aria-label={field.label} key={field.fieldId} data-review-field data-missing={absent} data-confirmed={field.status==="CONFIRMED"} className={styles.field}>
+  const renderField=(field:ExtractedField)=>{const vm=fieldView(field);const absent=hasMissingFieldValue(field);return <article id={`review-field-${field.fieldId}`} tabIndex={-1} aria-label={field.label} key={field.fieldId} data-review-field data-missing={absent} data-confirmed={field.status==="CONFIRMED"} className={styles.field}>
       <div className={styles.fieldHeading}><h3>{field.label}</h3><span className={absent?styles.missingBadge:field.status==="CONFIRMED"?styles.confirmedBadge:field.status==="CONFLICTED"?styles.missingBadge:styles.requiredBadge}>{absent?<><CircleAlert size={13} aria-hidden="true" />{translate("documents.fieldsPanel_extraction")}</>:field.status==="CONFIRMED"?<><Check size={13} aria-hidden="true" />{vm.statusLabel}</>:field.status==="CONFLICTED"?translate("documents.fieldsPanel_span2"):translate("documents.fieldsPanel_count_confirm")}</span></div>
-      <p data-review-value className={styles.fieldValue}>{vm.valueLabel}{field.value!==null&&vm.unitLabel&&<span>{vm.unitLabel}</span>}</p>
-      {absent&&<p className={styles.missingHint}>{translate("documents.fieldsPanel_original_input", { value1: vm.statusLabel, value2: field.status==="UNREADABLE"?translate("documents.fieldsPanel_document_failure"):translate("documents.fieldsPanel_document_failure_2") })}</p>}
+      {!absent&&<p data-review-value className={styles.fieldValue}>{vm.valueLabel}{field.value!==null&&vm.unitLabel&&<span>{vm.unitLabel}</span>}</p>}
+      {absent&&<p className={styles.missingHint}>{translate("documents.fieldsPanel_original_input")}</p>}
       {(field.status==="DEFERRED"||field.status==="NEEDS_RECONFIRMATION")&&<p className={styles.missingHint}>{translate("documents.fieldsPanel_current_original_comparison_edit_confirm", { value1: vm.statusLabel })}</p>}
       {field.status==="CONFLICTED"&&<p className={styles.missingHint}>{translate("documents.fieldsPanel_original_comparison_applicable_edit")}</p>}
       <div className={styles.fieldActions}>
-        {field.status!=="CONFIRMED"&&<button className={`${primaryButton} ${styles.confirmValue}`} disabled={actionsDisabled||!vm.canEdit||absent||mutation.isPending||conflict||dirty||!!editor} onClick={()=>{void perform(field,true);}}><Check size={15} aria-hidden="true" />{translate("documents.fieldsPanel_confirm")}</button>}
+        {field.status!=="CONFIRMED"&&<button className={`${primaryButton} ${styles.confirmValue}`} disabled={actionsDisabled||!vm.canEdit||isExtractionMissing(field)||mutation.isPending||conflict||dirty||!!editor} onClick={()=>{void perform(field,true);}}><Check size={15} aria-hidden="true" />{translate("documents.fieldsPanel_confirm")}</button>}
 
         <button aria-label={translate("documents.fieldsPanel_case_edit")} className={`${secondaryButton} ${absent?styles.enterValue:styles.editValue}`} disabled={actionsDisabled||!vm.canEdit||mutation.isPending||(!!editor&&editor.fieldId!==field.fieldId)} onClick={()=>edit(field.fieldId,"case")}>{translate("documents.fieldsPanel_edit")}</button>
         <button className={styles.sourceButton} onClick={()=>onSource(field.source)}>{translate("documents.fieldsPanel_original_evidence")}<ArrowUpRight size={14} aria-hidden="true" /></button>
@@ -53,7 +53,7 @@ export function FieldsPanel({actionsDisabled=false,fields,context,inputVersion,o
         <button className={secondaryButton} onClick={()=>setHistory(history===field.fieldId?undefined:field.fieldId)}>{history===field.fieldId?translate("documents.fieldsPanel_history_close"):translate("documents.fieldHistory_editHistory")}</button>
         </div></div></details>
       {history===field.fieldId&&<FieldHistory caseId={context.caseId} documentId={context.documentId} fieldId={field.fieldId} />}
-      {!actionsDisabled&&vm.canEdit&&editor?.fieldId===field.fieldId&&<section aria-label={translate("documents.fieldsPanel_select_field")}><h3 className="font-bold">{translate("documents.fieldsPanel_section", { value1: field.label })}</h3><FieldEditor key={`${field.fieldId}-${editor.scope}`} field={field} scope={editor.scope} context={context} version={inputVersion} onClose={()=>setEditor(undefined)} onDirty={onDirty} onSaved={setReceipt} linkedCaseIds={linkedCaseIds} /></section>}
+      {!actionsDisabled&&vm.canEdit&&editor?.fieldId===field.fieldId&&<section aria-label={translate("documents.fieldsPanel_select_field")}><FieldEditor key={`${field.fieldId}-${editor.scope}`} field={field} scope={editor.scope} context={context} version={inputVersion} onClose={()=>setEditor(undefined)} onDirty={onDirty} onSaved={setReceipt} linkedCaseIds={linkedCaseIds} /></section>}
     </article>;};
   return <section data-ui="documents-fieldsPanel_ariaLabel_section2" aria-label={translate("documents.fieldsPanel_extraction_field")} className={styles.fieldsPanel} data-review-groups>
     <header className={styles.panelHeading}><span className={styles.panelIcon}><ScanText size={21} aria-hidden="true" /></span><div><h2>{translate("documents.fieldsPanel_content")}</h2><p>{translate("documents.fieldsPanel_original_confirm")}</p></div></header>

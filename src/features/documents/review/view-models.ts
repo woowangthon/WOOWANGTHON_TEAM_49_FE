@@ -11,7 +11,6 @@ export function fieldEditorView(field: ExtractedField, unknownShared = false) {
   const structured = field.value !== null && typeof field.value === "object";
   return {kind: structured ? "structured" as const : "scalar" as const,
     text: unknownShared || field.value === null ? "" : structured ? JSON.stringify(field.value, null, 2) : String(field.value),
-    empty: !unknownShared && field.value === null, confirmed: false,
     scalar: typeof field.value === "number" || field.valueType === "MONEY_KRW" ? "number" as const : typeof field.value === "boolean" ? "boolean" as const : "string" as const};
 }
 export function reviewStateView(processingStatus: string, reviewStatus: string) {
@@ -52,6 +51,7 @@ export function parseFieldValue(field: ExtractedField, text: string, empty: bool
     const value=Number(text);if(field.valueType === "MONEY_KRW" && !Number.isSafeInteger(value)) throw new Error(translate("documents.viewModels_unit_count_input"));return value;
   }
   if((scalar??typeof field.value) === "boolean") {if(text !== "true" && text !== "false") throw new Error(translate("documents.viewModels_select"));return text === "true";}
+  if(!text.trim()) throw new Error(translate("documents.fieldEditor_confirm"));
   return text;
 }
 
