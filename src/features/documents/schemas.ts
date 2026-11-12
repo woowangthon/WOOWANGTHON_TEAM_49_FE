@@ -1,7 +1,14 @@
 import { z } from "zod";
 
 const id = z.number().int().positive();
+// Concrete types a user can choose explicitly.
 export const documentTypes = ["CONTRACT", "ATTENDANCE", "PAYSLIP", "DEPOSIT"] as const;
+// P0 DocumentDTO/upload: AUTO = classified by the agent; stays AUTO until classification succeeds.
+export const uploadDocumentTypes = ["AUTO", ...documentTypes] as const;
+export type ConcreteDocumentType = typeof documentTypes[number];
+// errorCode values that need a document type decision rather than a reprocess (P0 PATCH document type).
+export const documentTypeErrorCodes = ["DOCUMENT_TYPE_MISMATCH", "DOCUMENT_TYPE_UNRESOLVED"] as const;
+export const documentTypePatchSchema = z.strictObject({ documentType: z.enum(uploadDocumentTypes) });
 export const processingStatuses = ["UPLOADED", "PROCESSING", "READ_READY", "READY", "REVIEW_REQUIRED", "FAILED"] as const;
 export const processingSchema = z.enum(processingStatuses);
 export const linkSchema = z.object({
@@ -12,7 +19,7 @@ export const linkSchema = z.object({
 // P0 DocumentDTO: no nested link; nullable is distinct from missing.
 export const caseDocumentSchema = z.object({
   documentId: z.number().int(), workplaceId: z.number().int(),
-  documentType: z.enum(documentTypes), fileName: z.string(), processingStatus: processingSchema,
+  documentType: z.enum(uploadDocumentTypes), fileName: z.string(), processingStatus: processingSchema,
   reviewStatus: z.enum(["NOT_STARTED", "IN_PROGRESS", "CONFIRMED"]),
   progress: z.number().int(), linkId: z.number().int().nullable(),
   linkedCaseIds: z.array(z.number().int()), uploadedAt: z.string(),

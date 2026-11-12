@@ -8,8 +8,8 @@ import { TextField } from "@/components/ui/text-field";
 import { WorkplacePicker } from "@/features/workplaces/components/workplace-picker";
 import { cardStyle, secondaryButton } from "@/components/ui/styles";
 import { useDocuments } from "../queries";
-import { documentTypes, processingStatuses, type DocumentContext } from "../schemas";
-import { statusLabels, typeLabels } from "../view-models";
+import { uploadDocumentTypes, processingStatuses, type DocumentContext } from "../schemas";
+import { statusLabels, storedTypeLabel } from "../view-models";
 import { DocumentCard } from "./document-card";
 import styles from "./workplace-documents.module.css";
 import libraryStyles from "./library.module.css";
@@ -61,7 +61,7 @@ function FilteredDocumentList({ context, inputVersion, selectableCaseId, canConn
         <div className="mt-4"><button type="button" className={`mb-4 ${secondaryButton}`} onClick={() => chooseWorkplace(null)}>전체 근무지</button><WorkplacePicker value={workplaceId} onChange={chooseWorkplace} /></div>
       </details>}
       <div className={libraryView ? libraryStyles.controls : workplaceView ? styles.filterControls : "grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3"}>
-        {workplaceView ? <div className={styles.types} role="group" aria-label="문서 유형 필터">{[["", "전체"], ...documentTypes.map(type => [type, typeLabels[type]])].map(([value, label]) => <button key={value} type="button" aria-pressed={documentType === value} onClick={() => { setDocumentType(value); setPage(1); }}>{label}</button>)}</div> : context.kind !== "case" && <SelectField id={`${id}-type`} label="문서 유형 필터" value={documentType} onChange={e => { setDocumentType(e.target.value); setPage(1); }}><option value="">전체 유형</option>{documentTypes.map(t => <option key={t} value={t}>{typeLabels[t]}</option>)}</SelectField>}
+        {workplaceView ? <div className={styles.types} role="group" aria-label="문서 유형 필터">{[["", "전체"], ...uploadDocumentTypes.map(type => [type, storedTypeLabel(type)])].map(([value, label]) => <button key={value} type="button" aria-pressed={documentType === value} onClick={() => { setDocumentType(value); setPage(1); }}>{label}</button>)}</div> : context.kind !== "case" && <SelectField id={`${id}-type`} label="문서 유형 필터" value={documentType} onChange={e => { setDocumentType(e.target.value); setPage(1); }}><option value="">전체 유형</option>{uploadDocumentTypes.map(t => <option key={t} value={t}>{storedTypeLabel(t)}</option>)}</SelectField>}
         {context.kind === "library" && <SelectField id={`${id}-status`} label="처리 상태 필터" value={processingStatus} onChange={e => { setProcessingStatus(e.target.value); setPage(1); }}><option value="">전체 상태</option>{processingStatuses.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}</SelectField>}
         <TextField id={`${id}-search`} label="현재 페이지 파일명 검색" placeholder={workplaceView || libraryView ? "파일 이름으로 찾아보세요" : undefined} value={search} onChange={e => setSearch(e.target.value)} />
       </div>

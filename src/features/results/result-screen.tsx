@@ -1,4 +1,5 @@
 "use client";
+import { ArrowRight, Info } from "lucide-react";
 import { jobText } from "@/features/documents/api";
 import { useCase } from "@/features/cases/queries";
 import styles from "./result-screen.module.css";
@@ -35,16 +36,16 @@ export function ResultScreen({caseId, selection, returnTo}:{caseId:number;compar
  const detail=useResultJob(caseId,jobText(job?.jobId),jobText(job?.status));
  const busy=execution.isPending || status.isPending || status.isError || !!status.awaitingScheduledJob || (!!status.data && recomputeActive(status.data));
  return <div className={styles.screen}>
- <header className={styles.header}><div><p className={styles.eyebrow}>내 급여 살펴보기</p><h1>내 임금, 어디까지 확인됐을까요?</h1><p>계산된 금액부터 차이가 생긴 이유까지 확인해 보세요.</p></div><Link className={styles.headerLink} href={`/cases/${caseId}/reports`}>상담 자료 준비 →</Link></header>
+ <header className={styles.header}><div><p className={styles.eyebrow}>내 급여 살펴보기</p><h1>내 임금, 어디까지 확인됐을까요?</h1><p>계산된 금액부터 차이가 생긴 이유까지 확인해 보세요.</p></div><Link className={styles.headerLink} href={`/cases/${caseId}/reports`}>상담 자료 준비<ArrowRight size={16} aria-hidden="true"/></Link></header>
  {!context.data && <QueryFeedback pending={context.isPending} error={context.error} retry={()=>void context.refetch()}/>}
 
- <p>차이 발견은 미지급임금 확정을 의미하지 않습니다. 공제액의 적법성이나 세금·보험료의 적정성을 판단하지 않습니다.</p>
  {returnTo&&<Link href={returnTo} className={secondaryButton}>원래 채팅으로 돌아가기</Link>}{selection!==undefined&&<SelectedSnapshot caseId={caseId} selection={selection}/>}
  {!q.data ? <QueryFeedback pending={q.isPending} error={q.error} retry={()=>void q.refetch()}/> : <>
  {q.isError && <><p role="alert">최신 결과 조회에 실패해 직전 조회 결과를 보존합니다. 최신성을 다시 확인해 주세요.</p><QueryFeedback error={q.error} retry={()=>void q.refetch()}/></>}
  {execution.isError && <><p role="alert">작업을 접수하지 못했습니다. 최신 입력 버전과 실행 가능성을 확인해 주세요. 상태 조회는 작업을 중복 생성하지 않습니다.</p><QueryFeedback error={execution.error} retry={()=>{void q.refetch();void status.refetch();}}/></>}{execution.data && <p role="status">수동 작업 접수: {execution.data.jobId} · {statusLabels[execution.data.status]}</p>}
  {q.data.interpretation==="interpretation-error" && <p role="alert">&#44208;&#44284; &#54364;&#49884; &#54644;&#49437;&#50640; &#49892;&#54056;&#54664;&#49845;&#45768;&#45796;. &#50896;&#48376; &#45936;&#51060;&#53552;&#45716; &#48372;&#51316;&#54664;&#49845;&#45768;&#45796;.</p>}
  {q.data.interpretation!=="interpretation-error" && <div className={styles.overview}><ResultSummary compare={false} value={{...vm!,title:q.isError?"직전 조회 결과 · 최신성 미확인":vm!.title}}/><ResultNextSteps value={vm!} caseId={caseId}/></div>}
+ <p className={styles.notice}><Info size={16} aria-hidden="true"/><span>차이 발견은 미지급임금 확정을 의미하지 않습니다. 공제액의 적법성이나 세금·보험료의 적정성을 판단하지 않습니다.</span></p>
  {q.data.freshness.overall==="FAILED"&&<p role="alert">이전 결과를 보존합니다. <button className={secondaryButton} onClick={()=>{void q.refetch();void status.refetch();}}>갱신 상태 다시 확인</button> 아래 보조 관리에서 재실행할 수 있습니다.</p>}
  {q.data.interpretation!=="interpretation-error" && <ResultExplorer key={caseId} data={q.data} compare={false} freshnessUnverified={q.isError} after={<details className={cardStyle}><summary>부족한 정보 보완하기</summary><p>원문 확인과 조건 보완으로 계산 가능한 범위를 넓혀 보세요.</p><nav className="my-4 flex flex-wrap gap-3"><Link className={secondaryButton} href={`/cases/${caseId}/review`}>원문 검토</Link><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>조건 보완</Link><Link className={secondaryButton} href={`/cases/${caseId}/manual-records`}>수기 입력 보완</Link></nav><details><summary>실행 가능성과 부족한 입력 상세</summary><InputStatus caseId={caseId} compact/></details></details>}/>}
  <details className={cardStyle}><summary className="font-bold">입금 거래·배분 관리 및 별도 입금 대조 이력</summary><p>이 영역은 별도 입금 조회 시점의 결과입니다. 위 결과와 버전·최신성을 각각 확인하세요.</p><DepositComparisonPanel caseId={caseId}/></details>
@@ -59,7 +60,7 @@ export function ResultScreen({caseId, selection, returnTo}:{caseId:number;compar
 
  <details><summary>전체 서버 결과·추가 근거</summary><ServerValue value={q.data} caseId={caseId}/></details>
  </details>
- <details className={cardStyle}><summary>상담 준비와 후속 행동</summary><SupportLinks caseId={caseId}/></details><nav data-case-next aria-label="결과 관련 화면"><div><h2>확인할 질문을 준비해 볼까요?</h2><p>부족한 자료와 회사에 물어볼 내용을 정리해요.</p></div><Link className={secondaryButton} href={`/cases/${caseId}/questions`}>확인 질문·상담 준비</Link></nav>
+ <section className={styles.support}><h2>결과를 바탕으로 다음을 준비해요</h2><SupportLinks caseId={caseId}/></section><nav data-case-next aria-label="결과 관련 화면"><div><h2>확인할 질문을 준비해 볼까요?</h2><p>부족한 자료와 회사에 물어볼 내용을 정리해요.</p></div><Link className={secondaryButton} href={`/cases/${caseId}/questions`}>확인 질문·상담 준비</Link></nav>
  </>}</div>;
 }
 

@@ -34,6 +34,7 @@ const apps:AppServices[]=[];const NativeURL=URL;
 const context={caseId:15,workplaceId:3,documentId:101};
 beforeAll(()=>{HTMLDialogElement.prototype.showModal=function(){this.setAttribute("open","");};HTMLDialogElement.prototype.close=function(){this.removeAttribute("open");};});
 beforeEach(async()=>{
+  HTMLElement.prototype.scrollTo=vi.fn();
   vi.stubGlobal("FormData",(await new Response(new URLSearchParams()).formData()).constructor);vi.stubGlobal("File",NodeFile);
   vi.stubGlobal("URL",class extends NativeURL {static createObjectURL=vi.fn(()=>"blob:local-review-resource");static revokeObjectURL=vi.fn();});
 });

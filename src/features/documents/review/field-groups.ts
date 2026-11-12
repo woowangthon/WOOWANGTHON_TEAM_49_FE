@@ -3,6 +3,7 @@ import type { ExtractedField } from "./schemas";
 
 // Presentation priorities only. All returned fields retain their server review state.
 const essentialKeys: Record<DocumentDto["documentType"], readonly string[]> = {
+  AUTO: [],
   PAYSLIP: ["periodStart", "periodEnd", "grossPay", "deductions", "totalDeductions", "netPay"],
   CONTRACT: ["periodStart", "periodEnd", "payType", "hourlyWage", "monthlyBasePay", "regularMinutes"],
   ATTENDANCE: ["workDate", "clockIn", "clockOut", "breakMinutes"],

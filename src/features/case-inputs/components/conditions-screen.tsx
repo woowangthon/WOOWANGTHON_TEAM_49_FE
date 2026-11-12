@@ -12,8 +12,6 @@ import { QueryFeedback } from "@/components/ui/query-feedback";
 import { ApiError } from "@/lib/api/error";
 import { businessErrorMessage } from "@/lib/api/form-errors";
 import { useConditions, useInputAction } from "../queries";
-import { InputStatus } from "./input-status";
-import { cardStyle, secondaryButton } from "@/components/ui/styles";
 import { type Condition, type Conditions } from "../schemas";
 import { answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation, conditionTitle, conditionValues, editableCondition } from "../condition-presentation";
 import { ConditionDuration } from "./condition-duration";
@@ -201,7 +199,5 @@ export function ConditionsForm({ caseId, initial, reload }: { caseId: number; in
         {(conflict || errors.root?.server) && <button className={styles.textButton} type="button" disabled={isSubmitting} onClick={() => { if (!hasDraft || window.confirm("편집 초안을 버리고 최신 질문과 답변을 불러올까요?")) void refresh().catch(error => setError("root.server", { message: businessErrorMessage(error) })); }}>최신 질문·답변 다시 불러오기</button>}
       </footer>
     </form>
-    <details className={cardStyle}><summary>실행 가능성·자동 갱신 상태</summary><InputStatus caseId={caseId} compact /></details>
-    <details className={cardStyle}><summary>자료 보완하기</summary><nav className="flex flex-wrap gap-3" aria-label="계산 조건 탐색"><Link className={secondaryButton} href={`/cases/${caseId}/manual-records`}>수기 자료 입력·관리</Link><Link className={secondaryButton} href={`/cases/${caseId}/upload`}>문서 자료 등록</Link></nav></details>
   </div>;
 }

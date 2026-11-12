@@ -51,7 +51,7 @@ export function ResultDetail({ caseId, card, groupId, onClose }: { caseId: numbe
     <p className={styles.guidance}>{mismatched ? "기간·단위·의미가 일치하지 않습니다. 비교 기준을 확인해 주세요." : card.status === "DIFFERENCE" ? "자료에 기재된 값이 달라요. 원문과 추가 자료를 확인해 주세요." : card.status === "MATCH" ? "현재 비교한 자료의 값이 일치해요." : card.status === "INSUFFICIENT_INFORMATION" ? "미확인 값은 0이 아닙니다. 원문과 입력 조건을 보완해 주세요." : card.status === "REVIEW_REQUIRED" ? "원문과 적용 조건을 검토해 주세요." : "계산에 사용한 값과 적용 조건을 함께 확인해 주세요."}</p>
     {groupId !== "calculation" && <p className={styles.disclaimer}>차이는 현재 비교 범위의 값이며, 확정된 미지급임금이 아니에요.</p>}
     <section className={styles.section} aria-label="원문 근거"><h4 className={styles.sourceHeading}><span>원문 근거</span>{!sources.length&&<Link href={`/cases/${caseId}/review`}>문서 검토로 이동<ArrowRight size={14} aria-hidden="true"/></Link>}</h4>
-      {sources.length ? <div className={styles.sources}>{sources.map((source, index) => <SourceEvidence key={index} caseId={caseId} value={record(source) ?? {}}/>)}</div> : <p className={styles.empty}>이 결과에 연결된 원문 근거가 제공되지 않았어요.</p>}
+      {sources.length ? <div className={styles.sources}>{sources.map((source, index) => <SourceEvidence key={index} caseId={caseId} value={record(source) ?? {}} compact/>)}</div> : <p className={styles.empty}>이 결과에 연결된 원문 근거가 제공되지 않았어요.</p>}
     </section>
     {Object.keys(remaining).length > 0 && <section className={`${styles.section} ${styles.additional}`} aria-label="추가 정보"><h4>추가 정보</h4><ServerValue caseId={caseId} value={remaining} unit={card.unit}/></section>}
     {typeof card.data.nextAction === "string" && <p className={styles.nextAction}>{card.data.nextAction}</p>}

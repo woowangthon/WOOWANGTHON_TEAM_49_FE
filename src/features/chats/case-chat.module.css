@@ -1,0 +1,11 @@
+.trigger { position: fixed; z-index: 40; right: max(20px, env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom)); display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; color: white; background: #3568db; box-shadow: 0 8px 30px #3568db50; }
+.panel { position: fixed; inset: auto 20px calc(90px + env(safe-area-inset-bottom)) auto; margin: 0; width: min(480px, calc(100vw - 40px)); max-width: none; height: min(760px, calc(100dvh - 120px)); max-height: none; padding: 0; border: 1px solid #dce3ef; border-radius: 20px; color: var(--color-foreground); background: var(--color-surface); box-shadow: 0 16px 60px #172a4630; }
+.panel[open] { display: flex; flex-direction: column; }
+.panel::backdrop { background: #172a4620; }
+.header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid #dce3ef; }
+.header button { display: grid; place-items: center; min-width: 44px; min-height: 44px; }
+.body { flex: 1; min-height: 0; overflow: auto; padding: 16px; overscroll-behavior: contain; }
+.body :global(.v2-chat-conversation) { height: min(520px, 58dvh); }
+.body :global(.v2-chat-shell) { width: 100%; }
+.trigger:focus-visible, .panel button:focus-visible { outline: 3px solid #668be6; outline-offset: 3px; }
+@media (max-width: 600px) { .panel { inset: 0; width: 100%; height: 100dvh; border-radius: 0; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); } .trigger { bottom: calc(80px + env(safe-area-inset-bottom)); } .body :global(.v2-chat-conversation) { height: min(620px, 65dvh); } }

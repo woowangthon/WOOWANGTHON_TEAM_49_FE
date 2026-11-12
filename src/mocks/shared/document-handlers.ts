@@ -1,8 +1,26 @@
-import { linkCreateSchema, linkPatchSchema } from "@/features/documents/schemas";
+import { documentTypePatchSchema, linkCreateSchema, linkPatchSchema } from "@/features/documents/schemas";
 import { http, HttpResponse } from "msw";
-import type { DocumentDto } from "@/features/documents/schemas";
+import type { ConcreteDocumentType, DocumentDto } from "@/features/documents/schemas";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 import { apiResponse } from "./response";
+// Mock-only stand-in for the agent's classifier: a file name keyword, never a real reading.
+const mockTypeKeywords: [RegExp, ConcreteDocumentType][] = [[/계약/, "CONTRACT"], [/근태|출퇴근|출근/, "ATTENDANCE"], [/입금|거래내역|통장/, "DEPOSIT"], [/명세/, "PAYSLIP"]];
+/** Finish mock processing like the backend: AUTO takes the detected type; a conflict needs a user decision. */
+export function settleMockDocument(doc: DocumentDto) {
+  const detected = mockTypeKeywords.find(([pattern]) => pattern.test(doc.fileName))?.[1];
+  const metadata: Record<string, NonNullable<DocumentDto["aiMetadata"]>[string]> = { ...(doc.aiMetadata ?? {}) };
+  delete metadata.detectedType;
+  doc.progress = 100;
+  if (doc.documentType === "AUTO" && !detected) Object.assign(doc, { processingStatus: "REVIEW_REQUIRED", errorCode: "DOCUMENT_TYPE_UNRESOLVED" });
+  else if (doc.documentType !== "AUTO" && detected && detected !== doc.documentType) {
+    Object.assign(doc, { processingStatus: "REVIEW_REQUIRED", errorCode: "DOCUMENT_TYPE_MISMATCH" });
+    metadata.detectedType = detected;
+  } else {
+    if (doc.documentType === "AUTO" && detected) { doc.documentType = detected; metadata.detectedType = detected; }
+    Object.assign(doc, { processingStatus: "READY", errorCode: null });
+  }
+  doc.aiMetadata = metadata;
+}
 // Explicit wire projection: internal mock link records never leak into DocumentDTO.
 export function caseDocumentResponse(d: DocumentDto, linkId: number | null) {
   return { ...d, linkId };
@@ -46,6 +64,16 @@ export function documentMocks(cases: CaseDetailDto[], testApiUrl = "http://127.0
     http.patch(`${testApiUrl}/cases/:c/document-links/:l`, async ({request, params}) => { const body = await request.json() as Record<string, unknown>; record(request, body); const c = Number(params.c); if (!(request.method === "POST" ? linkCreateSchema : linkPatchSchema).safeParse(body).success) return error("VALIDATION_ERROR", 422); if (conflict(c, body)) return error("INPUT_VERSION_CONFLICT"); const link = links.find(l => l.linkId === Number(params.l))!; Object.assign(link, Object.fromEntries(Object.entries(body).filter(([key]) => key !== "expectedInputVersion"))); return apiResponse({...link, inputVersion: bump(c)}); }),
     http.delete(`${testApiUrl}/cases/:c/document-links/:l`, async ({request, params}) => { record(request); const c = Number(params.c); const link = links.find(l => l.linkId === Number(params.l))!; if (!link) return error("RESOURCE_NOT_FOUND", 404); links = links.filter(l => l !== link); const dto = documents.find(d => d.documentId === link.documentId)!; dto.linkedCaseIds = dto.linkedCaseIds!.filter(id => id !== c); bump(c); return new HttpResponse(null, {status:204}); }),
     http.get(`${testApiUrl}/workplaces/:w/documents/:d/deletion-impact`, ({request, params}) => { record(request); const dto = documents.find(d => d.documentId === Number(params.d)); if (!dto) return error("RESOURCE_NOT_FOUND", 404); return apiResponse({documentId: dto.documentId, affectedCaseIds: dto.linkedCaseIds, linkedCaseCount: dto.linkedCaseIds!.length, derivedTransactionIds: [], downloadedExternalCopiesCannotBeRecalled: true}); }),
+    http.patch(`${testApiUrl}/workplaces/:w/documents/:d`, async ({request, params}) => {
+      const body = await request.json().catch(() => null) as Record<string, unknown> | null; record(request, body ?? undefined);
+      const parsed = documentTypePatchSchema.safeParse(body); if (!parsed.success) return error("VALIDATION_ERROR", 422);
+      const dto = documents.find(d => d.documentId === Number(params.d)); if (!dto) return error("RESOURCE_NOT_FOUND", 404);
+      if (["UPLOADED", "PROCESSING"].includes(dto.processingStatus)) return error("DOCUMENT_STILL_PROCESSING");
+      const metadata: Record<string, NonNullable<DocumentDto["aiMetadata"]>[string]> = { ...(dto.aiMetadata ?? {}), legacyAutoExtract: true };
+      delete metadata.detectedType;
+      Object.assign(dto, { documentType: parsed.data.documentType, processingStatus: "PROCESSING", progress: 40, errorCode: null, aiMetadata: metadata });
+      return apiResponse(dto, 202);
+    }),
     http.delete(`${testApiUrl}/workplaces/:w/documents/:d`, ({request, params}) => { record(request); if (new URL(request.url).searchParams.get("confirm") !== "true") return error("DOCUMENT_SHARED_REFERENCES_EXIST"); documents.splice(0, documents.length, ...documents.filter(d => d.documentId !== Number(params.d))); links = links.filter(l => l.documentId !== Number(params.d)); return new HttpResponse(null, {status:204}); }),
     http.get(`${testApiUrl}/cases/:c/recompute-status`, ({request, params}) => { record(request); return apiResponse({caseId: Number(params.c), currentInputVersion: current(Number(params.c)).inputVersion, results: {}, activeJob: null, pending: 0, running: 0, latestJob: {status: "PARTIAL"}}); }),
   ];
