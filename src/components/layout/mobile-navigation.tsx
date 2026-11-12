@@ -1,9 +1,11 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 
 import { Menu, X } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
-export function MobileNavigation({ children, label="메뉴", title="월급잇다 메뉴", breakpoint="64rem" }: { children: ReactNode; label?:string; title?:string; breakpoint?:string }) {
+export function MobileNavigation({ children, label=translate("navigation.mobileNavigation_menu"), title=translate("navigation.mobileNavigation_monthlyWage_menu"), breakpoint="64rem" }: { children: ReactNode; label?:string; title?:string; breakpoint?:string }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dialogId = useId();
@@ -34,7 +36,7 @@ export function MobileNavigation({ children, label="메뉴", title="월급잇다
       <button
         ref={triggerRef}
         type="button"
-        aria-label={`${label} 열기`}
+        aria-label={translate("navigation.mobileNavigation_ariaLabel_button", { value1: label })}
         aria-haspopup="dialog"
         aria-controls={dialogId}
         className="grid size-11 place-items-center rounded-control"
@@ -64,7 +66,7 @@ export function MobileNavigation({ children, label="메뉴", title="월급잇다
           <h2 id={titleId} className="font-bold">{title}</h2>
           <button
             type="button"
-            aria-label={`${label} 닫기`}
+            aria-label={translate("navigation.mobileNavigation_close", { value1: label })}
             autoFocus
             className="grid size-11 shrink-0 place-items-center rounded-control"
             onClick={() => dialogRef.current?.close()}

@@ -1,6 +1,8 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 import { useEffect } from "react";
-export const discardChanges = () => window.confirm("저장하지 않은 변경이 있습니다. 변경을 버리고 이동할까요?");
+export const discardChanges = () => window.confirm(translate("documents.useUnsaved_save_change_navigate"));
 export function useUnsavedChanges(dirty:boolean){
   useEffect(()=>{
     if(!dirty)return;

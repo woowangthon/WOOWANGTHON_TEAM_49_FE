@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
@@ -19,20 +21,20 @@ function DeleteWorkplaceDialog({ id, onClose }: { id: number; onClose: () => voi
   const router = useRouter();
   const busy = mutation.isPending || done;
   return (
-    <ConfirmDialog title="근무지 삭제 요청" onClose={onClose} busy={busy} action={<button type="button" className={dangerButton} disabled={!checked || !query.isSuccess || query.isFetching || busy} onClick={async () => {
+    <ConfirmDialog title={translate("workplaces.deleteWorkplace_workplace_delete_request")} onClose={onClose} busy={busy} action={<button type="button" className={dangerButton} disabled={!checked || !query.isSuccess || query.isFetching || busy} onClick={async () => {
       try { await mutation.mutateAsync(); setDone(true); router.replace("/workplaces"); } catch { /* Mutation error is shown below. */ }
-    }}>{busy ? "처리 중…" : "근무지 삭제 요청"}</button>}>
+    }}>{busy ? translate("workplaces.deleteWorkplace_processing") : translate("workplaces.deleteWorkplace_workplace_delete_request")}</button>}>
       {query.isPending ? <QueryFeedback pending /> : query.isError ? <QueryFeedback error={query.error} retry={() => { void query.refetch(); }} /> : <>
-        <p><strong>{query.data.name}</strong>에 등록된 급여 내역은 {query.data.caseCount}개입니다.</p>
-        <p>연결된 내역나 자료가 있으면 삭제가 제한될 수 있습니다. 필요한 자료를 확인한 뒤 삭제를 요청해 주세요.</p>
-        <p>다른 내역에 필요한 문서 원본과 자료를 먼저 확인해 주세요. 삭제가 제한되면 연결된 내역을 확인해 주세요.</p>
+        <p><strong>{query.data.name}</strong>{translate("workplaces.deleteWorkplace_create_wageCase")}{query.data.caseCount}{translate("workplaces.deleteWorkplace_p2")}</p>
+        <p>{translate("workplaces.deleteWorkplace_link_case_record_delete_count_required_confirm")}</p>
+        <p>{translate("workplaces.deleteWorkplace_case_required_document_original_record_confirm_delete")}</p>
       </>}
       {mutation.isError && <p role="alert" className="rounded-control bg-danger-soft p-3">{businessErrorMessage(mutation.error)}</p>}
-      <label htmlFor={checkId} className="flex min-h-11 items-start gap-3"><input id={checkId} type="checkbox" className="mt-1 size-5 shrink-0" checked={checked} onChange={(event) => setChecked(event.target.checked)} disabled={busy} />삭제 영향과 연결된 자료를 확인했습니다.</label>
+      <label htmlFor={checkId} className="flex min-h-11 items-start gap-3"><input id={checkId} type="checkbox" className="mt-1 size-5 shrink-0" checked={checked} onChange={(event) => setChecked(event.target.checked)} disabled={busy} />{translate("workplaces.deleteWorkplace_delete_impact_link_record_confirm")}</label>
     </ConfirmDialog>
   );
 }
 export function DeleteWorkplace({ id }: { id: number }) {
   const [open, setOpen] = useState(false);
-  return <><button type="button" className={dangerButton} onClick={() => setOpen(true)}>근무지 삭제</button>{open && <DeleteWorkplaceDialog id={id} onClose={() => setOpen(false)} />}</>;
+  return <><button type="button" className={dangerButton} onClick={() => setOpen(true)}>{translate("workplaces.deleteWorkplace_workplace_delete")}</button>{open && <DeleteWorkplaceDialog id={id} onClose={() => setOpen(false)} />}</>;
 }

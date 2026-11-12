@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 import { useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 export default function PdfCanvas({url,page,pageCount,rotation,onRendered}:{url:string;page:number;pageCount:number|null;rotation:number|null;onRendered:(page:number,rotation:number)=>void}){
@@ -33,6 +35,6 @@ export default function PdfCanvas({url,page,pageCount,rotation,onRendered}:{url:
     previous.current=job;
     return()=>{disposed=true;task?.cancel();};
   },[loaded,url,page,rotation,onRendered]);
-  if(error)return <p role="alert">PDF를 표시할 수 없습니다. 파일 또는 페이지 정보를 확인하고 원문을 다시 불러와 주세요.</p>;
-  return <><canvas ref={canvas} role="img" aria-label={`PDF 원문 ${page}페이지`} className="block h-auto w-full" />{(rendered?.page!==page||rendered.url!==url)&&<p role="status">PDF 페이지를 그리는 중…</p>}</>;
+  if(error)return <p role="alert">{translate("documents.pdfCanvas_pdf_count_empty_file_page_information_confirm")}</p>;
+  return <><canvas ref={canvas} role="img" aria-label={translate("documents.pdfCanvas_pdf_original_page", { value1: page })} className="block h-auto w-full" />{(rendered?.page!==page||rendered.url!==url)&&<p role="status">{translate("documents.pdfCanvas_pdf_page")}</p>}</>;
 }

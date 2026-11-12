@@ -1,8 +1,10 @@
+
+import { translate } from "@/i18n/translate";
 import type { ComponentProps, ReactNode } from "react";
 import { cardVariants, primaryButton, secondaryButton, tertiaryButton, dangerButton } from "./styles";
 
 export function Button({ variant = "primary", pending = false, disabled, children, className = "", type = "button", ...props }: ComponentProps<"button"> & { variant?: "primary" | "secondary" | "tertiary" | "danger"; pending?: boolean }) {
-  return <button {...props} type={type} disabled={disabled || pending} aria-busy={pending || undefined} className={`${{ primary: primaryButton, secondary: secondaryButton, tertiary: tertiaryButton, danger: dangerButton }[variant]} ${className}`}>{children}{pending && <span className="ml-2">{"\uCC98\uB9AC \uC911"}</span>}</button>;
+  return <button {...props} type={type} disabled={disabled || pending} aria-busy={pending || undefined} className={`${{ primary: primaryButton, secondary: secondaryButton, tertiary: tertiaryButton, danger: dangerButton }[variant]} ${className}`}>{children}{pending && <span className="ml-2">{translate("common.processing")}</span>}</button>;
 }
 export function Section({ variant = "default", title, description, children, className = "", ...props }: Omit<ComponentProps<"section">, "title"> & { variant?: keyof typeof cardVariants; title?: string; description?: string }) {
   return <section {...props} className={`${cardVariants[variant]} ${className}`}>{title && <h2 className="text-title font-extrabold">{title}</h2>}{description && <p className="mt-2 text-body text-muted">{description}</p>}{children}</section>;

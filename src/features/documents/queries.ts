@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSessionScope } from "@/hooks/use-session-scope";
 import { documentKeys, type RecomputeReceipt } from "./query-keys";
@@ -20,7 +22,7 @@ export function useDocumentStatus(context: DocumentContext, dto: DocumentDto) {
   return useQuery({
     queryKey: documentKeys.status(s.generation, context, dto.documentId),
     queryFn: async ({ signal }) => {
-      if (context.kind === "library") throw new Error("원본 상세 경로가 필요합니다.");
+      if (context.kind === "library") throw new Error(translate("documents.queries_original_detail_required"));
       const result = await documentApi(s.api).status(context, dto.documentId, signal);
       if (!isProcessing(result.processingStatus)) {
         void s.queryClient.invalidateQueries({ queryKey: documentKeys.lists(s.generation) });

@@ -1,23 +1,25 @@
+
+import { translate } from "@/i18n/translate";
 import { z } from "zod";
 
 export const loginRequestSchema = z.object({
-  email: z.string().trim().pipe(z.email("올바른 이메일 주소를 입력해 주세요.")),
+  email: z.string().trim().pipe(z.email(translate("auth.schemas_valid_email_address_input"))),
   // P0 does not specify length/complexity rules. The server remains authoritative.
-  password: z.string().min(1, "비밀번호를 입력해 주세요."),
+  password: z.string().min(1, translate("auth.schemas_password_input")),
 });
 
 // Request DTOs preserve P0 values; form normalization is separate.
-const email = z.string().min(3, "입력 길이 또는 형식을 확인해 주세요.").max(254, "입력 길이 또는 형식을 확인해 주세요.").regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "입력 길이 또는 형식을 확인해 주세요.");
-const password = z.string().min(8, "입력 길이 또는 형식을 확인해 주세요.").max(128, "입력 길이 또는 형식을 확인해 주세요.");
+const email = z.string().min(3, translate("auth.schemas_input_length_format_confirm")).max(254, translate("auth.schemas_input_length_format_confirm")).regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, translate("auth.schemas_input_length_format_confirm"));
+const password = z.string().min(8, translate("auth.schemas_input_length_format_confirm")).max(128, translate("auth.schemas_input_length_format_confirm"));
 export const signupRequestSchema = z.strictObject({
-  email, password, name: z.string().min(1, "이름을 입력해 주세요.").max(100, "입력 길이 또는 형식을 확인해 주세요."),
+  email, password, name: z.string().min(1, translate("auth.schemas_name_input")).max(100, translate("auth.schemas_input_length_format_confirm")),
 });
 export const signupFormSchema = signupRequestSchema.extend({
   email: z.string().trim().pipe(email), name: z.string().trim().pipe(signupRequestSchema.shape.name),
 });
 export const forgotPasswordRequestSchema = z.strictObject({ email });
 export const resetPasswordRequestSchema = z.strictObject({
-  token: z.string().min(20, "입력 길이 또는 형식을 확인해 주세요.").max(200, "입력 길이 또는 형식을 확인해 주세요."),
+  token: z.string().min(20, translate("auth.schemas_input_length_format_confirm")).max(200, translate("auth.schemas_input_length_format_confirm")),
   newPassword: password,
 });
 

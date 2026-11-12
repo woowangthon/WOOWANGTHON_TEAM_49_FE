@@ -9,13 +9,19 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "i18n:generate": "node scripts/generate-i18n.mjs",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "predev": "npm run i18n:generate",
+    "prebuild": "npm run i18n:generate",
+    "pretypecheck": "npm run i18n:generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.5",
     "@tanstack/react-query": "^5.107.1",
     "lucide-react": "^1.70.0",
     "next": "16.4.5",
+    "next-intl": "^4.15.1",
     "pdfjs-dist": "^6.5.438",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -26,6 +32,7 @@
     "zustand": "^5.1.0"
   },
   "devDependencies": {
+    "@formatjs/icu-messageformat-parser": "^3.5.23",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

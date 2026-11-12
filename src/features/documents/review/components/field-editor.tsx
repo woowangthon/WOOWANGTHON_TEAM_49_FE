@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 import { useEffect, useId, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,31 +42,31 @@ export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved
       setError("root.server",{message:reviewError(error)});setPrepared(undefined);
     }finally{locked.current=false;}
   };
-  return <form aria-label={`${scope==="case"?"내역 재정의":"공유 기본값"} 편집`} className="mt-4 min-w-0 space-y-4 rounded-control border border-border p-4" onSubmit={event=>{void handleSubmit(async values=>{
+  return <form aria-label={translate("documents.fieldEditor_ariaLabel_form", { value1: scope==="case"?translate("documents.fieldEditor_case_override"):translate("documents.fieldEditor_sharedDefault") })} className="mt-4 min-w-0 space-y-4 rounded-control border border-border p-4" onSubmit={event=>{void handleSubmit(async values=>{
     if(conflict||locked.current)return;
-    let value;try{value=structured?valueSchema.parse(JSON.parse(values.text)):parseFieldValue(field,values.text,values.empty,values.scalar);}catch(error){setError("text",{message:error instanceof Error?error.message:"값을 확인해 주세요."});return;}
-    if(value===null&&values.confirmed){setError("confirmed",{message:"값 없음은 확인할 수 없습니다."});return;}
+    let value;try{value=structured?valueSchema.parse(JSON.parse(values.text)):parseFieldValue(field,values.text,values.empty,values.scalar);}catch(error){setError("text",{message:error instanceof Error?error.message:translate("documents.fieldEditor_confirm")});return;}
+    if(value===null&&values.confirmed){setError("confirmed",{message:translate("documents.fieldEditor_none_confirm_count_empty")});return;}
     const patch:FieldPatch={value,...(values.confirmed?{confirmed:true}:{})};
     if(scope==="shared")setPrepared(patch);else await save(patch);
   })(event);}}>
-    <h4 className="text-body font-bold">{scope==="case"?"이 내역에만 적용할 값":"근무지 공유 기본값"}</h4>
-    <p className="text-caption text-muted">{scope==="shared"?"재정의가 없는 연결 내역에 영향을 줄 수 있습니다. 다른 내역의 재정의를 변경하지 않습니다.":"공유 기본값과 다른 내역의 값은 유지됩니다."}</p>
-    {scope==="shared"&&field.hasCaseOverride&&<p className="text-caption">현재 보이는 값은 이 내역의 재정의입니다. 공유 기본값을 대신 채우지 않았습니다. 새 공유값을 직접 입력해 주세요.</p>}
-    {field.value===null&&field.valueType!=="MONEY_KRW"&&<SelectField label="입력값 형식" id={`${id}-scalar`} {...register("scalar")}><option value="string">문자</option><option value="number">숫자</option><option value="boolean">예/아니요</option></SelectField>}
-    {structured?<div><label htmlFor={`${id}-json`}>구조형 값 (JSON)</label><textarea id={`${id}-json`} className="min-h-48 w-full min-w-0 rounded-control border p-3 font-mono" disabled={busy} aria-invalid={!!errors.text} aria-describedby={errors.text?`${id}-json-error`:undefined} {...register("text")} /><p>배열·객체 구조와 null, 0을 유지하여 저장합니다.</p>{errors.text&&<p id={`${id}-json-error`} role="alert">올바른 JSON 값을 입력해 주세요.</p>}</div>:scalar==="boolean"?<SelectField id={`${id}-value`} label="수정값" disabled={empty||busy} error={errors.text?.message} {...register("text")}><option value="">선택해 주세요</option><option value="true">예</option><option value="false">아니요</option></SelectField>:<TextField id={`${id}-value`} label="수정값" inputMode={scalar==="number"?"decimal":undefined} disabled={empty||busy} error={errors.text?.message} {...register("text")} />}
-    <label className="flex min-h-11 items-center gap-3"><input type="checkbox" className="size-5" disabled={busy||structured} {...register("empty",{onChange:event=>{if(event.target.checked)form.setValue("confirmed",false);}})} /><span>값 없음 (null)</span></label>
-    <label className="flex min-h-11 items-center gap-3"><input type="checkbox" className="size-5" disabled={busy||empty} {...register("confirmed")} /><span>수정한 값을 함께 확인</span></label>
-    <p className="text-caption text-muted">확인을 선택하지 않고 값을 저장하면 미확인 상태로 돌아갑니다. 미확인은 0이 아닙니다.</p>
+    <h4 className="text-body font-bold">{scope==="case"?translate("documents.fieldEditor_case_applicable"):translate("documents.fieldEditor_workplace_sharedDefault")}</h4>
+    <p className="text-caption text-muted">{scope==="shared"?translate("documents.fieldEditor_override_none_link_case_impact_count_change"):translate("documents.fieldEditor_sharedDefault_case")}</p>
+    {scope==="shared"&&field.hasCaseOverride&&<p className="text-caption">{translate("documents.fieldEditor_current_case_override_sharedDefault_new_input")}</p>}
+    {field.value===null&&field.valueType!=="MONEY_KRW"&&<SelectField label={translate("documents.fieldEditor_input_format")} id={`${id}-scalar`} {...register("scalar")}><option value="string">{translate("documents.fieldEditor_message")}</option><option value="number">{translate("documents.fieldEditor_message2")}</option><option value="boolean">{translate("documents.fieldEditor_message3")}</option></SelectField>}
+    {structured?<div><label htmlFor={`${id}-json`}>{translate("documents.fieldEditor_div")}</label><textarea id={`${id}-json`} className="min-h-48 w-full min-w-0 rounded-control border p-3 font-mono" disabled={busy} aria-invalid={!!errors.text} aria-describedby={errors.text?`${id}-json-error`:undefined} {...register("text")} /><p>{translate("documents.fieldEditor_save")}</p>{errors.text&&<p id={`${id}-json-error`} role="alert">{translate("documents.fieldEditor_valid_input")}</p>}</div>:scalar==="boolean"?<SelectField id={`${id}-value`} label={translate("documents.fieldEditor_edit")} disabled={empty||busy} error={errors.text?.message} {...register("text")}><option value="">{translate("documents.fieldEditor_select")}</option><option value="true">{translate("common.yes")}</option><option value="false">{translate("common.no")}</option></SelectField>:<TextField id={`${id}-value`} label={translate("documents.fieldEditor_edit")} inputMode={scalar==="number"?"decimal":undefined} disabled={empty||busy} error={errors.text?.message} {...register("text")} />}
+    <label className="flex min-h-11 items-center gap-3"><input type="checkbox" className="size-5" disabled={busy||structured} {...register("empty",{onChange:event=>{if(event.target.checked)form.setValue("confirmed",false);}})} /><span>{translate("documents.fieldEditor_none")}</span></label>
+    <label className="flex min-h-11 items-center gap-3"><input type="checkbox" className="size-5" disabled={busy||empty} {...register("confirmed")} /><span>{translate("documents.fieldEditor_edit_confirm")}</span></label>
+    <p className="text-caption text-muted">{translate("documents.fieldEditor_confirm_select_save_status")}</p>
     {errors.confirmed&&<p role="alert">{errors.confirmed.message}</p>}{errors.root?.server&&<p ref={summary} tabIndex={-1} role="alert">{errors.root.server.message}</p>}
     {conflict&&<button type="button" className={secondaryButton} disabled={latestCase.isFetching||latestFields.isFetching} onClick={async()=>{
       const [c,f]=await Promise.all([latestCase.refetch(),latestFields.refetch()]);const fresh=f.data?.fields.find(v=>v.fieldId===field.fieldId);
       if(!c.isError&&!f.isError&&c.data&&fresh){reset(defaults(fresh,scope==="shared"&&fresh.hasCaseOverride));setBaseVersion(c.data.inputVersion);setConflict(false);}
-    }}>최신 값으로 초안 다시 불러오기</button>}
-    <div className="flex flex-wrap gap-2"><button type="submit" className={primaryButton} disabled={busy||conflict}>수정값 저장</button><button type="button" className={secondaryButton} disabled={busy} onClick={()=>{if(!isDirty||window.confirm("저장하지 않은 변경을 버릴까요?"))onClose();}}>편집 닫기</button></div>
-    {prepared&&<ConfirmDialog title="공유 기본값 변경 영향" busy={mutation.isPending} onClose={()=>setPrepared(undefined)} action={<button type="button" className={primaryButton} disabled={mutation.isPending} onClick={()=>{void save(prepared);}}>공유 기본값 저장 확인</button>}>
-      <p>공유 기본값을 사용하는 연결 내역의 입력과 검사가 갱신될 수 있습니다. Case별 재정의는 유지됩니다.</p>
-      <p>{linkedCaseIds?`연결 내역: ${linkedCaseIds.map(c=>`#${c}`).join(", ")||"없음"}`:"연결 내역 목록은 제공되지 않았습니다."}</p>
-      <p>실제 영향받은 내역과 버전은 저장 후 서버 응답으로 확인합니다.</p>
+    }}>{translate("documents.fieldEditor_current_draft_retry_load")}</button>}
+    <div className="flex flex-wrap gap-2"><button type="submit" className={primaryButton} disabled={busy||conflict}>{translate("documents.fieldEditor_edit_save")}</button><button type="button" className={secondaryButton} disabled={busy} onClick={()=>{if(!isDirty||window.confirm(translate("documents.fieldEditor_save_change")))onClose();}}>{translate("documents.fieldEditor_close")}</button></div>
+    {prepared&&<ConfirmDialog title={translate("documents.fieldEditor_sharedDefault_change_impact")} busy={mutation.isPending} onClose={()=>setPrepared(undefined)} action={<button type="button" className={primaryButton} disabled={mutation.isPending} onClick={()=>{void save(prepared);}}>{translate("documents.fieldEditor_sharedDefault_save_confirm")}</button>}>
+      <p>{translate("documents.fieldEditor_sharedDefault_use_link_case_input_check_update")}</p>
+      <p>{linkedCaseIds?translate("documents.fieldEditor_link_case", { value1: linkedCaseIds.map(c=>`#${c}`).join(", ")||translate("documents.fieldEditor_none_2") }):translate("documents.fieldEditor_link_case_list_notProvided")}</p>
+      <p>{translate("documents.fieldEditor_impact_case_version_save_response_confirm")}</p>
     </ConfirmDialog>}
   </form>;
 }

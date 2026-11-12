@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 import { useEffect, useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,13 +31,13 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
     if (locked.current || disabled) return;
     setSuccess(false); setCandidates([]);
     if (!files?.length) return;
-    if (files.length !== 1) { setMessage("한 번에 파일 하나를 선택해 주세요. 완료 후 다음 파일을 등록할 수 있습니다."); return; }
+    if (files.length !== 1) { setMessage(translate("documents.uploadForm_file_select_complete_next_create_count")); return; }
     const error = validateFile(files[0]);
     setMessage(error ?? ""); setFile(error ? undefined : files[0]);
   };
-  return <form className={`${cardStyle} space-y-5`} aria-label="새 파일 업로드" onSubmit={event => { void handleSubmit(async values => {
+  return <form className={`${cardStyle} space-y-5`} aria-label={translate("documents.documentScreens_new_file_upload")} onSubmit={event => { void handleSubmit(async values => {
     if (locked.current || disabled) return;
-    if (!file) { setMessage("파일을 선택해 주세요."); input.current?.focus(); return; }
+    if (!file) { setMessage(translate("documents.uploadForm_file_select")); input.current?.focus(); return; }
     locked.current = true; setBusy(true); setSuccess(false); setCandidates([]); setMessage("");
     controller.current = new AbortController();
     try {
@@ -47,25 +49,25 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
     } catch (error) { if (mounted.current) setMessage(documentError(error)); }
     finally { locked.current = false; if (mounted.current) setBusy(false); }
   })(event); }}>
-    <h2 className="text-title font-bold">새 파일 업로드</h2>
-    <p className="text-body text-muted">불필요한 민감정보는 가린 뒤 등록해 주세요. 원본은 근무지에 보관됩니다.</p>
-    <SelectField id={`${id}-type`} label="문서 유형" hint="자동 인식은 AI가 문서 유형을 판단해 값을 추출합니다. 판단하지 못하거나 직접 고른 유형과 다르면 유형을 다시 선택하도록 안내합니다." disabled={busy || disabled} {...register("documentType")}>
-      {uploadDocumentTypes.map(type => <option key={type} value={type}>{type === "AUTO" ? "자동 인식 (AI가 유형 판단)" : typeLabels[type]}</option>)}
+    <h2 className="text-title font-bold">{translate("documents.documentScreens_new_file_upload")}</h2>
+    <p className="text-body text-muted">{translate("documents.uploadForm_required_information_create_original_workplace_archived")}</p>
+    <SelectField id={`${id}-type`} label={translate("documents.documentTypeResolution_document_type")} hint={translate("documents.uploadForm_automatic_document_type_extraction_retry_select_notice")} disabled={busy || disabled} {...register("documentType")}>
+      {uploadDocumentTypes.map(type => <option key={type} value={type}>{type === "AUTO" ? translate("documents.uploadForm_automatic_type") : typeLabels[type]}</option>)}
     </SelectField>
     <div onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); choose(e.dataTransfer.files); }} className="min-w-0 rounded-panel border-2 border-dashed border-border bg-neutral-soft p-5 text-center">
       <UploadCloud aria-hidden="true" className="mx-auto mb-3 size-8" />
-      <label htmlFor={`${id}-file`} className="block text-body font-bold">파일 선택 또는 이곳에 끌어 놓기</label>
+      <label htmlFor={`${id}-file`} className="block text-body font-bold">{translate("documents.uploadForm_file_select_2")}</label>
       <input ref={input} id={`${id}-file`} type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" disabled={busy || disabled} onChange={e => choose(e.target.files)} className="mt-4 block w-full min-w-0 max-w-full text-body file:mr-2 file:min-h-11 file:rounded-control file:border file:border-border file:bg-surface file:px-3" />
       {file && <p className="mt-3 break-all text-body">{file.name}</p>}
     </div>
-    <p className="text-caption text-muted">PDF·JPEG·PNG, 20MiB 이하. PDF 50페이지, 이미지 각 축 10000px 이하. 암호화·손상·실제 파일 형식은 서버에서 최종 검사합니다.</p>
+    <p className="text-caption text-muted">{translate("documents.uploadForm_pdf_atMost_page_image_file_format_check")}</p>
     {message && <p role="alert" tabIndex={-1} className="break-words text-body">{message}</p>}
-    {success && <p role="status" className="text-body">업로드가 접수되었습니다. 아래 목록에서 서버 처리 상태를 확인해 주세요.</p>}
-    {!!candidates.length && <p role="status" className="break-words text-body">중복 원본 후보: {candidates.map(id => `#${id}`).join(", ")}. 서버가 제공한 후보이며, 업로드는 접수되었습니다. 기존 자료를 확인해 주세요.</p>}
-    {busy && <p role="status" className="text-body">업로드 요청 중… 서버 처리 진행률과는 별개입니다.</p>}
-    <div className="flex flex-wrap gap-3"><button className={primaryButton} disabled={busy || disabled} type="submit">{busy ? "업로드 요청 중" : "파일 업로드"}</button>
-      {busy && <button className={secondaryButton} type="button" onClick={() => controller.current?.abort()}>요청 대기 중단</button>}
+    {success && <p role="status" className="text-body">{translate("documents.uploadForm_upload_count_list_processing_status_confirm")}</p>}
+    {!!candidates.length && <p role="status" className="break-words text-body">{translate("documents.uploadForm_duplicate_original_candidate_provided_upload_count_record", { value1: candidates.map(id => `#${id}`).join(", ") })}</p>}
+    {busy && <p role="status" className="text-body">{translate("documents.uploadForm_upload_request_processing_progress")}</p>}
+    <div className="flex flex-wrap gap-3"><button className={primaryButton} disabled={busy || disabled} type="submit">{busy ? translate("documents.uploadForm_upload_request") : translate("documents.uploadForm_file_upload")}</button>
+      {busy && <button className={secondaryButton} type="button" onClick={() => controller.current?.abort()}>{translate("documents.uploadForm_request_pending_stop")}</button>}
     </div>
-    <p className="text-caption text-muted">요청 중단은 서버 접수나 처리를 취소하지 않습니다. 오류·중단 후 목록을 확인하고 직접 재시도해 주세요.</p>
+    <p className="text-caption text-muted">{translate("documents.uploadForm_request_stop_count_processing_cancel_error_list")}</p>
   </form>;
 }

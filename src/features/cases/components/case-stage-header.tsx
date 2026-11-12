@@ -1,17 +1,19 @@
+
+import { translate } from "@/i18n/translate";
 import type { ReactNode } from "react";
 import { FileCheck2, FilePenLine, FileText, FileUp, ListChecks, MessageSquare, MessagesSquare, ReceiptText, Settings2 } from "lucide-react";
 import styles from "./case-workspace.module.css";
 
 const stages = {
-  upload: { label: "자료 모으기", icon: FileUp },
-  manual: { label: "직접 기록하기", icon: FilePenLine },
-  review: { label: "원문과 함께 확인", icon: FileCheck2 },
-  conditions: { label: "계산 전 확인", icon: Settings2 },
-  result: { label: "내 급여 살펴보기", icon: ReceiptText },
-  compare: { label: "자료 사이의 차이 확인", icon: ListChecks },
-  questions: { label: "상담 준비", icon: MessagesSquare },
-  inquiry: { label: "회사에 물어보기", icon: MessageSquare },
-  reports: { label: "상담 자료 준비", icon: FileText },
+  upload: { label: translate("cases.caseContext_record"), icon: FileUp },
+  manual: { label: translate("cases.caseStageHeader_stages_manual_label"), icon: FilePenLine },
+  review: { label: translate("cases.caseStageHeader_original_confirm"), icon: FileCheck2 },
+  conditions: { label: translate("cases.caseStageHeader_calculation_confirm"), icon: Settings2 },
+  result: { label: translate("cases.caseStageHeader_wage"), icon: ReceiptText },
+  compare: { label: translate("cases.caseStageHeader_record_difference_confirm"), icon: ListChecks },
+  questions: { label: translate("cases.caseStageHeader_consultation"), icon: MessagesSquare },
+  inquiry: { label: translate("cases.caseStageHeader_company"), icon: MessageSquare },
+  reports: { label: translate("cases.caseStageHeader_consultation_record"), icon: FileText },
 };
 
 export function CaseStageHeader({ stage, title, description, action }: {

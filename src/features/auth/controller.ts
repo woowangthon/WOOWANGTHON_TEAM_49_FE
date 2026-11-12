@@ -1,3 +1,5 @@
+
+import { translate } from "@/i18n/translate";
 import type { QueryClient } from "@tanstack/react-query";
 
 import type { ApiClient } from "@/lib/api/client";
@@ -73,18 +75,18 @@ export function createAuthController({ api, authApi, session, queryClient }: {
           update({
             status: "anonymous",
             notice: error instanceof ApiError && error.status === 401
-              ? null : "이전 로그인 상태를 확인하지 못했습니다. 다시 로그인해 주세요.",
+              ? null : translate("auth.controller_previous_login_status_confirm_failure_retry"),
           });
         }
       })().finally(() => { restoration = undefined; });
       return restoration;
     },
     async login(body: LoginRequest) {
-      if (snapshot.status === "signing-out") throw new Error("로그아웃 처리 중입니다.");
+      if (snapshot.status === "signing-out") throw new Error(translate("auth.controller_logout_processing"));
       const current = ++operation;
       initialized = true;
       const result = await authApi.login(body);
-      if (current !== operation) throw new DOMException("인증 요청이 취소되었습니다.", "AbortError");
+      if (current !== operation) throw new DOMException(translate("auth.controller_authentication_request_cancel"), "AbortError");
       try { requireUsableSession(result); } catch (error) { session.clear(); throw error; }
       session.start(result.accessToken);
       remember(result.user);
@@ -98,8 +100,8 @@ export function createAuthController({ api, authApi, session, queryClient }: {
       // Cancels user requests, clears query/mutation caches, and hides protected content now.
       session.clear();
       logoutFlight = authApi.logout(token).then(
-        () => update({ status: "anonymous", signedOut: true, notice: "로그아웃되었습니다." }),
-        () => update({ status: "anonymous", signedOut: true, notice: "이 기기에서 로그아웃했습니다. 서버 세션 종료는 확인하지 못했으므로 다시 접속하면 로그인될 수 있습니다." }),
+        () => update({ status: "anonymous", signedOut: true, notice: translate("auth.controller_logout") }),
+        () => update({ status: "anonymous", signedOut: true, notice: translate("auth.controller_logout_confirm_failure_retry_login_count") }),
       ).finally(() => { logoutFlight = undefined; });
       return logoutFlight;
     },

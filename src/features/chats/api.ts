@@ -1,8 +1,10 @@
+
+import { translate } from "@/i18n/translate";
 ﻿import { z } from 'zod';
 import { decodeWith, pageSchema } from '@/lib/api/schema';
 import type { ApiClient } from '@/lib/api/client';
 export const scopeSchema=z.discriminatedUnion('scopeType',[z.object({scopeType:z.literal('CASE'),caseId:z.number().int().positive()}),z.object({scopeType:z.literal('WORKPLACE_ALL')})]);
-export const chatTitleSchema = z.string().min(1, '제목을 입력해 주세요.').max(200, '200자 이하로 입력해 주세요.');
+export const chatTitleSchema = z.string().min(1, translate("chats.api_input")).max(200, translate("chats.api_atMost_input"));
 export const chatCreateSchema = z.strictObject({ title: chatTitleSchema.optional(), defaultScope: scopeSchema });
 export const chatPatchSchema = z.strictObject({ title: chatTitleSchema });
 export type ChatScope=z.infer<typeof scopeSchema>;

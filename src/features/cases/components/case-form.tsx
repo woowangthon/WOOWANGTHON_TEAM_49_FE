@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -71,7 +73,7 @@ export function CaseForm({ initial, defaultWorkplaceId = null, onSaved, onCancel
         await update.mutateAsync(patch);
         onSaved?.();
       } else {
-        if (!workplaceId || !workplace.isSuccess) { setError("root.server", { message: "근무지를 선택하고 정보를 확인해 주세요." }); return; }
+        if (!workplaceId || !workplace.isSuccess) { setError("root.server", { message: translate("cases.caseForm_workplace_select_information_confirm") }); return; }
         const result = await create.mutateAsync({ workplaceId, payType: values.payType, periodStart: values.periodStart, periodEnd: values.periodEnd, scheduledPayDate });
         setCompleted(true);
         router.replace(`/cases/${result.caseId}/upload`);
@@ -84,27 +86,27 @@ export function CaseForm({ initial, defaultWorkplaceId = null, onSaved, onCancel
   return (
     <form noValidate onSubmit={handleSubmit(submit)} aria-busy={pending} className="min-w-0 space-y-6">
       <fieldset disabled={pending} className="min-w-0 space-y-6">
-        <legend className="sr-only">급여 내역 입력</legend>
+        <legend className="sr-only">{translate("cases.caseForm_wageCase_input")}</legend>
         {!initial && <WorkplacePicker value={workplaceId} onChange={setWorkplaceId} />}
         <div className="rounded-control bg-neutral-soft p-4 text-body">
-          <p>{workplaceId === null ? "먼저 근무지를 선택해 주세요." : workplace.isPending ? "선택한 근무지를 확인하고 있습니다." : workplace.isError ? "선택한 근무지에 접근할 수 없습니다. 다시 확인하거나 다른 근무지를 선택해 주세요." : `선택한 근무지: ${workplace.data.name}`}</p>
-          {workplaceId !== null && workplace.isError && <button type="button" className={`mt-3 ${secondaryButton}`} onClick={() => { void workplace.refetch(); }}>선택한 근무지 다시 확인</button>}
+          <p>{workplaceId === null ? translate("cases.caseForm_workplace_select") : workplace.isPending ? translate("cases.caseForm_selected_workplace_confirm") : workplace.isError ? translate("cases.caseForm_selected_workplace_access_count_empty_retry_confirm") : translate("cases.caseForm_selected_workplace", { value1: workplace.data.name })}</p>
+          {workplaceId !== null && workplace.isError && <button type="button" className={`mt-3 ${secondaryButton}`} onClick={() => { void workplace.refetch(); }}>{translate("cases.caseForm_selected_workplace_retry_confirm")}</button>}
         </div>
         <div className="grid min-w-0 gap-5 sm:grid-cols-2">
-          <SelectField id={`${id}-payType`} label="급여 형태" error={errors.payType?.message} {...register("payType")}><option value="HOURLY">시급제</option><option value="MONTHLY">월급제</option></SelectField>
+          <SelectField id={`${id}-payType`} label={translate("cases.caseDetailScreen_wage")} error={errors.payType?.message} {...register("payType")}><option value="HOURLY">{translate("cases.caseForm_hourlyWage")}</option><option value="MONTHLY">{translate("cases.caseForm_monthlyWage")}</option></SelectField>
           <div className="hidden sm:block" />
-          <TextField id={`${id}-start`} type="date" label="산정 시작일" required error={errors.periodStart?.message} {...register("periodStart")} />
-          <TextField id={`${id}-end`} type="date" label="산정 종료일" required error={errors.periodEnd?.message} {...register("periodEnd")} />
-          <TextField id={`${id}-payDate`} type="date" label="약정 지급일 (선택)" error={errors.scheduledPayDate?.message} {...register("scheduledPayDate")} />
+          <TextField id={`${id}-start`} type="date" label={translate("cases.caseForm_startDate")} required error={errors.periodStart?.message} {...register("periodStart")} />
+          <TextField id={`${id}-end`} type="date" label={translate("cases.caseForm_endDate")} required error={errors.periodEnd?.message} {...register("periodEnd")} />
+          <TextField id={`${id}-payDate`} type="date" label={translate("cases.caseForm_payment_select")} error={errors.scheduledPayDate?.message} {...register("scheduledPayDate")} />
         </div>
-        <p className="text-body text-muted">산정기간은 달력 월과 달라도 됩니다. 모르는 지급일은 비워 두세요.</p>
+        <p className="text-body text-muted">{translate("cases.caseForm_wagePeriod_payment")}</p>
       </fieldset>
       {errors.root?.server?.message && <p ref={summary} tabIndex={-1} role="alert" className="rounded-control bg-danger-soft p-4 text-body">{errors.root.server.message}</p>}
-      {conflict && <div className="space-y-3 rounded-control bg-warning-soft p-4 text-body"><p>작성 중인 입력을 유지했습니다. 저장하려면 최신 정보를 다시 확인해 주세요. 아래 버튼은 작성 중인 내용을 최신 값으로 교체합니다.</p><button type="button" className={secondaryButton} disabled={pending} onClick={() => { void reloadLatest(); }}>최신 정보 불러오기</button></div>}
-      {completed && <p role="status" className="text-body">내역을 만들었습니다. 자료 등록 화면으로 이동합니다.</p>}
+      {conflict && <div className="space-y-3 rounded-control bg-warning-soft p-4 text-body"><p>{translate("cases.caseForm_input_save_current_information_retry_confirm_content")}</p><button type="button" className={secondaryButton} disabled={pending} onClick={() => { void reloadLatest(); }}>{translate("cases.caseForm_current_information_load")}</button></div>}
+      {completed && <p role="status" className="text-body">{translate("cases.caseForm_case_record_create_navigate")}</p>}
       <div className="flex flex-wrap gap-3">
-        <button type="submit" className={primaryButton} disabled={pending || conflict || (initial ? !isDirty : !workplace.isSuccess)}>{pending ? "저장 중…" : initial ? "변경 저장" : "내역 만들기"}</button>
-        {onCancel && <button type="button" className={secondaryButton} disabled={pending} onClick={onCancel}>수정 취소</button>}
+        <button type="submit" className={primaryButton} disabled={pending || conflict || (initial ? !isDirty : !workplace.isSuccess)}>{pending ? translate("cases.caseForm_save") : initial ? translate("cases.caseForm_change_save") : translate("cases.caseForm_case")}</button>
+        {onCancel && <button type="button" className={secondaryButton} disabled={pending} onClick={onCancel}>{translate("cases.caseForm_edit_cancel")}</button>}
       </div>
     </form>
   );

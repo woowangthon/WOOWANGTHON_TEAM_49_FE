@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 import { useId, useState } from "react";
 import { SelectField } from "@/components/ui/select-field";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
@@ -22,24 +24,24 @@ export function DocumentTypeResolution({ dto, issue, disabled = false }: { dto: 
     catch (e) { setError(documentError(e)); }
   };
   return <section aria-labelledby={`${id}-title`} className="mt-3 min-w-0 space-y-3 rounded-control border border-border bg-neutral-soft p-4">
-    <h4 id={`${id}-title`} className="text-body font-bold">문서 유형 확인 필요</h4>
+    <h4 id={`${id}-title`} className="text-body font-bold">{translate("documents.documentTypeResolution_document_type_confirm_required")}</h4>
     <p className="break-words text-body">{issue.message}</p>
     {issue.detected && !choosing && <div className="flex flex-wrap gap-2">
-      <button type="button" className={primaryButton} disabled={busy} onClick={() => { void change(issue.detected!); }}>{typeLabels[issue.detected]}(으)로 바꿔 다시 추출</button>
-      <button type="button" className={secondaryButton} disabled={busy} onClick={() => setChoosing(true)}>유형 직접 선택</button>
+      <button type="button" className={primaryButton} disabled={busy} onClick={() => { void change(issue.detected!); }}>{translate("documents.documentTypeResolution_retry_extraction", { value1: typeLabels[issue.detected] })}</button>
+      <button type="button" className={secondaryButton} disabled={busy} onClick={() => setChoosing(true)}>{translate("documents.documentTypeResolution_type_select")}</button>
     </div>}
-    {choosing && <form className="space-y-3" aria-label="문서 유형 직접 선택" onSubmit={event => { event.preventDefault(); if (selected) void change(selected); }}>
-      <SelectField id={`${id}-type`} label="문서 유형" value={selected} disabled={busy} onChange={event => setSelected(event.target.value as ConcreteDocumentType | "")}>
-        <option value="">유형을 선택해 주세요</option>
+    {choosing && <form className="space-y-3" aria-label={translate("documents.documentTypeResolution_document_type_select")} onSubmit={event => { event.preventDefault(); if (selected) void change(selected); }}>
+      <SelectField id={`${id}-type`} label={translate("documents.documentTypeResolution_document_type")} value={selected} disabled={busy} onChange={event => setSelected(event.target.value as ConcreteDocumentType | "")}>
+        <option value="">{translate("documents.documentTypeResolution_type_select_2")}</option>
         {documentTypes.map(type => <option key={type} value={type}>{typeLabels[type]}</option>)}
       </SelectField>
       <div className="flex flex-wrap gap-2">
-        <button type="submit" className={primaryButton} disabled={busy || !selected}>이 유형으로 다시 추출</button>
-        {issue.detected && <button type="button" className={secondaryButton} disabled={busy} onClick={() => { setChoosing(false); setSelected(""); }}>선택 취소</button>}
+        <button type="submit" className={primaryButton} disabled={busy || !selected}>{translate("documents.documentTypeResolution_type_retry_extraction")}</button>
+        {issue.detected && <button type="button" className={secondaryButton} disabled={busy} onClick={() => { setChoosing(false); setSelected(""); }}>{translate("documents.documentTypeResolution_select_cancel")}</button>}
       </div>
     </form>}
-    {mutation.isPending && <p role="status" className="text-body">문서 유형 변경을 요청하는 중…</p>}
+    {mutation.isPending && <p role="status" className="text-body">{translate("documents.documentTypeResolution_document_type_change_request")}</p>}
     {error && <p role="alert" className="break-words text-body">{error}</p>}
-    <p className="text-caption text-muted">유형을 바꾸면 아직 확인하지 않은 추출값을 지우고 새 유형으로 다시 추출합니다. 원본 파일은 그대로 유지됩니다.</p>
+    <p className="text-caption text-muted">{translate("documents.documentTypeResolution_type_confirm_extractedValue_new_retry_extraction_original")}</p>
   </section>;
 }

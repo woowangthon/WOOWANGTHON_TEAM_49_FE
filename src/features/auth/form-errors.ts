@@ -1,3 +1,5 @@
+
+import { translate } from "@/i18n/translate";
 import type { UseFormSetError } from "react-hook-form";
 
 import { ApiError } from "@/lib/api/error";
@@ -12,7 +14,7 @@ export function applyAuthError(error: unknown, setError: UseFormSetError<AuthFor
   if (error instanceof Error && error.name === "AbortError") return;
   if (error instanceof ApiError) {
     if (mode === "signup" && error.errorCode === "EMAIL_ALREADY_EXISTS") {
-      setError("email", { message: "이미 가입된 이메일입니다. 로그인해 주세요." }, { shouldFocus: true });
+      setError("email", { message: translate("auth.formErrors_registration_email_login") }, { shouldFocus: true });
       return;
     }
     if (error.status === 422) {
@@ -27,14 +29,14 @@ export function applyAuthError(error: unknown, setError: UseFormSetError<AuthFor
       if (mapped) return;
     }
     const message = error.status === 401 && mode === "login"
-      ? "이메일 또는 비밀번호를 확인해 주세요."
+      ? translate("auth.formErrors_email_password_confirm")
       : error.status === 429
-        ? "요청이 많습니다. 잠시 후 다시 시도해 주세요."
+        ? translate("auth.accountScreens_request_retry")
         : error.status === 422
-          ? "입력 내용을 확인해 주세요. 서버에서 요청을 처리하지 못했습니다."
-          : "요청을 처리하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.";
+          ? translate("auth.formErrors_input_content_confirm_request_processing_failure")
+          : translate("auth.formErrors_request_processing_failure_link_confirm_retry");
     setError("root.server", { message });
     return;
   }
-  setError("root.server", { message: "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요." });
+  setError("root.server", { message: translate("auth.formErrors_request_processing_failure_retry") });
 }

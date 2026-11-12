@@ -1,6 +1,8 @@
+
+import { translate } from "@/i18n/translate";
 import { StatePanel } from "@/components/ui/state-panel";
 
-export function AuthPending({ fullPage = false, title = "로그인 상태를 확인하고 있습니다", description = "잠시만 기다려 주세요." }: {
+export function AuthPending({ fullPage = false, title = translate("auth.authPending_login_status_confirm"), description = translate("auth.accountOverview_accountOverview_description") }: {
   fullPage?: boolean;
   title?: string;
   description?: string;

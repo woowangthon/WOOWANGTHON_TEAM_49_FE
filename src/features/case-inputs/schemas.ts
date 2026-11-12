@@ -1,3 +1,5 @@
+
+import { translate } from "@/i18n/translate";
 import { z } from "zod";
 import { updateMetaSchema } from "@/features/documents/review/schemas";
 
@@ -28,7 +30,7 @@ export const conditionAnswerSchema = z.object({
     ? ["LESS_THAN_5", "AT_LEAST_5"].includes(String(v.value)) && typeof v.value === "string"
     : v.conditionId === "regular_minutes" ? typeof v.value === "number" && Number.isSafeInteger(v.value) && v.value >= 0 && v.value <= 1_000_000
       : typeof v.value === "boolean");
-  if (!valid) ctx.addIssue({ code: "custom", path: ["value"], message: "P0에서 허용한 응답 형식과 범위를 확인해 주세요." });
+  if (!valid) ctx.addIssue({ code: "custom", path: ["value"], message: translate("caseInputs.schemas_response_format_scope_confirm") });
 });
 export const conditionsPutSchema = z.object({ answers: z.array(conditionAnswerSchema), expectedInputVersion: id });
 export const checkTypes = ["WAGE_CALCULATION", "CONTRACT_ATTENDANCE_COMPARISON", "PAYSLIP_VALIDATION", "DEPOSIT_COMPARISON"] as const;

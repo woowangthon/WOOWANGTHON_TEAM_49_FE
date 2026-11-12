@@ -1,3 +1,5 @@
+
+import { translate } from "@/i18n/translate";
 import { z } from "zod";
 
 export const payTypeSchema = z.enum(["HOURLY", "MONTHLY"]);
@@ -25,10 +27,10 @@ export const deletionImpactSchema = z.object({
 });
 export const caseFormSchema = z.object({
   payType: payTypeSchema,
-  periodStart: z.iso.date("시작일을 입력해 주세요."),
-  periodEnd: z.iso.date("종료일을 입력해 주세요."),
-  scheduledPayDate: z.union([z.literal(""), z.iso.date("올바른 지급일을 입력해 주세요.")]),
-}).refine((value) => value.periodStart <= value.periodEnd, { path: ["periodEnd"], message: "종료일은 시작일보다 빠를 수 없습니다." });
+  periodStart: z.iso.date(translate("cases.schemas_startDate_input")),
+  periodEnd: z.iso.date(translate("cases.schemas_endDate_input")),
+  scheduledPayDate: z.union([z.literal(""), z.iso.date(translate("cases.schemas_valid_payment_input"))]),
+}).refine((value) => value.periodStart <= value.periodEnd, { path: ["periodEnd"], message: translate("cases.schemas_endDate_startDate_count_empty") });
 export type CaseListDto = z.infer<typeof caseListItemSchema>;
 export type CaseDetailDto = z.infer<typeof caseDetailSchema>;
 export type CaseFormValues = z.infer<typeof caseFormSchema>;

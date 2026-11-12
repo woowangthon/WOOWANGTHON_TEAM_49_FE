@@ -1,17 +1,19 @@
+
+import { translate } from "@/i18n/translate";
 import type { FieldPath, FieldValues, UseFormSetError } from "react-hook-form";
 
 import { ApiError } from "./error";
 
 export function businessErrorMessage(error: unknown): string {
-  if (!(error instanceof ApiError)) return "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
-  if (error.kind === "protocol") return "서버 응답 형식이 문서 계약과 일치하지 않습니다. 값을 임의로 보완하지 않았습니다. 다시 조회해 주세요.";
-  if (error.status === 403) return "이 자료에 접근할 권한이 없습니다.";
-  if (error.status === 404) return "자료를 찾을 수 없습니다. 삭제되었거나 접근할 수 없는 자료입니다.";
-  if (error.errorCode === "INPUT_VERSION_CONFLICT") return "다른 변경이 먼저 저장되었습니다. 최신 정보를 확인한 뒤 다시 수정해 주세요.";
-  if (error.status === 409) return "연결된 자료나 현재 상태 때문에 요청을 처리할 수 없습니다. 최신 정보와 연결된 내역을 확인해 주세요.";
-  if (error.status === 422) return "입력한 값을 확인해 주세요. 서버에서 요청을 처리하지 못했습니다.";
-  if (error.status === 429) return "요청이 많습니다. 잠시 후 다시 시도해 주세요.";
-  return "자료를 불러오거나 저장하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.";
+  if (!(error instanceof ApiError)) return translate("errors.formErrors_request_processing_failure_retry");
+  if (error.kind === "protocol") return translate("errors.formErrors_response_format_document_contract_match_retry");
+  if (error.status === 403) return translate("errors.formErrors_record_access_permission_empty");
+  if (error.status === 404) return translate("errors.formErrors_record_notFound_delete_access_count_none");
+  if (error.errorCode === "INPUT_VERSION_CONFLICT") return translate("errors.formErrors_change_save_current_information_confirm_retry_edit");
+  if (error.status === 409) return translate("errors.formErrors_link_record_current_status_request_processing_count");
+  if (error.status === 422) return translate("errors.formErrors_input_confirm_request_processing_failure");
+  if (error.status === 429) return translate("errors.formErrors_request_retry");
+  return translate("errors.formErrors_record_load_saveFailure_link_confirm_retry");
 }
 
 export function applyBusinessFormError<T extends FieldValues>(error: unknown, setError: UseFormSetError<T>, fields: readonly FieldPath<T>[]) {

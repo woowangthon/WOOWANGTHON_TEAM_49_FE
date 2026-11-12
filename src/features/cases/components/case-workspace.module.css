@@ -69,23 +69,23 @@
 .content [data-case-document-picker] { padding: 4px 20px; border: 1px solid var(--color-border); border-radius: 17px; background: white; }
 .content [data-case-document-picker] button[aria-current="page"] { border-radius: 10px; color: var(--color-nav-foreground); background: var(--color-nav-active); }
 .content :global(.review-comparison) { gap: 18px; }
-.content [aria-label="OCR 추출 필드"] { padding: 22px; border: 1px solid var(--color-border); border-radius: 22px; background: white; }
-.content [aria-label="OCR 추출 필드"] article { padding: 18px 0; }
+.content [data-ui="documents-fieldsPanel_ariaLabel_section2"] { padding: 22px; border: 1px solid var(--color-border); border-radius: 22px; background: white; }
+.content [data-ui="documents-fieldsPanel_ariaLabel_section2"] article { padding: 18px 0; }
 .content [role="tablist"]:not(:global(.review-tabs)) { padding: 6px; border: 1px solid var(--color-border); border-radius: 15px; background: white; }
 .content [role="tablist"] button { flex-grow: 1; border-color: transparent; }
 .content [role="tablist"] button[aria-selected="true"] { color: var(--color-nav-foreground); background: var(--color-nav-active); }
 .content [data-case-conditions] > header { padding: 24px; border: 1px solid var(--color-border); border-radius: 22px; background: white; }
 .content [data-case-conditions] > header > p { color: var(--color-review-foreground); font-size: 13px; }
 .content [data-case-conditions] > section > p:first-child { color: var(--color-nav-foreground); background: var(--color-nav-active); font-size: 12px; }
-.content [aria-label="입력 단계"] { padding: 18px; border: 1px solid var(--color-border); background: white; }
-.content [aria-label="입력 단계"] button[aria-current="step"] { border-color: var(--color-accent); color: var(--color-nav-foreground); background: var(--color-nav-active); }
-.content [aria-label="기능별 실행 가능성"] > div { grid-template-columns: minmax(0, 1fr); }
+.content [data-ui="common-stepFormNavigation_ariaLabel_nav"] { padding: 18px; border: 1px solid var(--color-border); background: white; }
+.content [data-ui="common-stepFormNavigation_ariaLabel_nav"] button[aria-current="step"] { border-color: var(--color-accent); color: var(--color-nav-foreground); background: var(--color-nav-active); }
+.content [data-ui="caseInputs-inputStatus_ariaLabel_section"] > div { grid-template-columns: minmax(0, 1fr); }
 .content [data-case-summary] { padding: 26px; border-color: #dce3f3; background: linear-gradient(125deg, white 55%, #f2effb); }
 .content [data-case-summary] > dl > div { min-width: 0; padding: 20px; border: 1px solid var(--color-border); border-radius: 16px; background: white; }
 .content [data-case-summary] dt { color: var(--color-review-foreground); font-size: 12px; }
 .content [data-case-summary] dd { margin-top: 10px; font-size: clamp(24px, 3.5cqi, 32px); letter-spacing: -.8px; }
-.content [aria-label="중요한 결과 안내"] { border: 1px solid #f0e3cc; border-radius: 20px; }
-.content [aria-label="중요한 결과 안내"] > p { color: var(--color-warning-foreground); font-size: 12px; }
+.content [data-ui="results-resultExplorer_ariaLabel_aside"] { border: 1px solid #f0e3cc; border-radius: 20px; }
+.content [data-ui="results-resultExplorer_ariaLabel_aside"] > p { color: var(--color-warning-foreground); font-size: 12px; }
 .content [data-case-question] { position: relative; padding-left: 76px; }
 .content [data-case-question]::before { content: attr(data-case-question); position: absolute; top: 24px; left: 24px; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: var(--color-nav-active); color: var(--color-nav-foreground); font-size: 13px; font-weight: 750; }
 .content [data-case-question] h2 { font-size: 17px; }
@@ -99,7 +99,7 @@
 
 @container (min-width: 42rem) {
   .navigation:global(.case-task-navigation) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .content [aria-label="기능별 실행 가능성"] > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .content [data-ui="caseInputs-inputStatus_ariaLabel_section"] > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .content [data-case-support] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @container (max-width: 34rem) {
@@ -114,7 +114,7 @@
   .content [data-case-methods] > button { gap: 10px; min-height: 76px; padding: 12px 9px; font-size: 12px; }
   .content [data-case-toolbar] { padding: 12px; gap: 8px; }
   .content [data-case-toolbar] > :global(.ui-button-primary) { width: 100%; }
-  .content [data-case-upload] form, .content [data-case-panel], .content [data-case-conditions] > header, .content [data-case-summary], .content [aria-label="OCR 추출 필드"] { padding: 18px; }
+  .content [data-case-upload] form, .content [data-case-panel], .content [data-case-conditions] > header, .content [data-case-summary], .content [data-ui="documents-fieldsPanel_ariaLabel_section2"] { padding: 18px; }
   .content [data-case-summary] > dl { grid-template-columns: minmax(0, 1fr); }
   .content [data-case-question] { padding-left: 20px; padding-top: 68px; }
   .content [data-case-question]::before { top: 20px; left: 20px; }

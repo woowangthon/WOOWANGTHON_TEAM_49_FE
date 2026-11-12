@@ -1,3 +1,5 @@
+
+import { translate } from "@/i18n/translate";
 import { z } from "zod";
 
 const id = z.number().int().positive();
@@ -45,11 +47,11 @@ export const linkPatchSchema = z.strictObject({
 });
 export const linkCreateSchema = linkPatchSchema.extend({ documentId: id });
 export const linkFormSchema = z.object({
-  purpose: z.string().trim().max(100, "100자 이하로 입력해 주세요."),
+  purpose: z.string().trim().max(100, translate("documents.schemas_atMost_input")),
   applicableFrom: z.union([z.literal(""), z.iso.date()]),
   applicableTo: z.union([z.literal(""), z.iso.date()]),
 }).refine(v => !v.applicableFrom || !v.applicableTo || v.applicableFrom <= v.applicableTo,
-  { path: ["applicableTo"], message: "종료일은 시작일보다 빠를 수 없습니다." });
+  { path: ["applicableTo"], message: translate("documents.schemas_endDate_startDate_count_empty") });
 export type DocumentDto = z.infer<typeof documentSchema>;
 export type DocumentStatusDto = z.infer<typeof statusSchema>;
 export type LinkDto = z.infer<typeof linkSchema>;

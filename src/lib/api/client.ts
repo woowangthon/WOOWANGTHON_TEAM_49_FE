@@ -1,3 +1,5 @@
+
+import { translate } from "@/i18n/translate";
 import type { MemorySession } from "@/features/auth/session";
 import { parseApiBaseUrl } from "@/lib/config/env";
 import type { JsonValue } from "@/types/api";
@@ -41,7 +43,7 @@ export function createApiClient(options: ClientOptions) {
       !url.pathname.startsWith(`${new URL(baseUrl).pathname.replace(/\/$/, "")}/`) ||
       url.hash
     ) {
-      throw new Error("API 경로는 Base URL 내부의 /로 시작하는 상대 경로여야 합니다.");
+      throw new Error(translate("errors.client_start"));
     }
     return url.toString();
   }
@@ -49,7 +51,7 @@ export function createApiClient(options: ClientOptions) {
   function assertCurrent(generation: number, signal: AbortSignal) {
     signal.throwIfAborted();
     if (options.session.getSnapshot().generation !== generation) {
-      throw new DOMException("세션이 변경되었습니다.", "AbortError");
+      throw new DOMException(translate("errors.client_change"), "AbortError");
     }
   }
 
@@ -97,7 +99,7 @@ export function createApiClient(options: ClientOptions) {
       headers.set("Accept", accept);
       const token = authenticated ? options.session.getSnapshot().accessToken : null;
       if (token) headers.set("Authorization", `Bearer ${token}`);
-      if (init.body !== undefined && init.formData) throw new Error("JSON과 multipart 본문은 함께 보낼 수 없습니다.");
+      if (init.body !== undefined && init.formData) throw new Error(translate("errors.client_count_empty"));
       if (init.formData) headers.delete("Content-Type");
       else if (init.body !== undefined) headers.set("Content-Type", "application/json");
 

@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 import { useRef, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { useCase } from "@/features/cases/queries";
@@ -19,12 +21,12 @@ function CaseChatPanel({ caseId, workplaceId }: { caseId: number; workplaceId: n
   const [open, setOpen] = useState(false);
   function close() { dialog.current?.close(); setOpen(false); trigger.current?.focus(); }
   return <>
-    <button ref={trigger} className={styles.trigger} aria-label="AI 자료 도우미 열기" aria-haspopup="dialog" aria-expanded={open} onClick={() => {
+    <button ref={trigger} className={styles.trigger} aria-label={translate("chats.caseChat_record_assistant")} aria-haspopup="dialog" aria-expanded={open} onClick={() => {
       if (open) { close(); return; }
       setVisited(true); setOpen(true); dialog.current?.showModal();
     }}><MessageCircle aria-hidden="true" /></button>
-    <dialog ref={dialog} className={styles.panel} aria-label="현재 급여 사례 AI 자료 도우미" onCancel={event => { event.preventDefault(); close(); }} onClose={() => setOpen(false)}>
-      <header className={styles.header}><strong>AI 자료 도우미 · 사례 #{caseId}</strong><button autoFocus aria-label="AI 자료 도우미 닫기" onClick={close}><X aria-hidden="true" /></button></header>
+    <dialog ref={dialog} className={styles.panel} aria-label={translate("chats.caseChat_current_wage_record_assistant")} onCancel={event => { event.preventDefault(); close(); }} onClose={() => setOpen(false)}>
+      <header className={styles.header}><strong>{translate("chats.caseChat_record_assistant_2", { value1: caseId })}</strong><button autoFocus aria-label={translate("chats.caseChat_record_assistant_close")} onClick={close}><X aria-hidden="true" /></button></header>
       <div className={styles.body}>{visited && <ChatScreen workplaceId={workplaceId} embeddedCaseId={caseId} />}</div>
     </dialog>
   </>;

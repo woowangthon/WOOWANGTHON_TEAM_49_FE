@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
@@ -27,10 +29,10 @@ export function WorkplaceListScreen() {
     <div className={styles.screen}>
       <header className={styles.header}>
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}><span aria-hidden="true" />나의 일터, 나의 급여</p>
-          <h1>내 근무지</h1>
-          <p className={styles.intro}>일한 곳마다 급여 기록을 차곡차곡.<br />확인할 근무지를 선택해 주세요.</p>
-          {!empty && <Link href="/workplaces/new" className={styles.register}><Plus size={18} aria-hidden="true" />근무지 등록</Link>}
+          <p className={styles.eyebrow}><span aria-hidden="true" />{translate("workplaces.workplaceListScreen_wage")}</p>
+          <h1>{translate("workplaces.workplaceListScreen_workplace")}</h1>
+          <p className={styles.intro}>{translate("workplaces.workplaceListScreen_wage_2")}<br />{translate("workplaces.workplaceListScreen_confirm_workplace_select")}</p>
+          {!empty && <Link href="/workplaces/new" className={styles.register}><Plus size={18} aria-hidden="true" />{translate("workplaces.workplaceForm_workplace_create")}</Link>}
         </div>
         <div className={styles.heroArt} aria-hidden="true">
           <div className={styles.artHalo} />
@@ -49,23 +51,23 @@ export function WorkplaceListScreen() {
       {query.isPending ? <div className={styles.feedback}><QueryFeedback pending /></div> : query.isError ? <div className={styles.feedback}><QueryFeedback error={query.error} retry={() => { void query.refetch(); }} /></div> : empty ? (
         <section className={styles.empty}>
           <span className={styles.emptyIcon} aria-hidden="true"><Building2 size={30} strokeWidth={1.6} /></span>
-          <h2>첫 근무지를 등록해 주세요</h2>
-          <p>일한 곳을 등록하고, 확인할 급여 기간과 자료를 모아 보세요.</p>
-          <Link href="/workplaces/new" className={primaryButton}><Plus size={18} aria-hidden="true" />근무지 등록</Link>
+          <h2>{translate("workplaces.workplaceListScreen_workplace_create")}</h2>
+          <p>{translate("workplaces.workplaceListScreen_create_confirm_wage_period_record")}</p>
+          <Link href="/workplaces/new" className={primaryButton}><Plus size={18} aria-hidden="true" />{translate("workplaces.workplaceForm_workplace_create")}</Link>
         </section>
       ) : (
         <section aria-labelledby={`${id}-list-title`} className={styles.panel}>
           <div className={styles.listHead}>
-            <h2 id={`${id}-list-title`}>등록한 근무지 <span>{query.data.total}곳</span></h2>
+            <h2 id={`${id}-list-title`}>{translate("workplaces.workplaceListScreen_create_workplace")}<span>{translate("workplaces.workplaceListScreen_h22", { value1: query.data.total })}</span></h2>
             <div className={styles.search}>
-              <label htmlFor={`${id}-search`}>현재 페이지에서 검색</label>
+              <label htmlFor={`${id}-search`}>{translate("workplaces.workplaceListScreen_current_page_search")}</label>
               <div className={styles.searchControl}>
                 <Search size={18} aria-hidden="true" />
-                <input ref={searchInput} id={`${id}-search`} type="search" placeholder="사업장명, 업종, 지역" value={search} onChange={(event) => setSearch(event.target.value)} />
+                <input ref={searchInput} id={`${id}-search`} type="search" placeholder={translate("workplaces.workplaceListScreen_workplace_industry_region")} value={search} onChange={(event) => setSearch(event.target.value)} />
               </div>
             </div>
           </div>
-          {hasSearch && <div className={styles.searchStatus}><p role="status">현재 페이지에서 {items?.length ?? 0}곳을 찾았어요</p><button type="button" onClick={clearSearch}>검색 초기화</button></div>}
+          {hasSearch && <div className={styles.searchStatus}><p role="status">{translate("workplaces.workplaceListScreen_current_page", { value1: items?.length ?? 0 })}</p><button type="button" onClick={clearSearch}>{translate("workplaces.workplaceListScreen_search")}</button></div>}
 
           {items?.length ? <ul className={styles.list}>{items.map((dto) => {
             const item = workplaceCard(dto);
@@ -79,16 +81,16 @@ export function WorkplaceListScreen() {
                   <div className={styles.titleRow}><h3 id={titleId}>{item.name}</h3></div>
                   <p className={styles.meta}><MapPin size={14} aria-hidden="true" /><span>{item.region} · {item.industry}</span></p>
                 </div>
-                <span id={actionId} className={styles.action}>{hasCases ? <>급여 내역 <strong>{item.caseCount}개</strong> 보기</> : "첫 급여 내역 만들기"}<ArrowRight size={18} aria-hidden="true" /></span>
+                <span id={actionId} className={styles.action}>{hasCases ? <>{translate("workplaces.workplaceListScreen_wageCase")}<strong>{translate("workplaces.workplaceListScreen_span2", { value1: item.caseCount })}</strong> {translate("workplaces.workplaceListScreen_span3")}</> : translate("workplaces.workplaceListScreen_wageCase_2")}<ArrowRight size={18} aria-hidden="true" /></span>
               </Link>
-              {!hasCases && <div className={styles.cardFoot}><p>아직 등록한 급여 내역이 없어요</p><Link href={`/workplaces/${item.id}`} aria-label={`${item.name} 근무지 정보`}>근무지 정보</Link></div>}
+              {!hasCases && <div className={styles.cardFoot}><p>{translate("workplaces.workplaceListScreen_create_wageCase_empty")}</p><Link href={`/workplaces/${item.id}`} aria-label={translate("workplaces.workplaceListScreen_workplace_information", { value1: item.name })}>{translate("workplaces.workplaceForm_workplace_information")}</Link></div>}
             </li>;
-          })}</ul> : <div className={styles.noResults}><Search size={28} aria-hidden="true" /><h3>현재 페이지에 검색 결과가 없습니다</h3><p>검색어를 바꾸거나 다른 페이지를 확인해 주세요.</p><button type="button" className={secondaryButton} onClick={clearSearch}>현재 페이지 전체 보기</button></div>}
+          })}</ul> : <div className={styles.noResults}><Search size={28} aria-hidden="true" /><h3>{translate("workplaces.workplaceListScreen_current_page_search_result_empty")}</h3><p>{translate("workplaces.workplaceListScreen_search_page_confirm")}</p><button type="button" className={secondaryButton} onClick={clearSearch}>{translate("workplaces.workplaceListScreen_current_page_all")}</button></div>}
 
           {query.data.total > query.data.size && <Pagination page={query.data.page} size={query.data.size} total={query.data.total} busy={query.isFetching} onPage={(next) => { setPage(next); setSearch(""); }} />}
         </section>
       )}
-      {!empty && query.isSuccess && <p className={styles.note}>퇴사한 근무지의 급여도 계속 확인할 수 있어요.</p>}
+      {!empty && query.isSuccess && <p className={styles.note}>{translate("workplaces.workplaceListScreen_employmentEnd_workplace_wage_confirm_count")}</p>}
     </div>
   );
 }

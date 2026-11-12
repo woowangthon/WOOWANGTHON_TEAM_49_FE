@@ -1,4 +1,8 @@
 'use client';
+
+import { translate, translateContent } from "@/i18n/translate";
+import { activeLocale as defaultLocale } from "@/i18n/config";
+
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { MobileNavigation } from '@/components/layout/mobile-navigation';
 import { ChatMarkdown } from './markdown';
@@ -55,10 +59,10 @@ function ChatWorkspace({workplaceId:w,chatId:initialId,embeddedCaseId}:{workplac
  useEffect(()=>()=>abort.current?.abort(),[]);
  useEffect(()=>{if(follow.current&&viewport.current)viewport.current.scrollTop=viewport.current.scrollHeight;},[draft,detail.data]);
  const refresh=()=>s.queryClient.invalidateQueries({queryKey:prefix});
- async function action(fn:()=>Promise<unknown>){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await fn();await refresh();}catch(e){setError(e instanceof Error?e.message:'요청 실패');}finally{lock.current=false;setBusy(false);}}
+ async function action(fn:()=>Promise<unknown>){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await fn();await refresh();}catch(e){setError(e instanceof Error?e.message:translate("chats.chatScreen_request_failure"));}finally{lock.current=false;setBusy(false);}}
  async function send(retry?:number){
   if(!id||lock.current||(!retry&&!content.trim()))return;
-  lock.current=true;setBusy(true);setError('');setDraft('');setRun(undefined);setPhase('대기');
+  lock.current=true;setBusy(true);setError('');setDraft('');setRun(undefined);setPhase(translate("chats.chatScreen_pending"));
   const ctrl=new AbortController();abort.current=ctrl;
   try{
    const signature=JSON.stringify([content,all]);
@@ -66,76 +70,76 @@ function ChatWorkspace({workplaceId:w,chatId:initialId,embeddedCaseId}:{workplac
    const stream=await api.stream(id,ctrl.signal,content,all?{scopeType:'WORKPLACE_ALL'}:undefined,retry,retry?undefined:pendingMessage.current?.id);
    await consumeChat(stream,event=>{
     if(ctrl.signal.aborted)return;
-    if(event.event==='message_start'){pendingMessage.current=undefined;setRun(event.data.runId);setMode(event.data.aiMode??'');setPhase('스트리밍');setContent('');}
+    if(event.event==='message_start'){pendingMessage.current=undefined;setRun(event.data.runId);setMode(event.data.aiMode??'');setPhase(translate("chats.chatScreen_chatWorkspace_send2"));setContent('');}
     if(event.event==='content_delta')setDraft(v=>v+event.data.delta);
-    if(event.event==='message_done')setPhase(event.data.status==='COMPLETED'?'완료':event.data.status==='CANCELLED'?'취소 완료':'실패');
-    if(event.event==='error'){setPhase('AI 생성 실패');setError(`${event.data.errorCode} · ${event.data.retryable?'재시도 가능':'재시도 불가'}`);}
+    if(event.event==='message_done')setPhase(event.data.status==='COMPLETED'?translate("chats.chatScreen_complete"):event.data.status==='CANCELLED'?translate("chats.chatScreen_cancel_complete"):translate("chats.chatScreen_failure"));
+    if(event.event==='error'){setPhase(translate("chats.chatScreen_failure_2"));setError(`${event.data.errorCode} · ${event.data.retryable?translate("chats.chatScreen_retry"):translate("chats.chatScreen_retry_2")}`);}
    });
-  }catch(e){if(!ctrl.signal.aborted){setPhase('실패 · 저장 상태 확인 필요');setError(e instanceof Error?e.message:'네트워크 오류');}}
+  }catch(e){if(!ctrl.signal.aborted){setPhase(translate("chats.chatScreen_failure_save_status_confirm_required"));setError(e instanceof Error?e.message:translate("chats.chatScreen_error"));}}
   finally{if(!ctrl.signal.aborted){await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}}
  }
- async function cancel(){if(!id||!run)return;setPhase('취소 요청 중');try{await api.cancel(id,run);setPhase('취소 접수 · 서버 상태 확인 중');abort.current?.abort();await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}catch(e){setPhase('취소 실패');setError(e instanceof Error?e.message:'취소 실패');}}
- const chatList=( <div className="v2-chat-list"><h2 className="font-bold">대화 목록</h2>
- {list.isPending?<p>대화 불러오는 중</p>:list.isError?<p role="alert">대화 목록 조회 실패 <button className={secondaryButton} onClick={()=>void list.refetch()}>대화 목록 다시 조회</button></p>:list.data.items.length?list.data.items.filter(c=>!embeddedCaseId||(c.defaultScope.scopeType==='CASE'&&c.defaultScope.caseId===embeddedCaseId)).map(c=><Link onClick={e=>{if(embeddedCaseId){e.preventDefault();navigateChat(c.chatId);}}} className="v2-chat-session" key={c.chatId} aria-current={id===c.chatId?"page":undefined} href={`/workplaces/${w}/chats/${c.chatId}`}><strong>{c.title}</strong><small className="block font-normal"><span className="line-clamp-2">{c.lastMessagePreview}</span><time dateTime={c.updatedAt} className="block">{new Date(c.updatedAt).toLocaleDateString("ko-KR", {year:"numeric",month:"long",day:"numeric"})}</time></small></Link>):<p>저장된 대화가 없습니다.</p>}
+ async function cancel(){if(!id||!run)return;setPhase(translate("chats.chatScreen_cancel_request"));try{await api.cancel(id,run);setPhase(translate("chats.chatScreen_cancel_count_status_confirm"));abort.current?.abort();await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}catch(e){setPhase(translate("chats.chatScreen_cancel_failure"));setError(e instanceof Error?e.message:translate("chats.chatScreen_cancel_failure"));}}
+ const chatList=( <div className="v2-chat-list"><h2 className="font-bold">{translate("chats.chatScreen_chat_list")}</h2>
+ {list.isPending?<p>{translate("chats.chatScreen_chat_load")}</p>:list.isError?<p role="alert">{translate("chats.chatScreen_chat_list_failure")}<button className={secondaryButton} onClick={()=>void list.refetch()}>{translate("chats.chatScreen_chat_list_retry")}</button></p>:list.data.items.length?list.data.items.filter(c=>!embeddedCaseId||(c.defaultScope.scopeType==='CASE'&&c.defaultScope.caseId===embeddedCaseId)).map(c=><Link onClick={e=>{if(embeddedCaseId){e.preventDefault();navigateChat(c.chatId);}}} className="v2-chat-session" key={c.chatId} aria-current={id===c.chatId?"page":undefined} href={`/workplaces/${w}/chats/${c.chatId}`}><strong>{c.title}</strong><small className="block font-normal"><span className="line-clamp-2">{c.lastMessagePreview}</span><time dateTime={c.updatedAt} className="block">{new Date(c.updatedAt).toLocaleDateString(defaultLocale, {year:"numeric",month:"long",day:"numeric"})}</time></small></Link>):<p>{translate("chats.chatScreen_save_chat_empty")}</p>}
  {!!list.data?.total&&<Pagination page={page} size={20} total={list.data.total} onPage={setPage} busy={list.isFetching}/>}
  </div>);
  const startForm=( <form onSubmit={e=>{e.preventDefault();void action(async()=>{const c=await api.create(title,Number(caseId));navigateChat(c.chatId);});}} className="v2-chat-start">
- <label className="block"><span className={styles.stepLabel}>01 · 급여 내역 선택</span>어떤 급여 기록이 궁금하세요?<select disabled={!!embeddedCaseId} required className="ui-control " value={caseId} onChange={e=>setCaseId(e.target.value)}>{embeddedCaseId&&<option value={embeddedCaseId}>Case #{embeddedCaseId}</option>}<option value="">급여 기간을 선택해 주세요</option>{cases.data?.items.filter(c=>c.workplaceId===w&&c.caseId!==embeddedCaseId).map(c=><option key={c.caseId} value={c.caseId}>{caseCard(c).period} · {caseCard(c).status} · 내역 #{c.caseId}</option>)}</select></label>
- {cases.isPending&&<p role="status">급여 내역 불러오는 중</p>}
- {cases.data?.total===0&&<p>참조할 급여 내역이 없습니다. 내역을 등록한 뒤 대화를 시작하세요.</p>}
- {cases.isError&&<p role="alert">급여 내역을 불러오지 못했어요. <button type="button" onClick={()=>void cases.refetch()}>급여 내역 다시 조회</button></p>}
- {!embeddedCaseId&&(casePage>1||(cases.data?.total??0)>100)&&<div className="flex flex-wrap items-center gap-2"><button className={secondaryButton} type="button" disabled={casePage===1||cases.isFetching} onClick={()=>{setCaseId('');setCasePage(p=>p-1);}}>이전 내역 목록</button><span>{casePage}페이지</span><button className={secondaryButton} type="button" disabled={!cases.data||cases.isFetching||casePage*100>=cases.data.total} onClick={()=>{setCaseId('');setCasePage(p=>p+1);}}>다음 내역 목록</button></div>}
- <div hidden={!caseId} className={styles.titleStep}><span className={styles.stepLabel}>02 · 대화 제목</span><label className="block">새 대화 제목<input className="ui-control " placeholder="예: 10월 급여명세서 확인" minLength={1} maxLength={200} required value={title} onChange={e=>setTitle(e.target.value)}/></label></div>
- <button className={primaryButton} disabled={busy||!caseId||!title.trim()||(!embeddedCaseId&&(cases.isError||cases.isFetching))}>대화 시작</button></form>);
+ <label className="block"><span className={styles.stepLabel}>{translate("chats.chatScreen_wageCase_select")}</span>{translate("chats.chatScreen_wage")}<select disabled={!!embeddedCaseId} required className="ui-control " value={caseId} onChange={e=>setCaseId(e.target.value)}>{embeddedCaseId&&<option value={embeddedCaseId}>Case #{embeddedCaseId}</option>}<option value="">{translate("chats.chatScreen_wage_period_select")}</option>{cases.data?.items.filter(c=>c.workplaceId===w&&c.caseId!==embeddedCaseId).map(c=><option key={c.caseId} value={c.caseId}>{translate("chats.chatScreen_case", { value1: caseCard(c).period, value2: caseCard(c).status, value3: c.caseId })}</option>)}</select></label>
+ {cases.isPending&&<p role="status">{translate("chats.chatScreen_wageCase_load")}</p>}
+ {cases.data?.total===0&&<p>{translate("chats.chatScreen_reference_wageCase_empty_case_create_chat_start")}</p>}
+ {cases.isError&&<p role="alert">{translate("chats.chatScreen_wageCase_loadFailure")}<button type="button" onClick={()=>void cases.refetch()}>{translate("chats.chatScreen_wageCase_retry")}</button></p>}
+ {!embeddedCaseId&&(casePage>1||(cases.data?.total??0)>100)&&<div className="flex flex-wrap items-center gap-2"><button className={secondaryButton} type="button" disabled={casePage===1||cases.isFetching} onClick={()=>{setCaseId('');setCasePage(p=>p-1);}}>{translate("chats.chatScreen_previous_case_list")}</button><span>{translate("chats.chatScreen_page", { value1: casePage })}</span><button className={secondaryButton} type="button" disabled={!cases.data||cases.isFetching||casePage*100>=cases.data.total} onClick={()=>{setCaseId('');setCasePage(p=>p+1);}}>{translate("chats.chatScreen_next_case_list")}</button></div>}
+ <div hidden={!caseId} className={styles.titleStep}><span className={styles.stepLabel}>{translate("chats.chatScreen_chat")}</span><label className="block">{translate("chats.chatScreen_new_chat")}<input className="ui-control " placeholder={translate("chats.chatScreen_payslip_confirm")} minLength={1} maxLength={200} required value={title} onChange={e=>setTitle(e.target.value)}/></label></div>
+ <button className={primaryButton} disabled={busy||!caseId||!title.trim()||(!embeddedCaseId&&(cases.isError||cases.isFetching))}>{translate("chats.chatScreen_chat_start")}</button></form>);
  return <div className={embeddedCaseId?"case-chat-embedded":workplaceStyles.screen}>{!embeddedCaseId&&<WorkplaceHeader id={w} workplace={workplace.data} active="chats" compact={!!id} />}<div className={`v2-chat-shell ${styles.shell}`}>
- {!id&&<><section aria-label="AI 대화 시작 안내" className="v2-chat-intro"><span aria-hidden="true" className="v2-chat-orb">✦</span><h2>이 근무지의 자료, 무엇이 궁금하세요?</h2><p>급여 내역을 선택하면, 그 기록을 바탕으로 대화할 수 있어요.</p></section>{startForm}<div className={styles.history}>{chatList}</div><p className="v2-chat-disclaimer">AI 설명은 공식 임금 계산 결과와 구분됩니다.</p></>}
- {id&&<div className="v2-chat-header"><h1>{detail.data?.session.title??'AI 자료 도우미'}</h1><div className="v2-chat-drawer"><MobileNavigation label="채팅 목록" title="대화 목록" breakpoint="99999px"><Link onClick={e=>{if(embeddedCaseId){e.preventDefault();navigateChat();}}} className={secondaryButton} href={`/workplaces/${w}/chats`}>새 대화 시작</Link>{chatList}</MobileNavigation></div></div>}
+ {!id&&<><section aria-label={translate("chats.chatScreen_chat_start_notice")} className="v2-chat-intro"><span aria-hidden="true" className="v2-chat-orb">✦</span><h2>{translate("chats.chatScreen_workplace_record")}</h2><p>{translate("chats.chatScreen_wageCase_select_chat_count")}</p></section>{startForm}<div className={styles.history}>{chatList}</div><p className="v2-chat-disclaimer">{translate("chats.chatScreen_wage_calculation_result_minutes")}</p></>}
+ {id&&<div className="v2-chat-header"><h1>{detail.data?.session.title??translate("chats.chatScreen_record_assistant")}</h1><div className="v2-chat-drawer"><MobileNavigation label={translate("chats.chatScreen_list")} title={translate("chats.chatScreen_chat_list")} breakpoint="99999px"><Link onClick={e=>{if(embeddedCaseId){e.preventDefault();navigateChat();}}} className={secondaryButton} href={`/workplaces/${w}/chats`}>{translate("chats.chatScreen_new_chat_start")}</Link>{chatList}</MobileNavigation></div></div>}
  {error&&<p role="alert" className="v2-chat-warning">{error}</p>}
  <section className="min-w-0">
- {!id?null:detail.isPending?<p>과거 기록 불러오는 중</p>:detail.isError?<p role="alert">대화에 접근할 수 없습니다. 삭제 또는 권한과 응답 형식을 확인하세요. <button className={secondaryButton} onClick={()=>void detail.refetch()}>대화 기록 다시 조회</button></p>:<>
- <details className="v2-chat-management"><summary>대화 관리 · 제목 수정 및 삭제</summary><form onSubmit={e=>{e.preventDefault();void action(()=>api.rename(id,title));}} className="flex flex-wrap gap-2"><label>수정할 제목<input required className="ui-control " minLength={1} maxLength={200} value={title} onChange={e=>setTitle(e.target.value)}/></label><button className={secondaryButton} disabled={busy}>제목 수정</button><button className={secondaryButton} type="button" disabled={busy} onClick={()=>setConfirmDelete(true)}>대화 삭제</button></form></details>{confirmDelete&&<ConfirmDialog title="이 대화를 삭제할까요?" busy={busy} onClose={()=>setConfirmDelete(false)} action={<button className={secondaryButton} disabled={busy} onClick={()=>void action(async()=>{await api.remove(id);s.queryClient.removeQueries({queryKey:[...prefix,'detail',id]});navigateChat();})}>대화 삭제 확인</button>}><p>삭제할 대화와 기록을 확인하세요.</p></ConfirmDialog>}
+ {!id?null:detail.isPending?<p>{translate("chats.chatScreen_load")}</p>:detail.isError?<p role="alert">{translate("chats.chatScreen_chat_access_count_empty_delete_permission_response")}<button className={secondaryButton} onClick={()=>void detail.refetch()}>{translate("chats.chatScreen_chat_retry")}</button></p>:<>
+ <details className="v2-chat-management"><summary>{translate("chats.chatScreen_chat_edit_delete")}</summary><form onSubmit={e=>{e.preventDefault();void action(()=>api.rename(id,title));}} className="flex flex-wrap gap-2"><label>{translate("chats.chatScreen_edit")}<input required className="ui-control " minLength={1} maxLength={200} value={title} onChange={e=>setTitle(e.target.value)}/></label><button className={secondaryButton} disabled={busy}>{translate("chats.chatScreen_edit_2")}</button><button className={secondaryButton} type="button" disabled={busy} onClick={()=>setConfirmDelete(true)}>{translate("chats.chatScreen_chat_delete")}</button></form></details>{confirmDelete&&<ConfirmDialog title={translate("chats.chatScreen_chat_delete_2")} busy={busy} onClose={()=>setConfirmDelete(false)} action={<button className={secondaryButton} disabled={busy} onClick={()=>void action(async()=>{await api.remove(id);s.queryClient.removeQueries({queryKey:[...prefix,'detail',id]});navigateChat();})}>{translate("chats.chatScreen_chat_delete_confirm")}</button>}><p>{translate("chats.chatScreen_delete_chat_confirm")}</p></ConfirmDialog>}
  <div ref={conversation} className="v2-chat-conversation">
- <ChatContextBar workplaceId={w} scope={detail.data.session.defaultScope} caseLabel={referenceCase ? `${caseCard(referenceCase).period} · 내역 #${referenceCase.caseId}` : undefined} all={all} busy={busy} onAll={setAll}/>
- <div ref={viewport} role="region" aria-label="대화 메시지" tabIndex={0} className="v2-chat-messages" onScroll={e=>{const el=e.currentTarget;follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<80;setShowLatest(!follow.current);}}>
- {detail.data.messages.total>20&&<div className="v2-chat-history"><button disabled={history===1||busy} onClick={()=>setHistory(p=>p-1)}>이전 기록</button><span>{history} / {Math.ceil(detail.data.messages.total/20)} 페이지 · 총 {detail.data.messages.total}개</span><button disabled={busy||history*20>=detail.data.messages.total} onClick={()=>setHistory(p=>p+1)}>다음 기록</button></div>}
+ <ChatContextBar workplaceId={w} scope={detail.data.session.defaultScope} caseLabel={referenceCase ? translate("chats.chatScreen_case_2", { value1: caseCard(referenceCase).period, value2: referenceCase.caseId }) : undefined} all={all} busy={busy} onAll={setAll}/>
+ <div ref={viewport} role="region" aria-label={translate("chats.chatScreen_chat_message")} tabIndex={0} className="v2-chat-messages" onScroll={e=>{const el=e.currentTarget;follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<80;setShowLatest(!follow.current);}}>
+ {detail.data.messages.total>20&&<div className="v2-chat-history"><button disabled={history===1||busy} onClick={()=>setHistory(p=>p-1)}>{translate("chats.chatScreen_previous")}</button><span>{translate("chats.chatScreen_page_2", { value1: history, value2: Math.ceil(detail.data.messages.total/20), value3: detail.data.messages.total })}</span><button disabled={busy||history*20>=detail.data.messages.total} onClick={()=>setHistory(p=>p+1)}>{translate("chats.chatScreen_next")}</button></div>}
  {detail.data.messages.items.map(m=><StoredMessage key={m.messageId} message={m} retry={()=>void send(m.messageId)} busy={busy} currentScope={all?{scopeType:'WORKPLACE_ALL'}:detail.data.session.defaultScope} returnTo={`/workplaces/${w}/chats/${id}`}/>)}
-{!detail.data.messages.items.length&&!busy&&<p>아직 메시지가 없습니다. 확인할 자료나 질문을 작성하세요.</p>} {(busy||draft)&&<article className="v2-chat-bubble"><p>{phase}{mode==='mock'?' · 개발용 사전 작성 답변(mock)':''}</p><ChatMarkdown content={draft}/>{!busy&&<><p>수신한 임시 답변입니다. 저장 기록과 완료 상태를 확인하세요.</p><button className={secondaryButton} onClick={()=>setDraft('')}>임시 답변 닫기</button></>}</article>}</div>
- {showLatest&&<button className={secondaryButton} onClick={()=>{follow.current=true;setShowLatest(false);if(viewport.current)viewport.current.scrollTop=viewport.current.scrollHeight;}}>최신 메시지 보기</button>}
+{!detail.data.messages.items.length&&!busy&&<p>{translate("chats.chatScreen_message_empty_confirm_record_question")}</p>} {(busy||draft)&&<article className="v2-chat-bubble"><p>{phase}{mode==='mock'?translate("chats.chatScreen_answer"):''}</p><ChatMarkdown content={draft}/>{!busy&&<><p>{translate("chats.chatScreen_count_answer_save_complete_status_confirm")}</p><button className={secondaryButton} onClick={()=>setDraft('')}>{translate("chats.chatScreen_answer_close")}</button></>}</article>}</div>
+ {showLatest&&<button className={secondaryButton} onClick={()=>{follow.current=true;setShowLatest(false);if(viewport.current)viewport.current.scrollTop=viewport.current.scrollHeight;}}>{translate("chats.chatScreen_current_message")}</button>}
  <p role="status" aria-live="polite" className="sr-only">{phase}</p>
  <form onSubmit={e=>{e.preventDefault();void send();}} className="v2-chat-composer">
- <label className="sr-only" htmlFor="chat-question">질문</label><textarea id="chat-question" rows={2} placeholder="내 근무 기록과 급여에 관해 질문하세요" className="ui-control " required value={content} disabled={busy} onChange={e=>setContent(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send();}}}/>
- <div className="v2-chat-footer"><small>Enter 전송 · Shift+Enter 줄바꿈</small><button className={primaryButton} disabled={busy||!content.trim()}>전송</button>{busy&&<button className={secondaryButton} type="button" disabled={!run||phase==='취소 요청 중'} onClick={()=>void cancel()}>답변 중지</button>}</div></form><p className="v2-chat-disclaimer">AI 설명은 공식 계산과 구분됩니다. 저장된 모든 대화가 모델에 전달되는 것은 아닙니다.</p></div></>}
+ <label className="sr-only" htmlFor="chat-question">{translate("chats.chatScreen_question")}</label><textarea id="chat-question" rows={2} placeholder={translate("chats.chatScreen_work_wage_question")} className="ui-control " required value={content} disabled={busy} onChange={e=>setContent(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send();}}}/>
+ <div className="v2-chat-footer"><small>{translate("chats.chatScreen_div14")}</small><button className={primaryButton} disabled={busy||!content.trim()}>{translate("chats.chatScreen_div15")}</button>{busy&&<button className={secondaryButton} type="button" disabled={!run||phase===translate("chats.chatScreen_cancel_request")} onClick={()=>void cancel()}>{translate("chats.chatScreen_answer_2")}</button>}</div></form><p className="v2-chat-disclaimer">{translate("chats.chatScreen_calculation_minutes_save_all_chat")}</p></div></>}
 
-{detail.isError&&(busy||draft)&&<article className="v2-chat-bubble"><p>{phase}{mode==='mock'?' · 개발용 사전 작성 답변(mock)':''}</p><ChatMarkdown content={draft}/>{!busy&&<><p>수신한 임시 답변입니다. 저장 기록과 완료 상태를 확인하세요.</p><button className={secondaryButton} onClick={()=>setDraft('')}>임시 답변 닫기</button></>}</article>}
+{detail.isError&&(busy||draft)&&<article className="v2-chat-bubble"><p>{phase}{mode==='mock'?translate("chats.chatScreen_answer"):''}</p><ChatMarkdown content={draft}/>{!busy&&<><p>{translate("chats.chatScreen_count_answer_save_complete_status_confirm")}</p><button className={secondaryButton} onClick={()=>setDraft('')}>{translate("chats.chatScreen_answer_close")}</button></>}</article>}
  </section></div></div>;
 }
 export function StoredMessage({message:m,retry,busy,returnTo,currentScope}:{message:Message;retry:()=>void;busy:boolean;returnTo?:string;currentScope?:ChatScope}){
  const caseId=m.scope.scopeType==='CASE'?m.scope.caseId:undefined;
  const different=currentScope&&scopeLabel(currentScope)!==scopeLabel(m.scope);
- return <article aria-label={m.role==='USER'?'내 메시지':'AI 답변'} className={`v2-chat-bubble ${m.role==='USER'?'v2-chat-user':''}`}>
- <h3>{m.role==='USER'?'나':'✦ AI 자료 도우미'}</h3>
- {different&&<p className="text-caption text-muted">이 메시지 참조: {scopeLabel(m.scope)}</p>}
+ return <article aria-label={m.role==='USER'?translate("chats.chatScreen_message"):translate("chats.chatScreen_answer_3")} className={`v2-chat-bubble ${m.role==='USER'?'v2-chat-user':''}`}>
+ <h3>{m.role==='USER'?translate("chats.chatScreen_h3"):translate("chats.chatScreen_record_assistant_2")}</h3>
+ {different&&<p className="text-caption text-muted">{translate("chats.chatScreen_message_reference", { value1: scopeLabel(m.scope) })}</p>}
  {m.role==='ASSISTANT'?<ChatMarkdown content={m.content}/>:<p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{m.content}</p>}
- {m.status!=='COMPLETED'&&<p role="status">{m.status==='FAILED'?'답변 생성 실패':m.status==='CANCELLED'?'답변 중지됨':'답변 생성 중'}</p>}
+ {m.status!=='COMPLETED'&&<p role="status">{m.status==='FAILED'?translate("chats.chatScreen_answer_failure"):m.status==='CANCELLED'?translate("chats.chatScreen_answer_4"):translate("chats.chatScreen_answer_5")}</p>}
  {m.errorCode&&<p className="v2-chat-warning">{m.errorCode}</p>}
- {m.sourceMayBeOutdated&&<p role="note" className="v2-chat-warning">주의: 최신 자료와 다를 수 있는 근거입니다.</p>}
- <details className="v2-chat-evidence"><summary>{m.role==='ASSISTANT'?`출처 ${(m.sources?.length ?? "?")}건 · 공식 결과 ${(m.resultRefs?.length ?? "?")}건`:'메시지 정보'}</summary><div>
- <p>참조: {scopeLabel(m.scope)}</p><p>저장 상태: {m.status}</p>
- {m.sources===undefined&&<p>&#52636;&#52376; &#51221;&#48372; &#48120;&#51228;&#44277;</p>}
- {m.sources?.length===0&&<p>연결된 문서 출처가 없습니다.</p>}
- {(m.sources ?? []).map((source,i)=>{const c=source.caseId??caseId;return c?<ChatSource key={i} caseId={c} value={source} returnTo={returnTo}/>:<p key={i}>출처 #{source.documentId}: Case 정보가 없어 접근할 수 없습니다.</p>;})}
- {(m.resultRefs ?? []).map((r,i)=>{const c=r.caseId??caseId;return <p key={i}>{r.type} · 스냅샷 #{r.snapshotId} · v{r.version} {c&&<Link className="underline" href={snapshotHref(c,r,returnTo)}>공식 결과 스냅샷 보기</Link>}</p>;})}
+ {m.sourceMayBeOutdated&&<p role="note" className="v2-chat-warning">{translate("chats.chatScreen_warning_current_record_count_evidence")}</p>}
+ <details className="v2-chat-evidence"><summary>{m.role==='ASSISTANT'?translate("chats.chatScreen_source_result", { value1: (m.sources?.length ?? "?"), value2: (m.resultRefs?.length ?? "?") }):translate("chats.chatScreen_message_information")}</summary><div>
+ <p>{translate("chats.chatContextBar_reference", { value1: scopeLabel(m.scope) })}</p><p>{translate("chats.chatScreen_save_status", { value1: m.status })}</p>
+ {m.sources===undefined&&<p>{translate("chats.chatScreen_source_information_notProvided")}</p>}
+ {m.sources?.length===0&&<p>{translate("chats.chatScreen_link_document_source_empty")}</p>}
+ {(m.sources ?? []).map((source,i)=>{const c=source.caseId??caseId;return c?<ChatSource key={i} caseId={c} value={source} returnTo={returnTo}/>:<p key={i}>{translate("chats.chatScreen_source_information_empty_access_count", { value1: source.documentId })}</p>;})}
+ {(m.resultRefs ?? []).map((r,i)=>{const c=r.caseId??caseId;return <p key={i}>{translateContent("chats.chatScreen_div22", { value1: r.type, value2: r.snapshotId, value3: r.version, value4: c&&<Link className="underline" href={snapshotHref(c,r,returnTo)}>{translate("chats.chatScreen_result")}</Link> })}</p>;})}
  </div></details>
- {m.role==='ASSISTANT'&&['FAILED','CANCELLED'].includes(m.status)&&<button className={secondaryButton} disabled={busy} onClick={retry}>실패·취소 답변 재시도</button>}</article>;
+ {m.role==='ASSISTANT'&&['FAILED','CANCELLED'].includes(m.status)&&<button className={secondaryButton} disabled={busy} onClick={retry}>{translate("chats.chatScreen_failure_cancel_answer_retry")}</button>}</article>;
 }
 
 function ChatSource({caseId,value,returnTo}:{caseId:number;value:NonNullable<Message['sources']>[number];returnTo?:string}){
- if(value.documentId===null)return <p>&#50896;&#48376; &#47928;&#49436; ID&#44032; &#51228;&#44277;&#46104;&#51648; &#50506;&#50520;&#49845;&#45768;&#45796;.</p>;
+ if(value.documentId===null)return <p>{translate("chats.chatScreen_original_document_notProvided")}</p>;
  return <LinkedChatSource caseId={caseId} value={{...value,documentId:value.documentId}} returnTo={returnTo}/>;
 }
 function LinkedChatSource({caseId,value,returnTo}:{caseId:number;value:NonNullable<Message['sources']>[number]&{documentId:number};returnTo?:string}){
  const doc=useSourceDocument(caseId,value.documentId);
- if(doc.isPending||doc.isFetching)return <p>출처 접근 확인 중</p>;
- if(doc.isError||!doc.data)return <p>삭제되었거나 접근할 수 없는 출처입니다.</p>;
- return <><SourceEvidence caseId={caseId} value={value}/>{returnTo&&<Link className="underline" href={`/cases/${caseId}/review?documentId=${value.documentId}&returnTo=${encodeURIComponent(returnTo)}`}>출처 검토 후 채팅으로 돌아가기</Link>}</>;
+ if(doc.isPending||doc.isFetching)return <p>{translate("chats.chatScreen_source_access_confirm")}</p>;
+ if(doc.isError||!doc.data)return <p>{translate("chats.chatScreen_delete_access_count_none_source")}</p>;
+ return <><SourceEvidence caseId={caseId} value={value}/>{returnTo&&<Link className="underline" href={`/cases/${caseId}/review?documentId=${value.documentId}&returnTo=${encodeURIComponent(returnTo)}`}>{translate("chats.chatScreen_source_review")}</Link>}</>;
 }

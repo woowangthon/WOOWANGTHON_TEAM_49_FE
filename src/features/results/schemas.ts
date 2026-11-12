@@ -1,3 +1,5 @@
+
+import { translate } from "@/i18n/translate";
 import { z } from "zod";
 import { decodeWith, pageSchema } from "@/lib/api/schema";
 import { sourceSchema } from "@/features/documents/review/schemas";
@@ -9,7 +11,7 @@ const timestamp = z.iso.datetime({ offset: true });
 const moneyUnits = new Set(["KRW", "MONEY_KRW", "KRW_PER_HOUR"]);
 function validateMoneyValues(value:Record<string,unknown>,keys:string[],unit:unknown,ctx:z.RefinementCtx) {
  if(typeof unit!=="string" || !moneyUnits.has(unit))return;
- for(const key of keys)if(typeof value[key]==="number" && !Number.isSafeInteger(value[key]))ctx.addIssue({code:"custom",path:[key],message:"원화는 안전한 범위의 정수여야 합니다."});
+ for(const key of keys)if(typeof value[key]==="number" && !Number.isSafeInteger(value[key]))ctx.addIssue({code:"custom",path:[key],message:translate("results.schemas_scope_count")});
 }
 export const freshnessSchema = z.enum(["CURRENT", "STALE", "UPDATING", "FAILED"]);
 export const resultStatusSchema = z.enum(["MATCH", "DIFFERENCE", "INSUFFICIENT_INFORMATION", "REVIEW_REQUIRED"]);

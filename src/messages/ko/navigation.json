@@ -1,0 +1,9 @@
+{
+  "appShell_create_menu_empty": "등록된 메뉴가 없습니다.",
+  "appShell_ariaLabel_aside": "사이드바",
+  "appShell_menu": "주 메뉴",
+  "mobileNavigation_menu": "메뉴",
+  "mobileNavigation_monthlyWage_menu": "월급잇다 메뉴",
+  "mobileNavigation_ariaLabel_button": "{value1} 열기",
+  "mobileNavigation_close": "{value1} 닫기"
+}

@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 import { useCase } from "@/features/cases/queries";
 import { ApiError } from "@/lib/api/error";
 import { useState } from "react";
@@ -17,15 +19,15 @@ export function ReviewConfirmation({context,version,fields,disabled,documentType
   const data=q.data;
   const groups=groupReviewFields(fields,documentType);
   const remainingDetails=groups.details.filter(field=>data.unconfirmedFieldIds?.includes(field.fieldId)).length;
-  return <section className={`${cardStyle} ${styles.confirmation}`} aria-label="문서 전체 검토"><div className={styles.confirmationCopy}><h2>문서 확인을 마무리할까요?</h2>
-    <p className="text-body">처리: {statusLabels[data.processingStatus]} · 연결 문서 검토: {reviewLabels[data.reviewStatus]}</p>
-    {data.totalFieldCount!==undefined&&data.confirmedFieldCount!==undefined&&<p>확인된 필드 {data.confirmedFieldCount} / {data.totalFieldCount}</p>}
-    {remainingDetails>0&&<p className="text-body">세부 항목에도 미확인 값이 {remainingDetails}개 있어요. ‘세부 항목 확인’을 펼쳐 살펴봐 주세요.</p>}
-    {data.unconfirmedFieldIds&&data.unconfirmedFieldIds.length>0&&<p className="break-words">미완료 항목: {data.unconfirmedFieldIds.map(id=>fields.find(f=>f.fieldId===id)?.label??`필드 #${id}`).join(", ")}</p>}
-    {data.reasonCodes?.length? <p className="break-words">사유: {data.reasonCodes.join(", ")}</p>:null}
-    <p className="text-caption text-muted">검토 완료는 원본 진위·법적 검증 완료를 뜻하지 않습니다.</p>
+  return <section className={`${cardStyle} ${styles.confirmation}`} aria-label={translate("documents.reviewConfirmation_document_all_review")}><div className={styles.confirmationCopy}><h2>{translate("documents.reviewConfirmation_document_confirm")}</h2>
+    <p className="text-body">{translate("documents.reviewConfirmation_processing_link_document_review", { value1: statusLabels[data.processingStatus], value2: reviewLabels[data.reviewStatus] })}</p>
+    {data.totalFieldCount!==undefined&&data.confirmedFieldCount!==undefined&&<p>{translate("documents.reviewConfirmation_confirm_field", { value1: data.confirmedFieldCount, value2: data.totalFieldCount })}</p>}
+    {remainingDetails>0&&<p className="text-body">{translate("documents.reviewConfirmation_item_confirm_expand", { value1: remainingDetails })}</p>}
+    {data.unconfirmedFieldIds&&data.unconfirmedFieldIds.length>0&&<p className="break-words">{translate("documents.reviewConfirmation_complete_item", { value1: data.unconfirmedFieldIds.map(id=>fields.find(f=>f.fieldId===id)?.label??translate("documents.reviewConfirmation_field", { value1: id })).join(", ") })}</p>}
+    {data.reasonCodes?.length? <p className="break-words">{translate("documents.reviewConfirmation_div6", { value1: data.reasonCodes.join(", ") })}</p>:null}
+    <p className="text-caption text-muted">{translate("documents.reviewConfirmation_review_complete_original")}</p>
     {error&&<p role="alert">{error}</p>}
-    {conflict&&<button className={primaryButton} disabled={q.isFetching||latest.isFetching} onClick={async()=>{const results=await Promise.all([q.refetch(),latest.refetch()]);if(results.every(r=>!r.isError)){setConflict(false);setError("");}}}>최신 검토 상태와 버전 확인</button>}
-    </div><div className={styles.confirmationAction}><button className={primaryButton} disabled={disabled||conflict||mutation.isPending||data.processingStatus==="UPLOADED"||data.processingStatus==="PROCESSING"} onClick={async()=>{setError("");try{await mutation.mutateAsync({type:"confirm-review",version});}catch(e){setError(reviewError(e));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}}}>{mutation.isPending?"검토 상태 확인 중…":"문서 검토 완료 요청"}</button><p>미완료 항목이 있으면 검토 중으로 유지돼요.</p></div>
+    {conflict&&<button className={primaryButton} disabled={q.isFetching||latest.isFetching} onClick={async()=>{const results=await Promise.all([q.refetch(),latest.refetch()]);if(results.every(r=>!r.isError)){setConflict(false);setError("");}}}>{translate("documents.reviewConfirmation_current_review_status_version_confirm")}</button>}
+    </div><div className={styles.confirmationAction}><button className={primaryButton} disabled={disabled||conflict||mutation.isPending||data.processingStatus==="UPLOADED"||data.processingStatus==="PROCESSING"} onClick={async()=>{setError("");try{await mutation.mutateAsync({type:"confirm-review",version});}catch(e){setError(reviewError(e));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}}}>{mutation.isPending?translate("documents.reviewConfirmation_review_status_confirm"):translate("documents.reviewConfirmation_document_review_complete_request")}</button><p>{translate("documents.reviewConfirmation_complete_item_review")}</p></div>
   </section>;
 }

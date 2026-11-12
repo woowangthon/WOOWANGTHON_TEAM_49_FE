@@ -1,20 +1,28 @@
+
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppProviders } from "./providers";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: { default: "월급잇다", template: "%s | 월급잇다" },
-  description: "근무 자료를 연결하고 급여 차이의 근거를 확인하는 월급잇다",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("common");
+  return {
+    title: { default: t("brand"), template: t("layout_monthlyWage") },
+    description: t("layout_work_record_link_wage_difference_evidence_confirm"),
+  };
+}
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale();
+  const t = await getTranslations("common");
   return (
-    <html lang="ko" className="h-full antialiased">
+    <html lang={locale} className="h-full antialiased">
       <body className="min-h-full">
-        <a href="#main-content" className="skip-link">본문으로 건너뛰기</a>
-        <AppProviders>{children}</AppProviders>
+        <a href="#main-content" className="skip-link">{t("layout_body")}</a>
+        <NextIntlClientProvider><AppProviders>{children}</AppProviders></NextIntlClientProvider>
       </body>
     </html>
   );

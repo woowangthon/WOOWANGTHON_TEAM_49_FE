@@ -16,12 +16,12 @@
 .screen .tabs button[aria-selected="true"] { background: white; color: #3e5fae; box-shadow: 0 2px 5px #182d4b08; }
 .screen .comparison { gap: 20px; }
 .original, .fields { min-width: 0; min-height: 0; }
-.original [aria-label="문서 원문 뷰어"] { padding: 22px; border: 1px solid #e3e6eb; border-radius: 22px; background: white; box-shadow: none; }
+.original [data-ui="documents-originalViewer_ariaLabel_section"] { padding: 22px; border: 1px solid #e3e6eb; border-radius: 22px; background: white; box-shadow: none; }
 .original h2 { font-size: 18px; letter-spacing: -.5px; }
-.original [aria-label="원문 도구"] { gap: 4px 8px; }
-.original [aria-label="원문 도구"] button { min-height: 36px; padding: 7px 9px; border-radius: 8px; font-size: 11px; }
-.original [aria-label="원문 도구"] p, .original [aria-label="원문 도구"] span { font-size: 11px; }
-.original [aria-label="확대한 원문 스크롤 영역"] { background: #f3f5f8; border-color: #e5e9ee; border-radius: 12px; }
+.original [data-ui="documents-originalViewer_ariaLabel_div"] { gap: 4px 8px; }
+.original [data-ui="documents-originalViewer_ariaLabel_div"] button { min-height: 36px; padding: 7px 9px; border-radius: 8px; font-size: 11px; }
+.original [data-ui="documents-originalViewer_ariaLabel_div"] p, .original [data-ui="documents-originalViewer_ariaLabel_div"] span { font-size: 11px; }
+.original [data-ui="documents-originalViewer_ariaLabel_div2"] { background: #f3f5f8; border-color: #e5e9ee; border-radius: 12px; }
 .original [data-original-evidence] { padding: 12px 14px; border-radius: 12px; background: #f8f9fb; font-size: 11px; line-height: 1.8; }
 .screen .fieldsPanel { min-width: 0; padding: 20px; border: 1px solid #e1e6ee; border-radius: 18px; background: white; }
 .fieldList { min-width: 0; }
@@ -81,9 +81,9 @@
 @container (min-width: 760px) {
   .screen .comparison { height: min(85dvh, 60rem); min-height: 28rem; align-items: stretch; }
   .original, .fields { height: 100%; }
-  .original [aria-label="문서 원문 뷰어"], .screen .fieldsPanel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-  .original [aria-label="문서 원문 뷰어"] > :not([aria-label="확대한 원문 스크롤 영역"]) { flex-shrink: 0; }
-  .original [aria-label="확대한 원문 스크롤 영역"] { flex: 1; min-height: 0; max-height: none; }
+  .original [data-ui="documents-originalViewer_ariaLabel_section"], .screen .fieldsPanel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .original [data-ui="documents-originalViewer_ariaLabel_section"] > :not([data-ui="documents-originalViewer_ariaLabel_div2"]) { flex-shrink: 0; }
+  .original [data-ui="documents-originalViewer_ariaLabel_div2"] { flex: 1; min-height: 0; max-height: none; }
   .panelHeading, .progressArea { flex-shrink: 0; }
   .fieldList { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #bac6df transparent; scrollbar-gutter: stable; padding-right: 6px; }
   .screen .tabs { display: none; }
@@ -95,7 +95,7 @@
   .screen .documentPicker { padding-inline: 14px; }
   .fileIcon { width: 32px; height: 38px; }
   .documentCount { font-size: 11px; }
-  .screen .fieldsPanel, .original [aria-label="문서 원문 뷰어"] { padding: 16px 14px; border-radius: 16px; }
+  .screen .fieldsPanel, .original [data-ui="documents-originalViewer_ariaLabel_section"] { padding: 16px 14px; border-radius: 16px; }
   .screen .fieldsPanel .field { padding: 11px 10px; }
   .screen .confirmation { padding: 16px; }
   .fieldActions { gap: 6px; }

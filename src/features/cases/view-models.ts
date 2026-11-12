@@ -1,16 +1,18 @@
+
+import { translate } from "@/i18n/translate";
 import type { CaseListDto } from "./schemas";
 
-export const caseStatusLabels = { CREATED: "생성됨", IN_PROGRESS: "진행 중", COMPLETED: "작업 완료", ARCHIVED: "보관됨" };
-export const caseStepLabels = { UPLOAD: "자료 등록", REVIEW: "추출값 검토", CONDITIONS: "조건 확인", COMPARE: "자료 대조", RESULT: "결과 확인" };
+export const caseStatusLabels = { CREATED: translate("cases.viewModels_caseStatusLabels_cREATED"), IN_PROGRESS: translate("cases.viewModels_progress"), COMPLETED: translate("cases.viewModels_complete"), ARCHIVED: translate("cases.viewModels_archived") };
+export const caseStepLabels = { UPLOAD: translate("cases.viewModels_record_create"), REVIEW: translate("cases.viewModels_extractedValue_review"), CONDITIONS: translate("cases.caseContext_confirm"), COMPARE: translate("cases.viewModels_record_comparison"), RESULT: translate("cases.viewModels_result_confirm") };
 export function caseCard(dto: CaseListDto) {
   return {
     id: dto.caseId,
     workplaceName: typeof dto.workplace.name === "string" ? dto.workplace.name : `#${dto.workplaceId}`,
     period: `${dto.periodStart} ~ ${dto.periodEnd}`,
-    payType: dto.payType === "HOURLY" ? "시급제" : "월급제",
+    payType: dto.payType === "HOURLY" ? translate("cases.caseForm_hourlyWage") : translate("cases.caseForm_monthlyWage"),
     status: caseStatusLabels[dto.status],
-    step: dto.currentStep === undefined ? "단계 정보 미제공" : caseStepLabels[dto.currentStep],
-    attention: dto.attentionRequired === true ? "확인 필요" : dto.attentionRequired === false ? "추가 확인 요청 없음" : "확인 필요 여부 미제공",
+    step: dto.currentStep === undefined ? translate("cases.viewModels_step_information_notProvided") : caseStepLabels[dto.currentStep],
+    attention: dto.attentionRequired === true ? translate("cases.viewModels_confirm_required") : dto.attentionRequired === false ? translate("cases.viewModels_add_confirm_request_none") : translate("cases.viewModels_confirm_required_notProvided"),
     updatedAt: dto.updatedAt,
   };
 }

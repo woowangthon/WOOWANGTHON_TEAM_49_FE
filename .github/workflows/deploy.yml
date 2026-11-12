@@ -39,6 +39,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Validate language packs
+        run: npm run i18n:check
+
       - name: Test with MSW
         run: npm test
         env:

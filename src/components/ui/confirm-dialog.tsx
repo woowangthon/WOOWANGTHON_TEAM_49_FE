@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
@@ -33,7 +35,7 @@ export function ConfirmDialog({ title, children, action, onClose, busy = false }
       <h2 id={titleId} className="text-title font-extrabold">{title}</h2>
       <div className="mt-5 space-y-4 text-body">{children}</div>
       <div className="mt-6 flex flex-wrap justify-end gap-3">
-        <button type="button" autoFocus className={secondaryButton} onClick={onClose} disabled={busy}>취소</button>
+        <button type="button" autoFocus className={secondaryButton} onClick={onClose} disabled={busy}>{translate("common.cancel")}</button>
         {action}
       </div>
     </dialog>

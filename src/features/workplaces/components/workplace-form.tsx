@@ -1,4 +1,6 @@
 "use client";
+import { translate } from "@/i18n/translate";
+
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -50,17 +52,17 @@ export function WorkplaceForm({ initial, onSaved, onCancel }: { initial?: Workpl
   return (
     <form noValidate onSubmit={handleSubmit(submit)} aria-busy={pending} className="min-w-0 space-y-5">
       <fieldset disabled={pending} className="grid min-w-0 gap-5 sm:grid-cols-2">
-        <legend className="sr-only">근무지 정보</legend>
-        <div className="sm:col-span-2"><TextField id={`${id}-name`} label="사업장명" required error={errors.name?.message} maxLength={200} {...register("name")} /></div>
-        <TextField id={`${id}-industry`} label="업종 (선택)" error={errors.industry?.message} maxLength={200} {...register("industry")} />
-        <TextField id={`${id}-region`} label="지역 (선택)" error={errors.region?.message} maxLength={200} {...register("region")} />
-        <SelectField id={`${id}-employment`} label="재직 상태" error={errors.employmentStatus?.message} {...register("employmentStatus")}><option value="CURRENT">재직 중</option><option value="FORMER">퇴사</option></SelectField>
+        <legend className="sr-only">{translate("workplaces.workplaceForm_workplace_information")}</legend>
+        <div className="sm:col-span-2"><TextField id={`${id}-name`} label={translate("workplaces.workplaceForm_workplace")} required error={errors.name?.message} maxLength={200} {...register("name")} /></div>
+        <TextField id={`${id}-industry`} label={translate("workplaces.workplaceForm_industry_select")} error={errors.industry?.message} maxLength={200} {...register("industry")} />
+        <TextField id={`${id}-region`} label={translate("workplaces.workplaceForm_region_select")} error={errors.region?.message} maxLength={200} {...register("region")} />
+        <SelectField id={`${id}-employment`} label={translate("workplaces.workplaceForm_employed_status")} error={errors.employmentStatus?.message} {...register("employmentStatus")}><option value="CURRENT">{translate("workplaces.workplaceForm_employed")}</option><option value="FORMER">{translate("workplaces.workplaceForm_employmentEnd")}</option></SelectField>
       </fieldset>
       {errors.root?.server?.message && <p ref={summary} tabIndex={-1} role="alert" className="rounded-control bg-danger-soft p-4 text-body">{errors.root.server.message}</p>}
-      {completed && <p role="status" className="text-body">근무지를 등록했습니다. 상세 화면으로 이동합니다.</p>}
+      {completed && <p role="status" className="text-body">{translate("workplaces.workplaceForm_workplace_create_detail_navigate")}</p>}
       <div className="flex flex-wrap gap-3">
-        <button type="submit" className={primaryButton} disabled={pending || Boolean(initial && !isDirty)}>{pending ? "저장 중…" : initial ? "변경 저장" : "근무지 등록"}</button>
-        {onCancel && <button type="button" className={secondaryButton} disabled={pending} onClick={onCancel}>수정 취소</button>}
+        <button type="submit" className={primaryButton} disabled={pending || Boolean(initial && !isDirty)}>{pending ? translate("workplaces.workplaceForm_save") : initial ? translate("workplaces.workplaceForm_change_save") : translate("workplaces.workplaceForm_workplace_create")}</button>
+        {onCancel && <button type="button" className={secondaryButton} disabled={pending} onClick={onCancel}>{translate("workplaces.workplaceForm_edit_cancel")}</button>}
       </div>
     </form>
   );

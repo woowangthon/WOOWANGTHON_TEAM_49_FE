@@ -1,3 +1,5 @@
+
+import { translate } from "@/i18n/translate";
 import { z } from "zod";
 
 export const employmentStatusSchema = z.enum(["CURRENT", "FORMER"]);
@@ -20,9 +22,9 @@ export const workplacePatchSchema = workplaceCreateSchema.extend({
  name: workplaceCreateSchema.shape.name.nullable().optional(), employmentStatus: employmentStatusSchema.nullable().optional(),
 });
 export const workplaceFormSchema = z.object({
-  name: z.string().trim().min(1, "사업장명을 입력해 주세요.").max(200, "200자 이하로 입력해 주세요."),
-  industry: z.string().trim().max(200, "200자 이하로 입력해 주세요."),
-  region: z.string().trim().max(200, "200자 이하로 입력해 주세요."),
+  name: z.string().trim().min(1, translate("workplaces.schemas_workplace_input")).max(200, translate("workplaces.schemas_atMost_input")),
+  industry: z.string().trim().max(200, translate("workplaces.schemas_atMost_input")),
+  region: z.string().trim().max(200, translate("workplaces.schemas_atMost_input")),
   employmentStatus: employmentStatusSchema,
 });
 export type WorkplaceDto = z.infer<typeof workplaceSchema>;

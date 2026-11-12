@@ -1,9 +1,12 @@
+
+import { translate } from "@/i18n/translate";
+import { activeLocale as defaultLocale } from "@/i18n/config";
 import { ApiError } from "@/lib/api/error";
 import { reviewLabels } from "../view-models";
 import { documentError } from "../view-models";
 import type { ExtractedField, FieldValue, PreviewDto, SourceDto } from "./schemas";
-export const fieldStatusLabels = {UNCONFIRMED:"미확인",CONFIRMED:"확인됨",MISSING:"값 없음",UNREADABLE:"판독 불가",CONFLICTED:"상충",DEFERRED:"보류",NEEDS_RECONFIRMATION:"재확인 필요"};
-export function displayValue(value: FieldValue) {return value === null ? "값 없음" : typeof value === "boolean" ? value ? "예" : "아니요" : typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);}
+export const fieldStatusLabels = {UNCONFIRMED:translate("documents.viewModels_confirm"),CONFIRMED:translate("documents.viewModels_confirm_2"),MISSING:translate("documents.viewModels_none"),UNREADABLE:translate("documents.viewModels_fieldStatusLabels_uNREADABLE"),CONFLICTED:translate("documents.viewModels_fieldStatusLabels_cONFLICTED"),DEFERRED:translate("documents.viewModels_fieldStatusLabels_dEFERRED"),NEEDS_RECONFIRMATION:translate("documents.viewModels_confirm_required")};
+export function displayValue(value: FieldValue) {return value === null ? translate("documents.viewModels_none") : typeof value === "boolean" ? value ? translate("common.yes") : translate("common.no") : typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);}
 export function fieldEditorView(field: ExtractedField, unknownShared = false) {
   const structured = field.value !== null && typeof field.value === "object";
   return {kind: structured ? "structured" as const : "scalar" as const,
@@ -17,15 +20,15 @@ export function reviewStateView(processingStatus: string, reviewStatus: string) 
     canAct: ["READ_READY", "READY", "REVIEW_REQUIRED"].includes(processingStatus) && Object.hasOwn(labels, reviewStatus)};
 }
 export function fieldView(field: ExtractedField) {
-  return { ...field, canEdit: Number.isSafeInteger(field.fieldId) && field.fieldId > 0, valueLabel: displayValue(field.value), unitLabel: field.valueType === "MONEY_KRW" ? "원" : field.valueType,
-    statusLabel: fieldStatusLabels[field.status], scopeLabel: field.effectiveValueOrigin === "CASE_OVERRIDE" ? "이 내역의 재정의" : "근무지 공유 기본값",
-    confirmedLabel: field.confirmedAt !== null ? Number.isFinite(Date.parse(field.confirmedAt)) ? new Date(field.confirmedAt).toLocaleString("ko-KR") : field.confirmedAt : "확인 시각 없음" };
+  return { ...field, canEdit: Number.isSafeInteger(field.fieldId) && field.fieldId > 0, valueLabel: displayValue(field.value), unitLabel: field.valueType === "MONEY_KRW" ? translate("common.won") : field.valueType,
+    statusLabel: fieldStatusLabels[field.status], scopeLabel: field.effectiveValueOrigin === "CASE_OVERRIDE" ? translate("documents.viewModels_case_override") : translate("documents.fieldEditor_workplace_sharedDefault"),
+    confirmedLabel: field.confirmedAt !== null ? Number.isFinite(Date.parse(field.confirmedAt)) ? new Date(field.confirmedAt).toLocaleString(defaultLocale) : field.confirmedAt : translate("documents.viewModels_confirm_none") };
 }
 export function reviewError(error: unknown) {
   if(error instanceof ApiError){
-    if(error.errorCode === "DOCUMENT_STILL_PROCESSING") return "문서를 처리 중입니다. 최신 처리 상태를 확인한 뒤 다시 시도해 주세요.";
-    if(error.errorCode === "REPLACEMENT_OVERRIDE_CONFLICT") return "새 원본에 기존 재정의와 대응하는 필드가 없거나 형식이 다릅니다. 기존 연결을 유지했습니다. 새 원본과 재정의를 확인해 주세요.";
-    if(error.errorCode === "UNRESOLVED_DOCUMENT_FIELDS") return "확인하지 못한 필드가 남아 있습니다. 아래 검토 상태와 미완료 항목을 확인해 주세요.";
+    if(error.errorCode === "DOCUMENT_STILL_PROCESSING") return translate("documents.viewModels_document_processing_current_status_confirm_retry");
+    if(error.errorCode === "REPLACEMENT_OVERRIDE_CONFLICT") return translate("documents.viewModels_new_original_override_field_none_format_link");
+    if(error.errorCode === "UNRESOLVED_DOCUMENT_FIELDS") return translate("documents.viewModels_confirm_field_review_status_complete_item");
   }
   return documentError(error);
 }
@@ -41,18 +44,18 @@ export function highlightBox(preview: PreviewDto, source: SourceDto | null | und
   return {left:percent(left),top:percent(top),width:percent(right-left),height:percent(bottom-top)};
 }
 export function parseFieldValue(field: ExtractedField, text: string, empty: boolean, scalar?: "string"|"number"|"boolean"): FieldValue {
-  if(field.value !== null && typeof field.value === "object") throw new Error("구조형 값은 JSON 편집기를 사용해 주세요.");
+  if(field.value !== null && typeof field.value === "object") throw new Error(translate("documents.viewModels_use"));
   if(empty) return null;
   // Preserve established JSON scalar types. P0 specifies MONEY_KRW; unknown null-valued types require an explicit scalar selection in the form.
   if((scalar??typeof field.value) === "number" || field.valueType === "MONEY_KRW") {
-    if(!text.trim() || !Number.isFinite(Number(text))) throw new Error("숫자를 입력해 주세요. 값이 없으면 ‘값 없음’을 선택하세요.");
-    const value=Number(text);if(field.valueType === "MONEY_KRW" && !Number.isSafeInteger(value)) throw new Error("원 단위 정수를 입력해 주세요.");return value;
+    if(!text.trim() || !Number.isFinite(Number(text))) throw new Error(translate("documents.viewModels_input_none_select"));
+    const value=Number(text);if(field.valueType === "MONEY_KRW" && !Number.isSafeInteger(value)) throw new Error(translate("documents.viewModels_unit_count_input"));return value;
   }
-  if((scalar??typeof field.value) === "boolean") {if(text !== "true" && text !== "false") throw new Error("예 또는 아니요를 선택해 주세요.");return text === "true";}
+  if((scalar??typeof field.value) === "boolean") {if(text !== "true" && text !== "false") throw new Error(translate("documents.viewModels_select"));return text === "true";}
   return text;
 }
 
 export function recomputeJobLabel(status:string|undefined){
-  const labels:Record<string,string>={PENDING:"작업 대기",RUNNING:"작업 실행 중",SUCCEEDED:"작업 종료",PARTIAL:"일부 갱신 완료",FAILED:"갱신 실패",SUPERSEDED:"이전 입력의 작업"};
-  return status?(labels[status]??status):"대기·실행 작업 없음";
+  const labels:Record<string,string>={PENDING:translate("documents.viewModels_pending"),RUNNING:translate("documents.viewModels_run"),SUCCEEDED:translate("documents.viewModels_recomputeJobLabel_labels_sUCCEEDED"),PARTIAL:translate("documents.viewModels_update_complete"),FAILED:translate("documents.viewModels_update_failure"),SUPERSEDED:translate("documents.viewModels_previous_input")};
+  return status?(labels[status]??status):translate("documents.viewModels_pending_run_none");
 }

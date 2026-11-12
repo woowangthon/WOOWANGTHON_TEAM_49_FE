@@ -1,12 +1,15 @@
-const numberFormat = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 10 });
+
+import { translate } from "@/i18n/translate";
+import { activeLocale as defaultLocale } from "@/i18n/config";
+const numberFormat = new Intl.NumberFormat(defaultLocale, { maximumFractionDigits: 10 });
 export function formatQuantity(value: number | null | undefined, unit?: string | null): string {
- if (value === undefined) return "미제공";
- if (value === null) return "미확정";
- const suffix: Record<string,string> = {COUNT:"개",KRW:"원",MONEY_KRW:"원",KRW_PER_HOUR:"원/시간",MINUTE:"분",MINUTES:"분",MINUTE_COUNT:"분",HOUR:"시간",HOURS:"시간"};
- return `${numberFormat.format(value)}${unit ? ` ${suffix[unit] ?? unit}` : " (단위 미제공)"}`;
+ if (value === undefined) return translate("common.notProvided");
+ if (value === null) return translate("common.unconfirmed");
+ const suffix: Record<string,string> = {COUNT:translate("common.countUnit"),KRW:translate("common.won"),MONEY_KRW:translate("common.won"),KRW_PER_HOUR:translate("common.format_time"),MINUTE:translate("common.minuteUnit"),MINUTES:translate("common.minuteUnit"),MINUTE_COUNT:translate("common.minuteUnit"),HOUR:translate("common.hourUnit"),HOURS:translate("common.hourUnit")};
+ return `${numberFormat.format(value)}${unit ? ` ${suffix[unit] ?? unit}` : translate("common.format_unit_notProvided")}`;
 }
 export function formatDate(value: string | null | undefined): string {
- if(value===undefined)return "미제공";if(value===null)return "미확정";
+ if(value===undefined)return translate("common.notProvided");if(value===null)return translate("common.unconfirmed");
  // Keep server date and offset: do not shift the documented wage period across time zones.
  return value.replace("T", " ");
 }
