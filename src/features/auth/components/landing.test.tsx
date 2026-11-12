@@ -4,6 +4,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { Landing } from "./landing";
+vi.mock("@/features/auth/hooks/use-auth", () => ({ useAuth: () => ({status: "anonymous"}) }));
 
 beforeEach(() => {
   vi.stubGlobal("matchMedia", vi.fn(() => ({

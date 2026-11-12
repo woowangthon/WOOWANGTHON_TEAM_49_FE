@@ -9,7 +9,9 @@ import { AppServicesContext } from "@/hooks/use-app-services";
 import { createAppServices,type AppServices } from "@/lib/app-services";
 import { managementMocks } from "@/mocks/shared/management-handlers";
 import { inputMocks } from "@/mocks/shared/input-handlers";
-import { server } from "@/test/server";
+import { server, testApiUrl, apiResponse } from "@/test/server";
+import { http, delay } from "msw";
+import { DuplicateCandidates } from "./duplicate-candidates";
 import { paymentsApi } from "./api";
 import { caseInputsApi } from "@/features/case-inputs/api";
 import { ComparisonValues,DepositComparisonPanel } from "./comparison-panel";
@@ -20,6 +22,16 @@ afterEach(()=>{cleanup();apps.splice(0).forEach(a=>{a.session.clear();a.queryCli
 async function setup(){const management=managementMocks();const mock=inputMocks(management.getCases);server.use(...mock.handlers,...management.handlers);const app=createAppServices();apps.push(app);await app.auth.login({email:"worker@example.com",password:"password1234"});const api=paymentsApi(app.api);const c=management.getCases().find(c=>c.caseId===15)!;return {app,api,mock,c,mount:(node:React.ReactNode)=>render(<AppServicesContext value={app}><QueryClientProvider client={app.queryClient}>{node}</QueryClientProvider></AppServicesContext>)};}
 const input={paymentMethod:"BANK_TRANSFER" as const,transactionDate:"2026-11-10",amount:100,source:"USER_INPUT" as const,confirmationStatus:"USER_REPORTED" as const};
 describe("deposit completion",()=>{
+ it("distinguishes loading, failed lookup, retry, and empty duplicate candidates", async()=>{
+  const {c,mount}=await setup();
+  server.use(http.get(`${testApiUrl}/workplaces/${c.workplaceId}/payment-transactions/duplicate-candidates`,async()=>{await delay(100);return apiResponse({errorCode:"FORBIDDEN"},403);}));
+  mount(<DuplicateCandidates workplaceId={c.workplaceId} onSelect={()=>{}}/>);
+  expect(screen.queryByText("중복 후보가 없습니다.")).not.toBeInTheDocument();
+  await screen.findByRole("alert");
+  server.use(http.get(`${testApiUrl}/workplaces/${c.workplaceId}/payment-transactions/duplicate-candidates`,()=>apiResponse({candidates:[]})));
+  fireEvent.click(screen.getByRole("button",{name:"다시 시도"}));
+  expect(await screen.findByText("중복 후보가 없습니다.")).toBeVisible();
+ });
  it("creates and edits from the form with independently validated actual requests",async()=>{
   const {c,mount,api}=await setup();const contract=createOpenApiContract();const requests:unknown[]=[];
   const listener=async({request}:{request:Request})=>{
@@ -34,7 +46,9 @@ describe("deposit completion",()=>{
    fireEvent.change(screen.getByLabelText("\uac70\ub798\uc77c"),{target:{value:"2026-11-10"}});
    fireEvent.change(screen.getByLabelText("\uae08\uc561 (\uc6d0, 0\uc6d0 \ud5c8\uc6a9)"),{target:{value:"100"}});
    fireEvent.click(screen.getByRole("button",{name:"\uac70\ub798 \ub4f1\ub85d"}));
-   fireEvent.click(await screen.findByRole("button",{name:"\uc0c1\uc138\u00b7\uc218\uc815"}));
+   const detailButton=await screen.findByRole("button",{name:"\uc0c1\uc138\u00b7\uc218\uc815"});
+   await waitFor(()=>expect(detailButton).toBeEnabled());
+   fireEvent.click(detailButton);
    await waitFor(()=>expect(screen.getByRole("button",{name:"\uac70\ub798 \uc218\uc815 \uc800\uc7a5"})).toBeEnabled());
    fireEvent.change(screen.getByLabelText("\uae08\uc561 (\uc6d0, 0\uc6d0 \ud5c8\uc6a9)"),{target:{value:"0"}});
    fireEvent.click(screen.getByRole("button",{name:"\uac70\ub798 \uc218\uc815 \uc800\uc7a5"}));

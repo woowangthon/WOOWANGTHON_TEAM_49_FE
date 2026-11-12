@@ -209,7 +209,7 @@ describe("authentication UI with React Testing Library + MSW", () => {
     await screen.findByText("민감한 보호 화면");
     await act(async () => { await services.auth.logout(); });
     expect(screen.queryByText("민감한 보호 화면")).not.toBeInTheDocument();
-    await waitFor(() => expect(navigation.router.replace).toHaveBeenCalledWith("/login?next=%2Fdashboard"));
+    await waitFor(() => expect(navigation.router.replace).toHaveBeenCalledWith("/"));
     expect(services.queryClient.getQueryCache().getAll()).toHaveLength(0);
   });
 

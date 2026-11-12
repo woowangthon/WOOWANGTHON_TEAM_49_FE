@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { BrandLink } from '@/components/layout/brand-link';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowUpRight, ArrowRight, ArrowDown, Check, CheckCheck, FileText, Files, Clock3, Calculator, CircleHelp, Link2, ScanLine, Wallet, FolderOpen, Plus, ShieldCheck, Copy, CheckCircle2, Menu, X, Building2, Download, MessageCircle, MoveRight } from 'lucide-react';
 import styles from './landing.module.css';
@@ -24,7 +25,7 @@ const documents = [
 ];
 const inquiry = '6월 급여명세서의 실수령액은 2,100,000원이고, 현재 확인한 입금 합계는 2,000,000원입니다. 차이 100,000원에 대한 추가 지급 내역이 있는지 확인 부탁드립니다.';
 function Logo() {
-    return <Link href="/" className={classes("logo")} aria-label="월급잇다 홈"><span className={classes("logo-symbol")} aria-hidden="true"><Link2 aria-hidden="true" size={26} strokeWidth={3}/></span>월급잇다<span className={classes("logo-dot")}>.</span></Link>;
+    return <BrandLink className={classes("logo")} aria-label="월급잇다 홈"><span className={classes("logo-symbol")} aria-hidden="true"><Link2 aria-hidden="true" size={26} strokeWidth={3}/></span>월급잇다<span className={classes("logo-dot")}>.</span></BrandLink>;
 }
 function Counter({ value }: {
     value: number;

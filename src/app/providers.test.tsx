@@ -17,13 +17,14 @@ vi.mock("@/lib/app-services", async () => {
   };
 });
 
-beforeEach(() => { route.pathname = "/"; });
+beforeEach(() => { vi.clearAllMocks(); route.pathname = "/"; });
 afterEach(cleanup);
 
-it("renders the public landing without constructing API services or restoring a session", () => {
+it("restores the landing session once so the logo has a resolved destination", () => {
   render(<AppProviders><h1>Public landing</h1></AppProviders>);
   expect(screen.getByRole("heading", { name: "Public landing" })).toBeVisible();
-  expect(createAppServices).not.toHaveBeenCalled();
+  expect(createAppServices).toHaveBeenCalledTimes(1);
+  expect(vi.mocked(createAppServices).mock.results[0].value.auth.restore).toHaveBeenCalledTimes(1);
 });
 
 it("initializes the existing services when navigating to auth and retains them between auth routes", () => {

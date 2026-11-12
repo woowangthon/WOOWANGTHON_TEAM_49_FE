@@ -9,4 +9,5 @@ export type AuthStatus = "restoring" | "authenticated" | "anonymous" | "signing-
 export interface AuthSnapshot {
   status: AuthStatus;
   notice: string | null;
+  signedOut?: boolean;
 }

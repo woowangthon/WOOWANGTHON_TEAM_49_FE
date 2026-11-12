@@ -1,5 +1,10 @@
 .screen { width: 100%; max-width: 1060px; min-width: 0; margin-inline: auto; overflow-wrap: anywhere; container-type: inline-size; }
 .header { min-width: 0; margin-bottom: 32px; }
+.overviewHero { padding: clamp(20px, 4cqi, 36px); margin-bottom: 28px; border-radius: 26px; color: white; background: linear-gradient(115deg, #314da0, #425ab1 56%, #6552a7); }
+.overviewHero .header { margin-bottom: 16px; }
+.overviewHero .back, .overviewHero .meta { color: #edf0ff; }
+.overviewHero > p:last-child { font-size: 14px; line-height: 1.7; }
+.eyebrow { margin-bottom: 12px; font-size: 12px; font-weight: 700; }
 .utility { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .back { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; margin-bottom: 0; color: var(--color-review-foreground); font-size: 13px; }
 .identity { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }

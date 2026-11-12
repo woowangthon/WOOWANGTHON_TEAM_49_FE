@@ -29,9 +29,9 @@ export const statusSchema = z.object({
 export const uploadSchema = statusSchema.extend({ linkId: id.optional(), inputVersion: id.optional(), duplicateCandidateIds: z.array(z.number().int().safe()) });
 export const mutationSchema = z.object({ inputVersion: id.optional(), affectedCaseIds: z.array(id).optional() });
 export const impactSchema = z.object({
-  documentId: id, linkedCaseIds: z.array(id), linkedCaseCount: z.number().int().nonnegative(),
-  canDeleteOriginal: z.boolean(), reasonCode: z.string().nullable(),
-}).refine(value => value.linkedCaseIds.length === value.linkedCaseCount, "삭제 영향의 연결 수가 일치하지 않습니다.");
+  documentId: id, affectedCaseIds: z.array(id), linkedCaseCount: z.number().int().nonnegative(),
+  derivedTransactionIds: z.array(id), downloadedExternalCopiesCannotBeRecalled: z.boolean(),
+});
 export const linkPatchSchema = z.strictObject({
  expectedInputVersion: id.nullable().optional(), purpose: z.string().max(100).nullable().optional(),
  applicableFrom: z.iso.date().nullable().optional(), applicableTo: z.iso.date().nullable().optional(),

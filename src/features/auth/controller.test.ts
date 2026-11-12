@@ -161,7 +161,7 @@ describe("MSW authentication integration", () => {
     await vi.waitFor(() => expect(logoutHeader).toBe(`Bearer ${testLogin.accessToken}`));
     release();
     await logout;
-    expect(app.auth.getSnapshot()).toEqual({ status: "anonymous", notice: "로그아웃되었습니다." });
+    expect(app.auth.getSnapshot()).toEqual({ status: "anonymous", signedOut: true, notice: "로그아웃되었습니다." });
   });
 
   it.each([401, 500])("keeps the client signed out and reports server logout failure (%i) without refreshing", async (status) => {

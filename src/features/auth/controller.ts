@@ -98,8 +98,8 @@ export function createAuthController({ api, authApi, session, queryClient }: {
       // Cancels user requests, clears query/mutation caches, and hides protected content now.
       session.clear();
       logoutFlight = authApi.logout(token).then(
-        () => update({ status: "anonymous", notice: "로그아웃되었습니다." }),
-        () => update({ status: "anonymous", notice: "이 기기에서 로그아웃했습니다. 서버 세션 종료는 확인하지 못했으므로 다시 접속하면 로그인될 수 있습니다." }),
+        () => update({ status: "anonymous", signedOut: true, notice: "로그아웃되었습니다." }),
+        () => update({ status: "anonymous", signedOut: true, notice: "이 기기에서 로그아웃했습니다. 서버 세션 종료는 확인하지 못했으므로 다시 접속하면 로그인될 수 있습니다." }),
       ).finally(() => { logoutFlight = undefined; });
       return logoutFlight;
     },

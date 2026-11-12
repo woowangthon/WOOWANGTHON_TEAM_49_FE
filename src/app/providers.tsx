@@ -2,7 +2,6 @@
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { AppServicesContext } from "@/hooks/use-app-services";
@@ -13,10 +12,6 @@ const MockBoundary = process.env.NODE_ENV === "development"
   ? dynamic(() => import("@/mocks/mock-boundary"), { ssr: false }) : null;
 
 export function AppProviders({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  // The public landing needs neither session restoration nor a running mock worker.
-  if (pathname === "/") return children;
-
   return mockEnabled && MockBoundary
     ? <MockBoundary><ServicesProvider>{children}</ServicesProvider></MockBoundary>
     : <ServicesProvider>{children}</ServicesProvider>;

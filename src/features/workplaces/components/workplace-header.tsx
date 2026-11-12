@@ -19,8 +19,8 @@ export function WorkplaceHeader({ id, workplace, active, compact = false, childr
         {!compact && item && <p className={styles.meta}>{item.industry} · {item.region}</p>}
       </div>
     </div>
-    <nav className={styles.tabs} aria-label="근무지 화면">
+    {active !== "cases" && <nav className={styles.tabs} aria-label="근무지 화면">
       {([['cases', '', '급여 사례'], ['documents', '/documents', '자료함'], ['chats', '/chats', 'AI 도우미']] as const).map(([key, path, label]) => <Link key={key} href={`/workplaces/${id}${path}`} aria-current={active === key ? "page" : undefined}>{label}</Link>)}
-    </nav>
+    </nav>}
   </header>;
 }

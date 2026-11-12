@@ -18,6 +18,10 @@
 .content [data-case-next] p { margin-top: 4px; color: var(--color-review-foreground); font-size: 13px; }
 @container (min-width: 760px) { .content :global(.review-return-button) { display: none; } }
 .context { display: grid; gap: 16px; margin-bottom: 26px; }
+.stickyNavigation { position: sticky; top: 0; z-index: 20; margin-bottom: 20px; padding-block: 6px; background: var(--color-background, #f5f6f8); }
+.navigationNote { padding: 6px 8px; font-size: 11px; color: var(--color-review-foreground); }
+.navigation:global(.case-task-navigation) > a { flex-direction: column; align-items: center; text-align: center; gap: 3px; overflow-wrap: anywhere; }
+.navigation small { font-size: 10px; font-weight: 400; }
 .contextMeta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; color: var(--color-review-foreground); font-size: 12px; }
 .contextIdentity { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; min-width: 0; }
 .contextIdentity a { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; max-width: 100%; color: var(--color-nav-foreground); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }

@@ -182,6 +182,27 @@ describe("document flows with MSW, never a live backend", () => {
     await within(screen.getByRole("dialog")).findByRole("alert"); expect(screen.getByRole("button",{name:"공유 원본 삭제 요청"})).toBeDisabled();
     expect(mocks.requests.some(r=>r.method==="DELETE")).toBe(false);
   });
+  it("cancels original deletion without a DELETE and retains the original", async () => {
+    const {mount,user,mocks} = await setup(); mount(<DocumentCard dto={mocks.getDocuments()[0]} context={{kind:"library"}} />);
+    await user.click(screen.getByText("자료 관리 상세",{exact:true}));
+    await user.click(screen.getByRole("button",{name:"공유 원본 삭제"}));
+    const dialog = screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 사례: 2개");
+    await user.click(within(dialog).getByRole("button",{name:"취소"}));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(mocks.getDocuments()).toHaveLength(21);
+    expect(mocks.requests.some(r=>r.method==="DELETE")).toBe(false);
+  });
+  it("refreshes the visible library only after the 204 deletion succeeds", async () => {
+    const {mount,user,mocks} = await setup(); mount(<LibraryScreen />);
+    const card = await screen.findByRole("article", {name:"근로계약서.pdf"});
+    await user.click(within(card).getByText("자료 관리 상세",{exact:true}));
+    await user.click(within(card).getByRole("button",{name:"공유 원본 삭제"}));
+    const dialog=screen.getByRole("dialog"); await within(dialog).findByText("이 원본을 참조하는 사례: 2개");
+    await user.click(within(dialog).getByRole("checkbox"));
+    await user.click(within(dialog).getByRole("button",{name:"공유 원본 삭제 요청"}));
+    await waitFor(()=>expect(screen.queryByRole("article",{name:"근로계약서.pdf"})).not.toBeInTheDocument());
+    expect(mocks.requests.filter(r=>r.path.includes("/documents?")&&r.method==="GET").length).toBeGreaterThan(1);
+  });
   it("retries a failed document using its Case retry endpoint", async () => {
     const {mount,user,mocks} = await setup(); const dto={...mocks.getDocuments()[0],processingStatus:"FAILED" as const};
     mount(<DocumentCard dto={dto} context={{kind:"case",id:15}} />); await user.click(screen.getByRole("button",{name:"문서 재처리"}));

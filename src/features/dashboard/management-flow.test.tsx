@@ -10,7 +10,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { CaseDetailScreen } from "@/features/cases/components/case-detail-screen";
-import { CaseContext } from "@/features/cases/components/case-context";
+import { TaskNavigation } from "@/features/cases/components/case-context";
+import { ConsultationScreen } from "@/features/case-support/consultation-screen";
+import { BrandLink } from "@/components/layout/brand-link";
+import { documentMocks } from "@/mocks/shared/document-handlers";
 import { WorkspaceNavigation } from "@/features/auth/components/workspace-navigation";
 import { CaseForm } from "@/features/cases/components/case-form";
 import { CaseList } from "@/features/cases/components/case-list";
@@ -52,7 +55,7 @@ async function setup(empty = false) {
   // Detail screens also mount payment/comparison queries inside disclosures.
   // Share the management store so these requests exercise consistent Case data.
   const inputs = inputMocks(mocks.getCases, testApiUrl);
-  server.use(...mocks.handlers, ...inputs.handlers);
+  server.use(...mocks.handlers, ...inputs.handlers, ...documentMocks(mocks.getCases()).handlers);
   const app = createAppServices();
   apps.push(app);
   await app.auth.login({ email: "worker@example.com", password: "password1234" });
@@ -336,8 +339,9 @@ describe("dashboard and management user flows with MSW", () => {
   it("links Case details to the document registration route", async () => {
     const { mount } = await setup();
     mount(<CaseDetailScreen id={15} />);
-    fireEvent.click(await screen.findByText("다른 작업으로 이동"));
-    expect(await screen.findByRole("link", { name: "자료 등록·관리" })).toHaveAttribute("href", "/cases/15/upload");
+    await screen.findByRole("heading", { name: /급여 사례$/ });
+    expect(screen.queryByText("다른 작업으로 이동")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /이어서 검토하기/ })).toHaveAttribute("href", "/cases/15/upload");
     expect(document.querySelector('input[type="file"]')).toBeNull();
     expect(screen.queryByRole("button", { name: /업로드/ })).not.toBeInTheDocument();
   });
@@ -387,24 +391,51 @@ it("keeps payment drafts and mounted inputs when the management disclosure close
   expect(within(disclosure).getByLabelText("입금자")).toBe(input);
   expect(input).toHaveValue("보존할 초안");
 });
+
+it("requires an explicit consultation case and links all existing support features", async () => {
+  const { mount, user } = await setup();
+  mount(<ConsultationScreen />);
+  await screen.findAllByRole("radio");
+  expect(screen.queryByRole("navigation", { name: "후속 확인" })).not.toBeInTheDocument();
+  await user.click(screen.getAllByRole("radio")[0]);
+  const links = screen.getByRole("navigation", { name: "후속 확인" });
+  const selected = Number(screen.getAllByRole("radio")[0].closest("label")!.textContent!.match(/사례 #(\d+)/)![1]);
+  expect(within(links).getByRole("link", {name:"확인 질문"})).toHaveAttribute("href", `/cases/${selected}/questions`);
+  expect(within(links).getByRole("link", {name:"회사 문의 초안"})).toHaveAttribute("href", `/cases/${selected}/company-inquiry`);
+  expect(within(links).getByRole("link", {name:"보고서"})).toHaveAttribute("href", `/cases/${selected}/reports`);
+});
+
+it("uses resolved authentication for the shared logo without requests per click", async () => {
+  const { mount, app } = await setup();
+  mount(<BrandLink>월급잇다</BrandLink>);
+  expect(screen.getByRole("link")).toHaveAttribute("href", "/dashboard");
+  act(() => app.session.clear());
+  expect(screen.queryByRole("link")).not.toBeInTheDocument();
+});
+
+it("keeps the five primary destinations in the requested order", async () => {
+  const {mount} = await setup(); mount(<WorkspaceNavigation />);
+  const links = screen.getAllByRole("link").slice(0,5);
+  expect(links.map(link => link.getAttribute("href"))).toEqual(["/cases/new","/dashboard","/library","/consultation","/workplaces/new"]);
+});
 it("provides all case tasks without workflow locks and preserves workplace routes", async () => {
   const { mount } = await setup();
-  mount(<><WorkspaceNavigation /><CaseContext id={15} /></>);
+  mount(<><WorkspaceNavigation /><TaskNavigation id={15} /></>);
   const tasks = screen.getByRole("navigation", { name: "사례 작업" });
-  expect(within(tasks).getByRole("link", { name: "결과" })).toHaveAttribute("href", "/cases/15/result");
-  expect(within(tasks).getByRole("link", { name: "상담 준비" })).toHaveAttribute("href", "/cases/15/questions");
+  expect(within(tasks).getByRole("link", { name: /결과 보기/ })).toHaveAttribute("href", "/cases/15/result");
+  expect(within(tasks).queryByRole("link", { name: "상담 준비" })).not.toBeInTheDocument();
   expect(within(tasks).getAllByRole("link")).toHaveLength(6);
-  expect(screen.getByRole("link", { name: "급여 사례 전체 목록" })).toHaveAttribute("href", "/cases");
+  expect(screen.getByRole("link", { name: "상담 준비" })).toHaveAttribute("href", "/consultation");
   const workplaceName = await screen.findByText("카페 나무", { selector: "summary strong" });
   expect(workplaceName.closest("summary")).toHaveTextContent("급여 사례");
-  expect(screen.getAllByRole("link", { hidden: true }).some(link => link.getAttribute("href") === "/workplaces/3/documents")).toBe(true);
+  expect(screen.getAllByRole("link", { hidden: true }).some(link => link.getAttribute("href") === "/workplaces/3/documents")).toBe(false);
 });
 it("marks only the create route active and keeps workplace tree destinations accessible", async () => {
   const { mount, user } = await setup();
   navigation.pathname = "/cases/new";
   mount(<WorkspaceNavigation />);
-  expect(screen.getByRole("link", { name: "새 검토" })).toHaveAttribute("aria-current", "page");
-  expect(screen.getByRole("link", { name: "급여 사례 전체 목록" })).not.toHaveAttribute("aria-current");
+  expect(screen.getByRole("link", { name: "새검토" })).toHaveAttribute("aria-current", "page");
+  expect(screen.queryByRole("link", { name: "급여 사례 전체 목록" })).not.toBeInTheDocument();
   const workplace = (await screen.findByText("카페 나무", { selector: "summary strong" })).closest("details")!;
   await user.click(within(workplace).getByText("카페 나무"));
   expect(workplace).toHaveAttribute("open");

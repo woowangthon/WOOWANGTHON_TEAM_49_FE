@@ -9,7 +9,7 @@ import { AuthPending } from "./auth-pending";
 
 /** Presentation guard only. Backend ownership checks remain authoritative. */
 export function AuthGate({ mode, children }: { mode: "guest" | "protected"; children: ReactNode }) {
-  const { status } = useAuth();
+  const { status, signedOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -20,11 +20,11 @@ export function AuthGate({ mode, children }: { mode: "guest" | "protected"; chil
     if (mode === "protected" && status === "deletion-accepted") {
       router.replace("/account-deletion");
     } else if (mode === "protected" && status === "anonymous") {
-      router.replace(loginHref(`${pathname}${search ? `?${search}` : ""}`));
+      router.replace(signedOut ? "/" : loginHref(`${pathname}${search ? `?${search}` : ""}`));
     } else if (mode === "guest" && status === "authenticated") {
       router.replace(returnTo);
     }
-  }, [mode, status, router, pathname, search, returnTo]);
+  }, [mode, status, signedOut, router, pathname, search, returnTo]);
 
   const allowed = mode === "protected" ? status === "authenticated" : status === "anonymous" || status === "deletion-accepted";
   if (!allowed) {

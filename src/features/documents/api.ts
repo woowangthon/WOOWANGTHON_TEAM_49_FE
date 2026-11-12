@@ -37,7 +37,7 @@ export function documentApi(api: ApiClient) {
     unlink: (caseId: number, linkId: number, _expectedInputVersion: number) => api.requestNoContent(`/cases/${caseId}/document-links/${linkId}`, (void _expectedInputVersion, { method: "DELETE" })),
     retry: (caseId: number, documentId: number) => api.requestJson(`/cases/${caseId}/documents/${documentId}/retry`, decodeWith(statusSchema), { expectedStatus: 202, method: "POST" }),
     impact: (workplaceId: number, documentId: number, signal?: AbortSignal) => api.requestJson(`/workplaces/${workplaceId}/documents/${documentId}/deletion-impact`, decodeWith(impactSchema), { signal, expectedStatus: 200 }),
-    // P0 API_ENDPOINTS explicitly specifies 204; no JSON envelope or purge receipt.
+    // P0 OpenAPI / API-041 specifies 204; no JSON envelope or purge receipt.
     remove: (workplaceId: number, documentId: number) => api.requestNoContent(`/workplaces/${workplaceId}/documents/${documentId}?confirm=true`, { method: "DELETE" }),
     recompute: (caseId: number, signal?: AbortSignal) => api.requestJson(`/cases/${caseId}/recompute-status`, decodeWith(recomputeSchema), { signal, expectedStatus: 200 }),
   };
