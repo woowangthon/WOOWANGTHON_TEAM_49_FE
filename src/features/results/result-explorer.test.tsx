@@ -119,14 +119,15 @@ it("keeps server overview counts separate from counts for the selected response 
  expect(within(overview).getByRole("button",{name:"정보 부족 19개 · 확인"})).toBeVisible();
  expect(within(overview).getByText(/아래 필터 건수는 현재 응답의 선택 검사 범위/)).toBeVisible();
 });
-it("keeps raw reason codes within the supporting detail disclosure",async()=>{
+it("shows supporting details directly without a second disclosure",async()=>{
  const d=fixture(),u=userEvent.setup();
  render(<ResultExplorer data={d} compare={false}/>);
  await u.click(screen.getByRole("button",{name:"다음 카드"}));
  const code=screen.getByText("UNVERIFIED_STATUTORY_RULES");
- expect(code).not.toBeVisible();
- await u.click(screen.getByText("계산식·비교 기준·출처·버전 상세"));
  expect(code).toBeVisible();
+ expect(screen.queryByText("계산식·비교 기준·출처·버전 상세")).not.toBeInTheDocument();
+ expect(screen.getByRole("region",{name:"추가 정보"})).toBeVisible();
+ for(const name of ["계산식","비교 기준","버전 정보"])expect(screen.queryByRole("region",{name})).not.toBeInTheDocument();
 });
 it("opens selected evidence from comparison table",async()=>{
  const d=fixture(),u=userEvent.setup();
@@ -139,9 +140,34 @@ it("opens selected evidence from comparison table",async()=>{
  const panel=screen.getByRole("tabpanel");
  expect(within(panel).getByRole("heading",{name:"공제 합계"})).toBeVisible();
  expect(within(panel).getByRole("button",{name:"전체 (3)"})).toHaveAttribute("aria-pressed","true");
- const summary=within(panel).getByText("계산식·비교 기준·출처·버전 상세");
- await waitFor(()=>expect(summary.closest("details")).toHaveAttribute("open"));
- expect(summary).toHaveFocus();
+ const detail=within(panel).getByRole("article",{name:"공제 합계 상세"});
+ await waitFor(()=>expect(detail).toHaveFocus());
+ expect(within(detail).getByRole("region",{name:"원문 근거"})).toBeVisible();
+ expect(within(detail).getByRole("link",{name:"문서 검토로 이동"})).toHaveAttribute("href","/cases/15/review");
+ await u.click(within(detail).getByRole("button",{name:"확인 · 상세 닫기"}));
+ expect(screen.queryByRole("region",{name:"결과 탐색"})).not.toBeInTheDocument();
+});
+it("shows paired deposit values, server difference and follow-up actions directly",async()=>{
+ const d=fixture(),u=userEvent.setup();
+ d.depositComparison={status:"DIFFERENCE",payslipNetPay:2100000,linkedPaymentTotal:2000000,linkedBankDepositTotal:1900000,linkedCashPaymentTotal:100000,difference:100000,version:2,formula:{expression:"serverProvidedFormula"},sources:[]};
+ const original=structuredClone(d);
+ const view=render(<ResultExplorer data={d} compare/>);
+ await u.click(screen.getByRole("tab",{name:"입금 대조"}));
+ const panel=screen.getByRole("tabpanel");
+ for(const text of ["기재 실수령액","연결 지급 합계","2,100,000 원","2,000,000 원"]){
+  expect(within(panel).getByText(text)).toBeVisible();
+ }
+ for(const name of ["원문 근거","추가 정보"])expect(within(panel).getByRole("region",{name})).toBeVisible();
+ for(const name of ["계산식","비교 기준","버전 정보"])expect(within(panel).queryByRole("region",{name})).not.toBeInTheDocument();
+ expect(within(panel).queryByText("serverProvidedFormula")).not.toBeInTheDocument();
+ expect(within(panel).getByRole("region",{name:"추가 정보"})).toHaveTextContent("1,900,000 원");
+ expect(within(panel).getByRole("link",{name:"확인 질문 보기"})).toHaveAttribute("href","/cases/15/questions");
+ expect(panel.querySelector("details")).not.toBeInTheDocument();
+ expect(d).toEqual(original);
+ d.depositComparison={...d.depositComparison,comparisonBasis:{semanticMatch:false},difference:999};
+ view.rerender(<ResultExplorer data={d} compare/>);
+ expect(within(panel).getByText("비교 기준 확인 필요")).toBeVisible();
+ expect(within(panel).queryByText("999 원")).not.toBeInTheDocument();
 });
 it("marks cached freshness unverified without changing the server freshness or versions",()=>{
  const d=fixture();

@@ -1,22 +1,19 @@
 ﻿"use client";
 
 import { useId, useState, type ReactNode } from "react";
-import { ArrowUpRight, Calculator, Check, ChevronRight, CircleHelp, Files, Landmark, ReceiptText, Search, TriangleAlert } from "lucide-react";
+import { Calculator, Check, ChevronRight, CircleHelp, Files, Landmark, ReceiptText, Search, TriangleAlert } from "lucide-react";
 import { ResultCarousel } from "@/components/ui/result-carousel";
 import type { Results } from "./schemas";
-import { displayScalar, fieldLabels, statusLabels } from "./view-models";
+import { statusLabels } from "./view-models";
 import { ServerValue } from "./result-screen";
 import styles from "./result-explorer.module.css";
 import { ResultComparisonTable } from "./result-comparison-table";
+import { ResultDetail, type ResultCard } from "./result-detail";
 
-type Card = { id: string; title: string; status?: string; data: Record<string, unknown>; unit?: string | null; period?: Record<string, unknown>; meta?: ReactNode };
-export type ResultGroup = { id: string; title: string; cards: Card[] };
+export type ResultGroup = { id: string; title: string; cards: ResultCard[] };
 const checks = { paymentTotal: "지급 합계", deductionTotal: "공제 합계", netPay: "실수령액" } as const;
 const filters = { ALL: "전체", DIFFERENCE: "차이", INSUFFICIENT_INFORMATION: "정보 부족", REVIEW_REQUIRED: "검토 필요", MATCH: "일치" };
-const valueKeys = ["amount", "contractValue", "attendanceValue", "payslipValue", "itemSum", "statedTotal", "calculated", "stated", "payslipNetPay", "linkedBankDepositTotal", "linkedCashPaymentTotal", "linkedPaymentTotal", "difference"];
-const labels: Record<string, string> = { payslipNetPay: "명세서 실수령액", linkedBankDepositTotal: "연결 계좌 입금", linkedCashPaymentTotal: "연결 현금 지급", linkedPaymentTotal: "전체 연결 지급액" };
 const comparisonTitles: Record<string, string> = { HOURLY_WAGE: "시급 대조" };
-const statusTones: Record<string, string> = { MATCH: styles.match, CALCULATED: styles.match, DIFFERENCE: styles.difference, INSUFFICIENT_INFORMATION: styles.insufficient, REVIEW_REQUIRED: styles.review };
 const groupIcons = { calculation: Calculator, comparison: Files, validation: ReceiptText, deposit: Landmark };
 const shortcuts = [
  { status: "DIFFERENCE", count: "difference", Icon: TriangleAlert, tone: styles.difference },
@@ -25,12 +22,11 @@ const shortcuts = [
 ] as const;
 function text(v: unknown, fallback: string) { return typeof v === "string" ? v : fallback; }
 export function resultGroups(d: Results, compare: boolean): ResultGroup[] {
- const meta = (key: "calculation" | "comparison" | "payslipValidation") => <ServerValue caseId={d.caseId} value={d.versions[key]}/>;
  return [
-  ...(!compare ? [{ id: "calculation", title: "임금 계산 항목", cards: (d.calculation?.items ?? []).map((v, i) => ({ id: `${v.type ?? "item"}-${i}`, title: v.label ?? v.type ?? `계산 항목 ${i + 1}`, status: v.status, data: v, unit: v.currency, meta: meta("calculation") })) }] : []),
-  { id: "comparison", title: compare ? "계약·근태·명세서 대조" : "자료 대조", cards: (d.comparison?.items ?? []).map((v, i) => ({ id: `${v.type ?? "item"}-${i}`, title: text(v.title, comparisonTitles[v.type ?? ""] ?? v.type ?? `대조 항목 ${i + 1}`), status: v.status, data: v, unit: v.comparisonBasis?.unit, period: v.comparisonBasis ?? undefined, meta: meta("comparison") })) },
-  { id: "validation", title: "명세서 내부 합계 검사", cards: d.payslipValidation ? (Object.keys(checks) as (keyof typeof checks)[]).map(key => ({ id: key, title: checks[key], status: d.payslipValidation![key].status, data: d.payslipValidation![key], unit: "KRW", meta: meta("payslipValidation") })) : [] },
-  { id: "deposit", title: "입금 대조", cards: d.depositComparison ? [{ id: "deposit", title: "연결 지급액과 명세서 대조", status: typeof d.depositComparison.status === "string" ? d.depositComparison.status : undefined, data: d.depositComparison, unit: "KRW" }] : [] },
+  ...(!compare ? [{ id: "calculation", title: "임금 계산 항목", cards: (d.calculation?.items ?? []).map((v, i) => ({ id: `${v.type ?? "item"}-${i}`, title: v.label ?? v.type ?? `계산 항목 ${i + 1}`, status: v.status, data: v, unit: v.currency, version: d.versions.calculation })) }] : []),
+  { id: "comparison", title: compare ? "계약·근태·명세서 대조" : "자료 대조", cards: (d.comparison?.items ?? []).map((v, i) => ({ id: `${v.type ?? "item"}-${i}`, title: text(v.title, comparisonTitles[v.type ?? ""] ?? v.type ?? `대조 항목 ${i + 1}`), status: v.status, data: v, unit: v.comparisonBasis?.unit, period: v.comparisonBasis ?? undefined, version: d.versions.comparison })) },
+  { id: "validation", title: "명세서 내부 합계 검사", cards: d.payslipValidation ? (Object.keys(checks) as (keyof typeof checks)[]).map(key => ({ id: key, title: checks[key], status: d.payslipValidation![key].status, data: d.payslipValidation![key], unit: "KRW", version: d.versions.payslipValidation })) : [] },
+  { id: "deposit", title: "입금 대조", cards: d.depositComparison ? [{ id: "deposit", title: "연결 지급액과 명세서 대조", status: typeof d.depositComparison.status === "string" ? d.depositComparison.status : undefined, data: d.depositComparison, unit: "KRW", version: d.versions.depositComparison }] : [] },
  ];
 }
 export function ResultExplorer({ data, compare, before, after, freshnessUnverified = false, showDetailsInitially = true }: { data: Results; compare: boolean; before?: ReactNode; after?: ReactNode; freshnessUnverified?: boolean; showDetailsInitially?: boolean }) {
@@ -54,9 +50,16 @@ export function ResultExplorer({ data, compare, before, after, freshnessUnverifi
   setStates(s => ({ ...s, [groupId]: { filter: "ALL", selected: { ...s[groupId]?.selected, ALL: cardId } } }));
   requestAnimationFrame(() => {
    const panel = document.getElementById(`${id}-panel`);
-   const evidence = panel?.querySelector("article details") as HTMLDetailsElement | null;
-   if (evidence) { evidence.open = true; evidence.querySelector("summary")?.focus(); evidence.scrollIntoView?.({ block: "center" }); }
+   const evidence = panel?.querySelector<HTMLElement>("[data-result-detail]");
+   if (evidence) { evidence.focus(); evidence.scrollIntoView?.({ block: "start" }); }
    else panel?.focus();
+  });
+ };
+ const closeDetail = () => {
+  setDetailsVisible(false);
+  requestAnimationFrame(() => {
+   const table = document.getElementById(`${id}-comparison-table`);
+   table?.focus(); table?.scrollIntoView?.({ block: "start" });
   });
  };
  const jump = (status: string) => {
@@ -84,7 +87,7 @@ export function ResultExplorer({ data, compare, before, after, freshnessUnverifi
    <p className={styles.caution}>차액은 확정된 미지급임금이 아닙니다.</p>
   </aside>
   {before}
-  <ResultComparisonTable groups={groups} resultVersion={data.resultVersion} onSelect={selectEvidence}/>
+  <div id={`${id}-comparison-table`} tabIndex={-1}><ResultComparisonTable groups={groups} resultVersion={data.resultVersion} onSelect={selectEvidence}/></div>
   {detailsVisible&&<section className={styles.explorer} aria-label={compare ? "검사 탐색" : "결과 탐색"}>
    <header className={styles.explorerHeading}><div><h2>{compare ? "어떤 자료에서 차이가 났을까요?" : "항목별로 자세히 볼까요?"}</h2><p>{compare ? "자료 대조와 명세서·입금 검사를 각각 확인해요." : "계산과 자료 대조 결과를 나누어 확인해요."}</p></div><span>{groups.length}가지 검사</span></header>
    <div role="tablist" aria-label="결과 카테고리" className={`${styles.tabs} ${compare ? styles.comparisonTabs : ""}`}>{groups.map((g, i) => { const Icon = groupIcons[g.id as keyof typeof groupIcons]; return <button key={g.id} id={`${id}-${g.id}`} role="tab" aria-label={g.title} aria-selected={group.id === g.id} aria-controls={`${id}-panel`} tabIndex={group.id === g.id ? 0 : -1} className={styles.tab} onClick={() => selectGroup(g.id)} onKeyDown={e => {
@@ -95,16 +98,7 @@ export function ResultExplorer({ data, compare, before, after, freshnessUnverifi
    <div id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-${group.id}`} tabIndex={-1} className={styles.panel}>
     <div role="group" aria-label="검사 상태 필터" className={styles.filters}>{Object.entries(filters).map(([key, label]) => <button key={key} aria-pressed={state.filter === key} className={styles.filter} onClick={() => filter(key)}>{label} <span>({group.cards.filter(c => key === "ALL" || c.status === key).length})</span></button>)}</div>
     <ResultCarousel count={filtered.length} index={index} title={group.title} onIndexChange={next => { setEvidenceStatus(undefined); setStates(s => ({ ...s, [group.id]: { ...state, selected: { ...state.selected, [state.filter]: filtered[next].id } } })); }}>
-     {card && <article key={`${group.id}-${card.id}`} className={styles.card}>
-      <header className={styles.cardHeading}><h3>{card.title}</h3><p className={`${styles.status} ${statusTones[card.status ?? ""] ?? styles.review}`}>{card.status ? statusLabels[card.status] ?? card.status : "상태 미제공"}</p></header>
-      <p className={styles.period}>산정기간: {displayScalar("periodStart" in card.data ? card.data.periodStart : card.period?.periodStart, "periodStart")} ~ {displayScalar("periodEnd" in card.data ? card.data.periodEnd : card.period?.periodEnd, "periodEnd")} · 단위: {card.unit ?? "미제공"}</p>
-      <dl className={styles.values}>{valueKeys.filter(k => k in card.data).map(k => <div key={k} className={k === "amount" || k === "difference" ? styles.emphasizedValue : undefined}><dt>{fieldLabels[k] ?? labels[k] ?? k}</dt><dd data-has-value={typeof card.data[k] === "number"}>{displayScalar(card.data[k], k in labels ? "amount" : k, card.unit)}</dd></div>)}</dl>
-      {typeof card.data.nextAction === "string" && <p className={styles.nextAction}><ArrowUpRight size={16} aria-hidden="true"/>{card.data.nextAction}</p>}
-      {card.period?.semanticMatch === false && <p className={styles.guidance} role="note">기간·단위·의미가 일치하지 않습니다. 비교 기준을 확인해 주세요.</p>}
-      {card.status === "INSUFFICIENT_INFORMATION" && <p className={styles.guidance}>미확인 값은 0이 아닙니다. 원문과 입력 조건을 보완해 주세요.</p>}
-      {card.status === "REVIEW_REQUIRED" && <p className={styles.guidance}>원문과 적용 조건을 검토해 주세요.</p>}
-      <details className={styles.details}><summary>계산식·비교 기준·출처·버전 상세</summary><div className={styles.detailBody}><ServerValue caseId={data.caseId} value={card.data}/>{card.meta}</div></details>
-     </article>}
+     {card && <ResultDetail key={`${group.id}-${card.id}`} caseId={data.caseId} card={card} groupId={group.id} onClose={closeDetail}/>}
     </ResultCarousel>
    </div>
   </section>}
