@@ -24,6 +24,8 @@
 .original [aria-label="확대한 원문 스크롤 영역"] { background: #f3f5f8; border-color: #e5e9ee; border-radius: 12px; }
 .original [aria-label="문서 원문 뷰어"] > div:last-child { padding: 12px 14px; border-radius: 12px; background: #f8f9fb; font-size: 11px; line-height: 1.8; }
 .screen .fieldsPanel { min-width: 0; padding: 20px; border: 1px solid #e1e6ee; border-radius: 18px; background: white; }
+.fieldList { min-width: 0; }
+.documentPicker > nav { margin-bottom: 12px; }
 .panelHeading { display: flex; gap: 12px; align-items: center; }
 .panelIcon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: #edf2fe; color: #4665bb; }
 .panelHeading h2 { font-size: 19px; font-weight: 800; letter-spacing: -.7px; }
@@ -80,6 +82,9 @@
 .screen .replacement { padding: 18px 22px; border: 1px solid #e3e6eb; border-radius: 16px; box-shadow: none; }
 .replacement > summary { min-height: 30px; color: #697586; font-size: 12px; }
 @container (min-width: 760px) {
+  .screen .fieldsPanel { display: flex; flex-direction: column; max-height: 85dvh; }
+  .panelHeading, .progressArea { flex-shrink: 0; }
+  .fieldList { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #bac6df transparent; scrollbar-gutter: stable; padding-right: 6px; }
   .screen .tabs { display: none; }
   .screen .comparison { grid-template-columns: minmax(0,1fr) minmax(0,1.08fr); }
   .original { position: sticky; top: 20px; }

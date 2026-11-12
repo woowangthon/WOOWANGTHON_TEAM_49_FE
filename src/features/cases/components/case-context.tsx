@@ -19,7 +19,7 @@ export function TaskNavigation({ id }: { id: number }) {
     const active = pathname === href || (path === "upload" && pathname === `/cases/${id}/manual-records`);
     const status = !dto ? "상태 확인 중" : path === "" ? "전체 흐름" : path === "review" && allReviewed ? "✓ 검토 완료" : path === "review" && docs.data?.items.some(d => d.reviewStatus !== "CONFIRMED") ? "! 확인 필요" : path === "upload" && dto.documentCount > 0 ? `${dto.documentCount}개 등록` : path === "result" && dto.latestCalculationId !== null ? "결과 있음" : (dto.currentStep === step || (path === "result" && dto.currentStep === "COMPARE")) ? "현재 진행 단계" : index > current ? "진행 전" : "완료 여부 미확인";
     return <Link key={href} href={href} aria-current={active ? "page" : undefined} className="workspace-nav-link border border-border"><span>{label}</span><small>{status}</small></Link>;
-  })}</nav><p className={styles.navigationNote}>진행 단계와 검토 완료·검사 가능 여부는 달라요. 필요한 작업은 언제든 선택할 수 있어요.{dto?.attentionRequired && ` 확인할 항목 ${dto.attentionCount}개.`}</p></div>;
+  })}</nav></div>;
 }
 export function CaseContext({ id }: { id: number }) {
   const pathname = usePathname();

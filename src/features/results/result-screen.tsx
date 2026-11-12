@@ -47,7 +47,9 @@ export function ResultScreen({caseId, selection, returnTo}:{caseId:number;compar
  {q.data.interpretation!=="interpretation-error" && <div className={styles.overview}><ResultSummary compare={false} value={{...vm!,title:q.isError?"직전 조회 결과 · 최신성 미확인":vm!.title}}/><ResultNextSteps value={vm!} caseId={caseId}/></div>}
  <p className={styles.notice}><Info size={16} aria-hidden="true"/><span>차이 발견은 미지급임금 확정을 의미하지 않습니다. 공제액의 적법성이나 세금·보험료의 적정성을 판단하지 않습니다.</span></p>
  {q.data.freshness.overall==="FAILED"&&<p role="alert">이전 결과를 보존합니다. <button className={secondaryButton} onClick={()=>{void q.refetch();void status.refetch();}}>갱신 상태 다시 확인</button> 아래 보조 관리에서 재실행할 수 있습니다.</p>}
- {q.data.interpretation!=="interpretation-error" && <ResultExplorer key={caseId} data={q.data} compare={false} freshnessUnverified={q.isError} after={<details className={cardStyle}><summary>부족한 정보 보완하기</summary><p>원문 확인과 조건 보완으로 계산 가능한 범위를 넓혀 보세요.</p><nav className="my-4 flex flex-wrap gap-3"><Link className={secondaryButton} href={`/cases/${caseId}/review`}>원문 검토</Link><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>조건 보완</Link><Link className={secondaryButton} href={`/cases/${caseId}/manual-records`}>수기 입력 보완</Link></nav><details><summary>실행 가능성과 부족한 입력 상세</summary><InputStatus caseId={caseId} compact/></details></details>}/>}
+ {q.data.interpretation!=="interpretation-error" && <ResultExplorer key={caseId} data={q.data} compare={false} showDetailsInitially={false} freshnessUnverified={q.isError}/> }
+ <section className={styles.support}><h2>결과를 바탕으로 다음을 준비해요</h2><SupportLinks caseId={caseId}/></section>
+ <details className={cardStyle}><summary>부족한 정보 보완하기</summary><p>원문 확인과 조건 보완으로 계산 가능한 범위를 넓혀 보세요.</p><nav className="my-4 flex flex-wrap gap-3"><Link className={secondaryButton} href={`/cases/${caseId}/review`}>원문 검토</Link><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>조건 보완</Link><Link className={secondaryButton} href={`/cases/${caseId}/manual-records`}>수기 입력 보완</Link></nav><details><summary>실행 가능성과 부족한 입력 상세</summary><InputStatus caseId={caseId} compact/></details></details>
  <details className={cardStyle}><summary className="font-bold">입금 거래·배분 관리 및 별도 입금 대조 이력</summary><p>이 영역은 별도 입금 조회 시점의 결과입니다. 위 결과와 버전·최신성을 각각 확인하세요.</p><DepositComparisonPanel caseId={caseId}/></details>
  <details className={`${cardStyle} space-y-4`}><summary className="font-bold">계산 상세·작업 상태·버전·이력·수동 실행</summary>
  <div className="flex flex-wrap gap-3">{(["recompute","calculations","comparisons","payslip-validations"] as const).map(endpoint=><button key={endpoint} className={secondaryButton} disabled={busy} onClick={async()=>{if(lock.current||busy)return;lock.current=true;try{await execution.mutateAsync({endpoint,version:q.data.currentInputVersion});}catch{}finally{lock.current=false;}}}>{{recompute:"전체 수동 재실행",calculations:"계산 재실행",comparisons:"대조 재실행","payslip-validations":"합계 검사 재실행"}[endpoint]}</button>)}</div>
@@ -60,7 +62,7 @@ export function ResultScreen({caseId, selection, returnTo}:{caseId:number;compar
 
  <details><summary>전체 서버 결과·추가 근거</summary><ServerValue value={q.data} caseId={caseId}/></details>
  </details>
- <section className={styles.support}><h2>결과를 바탕으로 다음을 준비해요</h2><SupportLinks caseId={caseId}/></section><nav data-case-next aria-label="결과 관련 화면"><div><h2>확인할 질문을 준비해 볼까요?</h2><p>부족한 자료와 회사에 물어볼 내용을 정리해요.</p></div><Link className={secondaryButton} href={`/cases/${caseId}/questions`}>확인 질문·상담 준비</Link></nav>
+<nav data-case-next aria-label="결과 관련 화면"><div><h2>확인할 질문을 준비해 볼까요?</h2><p>부족한 자료와 회사에 물어볼 내용을 정리해요.</p></div><Link className={secondaryButton} href={`/cases/${caseId}/questions`}>확인 질문·상담 준비</Link></nav>
  </>}</div>;
 }
 

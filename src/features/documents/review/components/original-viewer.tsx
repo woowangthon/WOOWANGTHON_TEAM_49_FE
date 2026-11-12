@@ -9,7 +9,7 @@ import { useObjectUrl } from "../use-object-url";
 import { highlightBox } from "../view-models";
 import type { PreviewDto, SourceDto } from "../schemas";
 const PdfCanvas=dynamic(()=>import("./pdf-canvas"),{ssr:false,loading:()=> <p role="status">PDF 뷰어 준비 중…</p>});
-export function OriginalViewer({workplaceId,documentId,source,onReady}:{workplaceId:number;documentId:number;source?:SourceDto|null;onReady?:(ready:boolean)=>void}){
+export function OriginalViewer({workplaceId,documentId,source,sourceRequest=0,onReady}:{workplaceId:number;documentId:number;source?:SourceDto|null;sourceRequest?:number;onReady?:(ready:boolean)=>void}){
   const preview=usePreview(workplaceId,documentId);const file=useOriginalFile(workplaceId,documentId);
   const url=useObjectUrl(file.data);
   const [retryKey,setRetryKey]=useState(0);
@@ -19,20 +19,24 @@ export function OriginalViewer({workplaceId,documentId,source,onReady}:{workplac
   if(preview.data.documentId!==documentId)return <p role="alert">원문 식별 정보가 일치하지 않습니다.</p>;
   const mediaType=file.data.type.split(";",1)[0];
   if(!["application/pdf","image/jpeg","image/png"].includes(preview.data.mediaType)||mediaType!==preview.data.mediaType)return <p role="alert">미리보기와 원본 파일 형식이 일치하지 않거나 지원하지 않는 형식입니다.</p>;
-  return <ViewerContent key={`${documentId}-${retryKey}`} url={url} preview={preview.data} source={source} onRetry={retry} onReady={onReady} />;
+  return <ViewerContent key={`${documentId}-${retryKey}`} url={url} preview={preview.data} source={source} sourceRequest={sourceRequest} onRetry={retry} onReady={onReady} />;
 }
-export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;preview:PreviewDto;source?:SourceDto|null;onRetry:()=>void;onReady?:(ready:boolean)=>void}){
+export function ViewerContent({url,preview,source,sourceRequest=0,onRetry,onReady}:{url:string;preview:PreviewDto;source?:SourceDto|null;sourceRequest?:number;onRetry:()=>void;onReady?:(ready:boolean)=>void}){
   const scrollArea=useRef<HTMLDivElement>(null);
   const marker=useRef<HTMLDivElement>(null);
-  const [manualPage,setManualPage]=useState<{page:number;source:SourceDto|null|undefined}>();
-  const [zoom,setZoom]=useState(1);
+  const [manualPage,setManualPage]=useState<{page:number;source:SourceDto|null|undefined;request:number}>();
+  // A request is an explicit evidence click, including repeated clicks on the same field.
+  const [zoomState,setZoomState]=useState({request:sourceRequest,value:sourceRequest>0?2:1});
+  const zoom=zoomState.request===sourceRequest?zoomState.value:sourceRequest>0?2:zoomState.value;
+  if(zoomState.request!==sourceRequest)setZoomState({request:sourceRequest,value:zoom});
+  const setZoom=(update:(value:number)=>number)=>setZoomState({request:sourceRequest,value:update(zoom)});
   const [imageError,setImageError]=useState(false);
   const [imageLoaded,setImageLoaded]=useState(false);
   const [imageSize,setImageSize]=useState<{width:number;height:number}>();
   const [pdfReady,setPdfReady]=useState<{page:number;rotation:number}>();
   const reportRendered=useCallback((page:number,rotation:number)=>setPdfReady({page,rotation}),[]);
   const sourcePage=source?.documentId===preview.documentId&&source.page&&(preview.pageCount===null||source.page<=preview.pageCount)?source.page:undefined;
-  const page=(manualPage?.source===source?manualPage?.page:undefined)??sourcePage??1;
+  const page=(manualPage?.source===source&&manualPage?.request===sourceRequest?manualPage?.page:undefined)??sourcePage??1;
   const rendered=preview.mediaType==="application/pdf"?pdfReady?.page===page:imageLoaded;
   useEffect(()=>{onReady?.(rendered&&!imageError);return()=>onReady?.(false);},[rendered,imageError,onReady]);
   const box=rendered?highlightBox(preview,source,page,preview.mediaType==="application/pdf"?(pdfReady?.rotation??NaN):0):undefined;
@@ -48,8 +52,9 @@ export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;p
     const frame=requestAnimationFrame(reveal);
     const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(reveal):undefined;
     observer?.observe(area);
+    if(marker.current?.parentElement)observer?.observe(marker.current.parentElement);
     return()=>{cancelAnimationFrame(frame);observer?.disconnect();};
-  },[source,page,zoom,hasBox]);
+  },[source,sourceRequest,page,zoom,hasBox]);
   const radians=(preview.rotationDegrees??0)*Math.PI/180;
   const rotatedSize=imageSize&&preview.rotationDegrees?{
     width:Math.abs(imageSize.width*Math.cos(radians))+Math.abs(imageSize.height*Math.sin(radians)),
@@ -60,7 +65,7 @@ export function ViewerContent({url,preview,source,onRetry,onReady}:{url:string;p
     {preview.pageCount===null&&<p role="status">&#51204;&#52404; &#54168;&#51060;&#51648; &#49688; &#48120;&#54869;&#51221;</p>}
     <h2 className="text-title font-bold">문서 원문</h2>
     <div className="flex flex-wrap gap-2" aria-label="원문 도구">
-      <button className={secondaryButton} disabled={page<=1} onClick={()=>setManualPage({page:page-1,source})}>이전 페이지</button><p className="self-center text-body">{page} / {preview.pageCount ?? "?"} 페이지</p><button className={secondaryButton} disabled={preview.pageCount===null||page>=preview.pageCount} onClick={()=>setManualPage({page:page+1,source})}>다음 페이지</button>
+      <button className={secondaryButton} disabled={page<=1} onClick={()=>setManualPage({page:page-1,source,request:sourceRequest})}>이전 페이지</button><p className="self-center text-body">{page} / {preview.pageCount ?? "?"} 페이지</p><button className={secondaryButton} disabled={preview.pageCount===null||page>=preview.pageCount} onClick={()=>setManualPage({page:page+1,source,request:sourceRequest})}>다음 페이지</button>
       <button className={secondaryButton} disabled={zoom<=0.5} onClick={()=>setZoom(v=>Math.max(0.5,v-0.25))}>축소</button><span className="self-center text-body">{Math.round(zoom*100)}%</span><button className={secondaryButton} disabled={zoom>=3} onClick={()=>setZoom(v=>Math.min(3,v+0.25))}>확대</button>
       {sourcePage&&<button className={secondaryButton} onClick={()=>setManualPage(undefined)}>선택한 근거 페이지</button>}
       <button className={secondaryButton} onClick={onRetry}>원문 다시 불러오기</button>
