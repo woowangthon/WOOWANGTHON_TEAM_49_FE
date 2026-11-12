@@ -1,0 +1,47 @@
+.detail { min-width: 0; padding: 24px; border: 1px solid #dfe7e2; border-radius: 18px; background: white; color: #254b40; scroll-margin-block: 24px; }
+.heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; }
+.heading h3 { font-size: 18px; font-weight: 750; letter-spacing: -.4px; }
+.status { display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 6px; background: #eff3ed; color: #486b53; font-size: 11px; font-weight: 650; }
+.status[data-status="DIFFERENCE"], .difference[data-status="DIFFERENCE"] { background: #fbf1e3; color: #965b20; }
+.status[data-status="INSUFFICIENT_INFORMATION"], .status[data-status="REVIEW_REQUIRED"] { background: #f3f4f1; color: #68766d; }
+.period { margin-top: 9px; color: #708075; font-size: 11px; line-height: 1.7; }
+.comparison { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 34px; margin-top: 18px; padding: 24px 18px; border-radius: 12px; background: #f0f4e9; }
+.comparison[data-single="true"] { grid-template-columns: minmax(0,1fr); }
+.valueColumn { position: relative; min-width: 0; text-align: center; }
+.valueColumn dl { display: grid; gap: 12px; }
+.valueColumn dt { color: #71816e; font-size: 12px; }
+.valueColumn dd { margin-top: 10px; color: #165749; font-size: clamp(21px,2.7cqi,28px); line-height: 1.4; font-weight: 750; letter-spacing: -.6px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.valueColumn dd[data-has-value="false"] { font-size: 16px; color: #65776b; }
+.compareIcon { position: absolute; top: 50%; left: -27px; transform: translateY(-50%); color: #7c8b7c; }
+.difference { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 14px; padding: 14px 16px; border-radius: 9px; background: #f3f5f0; font-size: 13px; }
+.difference strong { font-weight: 700; }
+.guidance { margin-top: 17px; color: #5c7265; font-size: 13px; line-height: 1.8; }
+.disclaimer { margin-top: 5px; color: #7b867d; font-size: 11px; line-height: 1.7; }
+.section { min-width: 0; margin-top: 22px; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.section > h4 { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #dfe7dc; font-size: 14px; font-weight: 700; color: #315247; }
+.sources { display: grid; gap: 0; }
+.empty { color: #7a857d; font-size: 12px; }
+.sourceHeading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.sourceHeading a { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; color: #52745c; font-size: 11px; font-weight: 600; }
+.additional > dl { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,110px),1fr)); gap: 12px 20px; }
+.additional > dl > div { min-width: 0; margin-top: 0; }
+.additional dt { color: #627468; font-weight: 550; }
+.additional dd { padding-left: 0; color: #3e554a; }
+.nextAction { margin-top: 20px; padding: 12px; border-radius: 9px; background: #f3f6f0; color: #4a6956; font-size: 12px; line-height: 1.8; }
+.actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 24px; padding-top: 18px; border-top: 1px solid #edf0e9; }
+.actions a { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 12px; color: #4b685a; font-size: 12px; font-weight: 650; }
+.actions button { min-height: 44px; min-width: 64px; padding: 10px 17px; border-radius: 8px; background: #195347; color: white; font-size: 13px; font-weight: 700; }
+@media (max-width: 540px) {
+  .detail { padding: 18px 14px; border-radius: 15px; }
+  .heading h3 { font-size: 16px; }
+  .comparison { gap: 24px; padding: 20px 10px; }
+  .valueColumn dt { font-size: 11px; }
+  .valueColumn dd { font-size: 21px; }
+  .compareIcon { left: -21px; width: 17px; }
+  .actions { gap: 8px; }
+}
+@media (max-width: 360px) {
+  .comparison { grid-template-columns: minmax(0,1fr); gap: 28px; }
+  .compareIcon { top: -24px; left: calc(50% - 8px); transform: none; }
+  .valueColumn dd { margin-top: 5px; }
+}

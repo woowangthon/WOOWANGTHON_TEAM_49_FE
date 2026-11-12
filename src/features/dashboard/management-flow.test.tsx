@@ -421,9 +421,9 @@ it("provides all case tasks without workflow locks and preserves workplace route
   const { mount } = await setup();
   mount(<><WorkspaceNavigation /><TaskNavigation id={15} /></>);
   const tasks = screen.getByRole("navigation", { name: "내역 작업" });
-  expect(within(tasks).getByRole("link", { name: /결과 보기/ })).toHaveAttribute("href", "/cases/15/result");
+  expect(within(tasks).getByRole("link", { name: /결과·자료 대조/ })).toHaveAttribute("href", "/cases/15/result");
   expect(within(tasks).queryByRole("link", { name: "상담 준비" })).not.toBeInTheDocument();
-  expect(within(tasks).getAllByRole("link")).toHaveLength(6);
+  expect(within(tasks).getAllByRole("link")).toHaveLength(5);
   expect(screen.getByRole("link", { name: "상담 준비" })).toHaveAttribute("href", "/consultation");
   const workplaceName = await screen.findByText("카페 나무", { selector: "summary strong" });
   expect(workplaceName.closest("summary")).toHaveTextContent("급여 내역");

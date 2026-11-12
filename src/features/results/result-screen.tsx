@@ -1,8 +1,8 @@
 "use client";
 import { jobText } from "@/features/documents/api";
 import { useCase } from "@/features/cases/queries";
-import { CaseStageHeader } from "@/features/cases/components/case-stage-header";
-import { ResultSummary } from "./result-presentation";
+import styles from "./result-screen.module.css";
+import { ResultNextSteps, ResultSummary } from "./result-presentation";
 import { ResultExplorer } from "./result-explorer";
 import { SupportLinks } from "@/features/case-support/screens";
 import { SelectedSnapshot } from "./selected-snapshot";
@@ -27,15 +27,15 @@ export function ServerValue({value,caseId,fieldKey,unit}:{value:unknown;caseId:n
  if(fieldKey==="resultItem" && !Object.keys(obj).length)return <p>서버 상세 항목 미제공</p>;
  return <dl className="min-w-0 space-y-3 [overflow-wrap:anywhere]">{resultRows(obj,validation?"KRW":fieldKey==="counts"?"COUNT":unit).map(row=><div key={row.key} className="min-w-0"><dt className="font-bold">{row.label}</dt><dd className="pl-2"><ServerValue value={row.value} caseId={caseId} fieldKey={row.key} unit={row.unit}/></dd></div>)}</dl>;
 }
-export function ResultScreen({caseId, compare=false, selection, returnTo}:{caseId:number;compare?:boolean;selection?:{kind:SnapshotKind;id:number;version:number}|null;returnTo?:string}) {
+export function ResultScreen({caseId, selection, returnTo}:{caseId:number;compare?:boolean;selection?:{kind:SnapshotKind;id:number;version:number}|null;returnTo?:string}) {
  const context=useCase(caseId);
  const q=useResults(caseId); const execution=useResultExecution(caseId); const status=useRecomputeStatus(caseId); const lock=useRef(false);
  const vm=q.data?toResultsViewModel(q.data):undefined;
  const job=status.data?.activeJob ?? status.data?.latestJob;
  const detail=useResultJob(caseId,jobText(job?.jobId),jobText(job?.status));
  const busy=execution.isPending || status.isPending || status.isError || !!status.awaitingScheduledJob || (!!status.data && recomputeActive(status.data));
- return <div className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
- <CaseStageHeader stage={compare ? "compare" : "result"} title={compare ? "자료를 비교해 볼까요?" : "내 임금 결과를 확인해 보세요"} description={compare ? "계약·근태·명세서를 함께 살펴보고, 차이가 생긴 항목과 근거를 확인해요." : "계산 가능한 범위와 확인이 필요한 항목을 살펴보세요. 결과의 근거도 함께 확인할 수 있어요."} />
+ return <div className={styles.screen}>
+ <header className={styles.header}><div><p className={styles.eyebrow}>내 급여 살펴보기</p><h1>내 임금, 어디까지 확인됐을까요?</h1><p>계산된 금액부터 차이가 생긴 이유까지 확인해 보세요.</p></div><Link className={styles.headerLink} href={`/cases/${caseId}/reports`}>상담 자료 준비 →</Link></header>
  {!context.data && <QueryFeedback pending={context.isPending} error={context.error} retry={()=>void context.refetch()}/>}
 
  <p>차이 발견은 미지급임금 확정을 의미하지 않습니다. 공제액의 적법성이나 세금·보험료의 적정성을 판단하지 않습니다.</p>
@@ -44,9 +44,9 @@ export function ResultScreen({caseId, compare=false, selection, returnTo}:{caseI
  {q.isError && <><p role="alert">최신 결과 조회에 실패해 직전 조회 결과를 보존합니다. 최신성을 다시 확인해 주세요.</p><QueryFeedback error={q.error} retry={()=>void q.refetch()}/></>}
  {execution.isError && <><p role="alert">작업을 접수하지 못했습니다. 최신 입력 버전과 실행 가능성을 확인해 주세요. 상태 조회는 작업을 중복 생성하지 않습니다.</p><QueryFeedback error={execution.error} retry={()=>{void q.refetch();void status.refetch();}}/></>}{execution.data && <p role="status">수동 작업 접수: {execution.data.jobId} · {statusLabels[execution.data.status]}</p>}
  {q.data.interpretation==="interpretation-error" && <p role="alert">&#44208;&#44284; &#54364;&#49884; &#54644;&#49437;&#50640; &#49892;&#54056;&#54664;&#49845;&#45768;&#45796;. &#50896;&#48376; &#45936;&#51060;&#53552;&#45716; &#48372;&#51316;&#54664;&#49845;&#45768;&#45796;.</p>}
- {q.data.interpretation!=="interpretation-error" && <ResultSummary compare={compare} value={{...vm!,title:q.isError?"직전 조회 결과 · 최신성 미확인":compare?"자료 비교 요약":vm!.title}}/>}
+ {q.data.interpretation!=="interpretation-error" && <div className={styles.overview}><ResultSummary compare={false} value={{...vm!,title:q.isError?"직전 조회 결과 · 최신성 미확인":vm!.title}}/><ResultNextSteps value={vm!} caseId={caseId}/></div>}
  {q.data.freshness.overall==="FAILED"&&<p role="alert">이전 결과를 보존합니다. <button className={secondaryButton} onClick={()=>{void q.refetch();void status.refetch();}}>갱신 상태 다시 확인</button> 아래 보조 관리에서 재실행할 수 있습니다.</p>}
- {q.data.interpretation!=="interpretation-error" && <ResultExplorer key={caseId} data={q.data} compare={compare} after={!compare&&<details className={cardStyle}><summary>부족한 정보 보완하기</summary><p>원문 확인과 조건 보완으로 계산 가능한 범위를 넓혀 보세요.</p><nav className="my-4 flex flex-wrap gap-3"><Link className={secondaryButton} href={`/cases/${caseId}/review`}>원문 검토</Link><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>조건 보완</Link><Link className={secondaryButton} href={`/cases/${caseId}/manual-records`}>수기 입력 보완</Link></nav><details><summary>실행 가능성과 부족한 입력 상세</summary><InputStatus caseId={caseId} compact/></details></details>}/>}
+ {q.data.interpretation!=="interpretation-error" && <ResultExplorer key={caseId} data={q.data} compare={false} freshnessUnverified={q.isError} after={<details className={cardStyle}><summary>부족한 정보 보완하기</summary><p>원문 확인과 조건 보완으로 계산 가능한 범위를 넓혀 보세요.</p><nav className="my-4 flex flex-wrap gap-3"><Link className={secondaryButton} href={`/cases/${caseId}/review`}>원문 검토</Link><Link className={secondaryButton} href={`/cases/${caseId}/conditions`}>조건 보완</Link><Link className={secondaryButton} href={`/cases/${caseId}/manual-records`}>수기 입력 보완</Link></nav><details><summary>실행 가능성과 부족한 입력 상세</summary><InputStatus caseId={caseId} compact/></details></details>}/>}
  <details className={cardStyle}><summary className="font-bold">입금 거래·배분 관리 및 별도 입금 대조 이력</summary><p>이 영역은 별도 입금 조회 시점의 결과입니다. 위 결과와 버전·최신성을 각각 확인하세요.</p><DepositComparisonPanel caseId={caseId}/></details>
  <details className={`${cardStyle} space-y-4`}><summary className="font-bold">계산 상세·작업 상태·버전·이력·수동 실행</summary>
  <div className="flex flex-wrap gap-3">{(["recompute","calculations","comparisons","payslip-validations"] as const).map(endpoint=><button key={endpoint} className={secondaryButton} disabled={busy} onClick={async()=>{if(lock.current||busy)return;lock.current=true;try{await execution.mutateAsync({endpoint,version:q.data.currentInputVersion});}catch{}finally{lock.current=false;}}}>{{recompute:"전체 수동 재실행",calculations:"계산 재실행",comparisons:"대조 재실행","payslip-validations":"합계 검사 재실행"}[endpoint]}</button>)}</div>
@@ -59,7 +59,7 @@ export function ResultScreen({caseId, compare=false, selection, returnTo}:{caseI
 
  <details><summary>전체 서버 결과·추가 근거</summary><ServerValue value={q.data} caseId={caseId}/></details>
  </details>
- <details className={cardStyle}><summary>상담 준비와 후속 행동</summary><SupportLinks caseId={caseId}/></details><nav data-case-next aria-label="결과 관련 화면"><div><h2>{compare ? "계산 결과도 살펴볼까요?" : "확인할 질문을 준비해 볼까요?"}</h2><p>{compare ? "계산 결과를 함께 확인할 수 있어요." : "부족한 자료와 회사에 물어볼 내용을 정리해요."}</p></div><Link className={secondaryButton} href={`/cases/${caseId}/${compare ? "result" : "questions"}`}>{compare ? "통합 결과" : "확인 질문·상담 준비"}</Link></nav>
+ <details className={cardStyle}><summary>상담 준비와 후속 행동</summary><SupportLinks caseId={caseId}/></details><nav data-case-next aria-label="결과 관련 화면"><div><h2>확인할 질문을 준비해 볼까요?</h2><p>부족한 자료와 회사에 물어볼 내용을 정리해요.</p></div><Link className={secondaryButton} href={`/cases/${caseId}/questions`}>확인 질문·상담 준비</Link></nav>
  </>}</div>;
 }
 
