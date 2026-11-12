@@ -1,0 +1,39 @@
+{
+  "upload": {
+    "documentId": 123,
+    "processingStatus": "UPLOADED",
+    "reviewStatus": "NOT_STARTED",
+    "progress": 10,
+    "duplicateCandidateIds": [
+      17,
+      29
+    ]
+  },
+  "centers": {
+    "items": [
+      {
+        "centerId": 1,
+        "name": "Fixture center",
+        "region": "??",
+        "categories": [
+          "WAGE"
+        ],
+        "phone": "1350",
+        "website": "https://example.org",
+        "businessHours": null,
+        "languages": null,
+        "visitInformation": null,
+        "sourceUrl": "https://example.org/source",
+        "verifiedAt": "2026-11-10",
+        "dataSource": "VERIFIED_DB",
+        "isNationwide": true,
+        "notes": "Fixture only"
+      }
+    ],
+    "page": 1,
+    "size": 20,
+    "total": 1,
+    "nationwideFallbackUsed": false,
+    "dataStatus": "NATIONWIDE_ONLY"
+  }
+}
