@@ -43,7 +43,7 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
       if (error) { setMessage(error); return; }
       if (!mounted.current || controller.current.signal.aborted) return;
       const receipt = await mutation.mutateAsync({ type: "upload", context, file, documentType: values.documentType, signal: controller.current.signal });
-      if (mounted.current) { setCandidates(uploadSchema.safeParse(receipt).data?.duplicateCandidateIds ?? []); setFile(undefined); setSuccess(true); if (input.current) input.current.value = ""; }
+      if (mounted.current) { setCandidates(uploadSchema.parse(receipt).duplicateCandidateIds); setFile(undefined); setSuccess(true); if (input.current) input.current.value = ""; }
     } catch (error) { if (mounted.current) setMessage(documentError(error)); }
     finally { locked.current = false; if (mounted.current) setBusy(false); }
   })(event); }}>

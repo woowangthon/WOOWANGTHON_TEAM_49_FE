@@ -26,7 +26,7 @@ export const statusSchema = z.object({
   reviewStatus: documentSchema.shape.reviewStatus.optional(), progress: documentSchema.shape.progress.optional(),
   errorCode: z.string().nullable().optional(),
 });
-export const uploadSchema = statusSchema.extend({ linkId: id.optional(), inputVersion: id.optional(), duplicateCandidateIds: z.array(z.number().int().safe()).optional().catch(undefined) });
+export const uploadSchema = statusSchema.extend({ linkId: id.optional(), inputVersion: id.optional(), duplicateCandidateIds: z.array(z.number().int().safe()) });
 export const mutationSchema = z.object({ inputVersion: id.optional(), affectedCaseIds: z.array(id).optional() });
 export const impactSchema = z.object({
   documentId: id, linkedCaseIds: z.array(id), linkedCaseCount: z.number().int().nonnegative(),

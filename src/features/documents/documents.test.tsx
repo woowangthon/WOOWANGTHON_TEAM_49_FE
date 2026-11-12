@@ -199,7 +199,7 @@ describe("document flows with MSW, never a live backend", () => {
  });
   it("shares refresh for multipart 401s and preserves the same file on retry", async () => {
     const {app} = await setup(); let uploads=0; let refreshes=0;
-    server.use(http.post(`${testApiUrl}/auth/refresh`,()=>{refreshes++;return apiResponse({accessToken:"rotated",tokenType:"Bearer",expiresIn:1800,user:{userId:1,email:"worker@example.com",name:"Worker"}});}),http.post(`${testApiUrl}/cases/15/documents`,async ({request})=>{uploads++; expect((await request.formData()).get("documentType")).toBe("PAYSLIP");return request.headers.get("Authorization")==="Bearer rotated" ? apiResponse({documentId:122,processingStatus:"UPLOADED",reviewStatus:"NOT_STARTED"},202) : apiResponse({},401);}));
+    server.use(http.post(`${testApiUrl}/auth/refresh`,()=>{refreshes++;return apiResponse({accessToken:"rotated",tokenType:"Bearer",expiresIn:1800,user:{userId:1,email:"worker@example.com",name:"Worker"}});}),http.post(`${testApiUrl}/cases/15/documents`,async ({request})=>{uploads++; expect((await request.formData()).get("documentType")).toBe("PAYSLIP");return request.headers.get("Authorization")==="Bearer rotated" ? apiResponse({documentId:122,processingStatus:"UPLOADED",reviewStatus:"NOT_STARTED",duplicateCandidateIds:[]},202) : apiResponse({},401);}));
     await Promise.all([documentApi(app.api).upload({kind:"case",id:15},pdf(),"PAYSLIP"),documentApi(app.api).upload({kind:"case",id:15},pdf(),"PAYSLIP")]);
     expect(refreshes).toBe(1); expect(uploads).toBe(4);
   });

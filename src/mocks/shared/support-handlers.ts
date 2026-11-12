@@ -22,11 +22,11 @@ export function supportMocks(base: string, getResult: (c: number) => Results | u
       const q = new URL(request.url).searchParams;
       const region = q.get("region") ?? "", category = q.get("category");
       const page = Math.max(1, Number(q.get("page")) || 1), size = Math.min(100, Math.max(1, Number(q.get("size")) || 20));
-      const local = { centerId: 1, name: "개발용 예시 지역 상담기관 — 실제 운영기관이 아닙니다", region: "청주시", categories: ["임금"], phone: null, website: null, sourceUrl: null, verifiedAt: null, dataSource: "MOCK", isNationwide: false };
+      const local = { centerId: 1, name: "개발용 예시 지역 상담기관 — 실제 운영기관이 아닙니다", region: "청주시", categories: ["임금"], phone: "", website: "", businessHours: null, languages: null, visitInformation: null, sourceUrl: "", verifiedAt: "2026-11-12", notes: "Development example only", dataSource: "MOCK", isNationwide: false };
       const nationwide = { ...local, centerId: 2, name: "개발용 예시 전국 상담 안내", region: "전국", isNationwide: true };
       const fallback = !region || !local.region.includes(region);
       const items = scenario(request) === "centers-empty" || region === "정보없음" || (category && category !== "WAGE") ? [] : [fallback ? nationwide : local];
-      return apiResponse({ items: items.slice((page - 1) * size, page * size), page, size, total: items.length, nationwideFallbackUsed: items.length > 0 && fallback });
+      return apiResponse({ items: items.slice((page - 1) * size, page * size), page, size, total: items.length, dataStatus: "AVAILABLE", nationwideFallbackUsed: items.length > 0 && fallback });
     }),
     http.post(`${base}/cases/:c/company-inquiry`, async ({ params, request }) => {
       const result = getResult(Number(params.c)); if (!result) return missing();
