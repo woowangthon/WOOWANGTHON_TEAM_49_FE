@@ -88,7 +88,7 @@ export function ResultExplorer({ data, compare, before, after, freshnessUnverifi
   </aside>
   {before}
   <div id={`${id}-comparison-table`} tabIndex={-1}><ResultComparisonTable groups={groups} resultVersion={data.resultVersion} onSelect={selectEvidence}/></div>
-  {!detailsVisible&&<button className={styles.filter} type="button" onClick={()=>setDetailsVisible(true)}>항목별 상세 다시 보기</button>}
+  {!detailsVisible&&showDetailsInitially&&<button className={styles.filter} type="button" onClick={()=>setDetailsVisible(true)}>항목별 상세 다시 보기</button>}
   {detailsVisible&&<section className={styles.explorer} aria-label={compare ? "검사 탐색" : "결과 탐색"}>
    <header className={styles.explorerHeading}><div><h2>{compare ? "어떤 자료에서 차이가 났을까요?" : "항목별로 자세히 볼까요?"}</h2><p>{compare ? "자료 대조와 명세서·입금 검사를 각각 확인해요." : "계산과 자료 대조 결과를 나누어 확인해요."}</p></div><span>{groups.length}가지 검사</span></header>
    <div role="tablist" aria-label="결과 카테고리" className={`${styles.tabs} ${compare ? styles.comparisonTabs : ""}`}>{groups.map((g, i) => { const Icon = groupIcons[g.id as keyof typeof groupIcons]; return <button key={g.id} id={`${id}-${g.id}`} role="tab" aria-label={g.title} aria-selected={group.id === g.id} aria-controls={`${id}-panel`} tabIndex={group.id === g.id ? 0 : -1} className={styles.tab} onClick={() => selectGroup(g.id)} onKeyDown={e => {

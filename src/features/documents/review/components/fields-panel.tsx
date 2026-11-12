@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowUpRight, Check, ChevronDown, CircleAlert, ScanText } from "lucide-react";
 import type { DocumentDto } from "../../schemas";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -16,6 +16,7 @@ import { FieldEditor } from "./field-editor";
 import { FieldHistory } from "./field-history";
 import styles from "./review-screen.module.css";
 export function FieldsPanel({actionsDisabled=false,fields,context,inputVersion,onSource,onDirty,dirty,linkedCaseIds,documentType="PAYSLIP",period}:{actionsDisabled?:boolean;fields:ExtractedField[];context:ReviewContext;inputVersion:number;onSource:(source:SourceDto|null)=>void;onDirty:(value:boolean)=>void;dirty:boolean;linkedCaseIds?:number[];documentType?:DocumentDto["documentType"];period?:{start:string;end:string}}){
+  const fieldList=useRef<HTMLDivElement>(null);
   const [editor,setEditor]=useState<{fieldId:number;scope:"case"|"shared"}>();
   const [detailsOpen,setDetailsOpen]=useState(false);
   const {essential,details}=groupReviewFields(fields,documentType);
@@ -55,8 +56,11 @@ export function FieldsPanel({actionsDisabled=false,fields,context,inputVersion,o
   return <section aria-label="OCR 추출 필드" className={styles.fieldsPanel} data-review-groups>
     <header className={styles.panelHeading}><span className={styles.panelIcon}><ScanText size={21} aria-hidden="true" /></span><div><h2>핵심 내용</h2><p>원문과 같은지 확인해 주세요.</p></div></header>
     <div className={styles.progressArea}><p role="status">전체 {fields.length}개 중 <strong>{countConfirmed(fields)}개 확인 완료</strong></p><progress aria-label="전체 필드 확인 진행률" value={countConfirmed(fields)} max={Math.max(1,fields.length)} />
-      {missing.length>0&&<button className={styles.missingShortcut} onClick={()=>{const target=document.getElementById(`review-field-${missing[0].fieldId}`);target?.scrollIntoView?.({block:"center"});target?.focus({preventScroll:true});}}><CircleAlert size={15} aria-hidden="true" /><span>추출 안 된 값 <strong>{missing.length}개</strong></span><ArrowUpRight size={15} aria-hidden="true" /></button>}
+      {missing.length>0&&<button className={styles.missingShortcut} onClick={()=>{const target=document.getElementById(`review-field-${missing[0].fieldId}`);const list=fieldList.current;
+        if(target&&list&&list.scrollHeight>list.clientHeight){const rect=target.getBoundingClientRect();const bounds=list.getBoundingClientRect();list.scrollTo({top:list.scrollTop+rect.top-bounds.top-(list.clientHeight-rect.height)/2});}
+        else target?.scrollIntoView?.({block:"center"});target?.focus({preventScroll:true});}}><CircleAlert size={15} aria-hidden="true" /><span>추출 안 된 값 <strong>{missing.length}개</strong></span><ArrowUpRight size={15} aria-hidden="true" /></button>}
     </div>
+    <div ref={fieldList} className={styles.fieldList} role="region" aria-label="핵심 내용 필드 목록" tabIndex={0}>
     {error&&<p role="alert" tabIndex={-1}>{error}</p>}
     {conflict&&<button className={secondaryButton} onClick={async()=>{const result=await Promise.all([latestCase.refetch(),latestFields.refetch()]);if(result.every(v=>!v.isError)){setConflict(false);setError("");}}}>최신 필드와 버전 확인</button>}
     {receipt&&<p role="status" className="break-words text-body">저장했습니다.{(receipt.affectedCaseIds?.length??receipt.caseUpdates?.length??0)>1?" 연결된 다른 사례에도 반영되었습니다.":""}</p>}
@@ -78,6 +82,7 @@ export function FieldsPanel({actionsDisabled=false,fields,context,inputVersion,o
       {!!editor&&details.some(field=>field.fieldId===editor.fieldId)&&<p className="px-4 pb-4 text-caption text-muted">편집을 저장하거나 닫으면 세부 항목을 접을 수 있어요.</p>}
     </section>
     <p className={styles.footnote}>값이 없거나 읽을 수 없는 항목은 0원으로 처리하지 않아요.</p>
+    </div>
     {remove&&<ConfirmDialog title="공유 기본값으로 복귀" busy={mutation.isPending} onClose={()=>setRemove(undefined)} action={<button className={primaryButton} disabled={actionsDisabled||mutation.isPending||conflict} onClick={async()=>{try{const result=await mutation.mutateAsync({type:"remove-override",fieldId:remove.fieldId,version:inputVersion});setReceipt(updateMetaSchema.parse(result));setRemove(undefined);}catch(e){setError(reviewError(e));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);setRemove(undefined);}}}>재정의 제거 확인</button>}><p>이 사례의 ‘{remove.label}’ 재정의를 제거하고 공유 기본값을 다시 적용합니다. 다른 사례의 재정의는 변경하지 않습니다.</p></ConfirmDialog>}
   </section>;
 }

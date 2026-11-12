@@ -33,7 +33,12 @@ export function highlightBox(preview: PreviewDto, source: SourceDto | null | und
   if(!source || source.documentId !== preview.documentId || source.page !== page || !preview.supportsHighlight || preview.coordinateSystem !== "RELATIVE_0_1" || source.coordinateSystem !== "RELATIVE_0_1" || preview.rotationDegrees !== 0 || intrinsicRotation !== 0 || !source.boundingBox) return;
   const [x,y,width,height] = source.boundingBox;
   if(![x,y,width,height].every(Number.isFinite) || x<0 || y<0 || width<=0 || height<=0 || x+width>1 || y+height>1) return;
-  return {left:`${x*100}%`,top:`${y*100}%`,width:`${width*100}%`,height:`${height*100}%`};
+  // Presentation padding only; retain the authoritative source coordinates.
+  const padX=Math.min(0.004,width*0.08),padY=Math.min(0.003,height*0.15);
+  const left=Math.max(0,x-padX),top=Math.max(0,y-padY);
+  const right=Math.min(1,x+width+padX),bottom=Math.min(1,y+height+padY);
+  const percent=(value:number)=>`${Number((value*100).toFixed(6))}%`;
+  return {left:percent(left),top:percent(top),width:percent(right-left),height:percent(bottom-top)};
 }
 export function parseFieldValue(field: ExtractedField, text: string, empty: boolean, scalar?: "string"|"number"|"boolean"): FieldValue {
   if(field.value !== null && typeof field.value === "object") throw new Error("구조형 값은 JSON 편집기를 사용해 주세요.");

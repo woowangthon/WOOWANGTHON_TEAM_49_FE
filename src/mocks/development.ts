@@ -38,6 +38,14 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
     if (link) link.documentId = next;
   }, c => inputs.notifyInputChange(c));
   review.histories.splice(0);
+  // Only the seeded synthetic PDF has known layout coordinates. Uploaded files
+  // keep the no-highlight fallback because this mock does not perform OCR.
+  if(seed){
+    const documentId=documents[0].documentId;
+    review.fields(cases[0].caseId,documentId).forEach(field=>{
+      field.source=field.key==="grossPay"?{documentId,page:1,text:"Gross pay: KRW 2,300,000",boundingBox:[50/595,140/842,185/595,18/842],coordinateSystem:"RELATIVE_0_1"}:null;
+    });
+  }
   const inputs = inputMocks(management.getCases, baseUrl, c => docs.getLinks().filter(l=>l.caseId===c).flatMap(l=>documents.some(d=>d.documentId===l.documentId && d.documentType==="PAYSLIP")?[{documentId:l.documentId,fields:review.fields(c,l.documentId)}]:[]));
   // Seed real positive-ID snapshots through the existing synthetic publish pipeline.
   cases.forEach(c=>{inputs.getResult(c.caseId);inputs.notifyInputChange(c.caseId);inputs.setJobStatus(c.caseId,"PARTIAL");});
@@ -103,7 +111,7 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
       });
       return apiResponse({ items: items.slice((page - 1) * size, page * size), page, size, total: items.length });
     }),
-    http.get(`${baseUrl}/workplaces/:w/documents/:d/preview`, ({ params }) => apiResponse({ documentId: Number(params.d), mediaType: files.get(Number(params.d))?.type ?? "application/pdf", pageCount: 1, coordinateSystem: "RELATIVE_0_1", rotationDegrees: 0, supportsHighlight: false })),
+    http.get(`${baseUrl}/workplaces/:w/documents/:d/preview`, ({ params }) => apiResponse({ documentId: Number(params.d), mediaType: files.get(Number(params.d))?.type ?? "application/pdf", pageCount: 1, coordinateSystem: "RELATIVE_0_1", rotationDegrees: 0, supportsHighlight: seed && Number(params.d)===documents[0]?.documentId && !files.has(Number(params.d)) })),
     http.get(`${baseUrl}/workplaces/:w/documents/:d/file`, async ({ params }) => {
       const file = files.get(Number(params.d));
       return new HttpResponse(file ? await file.arrayBuffer() : samplePdf(), { headers: { "Content-Type": file?.type ?? "application/pdf" } });
