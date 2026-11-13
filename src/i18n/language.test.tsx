@@ -12,16 +12,63 @@ import {authKeys} from '@/features/auth/query-keys';
 import {userSchema} from '@/features/auth/schemas';
 import {LanguageProvider, useLanguage} from './language-provider';
 import {LanguageSelector} from './language-selector';
-import {defaultLocale, resolveLocale, locales, type Locale} from './config';
+import {defaultLocale, resolveLocale, locales, languageCatalog, type Locale} from './config';
 vi.mock('next/navigation', () => ({useRouter: () => ({refresh: vi.fn()})}));
 afterEach(cleanup);
-function mount(app = createAppServices(testApiUrl)) {
+function mount(app = createAppServices(testApiUrl), initialLocale: Locale = defaultLocale) {
   let language: ReturnType<typeof useLanguage>;
   function Probe() {language = useLanguage(); return <output>{language.locale}</output>;}
-  render(<AppServicesContext value={app}><QueryClientProvider client={app.queryClient}><LanguageProvider><LanguageSelector/><Probe/></LanguageProvider></QueryClientProvider></AppServicesContext>);
+  render(<AppServicesContext value={app}><QueryClientProvider client={app.queryClient}><LanguageProvider initialLocale={initialLocale}><LanguageSelector/><Probe/></LanguageProvider></QueryClientProvider></AppServicesContext>);
   return {app, current: () => language!};
 }
 describe('user locale and selector', () => {
+  it.each([
+    ['ko', '\uC5B8\uC5B4'], ['en', 'Language'], ['zh', '\u8BED\u8A00'], ['vi', 'Ng\u00F4n ng\u1EEF'], ['km', '\u1797\u17B6\u179F\u17B6'],
+  ] as const)('shows only the localized label for %s and decorative SVG flags', async (locale, label) => {
+    mount(undefined, locale);
+    const button = screen.getByRole('button');
+    expect(button).toHaveTextContent(label);
+    expect(button.textContent).toBe(label);
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    const user = userEvent.setup();
+    await user.click(button);
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    for (const code of locales) {
+      const option = screen.getByRole('menuitemradio', {name: languageCatalog[code].name});
+      expect(option).toHaveAttribute('aria-checked', String(code === locale));
+      const flag = option.querySelector('img');
+      expect(flag).toHaveAttribute('src', languageCatalog[code].flagSrc);
+      expect(flag).toHaveAttribute('alt', '');
+      expect(option.textContent).toBe(languageCatalog[code].name);
+    }
+    await user.keyboard('{End}');
+    await waitFor(() => expect(screen.getAllByRole('menuitemradio').at(-1)).toHaveFocus());
+    await user.keyboard('{Home}');
+    await waitFor(() => expect(screen.getAllByRole('menuitemradio')[0]).toHaveFocus());
+    await user.keyboard('{Escape}');
+    expect(button).toHaveFocus();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    await user.click(button);
+    await user.click(document.body);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('disables the trigger while saving and shows failure without changing the applied label', async () => {
+    const {app} = mount();
+    await act(() => app.auth.login({email:testUser.email, password:'password1234'}));
+    let reject!: (error: Error) => void;
+    vi.spyOn(app.authApi, 'changeLanguage').mockImplementation(() => new Promise((_, fail) => {reject = fail;}));
+    const user = userEvent.setup();
+    const button = screen.getByRole('button');
+    await user.click(button);
+    await user.click(screen.getByRole('menuitemradio', {name:'English'}));
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    await act(async () => reject(new Error('save failed')));
+    expect(button).toBeEnabled();
+    expect(button.textContent).toBe('\uC5B8\uC5B4');
+    expect(screen.getByRole('alert')).toBeVisible();
+  });
   it('keeps backend codes separate from installed packs and missing fields', () => {
     expect(defaultLocale).toBe('ko'); expect([...locales].sort()).toEqual(['en','km','ko','vi','zh']);
     for (const language of [undefined, null, 'zh-CN', 'invalid']) expect(resolveLocale(language)).toBe('ko');

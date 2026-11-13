@@ -1,6 +1,5 @@
 "use client";
 import { LanguageProvider } from "@/i18n/language-provider";
-import { LanguageSelector } from "@/i18n/language-selector";
 import { TranslationLocaleContext } from "@/i18n/use-translation";
 
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -31,7 +30,7 @@ function ServicesProvider({ children, initialLocale }: { children: ReactNode; in
   return (
     <AppServicesContext value={services}>
       <QueryClientProvider client={services.queryClient}>
-        <LanguageProvider initialLocale={initialLocale}><div className="global-language-bar"><LanguageSelector /></div>{children}</LanguageProvider>
+        <LanguageProvider initialLocale={initialLocale}>{children}</LanguageProvider>
       </QueryClientProvider>
     </AppServicesContext>
   );

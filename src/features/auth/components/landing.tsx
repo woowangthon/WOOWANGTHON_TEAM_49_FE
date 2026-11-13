@@ -12,6 +12,7 @@ import { BrandLink } from '@/components/layout/brand-link';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowUpRight, ArrowRight, ArrowDown, Check, CheckCheck, FileText, Files, Clock3, Calculator, CircleHelp, Link2, ScanLine, Wallet, FolderOpen, Plus, ShieldCheck, Copy, CheckCircle2, Menu, X, Building2, Download, MessageCircle, MoveRight } from 'lucide-react';
 import styles from './landing.module.css';
+import { LanguageSelector } from '@/i18n/language-selector';
 function classes(names: string) {
     return names.split(/\s+/).filter(Boolean).map(name => styles[name]).join(' ');
 }
@@ -162,7 +163,7 @@ const {features, inquiry} = useLocalized(createPresentation);
         }
     }
     return <div className={styles.landing} ref={rootRef}>
-    <header className={classes("site-header")}><div className={classes("header-inner")}><Logo /><nav className={classes(menuOpen ? 'main-nav open' : 'main-nav')} id="main-navigation" aria-label={translate("auth.landing_menu")}><a href="#features" onClick={() => setMenuOpen(false)}>{translate("auth.landing_nav")}</a><a href="#how-it-works" onClick={() => setMenuOpen(false)}>{translate("auth.landing_nav2")}</a><a href="#questions" onClick={() => setMenuOpen(false)}>{translate("auth.landing_question")}</a></nav><Link className={classes("header-cta")} href="/signup">{translate("auth.landing_start")}<ArrowUpRight aria-hidden="true" size={16}/></Link><button type="button" ref={menuRef} className={classes("menu-toggle")} aria-expanded={menuOpen} aria-controls="main-navigation" aria-label={menuOpen ? translate("auth.landing_menu_close") : translate("auth.landing_menu_2")} onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X aria-hidden="true"/> : <Menu aria-hidden="true"/>}</button></div></header>
+    <header className={classes("site-header")}><div className={classes("header-inner")}><Logo /><nav className={classes(menuOpen ? 'main-nav open' : 'main-nav')} id="main-navigation" aria-label={translate("auth.landing_menu")}><a href="#features" onClick={() => setMenuOpen(false)}>{translate("auth.landing_nav")}</a><a href="#how-it-works" onClick={() => setMenuOpen(false)}>{translate("auth.landing_nav2")}</a><a href="#questions" onClick={() => setMenuOpen(false)}>{translate("auth.landing_question")}</a></nav><Link className={classes("header-cta")} href="/signup">{translate("auth.landing_start")}<ArrowUpRight aria-hidden="true" size={16}/></Link><button type="button" ref={menuRef} className={classes("menu-toggle")} aria-expanded={menuOpen} aria-controls="main-navigation" aria-label={menuOpen ? translate("auth.landing_menu_close") : translate("auth.landing_menu_2")} onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X aria-hidden="true"/> : <Menu aria-hidden="true"/>}</button><LanguageSelector /></div></header>
     <main id="main-content" tabIndex={-1}>
       <section className={classes("hero")} aria-labelledby="hero-title">
         <div className={classes("hero-inner")}>

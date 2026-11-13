@@ -3,6 +3,12 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { NextIntlClientProvider } from 'next-intl';
+import { catalogs } from '@/i18n/catalog.generated';
+vi.mock('@/i18n/language-provider', () => ({ useLanguage: () => ({locale:'ko', pending:false, error:null, select:vi.fn()}) }));
+function renderLanding() {
+  return render(<NextIntlClientProvider locale="ko" messages={catalogs.ko}><Landing /></NextIntlClientProvider>);
+}
 import { Landing } from "./landing";
 vi.mock("@/features/auth/hooks/use-auth", () => ({ useAuth: () => ({status: "anonymous"}) }));
 
@@ -21,7 +27,7 @@ afterEach(() => {
 
 it("keeps existing auth routes and switches all four illustrative previews", async () => {
   const user = userEvent.setup();
-  render(<Landing />);
+  renderLanding();
   expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("자료는 한곳에.");
   expect(screen.getByRole("link", { name: "내 월급 확인하기" })).toHaveAttribute("href", "/login");
   expect(screen.getByRole("link", { name: "시작하기" })).toHaveAttribute("href", "/signup");
@@ -46,7 +52,7 @@ it("keeps existing auth routes and switches all four illustrative previews", asy
 
 it("closes mobile navigation on Escape with focus restored and on anchor selection", async () => {
   const user = userEvent.setup();
-  render(<Landing />);
+  renderLanding();
   const toggle = screen.getByRole("button", { name: "메뉴 열기" });
   await user.click(toggle);
   expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -62,7 +68,7 @@ it("closes mobile navigation on Escape with focus restored and on anchor selecti
 
 it("keeps the native FAQ disclosures operable", async () => {
   const user = userEvent.setup();
-  render(<Landing />);
+  renderLanding();
   const summary = screen.getByText("차이가 나오면 바로 미지급액인가요?");
   expect(summary.tagName).toBe("SUMMARY");
   await user.click(summary);
@@ -75,7 +81,7 @@ it("keeps the native FAQ disclosures operable", async () => {
 it("copies the displayed example and announces success", async () => {
   const user = userEvent.setup();
   const write = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
-  render(<Landing />);
+  renderLanding();
   await user.click(screen.getByRole("button", { name: "예시 문장 복사" }));
   expect(write).toHaveBeenCalledWith(screen.getByText(/^6월 급여명세서의 실수령액은/).textContent);
   expect(screen.getByRole("status")).toHaveTextContent("예시 문장을 복사했어요.");
@@ -84,8 +90,15 @@ it("copies the displayed example and announces success", async () => {
 it("offers manual copying and focuses the example when clipboard access fails", async () => {
   const user = userEvent.setup();
   vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("Clipboard unavailable"));
-  render(<Landing />);
+  renderLanding();
   await user.click(screen.getByRole("button", { name: "예시 문장 복사" }));
   expect(screen.getByRole("status")).toHaveTextContent("문장을 직접 선택해서 복사해 주세요.");
   expect(screen.getByText(/^6월 급여명세서의 실수령액은/)).toHaveFocus();
+});
+
+it('places the shared language selector inside the existing single header', () => {
+  renderLanding();
+  const header = screen.getByRole('banner');
+  expect(header.querySelectorAll('.language-selector')).toHaveLength(1);
+  expect(document.querySelector('.global-language-bar')).toBeNull();
 });
