@@ -21,7 +21,7 @@ import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { ApiError } from "@/lib/api/error";
 import { useReviewAction, useFields } from "../queries";
 import { updateMetaSchema, valueSchema } from "../schemas";
-import type { ExtractedField, FieldPatch, ReviewContext, UpdateMeta } from "../schemas";
+import type { ExtractedField, SharedFieldPatch, ReviewContext, UpdateMeta } from "../schemas";
 
 const editorSchema=z.object({text:z.string(),scalar:z.enum(["string","number","boolean"])});
 type EditorValues=z.infer<typeof editorSchema>;
@@ -35,7 +35,7 @@ const {fieldEditorView, parseFieldValue, reviewError} = useLocalized(createLocal
 
   const id=useId();const mutation=useReviewAction(context);const latestCase=useCase(context.caseId);const latestFields=useFields(context.caseId,context.documentId);
   const [baseVersion,setBaseVersion]=useState(version);const [conflict,setConflict]=useState(false);
-  const [prepared,setPrepared]=useState<FieldPatch>();const locked=useRef(false);
+  const [prepared,setPrepared]=useState<SharedFieldPatch>();const locked=useRef(false);
   const form=useForm<EditorValues>({resolver:zodResolver(editorSchema),defaultValues:defaults(field,scope==="shared"&&field.hasCaseOverride,fieldEditorView)});
   const {register,handleSubmit,setError,setFocus,reset,formState:{errors,isSubmitting,isDirty}}=form;
   const scalar=useWatch({control:form.control,name:"scalar"});
@@ -44,7 +44,7 @@ const {fieldEditorView, parseFieldValue, reviewError} = useLocalized(createLocal
   const summary=useFormErrorFocus(errors,busy,setFocus,["text","scalar"]);
   useEffect(()=>{onDirty(isDirty||!!prepared);},[isDirty,prepared,onDirty]);
   useEffect(()=>()=>onDirty(false),[onDirty]);
-  const save=async(patch:FieldPatch)=>{
+  const save=async(patch:SharedFieldPatch)=>{
     if(locked.current)return;locked.current=true;
     try{const result=await mutation.mutateAsync(scope==="shared"?{type:"shared-field",fieldId:field.fieldId,patch}:{type:"case-field",fieldId:field.fieldId,patch,version:baseVersion});onSaved(updateMetaSchema.parse(result));onClose();}
     catch(error){
@@ -56,7 +56,7 @@ const {fieldEditorView, parseFieldValue, reviewError} = useLocalized(createLocal
   return <form aria-label={translate("documents.fieldEditor_ariaLabel_form", { value1: scope==="case"?translate("documents.fieldEditor_case_override"):translate("documents.fieldEditor_sharedDefault") })} className="mt-4 min-w-0 space-y-4 rounded-control border border-border p-4" onSubmit={event=>{void handleSubmit(async values=>{
     if(conflict||locked.current)return;
     let value;try{value=structured?valueSchema.parse(JSON.parse(values.text)):parseFieldValue(field,values.text,false,values.scalar);}catch(error){setError("text",{message:error instanceof Error?errorMessage(error):describeMessage("documents.fieldEditor_confirm")});return;}
-    const patch:FieldPatch={value};
+    const patch={value,...(scope==="case"?{confirmed:true}:{})};
     if(scope==="shared")setPrepared(patch);else await save(patch);
   })(event);}}>
     {scope==="shared"&&<h4 className="text-body font-bold">{translate("documents.fieldEditor_workplace_sharedDefault")}</h4>}
@@ -64,7 +64,7 @@ const {fieldEditorView, parseFieldValue, reviewError} = useLocalized(createLocal
     {scope==="shared"&&field.hasCaseOverride&&<p className="text-caption">{translate("documents.fieldEditor_current_case_override_sharedDefault_new_input")}</p>}
     {field.value===null&&field.valueType!=="MONEY_KRW"&&<SelectField label={translate("documents.fieldEditor_input_format")} id={`${id}-scalar`} {...register("scalar")}><option value="string">{translate("documents.fieldEditor_message")}</option><option value="number">{translate("documents.fieldEditor_message2")}</option><option value="boolean">{translate("documents.fieldEditor_message3")}</option></SelectField>}
     {structured?<div><label htmlFor={`${id}-json`}>{translate("documents.fieldEditor_div")}</label><textarea id={`${id}-json`} className="min-h-48 w-full min-w-0 rounded-control border p-3 font-mono" disabled={busy} aria-invalid={!!errors.text} aria-describedby={errors.text?`${id}-json-error`:undefined} {...register("text")} /><p>{translate("documents.fieldEditor_save")}</p>{errors.text&&<p id={`${id}-json-error`} role="alert">{translate("documents.fieldEditor_valid_input")}</p>}</div>:scalar==="boolean"?<SelectField id={`${id}-value`} label={translate("documents.fieldEditor_edit")} disabled={busy} error={errors.text?.message} {...register("text")}><option value="">{translate("documents.fieldEditor_select")}</option><option value="true">{translate("common.yes")}</option><option value="false">{translate("common.no")}</option></SelectField>:<TextField id={`${id}-value`} label={translate("documents.fieldEditor_edit")} inputMode={scalar==="number"?"decimal":undefined} disabled={busy} error={errors.text?.message} {...register("text")} />}
-    <p className="text-caption text-muted">{translate("documents.fieldEditor_confirm_select_save_status")}</p>
+    <p className="text-caption text-muted">{translate("documents.reviewPolicy_inputConfirmed")}</p>
     {errors.root?.server&&<p ref={summary} tabIndex={-1} role="alert">{errors.root.server.message}</p>}
     {conflict&&<button type="button" className={secondaryButton} disabled={latestCase.isFetching||latestFields.isFetching} onClick={async()=>{
       const [c,f]=await Promise.all([latestCase.refetch(),latestFields.refetch()]);const fresh=f.data?.fields.find(v=>v.fieldId===field.fieldId);

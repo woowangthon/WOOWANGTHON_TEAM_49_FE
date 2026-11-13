@@ -10,7 +10,8 @@ import { documentKeys } from "../query-keys";
 
 import { reviewApi } from "./api";
 import { reviewKeys } from "./query-keys";
-import { updateMetaSchema, type FieldPatch, type ReplacementId, type ReviewContext } from "./schemas";
+import { reviewConfirmedSchema, reviewSchema, updateMetaSchema, type SharedFieldPatch, type FieldPatch, type ReplacementId, type ReviewContext } from "./schemas";
+import type { z } from "zod";
 export function useFields(c:number,d:number,enabled=true) {
 const {isProcessing} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
 
@@ -38,7 +39,7 @@ const {isProcessing} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
 }
 export type ReviewAction =
  | {type:"case-field";fieldId:number;patch:FieldPatch;version:number}
- | {type:"shared-field";fieldId:number;patch:FieldPatch}
+ | {type:"shared-field";fieldId:number;patch:SharedFieldPatch}
  | {type:"remove-override";fieldId:number;version:number}
  | {type:"confirm-review";version:number}
  | {type:"replace";file:File;version:number;signal:AbortSignal}
@@ -55,8 +56,12 @@ export function useReviewAction(context:ReviewContext) {
       case "replace":return api.replace(c,d,action.file,action.version,action.signal);
       case "confirm-replacement":return api.confirmReplacement(c,action.replacementId,action.version);
     }
-  },onSuccess:data=>{
+  },onSuccess:(data,action)=>{
     if(s.session.getSnapshot().generation!==s.generation)return;
+    if(action.type==="confirm-review"){
+      const response=reviewConfirmedSchema.safeParse(data);
+      if(response.success)s.queryClient.setQueryData<z.infer<typeof reviewSchema>>(reviewKeys.review(s.generation,context.caseId,context.documentId),old=>old?{...old,...response.data}:old);
+    }
     const parsed=updateMetaSchema.safeParse(data);if(!parsed.success)return;
     const meta=parsed.data;
     const updates=[...(meta.caseUpdates??[]),...(meta.inputVersion?[{caseId:context.caseId,inputVersion:meta.inputVersion}]:[])];

@@ -28,16 +28,18 @@ const {reviewLabels, statusLabels} = useLocalized(createLocalizedFeaturesDocumen
   if(q.isPending)return <QueryFeedback pending />;if(q.isError)return <QueryFeedback error={q.error} retry={()=>{void q.refetch();}} />;
   const data=q.data;
   const groups=groupReviewFields(fields,documentType);
+  const pending=data.pendingRequiredFieldIds??data.unconfirmedFieldIds;
   const remainingDetails=groups.details.filter(field=>data.unconfirmedFieldIds?.includes(field.fieldId)).length;
   return <section className={`${cardStyle} ${styles.confirmation}`} aria-label={translate("documents.reviewConfirmation_document_all_review")}><div className={styles.confirmationCopy}><h2>{translate("documents.reviewConfirmation_document_confirm")}</h2>
     <p className="text-body">{translate("documents.reviewConfirmation_processing_link_document_review", { value1: statusLabels[data.processingStatus], value2: reviewLabels[data.reviewStatus] })}</p>
     {data.totalFieldCount!==undefined&&data.confirmedFieldCount!==undefined&&<p>{translate("documents.reviewConfirmation_confirm_field", { value1: data.confirmedFieldCount, value2: data.totalFieldCount })}</p>}
-    {remainingDetails>0&&<p className="text-body">{translate("documents.reviewConfirmation_item_confirm_expand", { value1: remainingDetails })}</p>}
-    {data.unconfirmedFieldIds&&data.unconfirmedFieldIds.length>0&&<p className="break-words">{translate("documents.reviewConfirmation_complete_item", { value1: data.unconfirmedFieldIds.map(id=>fields.find(f=>f.fieldId===id)?.label??translate("documents.reviewConfirmation_field", { value1: id })).join(", ") })}</p>}
+    {data.canCompleteReview===undefined&&remainingDetails>0&&<p className="text-body">{translate("documents.reviewConfirmation_item_confirm_expand", { value1: remainingDetails })}</p>}
+    {pending&&pending.length>0&&<p className="break-words">{translate("documents.reviewConfirmation_complete_item", { value1: pending.map(id=>fields.find(f=>f.fieldId===id)?.label??translate("documents.reviewConfirmation_field", { value1: id })).join(", ") })}</p>}
     {data.reasonCodes?.length? <p className="break-words">{translate("documents.reviewConfirmation_div6", { value1: data.reasonCodes.join(", ") })}</p>:null}
     <p className="text-caption text-muted">{translate("documents.reviewConfirmation_review_complete_original")}</p>
+    {data.canCompleteReview===undefined&&<p>{translate("documents.reviewPolicy_legacy")}</p>}
     {error&&<p role="alert">{error}</p>}
     {conflict&&<button className={primaryButton} disabled={q.isFetching||latest.isFetching} onClick={async()=>{const results=await Promise.all([q.refetch(),latest.refetch()]);if(results.every(r=>!r.isError)){setConflict(false);setError("");}}}>{translate("documents.reviewConfirmation_current_review_status_version_confirm")}</button>}
-    </div><div className={styles.confirmationAction}><button className={primaryButton} disabled={disabled||conflict||mutation.isPending||data.processingStatus==="UPLOADED"||data.processingStatus==="PROCESSING"} onClick={async()=>{setError("");try{await mutation.mutateAsync({type:"confirm-review",version});}catch(e){setError(reviewError(e, true));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}}}>{mutation.isPending?translate("documents.reviewConfirmation_review_status_confirm"):translate("documents.reviewConfirmation_document_review_complete_request")}</button><p>{translate("documents.reviewConfirmation_complete_item_review")}</p></div>
+    </div><div className={styles.confirmationAction}><button className={primaryButton} disabled={disabled||conflict||mutation.isPending||!["READY","READ_READY","REVIEW_REQUIRED"].includes(data.processingStatus)||fields.length===0||(data.canCompleteReview!==undefined&&!data.canCompleteReview)} onClick={async()=>{setError("");try{await mutation.mutateAsync({type:"confirm-review",version});}catch(e){setError(reviewError(e, true));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}}}>{mutation.isPending?translate("documents.reviewConfirmation_review_status_confirm"):translate("documents.reviewConfirmation_document_review_complete_request")}</button><p>{translate("documents.reviewConfirmation_complete_item_review")}</p></div>
   </section>;
 }

@@ -4,12 +4,30 @@ const id = z.number().int().positive();
 export const valueSchema = z.json();
 export const fieldStatusSchema = z.enum(["UNCONFIRMED", "CONFIRMED", "MISSING", "UNREADABLE", "CONFLICTED", "DEFERRED", "NEEDS_RECONFIRMATION"]);
 export const reviewStatusSchema = z.enum(["NOT_STARTED", "IN_PROGRESS", "CONFIRMED"]);
+export const reviewResolutionSchema = z.enum(["NONE", "NOT_IN_DOCUMENT", "UNKNOWN"]);
+export const analysisValueOriginSchema = z.enum(["USER_CONFIRMED", "SYSTEM_EXTRACTED_UNVERIFIED", "NONE"]);
+// Optional only during migration: absence preserves legacy presentation, never implies eligibility.
+export const reviewFieldMetaSchema = z.object({
+ requiresUserReview:z.boolean(), reviewReason:z.enum(["REQUIRED","MISSING","UNREADABLE","CONFLICTED","RECONFIRMATION"]).nullable(),
+ reviewResolution:reviewResolutionSchema, reviewResolved:z.boolean(), usableForAnalysis:z.boolean(), analysisValueOrigin:analysisValueOriginSchema,
+});
+export const reviewSummaryMetaSchema = z.object({
+ totalFieldCount:z.number().int().nonnegative(), confirmedFieldCount:z.number().int().nonnegative(),
+ requiredReviewCount:z.number().int().nonnegative(), resolvedRequiredCount:z.number().int().nonnegative(),
+ pendingRequiredFieldIds:z.array(id), optionalUnconfirmedFieldIds:z.array(id), canCompleteReview:z.boolean(),
+});
+export type ReviewReason = z.infer<typeof reviewFieldMetaSchema>["reviewReason"];
+export type ReviewFieldMeta = z.infer<typeof reviewFieldMetaSchema>;
+export type ReviewSummaryMeta = z.infer<typeof reviewSummaryMetaSchema>;
+export type ReviewResolution = z.infer<typeof reviewResolutionSchema>;
+export type AnalysisValueOrigin = z.infer<typeof analysisValueOriginSchema>;
 export const sourceSchema = z.object({
   documentId: id, page: id.nullable(), text: z.string().nullable().optional(),
   boundingBox: z.tuple([z.number(), z.number(), z.number(), z.number()]).nullable().optional(),
   coordinateSystem: z.string().nullable().optional(),
 });
 export const fieldWireSchema = z.object({
+  ...reviewFieldMetaSchema.partial().shape,
   agentKey: z.string().nullable().optional(), fieldId: z.number().int(), key: z.string(), label: z.string(), value: valueSchema, valueType: z.string(), status: fieldStatusSchema,
   editedByUser: z.boolean(), effectiveValueOrigin: z.enum(["SHARED_DEFAULT", "CASE_OVERRIDE"]), hasCaseOverride: z.boolean(),
   confirmedAt: z.string().nullable(), source: z.record(z.string(),z.json()).nullable(),
@@ -35,7 +53,7 @@ export const updateMetaSchema = z.object({
 // Convert only after validating the wire shape. UI receipts keep an explicit caseId.
 const caseUpdatesWireSchema = z.record(z.string().regex(/^[1-9]\d*$/).refine(key => Number.isSafeInteger(Number(key))), z.object({inputVersion:id, recompute:recomputeSchema})).transform(updates => Object.entries(updates).map(([caseId, update]) => ({caseId:Number(caseId), ...update})));
 const mutationMetaWireSchema = updateMetaSchema.extend({caseUpdates:caseUpdatesWireSchema.optional()});
-export const fieldUpdatedSchema = mutationMetaWireSchema.extend({fieldId: id, previousValue:valueSchema, value: valueSchema, status: fieldStatusSchema, editedByUser:z.boolean(), hasCaseOverride:z.boolean(), effectiveValueOrigin:z.enum(["SHARED_DEFAULT","CASE_OVERRIDE"]), affectedCaseIds:z.array(id), caseUpdates:caseUpdatesWireSchema});
+export const fieldUpdatedSchema = mutationMetaWireSchema.extend({...reviewFieldMetaSchema.partial().shape, fieldId: id, previousValue:valueSchema, value: valueSchema, status: fieldStatusSchema, editedByUser:z.boolean(), hasCaseOverride:z.boolean(), effectiveValueOrigin:z.enum(["SHARED_DEFAULT","CASE_OVERRIDE"]), affectedCaseIds:z.array(id), caseUpdates:caseUpdatesWireSchema});
 export const caseFieldUpdatedSchema = fieldUpdatedSchema.extend({inputVersion:id, recompute:recomputeSchema, hasCaseOverride:z.literal(true), effectiveValueOrigin:z.literal("CASE_OVERRIDE")});
 export const sharedFieldUpdatedSchema = fieldUpdatedSchema.extend({hasCaseOverride:z.literal(false), effectiveValueOrigin:z.literal("SHARED_DEFAULT")});
 export const overrideRemovedSchema = mutationMetaWireSchema.extend({fieldId: id, effectiveValueOrigin: z.literal("SHARED_DEFAULT")});
@@ -44,8 +62,9 @@ const historyValueSchema = z.object({value: valueSchema, status: z.string(), ori
 export const historyWireSchema = z.object({historyId: id, scope: z.string(), previous: historyValueSchema, new: historyValueSchema, createdAt: z.string()});
 export const historySchema = historyWireSchema.transform(wire=>({...wire, previousValue:wire.previous.value, newValue:wire.new.value, changedAt:wire.createdAt}));
 export const historyListSchema = z.object({items:z.array(historySchema)});
-export const reviewConfirmedSchema = z.object({documentId:id, reviewStatus:reviewStatusSchema, unconfirmedFieldIds:z.array(id)}).extend(mutationMetaWireSchema.shape);
+export const reviewConfirmedSchema = z.object({...reviewSummaryMetaSchema.partial().shape, processingStatus:processingSchema.optional(), documentId:id, reviewStatus:reviewStatusSchema, unconfirmedFieldIds:z.array(id)}).extend(mutationMetaWireSchema.shape);
 export const reviewSchema = z.object({
+  ...reviewSummaryMetaSchema.partial().shape,
   documentId: id, caseId: id.optional(), processingStatus: processingSchema, reviewStatus: reviewStatusSchema,
   confirmedFieldCount: z.number().int().nonnegative().optional(), totalFieldCount: z.number().int().nonnegative().optional(),
   unconfirmedFieldIds: z.array(id).optional(), reasonCodes: z.array(z.string()).optional(), confirmed: z.boolean().optional(),
@@ -84,4 +103,5 @@ export type PreviewDto = z.infer<typeof previewSchema>;
 export type UpdateMeta = z.infer<typeof updateMetaSchema>;
 export type ReplacementId = z.infer<typeof replacementIdSchema>;
 export interface ReviewContext { caseId: number; workplaceId: number; documentId: number }
-export interface FieldPatch { value?: FieldValue; confirmed?: boolean }
+export type FieldPatch = { value?: FieldValue; confirmed?: boolean; reviewResolution?: never } | { reviewResolution: ReviewResolution; value?: never; confirmed?: never };
+export type SharedFieldPatch = { value?: FieldValue; confirmed?: boolean; reviewResolution?: never };

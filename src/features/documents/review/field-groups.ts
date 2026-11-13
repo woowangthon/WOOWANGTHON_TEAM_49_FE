@@ -12,7 +12,7 @@ const essentialKeys: Record<DocumentDto["documentType"], readonly string[]> = {
 
 export function groupReviewFields(fields: ExtractedField[], documentType: DocumentDto["documentType"]) {
   const keys = essentialKeys[documentType];
-  const isCore = (field: ExtractedField) => keys.includes(field.key) || isExtractionMissing(field);
+  const isCore = (field: ExtractedField) => field.requiresUserReview ?? (keys.includes(field.key) || isExtractionMissing(field));
   return {
     essential: fields.filter(isCore),
     details: fields.filter(field => !isCore(field)),
