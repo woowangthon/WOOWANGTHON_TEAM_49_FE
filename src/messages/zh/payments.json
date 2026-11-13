@@ -80,5 +80,19 @@
   "autoAmount": "关联金额：{amount}韩元",
   "confirmAndConnect": "确认交易并关联",
   "connectionFailed": "已保存的步骤会保留。请检查交易和关联状态后重试。",
-  "manageTransactions": "手动输入与分配管理"
+  "manageTransactions": "手动输入与分配管理",
+  "amountQuestion": "请输入实际到账金额。",
+  "editQuestion": "请手动输入实际到账金额或从文件中选择。",
+  "notEntered": "未填写",
+  "needsConfirmation": "需要确认",
+  "pendingAmount": "待确认：{amount}",
+  "selectSource": "选择输入来源",
+  "documentFallback": "到账记录文件",
+  "depositField": "到账金额",
+  "manualInput": "手动输入",
+  "addDeposit": "添加",
+  "confirmDeposit": "确认到账",
+  "removeDeposit": "移除到账记录",
+  "confirmedTotal": "已确认到账合计：{amount}",
+  "finishEditing": "完成编辑"
 }

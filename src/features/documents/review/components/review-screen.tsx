@@ -72,7 +72,7 @@ const {recomputeJobLabel, reviewError, reviewStateView} = useLocalized(createLoc
   const sourceTrigger=useRef<HTMLElement|null>(null);
   const context={caseId,documentId:dto.documentId,workplaceId:dto.workplaceId};
   return <>
-    <div className={styles.statusHeader}><ReviewStatusBadges processing={processing} review={fields.data?.reviewStatus??dto.reviewStatus}/></div>
+
     {status.isError&&<QueryFeedback error={status.error} retry={()=>{void status.refetch();}} />}
     {recompute.isError?<QueryFeedback error={recompute.error} retry={()=>{void recompute.refetch();}} />:<p hidden={!!recompute.data && !recomputeActive(recompute.data) && recompute.data.latestJob?.status !== "FAILED"} role="status" className="text-body text-muted">{!recompute.data?translate("documents.reviewScreen_update_status_load"):recomputeActive(recompute.data)?translate("documents.reviewScreen_input_change_result_update"):translate("documents.reviewScreen_update_all_calculation_complete", { value1: recomputeJobLabel(jobText(recompute.data.latestJob?.status??recompute.data.activeJob?.status)) })}</p>}
     {typeIssue&&<div className={cardStyle}><DocumentTypeResolution key={typeIssue.code} dto={dto} issue={typeIssue} disabled={dirty} /></div>}

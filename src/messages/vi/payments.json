@@ -80,5 +80,19 @@
   "autoAmount": "Số tiền liên kết: {amount} KRW",
   "confirmAndConnect": "Xác nhận giao dịch và liên kết",
   "connectionFailed": "Các bước đã lưu được giữ lại. Kiểm tra giao dịch và liên kết rồi thử lại.",
-  "manageTransactions": "Nhập thủ công và phân bổ"
+  "manageTransactions": "Nhập thủ công và phân bổ",
+  "amountQuestion": "Nhập số tiền thực nhận.",
+  "editQuestion": "Nhập số tiền thực nhận hoặc chọn từ tài liệu.",
+  "notEntered": "Chưa nhập",
+  "needsConfirmation": "Cần xác nhận",
+  "pendingAmount": "Cần xác nhận: {amount}",
+  "selectSource": "Chọn nguồn nhập",
+  "documentFallback": "Tài liệu ghi nhận tiền nhận",
+  "depositField": "Số tiền nhận",
+  "manualInput": "Nhập thủ công",
+  "addDeposit": "Thêm",
+  "confirmDeposit": "Xác nhận tiền nhận",
+  "removeDeposit": "Xóa khoản liên kết",
+  "confirmedTotal": "Tổng đã xác nhận: {amount}",
+  "finishEditing": "Hoàn tất chỉnh sửa"
 }

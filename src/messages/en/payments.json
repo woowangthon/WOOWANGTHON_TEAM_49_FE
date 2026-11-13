@@ -80,5 +80,19 @@
   "autoAmount": "Amount to connect: KRW {amount}",
   "confirmAndConnect": "Confirm transaction and connect",
   "connectionFailed": "Saved steps are preserved. Check the transaction and connection, then try again.",
-  "manageTransactions": "Manual entry and allocations"
+  "manageTransactions": "Manual entry and allocations",
+  "amountQuestion": "Enter the amount actually received.",
+  "editQuestion": "Enter the amount received or select it from a document.",
+  "notEntered": "Not entered",
+  "needsConfirmation": "Confirmation needed",
+  "pendingAmount": "Needs confirmation: {amount}",
+  "selectSource": "Select input source",
+  "documentFallback": "Deposit record document",
+  "depositField": "Deposit amount",
+  "manualInput": "Enter manually",
+  "addDeposit": "Add",
+  "confirmDeposit": "Confirm deposit",
+  "removeDeposit": "Remove deposit entry",
+  "confirmedTotal": "Confirmed deposits: {amount}",
+  "finishEditing": "Done editing"
 }

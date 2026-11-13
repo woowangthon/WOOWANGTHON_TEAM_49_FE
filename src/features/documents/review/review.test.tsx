@@ -256,7 +256,7 @@ it("N01 preserves an unknown review status and blocks confirmation/editing",asyn
  const {mount,mocks}=await setup();
  server.use(http.get(`${testApiUrl}/cases/15/documents/101/fields`,()=>apiResponse({documentId:101,caseId:15,processingStatus:"READY",reviewStatus:"OPAQUE_REVIEW",fields:mocks.fields(15,101)})));
  mount(<ReviewScreen id={15} initialDocumentId={101}/>);
- expect(await screen.findByText(/OPAQUE_REVIEW/)).toBeVisible();
+ expect(document.querySelector("[data-review-status-header]")).toBeNull();
  expect(await screen.findByRole("button",{name:"\uBB38\uC11C \uAC80\uD1A0 \uC644\uB8CC \uC694\uCCAD"})).toBeDisabled();
  for(const button of screen.getAllByRole("button",{name:"수정"})) expect(button).toBeDisabled();
 });

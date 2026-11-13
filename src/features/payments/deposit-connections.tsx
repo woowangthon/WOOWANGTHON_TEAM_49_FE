@@ -1,27 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useCase } from "@/features/cases/queries";
 import { useTranslation, useLocalized } from "@/i18n/use-translation";
 import { createLocalizedLibApiFormErrors } from "@/lib/api/form-errors";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { secondaryButton } from "@/components/ui/styles";
-import { PaymentScreen } from "./payment-screen";
+import { CaseDeposits } from "./case-deposits";
 import { useDepositCandidates, usePayments } from "./queries";
 import { transactionCreate, type DepositCandidate, type Transaction } from "./schemas";
-import styles from "@/features/case-inputs/components/conditions-screen.module.css";
 import { ApiError } from "@/lib/api/error";
 
 export function DepositConnections({caseId}:{caseId:number}) {
  const context=useCase(caseId);
- const [open,setOpen]=useState(false);
- const {translate}=useTranslation();
- useEffect(()=>{const show=()=>{if(window.location.hash==="#deposit-connections")setOpen(true);};show();window.addEventListener("hashchange",show);return()=>window.removeEventListener("hashchange",show);},[]);
- return <details id="deposit-connections" open={open} onToggle={e=>setOpen(e.currentTarget.open)} className={styles.depositStep}>
-  <summary className={styles.depositSummary}><span className={styles.answerTitle}>{translate("payments.connections")}</span></summary>
-  <p className="my-3">{translate("payments.optionalConnections")}</p>
-  {open&&(context.data?<PaymentScreen workplaceId={context.data.workplaceId} caseId={caseId} inputVersion={context.data.inputVersion}/>:<QueryFeedback pending={context.isPending} error={context.error} retry={()=>void context.refetch()}/>)}
- </details>;
+ return context.data?<CaseDeposits workplaceId={context.data.workplaceId} caseId={caseId}/>:<QueryFeedback pending={context.isPending} error={context.error} retry={()=>void context.refetch()}/>;
 }
 
 export function DepositCandidates({workplaceId,caseId,onSelect,inputVersion}:{workplaceId:number;caseId?:number;inputVersion?:number;onSelect:(t:Transaction)=>void}) {

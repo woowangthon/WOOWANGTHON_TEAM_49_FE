@@ -28,7 +28,7 @@ const {reviewLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
   const latest=useCase(context.caseId);const [conflict,setConflict]=useState(false);const q=useReview(context.caseId,context.documentId);const mutation=useReviewAction(context);const [error,setError]=useMessageState("");
   if(q.isPending)return <QueryFeedback pending />;if(q.isError)return <QueryFeedback error={q.error} retry={()=>{void q.refetch();}} />;
   const data=q.data;
-  if(data.reviewStatus==="CONFIRMED")return <section className={`${cardStyle} ${styles.confirmation}`} aria-label={reviewLabels.CONFIRMED}><h2>{reviewLabels.CONFIRMED}</h2><ReviewStatusBadges processing={data.processingStatus} review={data.reviewStatus}/></section>;
+  if(data.reviewStatus==="CONFIRMED")return <section className={`${cardStyle} ${styles.confirmation} ${styles.confirmationComplete}`} aria-label={reviewLabels.CONFIRMED}><h2>{reviewLabels.CONFIRMED}</h2><ReviewStatusBadges processing={data.processingStatus} review={data.reviewStatus}/></section>;
   const groups=groupReviewFields(fields,documentType);
   const pending=data.pendingRequiredFieldIds??(data.canCompleteReview===true?[]:data.unconfirmedFieldIds);
   const remainingDetails=groups.details.filter(field=>data.unconfirmedFieldIds?.includes(field.fieldId)).length;

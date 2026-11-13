@@ -14,10 +14,10 @@ import type { DocumentContext, DocumentDto, DocumentFilters, LinkInput } from ".
 
 export { documentKeys } from "./query-keys";
 
-export function useDocuments(context: DocumentContext, filters: DocumentFilters) {
+export function useDocuments(context: DocumentContext, filters: DocumentFilters, enabled = true) {
   const s = useSessionScope();
   const removal = useRemovalState(context.kind === "library" ? ["unused-removal"] : [...(context.kind === "case" ? businessKeys.case(s.generation, context.id) : businessKeys.workplace(s.generation, context.id)), "remove"]);
-  return useQuery({ queryKey: documentKeys.list(s.generation, context, filters), queryFn: ({ signal }) => documentApi(s.api).list(context, filters, signal), enabled: s.enabled && !removal.pending && !removal.removed });
+  return useQuery({ queryKey: documentKeys.list(s.generation, context, filters), queryFn: ({ signal }) => documentApi(s.api).list(context, filters, signal), enabled: s.enabled && enabled && !removal.pending && !removal.removed });
 }
 export function useDocumentStatus(context: DocumentContext, dto: DocumentDto) {
 const {isProcessing} = useLocalized(createLocalizedFeaturesDocumentsViewModels);

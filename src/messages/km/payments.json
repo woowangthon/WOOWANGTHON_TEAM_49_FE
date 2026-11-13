@@ -80,5 +80,19 @@
   "autoAmount": "ចំនួនប្រាក់ត្រូវភ្ជាប់៖ {amount} KRW",
   "confirmAndConnect": "បញ្ជាក់ប្រតិបត្តិការ និងភ្ជាប់",
   "connectionFailed": "ជំហានដែលបានរក្សាទុកនៅដដែល។ ពិនិត្យប្រតិបត្តិការ និងការភ្ជាប់ រួចព្យាយាមម្តងទៀត។",
-  "manageTransactions": "បញ្ចូលដោយដៃ និងគ្រប់គ្រងការបែងចែក"
+  "manageTransactions": "បញ្ចូលដោយដៃ និងគ្រប់គ្រងការបែងចែក",
+  "amountQuestion": "បញ្ចូលចំនួនប្រាក់ដែលបានទទួល។",
+  "editQuestion": "បញ្ចូលចំនួនប្រាក់ ឬជ្រើសរើសពីឯកសារ។",
+  "notEntered": "មិនទាន់បញ្ចូល",
+  "needsConfirmation": "ត្រូវការបញ្ជាក់",
+  "pendingAmount": "ត្រូវការបញ្ជាក់៖ {amount}",
+  "selectSource": "ជ្រើសរើសប្រភព",
+  "documentFallback": "ឯកសារប្រាក់ចូល",
+  "depositField": "ចំនួនប្រាក់ចូល",
+  "manualInput": "បញ្ចូលដោយដៃ",
+  "addDeposit": "បន្ថែម",
+  "confirmDeposit": "បញ្ជាក់ប្រាក់ចូល",
+  "removeDeposit": "ដកកំណត់ត្រាប្រាក់ចូល",
+  "confirmedTotal": "ប្រាក់បានបញ្ជាក់សរុប៖ {amount}",
+  "finishEditing": "បញ្ចប់ការកែសម្រួល"
 }

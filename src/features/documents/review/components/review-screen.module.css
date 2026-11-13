@@ -107,3 +107,6 @@
 .optionName { flex: 1 1 10rem; min-width: 0; overflow-wrap: anywhere; }
 .documentOption [data-review-status-badges], .statusHeader [data-review-status-badges] { margin-left: auto; justify-content: flex-end; align-items: center; }
 .statusHeader { display: flex; justify-content: flex-end; min-width: 0; }
+
+.screen .confirmationComplete { display:flex; flex-wrap:wrap; justify-content:space-between; }
+.confirmationComplete [data-review-status-badges] { margin-left:auto; justify-content:flex-end; min-width:0; }
