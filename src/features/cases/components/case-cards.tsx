@@ -16,7 +16,7 @@ export function caseTaskHref(dto: CaseListDto) {
   return `/cases/${dto.caseId}${dto.currentStep ? `/${paths[dto.currentStep]}` : ""}`;
 }
 
-export function CaseCards({ items, compact = false, variant = "default" }: { items: CaseListDto[]; compact?: boolean; variant?: "default" | "explorer" | "workplace" }) {
+export function CaseCards({ items, compact = false, variant = "default", selection }: { items: CaseListDto[]; compact?: boolean; variant?: "default" | "explorer" | "workplace"; selection?: { selectedId?: number; onSelect: (id: number) => void } }) {
 const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
 
  const {translate} = useTranslation();
@@ -37,27 +37,28 @@ const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
         {items.map(dto => {
           const card = caseCard(dto);
           return (
-            <li key={card.id} className={styles.row}>
+            <li key={card.id} className={styles.row} data-selected={selection ? selection.selectedId === card.id : undefined}>
               <div className={styles.cardTop}>
                 <span className={styles.workplaceIcon} aria-hidden="true"><Building2 size={27} strokeWidth={1.7} /></span>
                 <span data-case-status={dto.status} className={styles.status}>{card.status}</span>
               </div>
               <div className={styles.caseIdentity}>
                 <div className={styles.caseTitle}>
-                  <h3><Link href={`/cases/${card.id}`} aria-describedby={`case-explorer-period-${card.id}`}>{card.workplaceName}</Link></h3>
+                  <h3>{selection ? <label className="flex min-h-11 cursor-pointer items-center gap-3"><input type="radio" value={card.id} name="consultation-case" checked={selection.selectedId === card.id} onChange={() => selection.onSelect(card.id)} aria-describedby={`case-explorer-period-${card.id} consultation-case-${card.id}`} /><span>{card.workplaceName}</span></label> : <Link href={`/cases/${card.id}`} aria-describedby={`case-explorer-period-${card.id}`}>{card.workplaceName}</Link>}</h3>
                   <span className={styles.payType}>{card.payType}</span>
                 </div>
                 <p id={`case-explorer-period-${card.id}`} className={styles.period}><CalendarDays size={14} aria-hidden="true" /><span><span className="sr-only">{translate("cases.caseCards_wagePeriod")}</span>{card.period}</span></p>
+                {selection && <p id={`consultation-case-${card.id}`} className="mt-2 text-caption text-muted">{translate("cases.caseCards_case", { value1: card.payType, value2: card.id })}</p>}
               </div>
               <div className={styles.caseStatus}>
                 <p data-attention={dto.attentionRequired} className={styles.attention}>
                   {dto.attentionRequired === true && <CircleAlert size={14} aria-hidden="true" />}{card.attention}
                 </p>
               </div>
-              <div className={styles.caseAction}>
+              {!selection && <div className={styles.caseAction}>
                 <p className={styles.step}><span>{translate("cases.caseCards_current")}</span><strong>{card.step}</strong></p>
                 <Link href={`/cases/${card.id}`} aria-describedby={`case-explorer-period-${card.id}`} className={styles.continue}>{translate("cases.caseCards_start")}<ChevronRight size={16} aria-hidden="true" /></Link>
-              </div>
+              </div>}
             </li>
           );
         })}

@@ -16,9 +16,11 @@ import { createDevelopmentScenario } from "@/mocks/development";
 import { supportApi } from "./api";
 import { ConsultationScreen } from "./consultation-screen";
 import { SupportLinks } from "./support-navigation";
-vi.mock("next/navigation",()=>({usePathname:()=>"/cases/15/questions"}));
+let pathname="/cases/15/questions";
+vi.mock("next/navigation",()=>({usePathname:()=>pathname}));
 let services:ReturnType<typeof createAppServices>;
 beforeEach(async()=>{
+ pathname="/cases/15/questions";
  services=createAppServices(testApiUrl);await services.auth.login({email:"worker@example.com",password:"password1234"});
  HTMLDialogElement.prototype.showModal=function(){this.open=true};HTMLDialogElement.prototype.close=function(){this.open=false};
 });
@@ -58,7 +60,8 @@ it("shows real preparation counts for each selected case and a creation link whe
  const ui=mount(<ConsultationScreen/>);const radios=await screen.findAllByRole('radio');
  expect(screen.queryByRole('region',{name:'선택한 내역의 상담 준비'})).toBeNull();
  fireEvent.click(radios[0]);expect(await screen.findByText('확인 질문 1개')).toBeVisible();
- fireEvent.click(radios[1]);expect(await screen.findByText('확인 질문 0개')).toBeVisible();expect(screen.queryByText('확인 질문 1개')).toBeNull();
+ fireEvent.click(radios[1]);expect(screen.queryByText('확인 질문 1개')).toBeNull();expect(await screen.findByText('확인 질문 0개')).toBeVisible();
+ expect(screen.getAllByRole('navigation',{name:'상담 준비 메뉴'})).toHaveLength(1);
  ui.unmount(); services.queryClient.clear();
  server.use(http.get(`${testApiUrl}/cases`,()=>apiResponse({items:[],total:0,page:1,size:20})));
  mount(<ConsultationScreen/>);expect(await screen.findByRole('link',{name:'새 급여 내역 시작'})).toHaveAttribute('href','/cases/new');
@@ -156,11 +159,16 @@ it("allows direct edits and copies while generation fails",async()=>{
 });
 it("handles stale generation and keeps the editor available",async()=>{server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,()=>apiResponse({errorCode:"REPORT_SOURCE_STALE"},409)));mount(<InquiryScreen caseId={15}/>);fireEvent.click(screen.getByRole("button",{name:"서버 초안 생성"}));expect(await screen.findByText(/결과가 최신 상태가 아닙니다/)).toBeVisible();expect(screen.getByRole("textbox")).toBeEnabled()});
 it("clears the editor on session generation changes",async()=>{mount(<InquiryScreen caseId={15}/>);fireEvent.change(screen.getByRole("textbox"),{target:{value:"개인 문장"}});act(()=>services.session.start("other-user-token"));expect(screen.getByRole("textbox")).toHaveValue("")});
-it("uses only supported server filters and keeps name search local",async()=>{
+it("uses supported server filters and removes local name search",async()=>{
  const urls:string[]=[];server.use(http.get(`${testApiUrl}/consultation-centers`,({request})=>{urls.push(request.url);return apiResponse({items:[{centerId:1,name:"예시 기관",region:"전국",categories:["임금"],phone:"javascript:bad",website:"javascript:bad",businessHours:null,languages:null,visitInformation:null,notes:"example",sourceUrl:"https://example.org/source",verifiedAt:"2026-11-10",dataSource:"MOCK",isNationwide:true}],page:1,size:20,total:1,nationwideFallbackUsed:true,dataStatus:"NATIONWIDE_ONLY"})}));
  mount(<CentersScreen/>);expect(await screen.findByText("예시 기관")).toBeVisible();expect(screen.getByText("지역 대신 전국 단위 대안을 표시합니다.")).toBeVisible();expect(screen.getByText(/개발용 예시 데이터/)).toBeVisible();expect(screen.getByRole("link",{name:"https://example.org/source"})).toHaveAttribute("rel","noopener noreferrer");expect(screen.getByText("검증일: 2026-11-10")).toBeVisible();expect(document.querySelector('a[href^="javascript:"]')).toBeNull();
- fireEvent.change(screen.getByLabelText("지역"),{target:{value:"청주시"}});fireEvent.change(screen.getByLabelText("상담 분야"),{target:{value:"WAGE"}});fireEvent.click(screen.getByRole("button",{name:"기관 조회"}));await waitFor(()=>expect(urls.at(-1)).toContain("category=WAGE"));const count=urls.length;
- fireEvent.change(screen.getByLabelText("현재 페이지 기관명 검색"),{target:{value:"없는이름"}});expect(screen.getByText(/표시할 상담기관이 없습니다/)).toBeVisible();expect(urls.length).toBe(count);expect(urls.every(u=>!u.includes("search="))).toBe(true);
+ fireEvent.change(screen.getByLabelText("지역"),{target:{value:"청주시"}});fireEvent.change(screen.getByLabelText("상담 분야"),{target:{value:"WAGE"}});fireEvent.click(screen.getByRole("button",{name:"기관 조회"}));await waitFor(()=>expect(urls.at(-1)).toContain("category=WAGE"));expect(urls.at(-1)).toContain("region=");
+ expect(screen.getAllByRole("textbox")).toHaveLength(1);
+ expect(document.querySelector("form button")).toHaveClass("w-full","sm:col-span-2");
+ expect(document.querySelector("details")).toBeNull();
+ expect(screen.queryByText("현재 전국 단위 상담기관 정보만 제공됩니다.")).toBeNull();
+ expect(screen.queryByText("이 페이지에서 기관명 찾기")).toBeNull();
+ expect(urls.every(u=>!u.includes("search="))).toBe(true);
 });
 it("retries center errors without inventing contact data",async()=>{let failed=true;server.use(http.get(`${testApiUrl}/consultation-centers`,()=>failed?apiResponse({errorCode:"UPSTREAM_UNAVAILABLE"},503):apiResponse({items:[],page:1,size:20,total:0,nationwideFallbackUsed:false,dataStatus:"AVAILABLE"})));mount(<CentersScreen/>);const retry=await screen.findByRole("button",{name:/다시/});failed=false;fireEvent.click(retry);expect(await screen.findByText(/표시할 상담기관이 없습니다/)).toBeVisible()});
 it("allows only safe phone and website schemes",()=>{expect(safeWebsite("javascript:alert(1)")).toBeUndefined();expect(safeWebsite("https://user:secret@example.org")).toBeUndefined();expect(safeWebsite("https://example.org")).toBe("https://example.org/");expect(safePhone("010-1234-5678")).toBe("tel:01012345678");expect(safePhone("123;ext=456")).toBeUndefined()});
@@ -187,4 +195,38 @@ it("confirms replacing only the local draft, preserves cancel without another AP
  fireEvent.click(screen.getByText('서버 생성 원문 · 적용 및 기준 보기'));fireEvent.change(screen.getByRole('textbox'),{target:{value:'보존할 작성본'}});const trigger=screen.getByRole('button',{name:'작성본 교체 확인'});trigger.focus();fireEvent.click(trigger);
  expect(screen.getByRole('dialog')).toHaveTextContent('기존 작성 내용은 사라집니다');fireEvent.click(screen.getByRole('button',{name:'취소'}));expect(screen.getByRole('textbox')).toHaveValue('보존할 작성본');
  fireEvent.click(trigger);fireEvent.click(screen.getByRole('button',{name:'작성본 교체'}));expect(screen.getByRole('textbox')).toHaveValue('서버 새 원문');expect(calls).toBe(1);expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+it.each(["/consultation", "/cases/15/questions", "/cases/15/company-inquiry", "/cases/15/reports", "/consultation-centers"])("keeps five destinations and one active link at %s", path => {
+ pathname=path;
+ mount(<SupportLinks caseId={15}/>);
+ const links=screen.getAllByRole("link");
+ expect(links).toHaveLength(5);
+ expect(links.filter(link=>link.getAttribute("aria-current")==="page").map(link=>link.getAttribute("href"))).toEqual([path]);
+});
+it("guides case-free navigation to selection and preserves explicit selection until logout", () => {
+ pathname="/consultation-centers";
+ mount(<SupportLinks/>);
+ expect(screen.getAllByRole("link")[1]).toHaveAttribute("href","/consultation#consultation-case-selection");
+ act(()=>services.consultationSelection.setState({caseId:16}));
+ expect(screen.getAllByRole("link")[1]).toHaveAttribute("href","/cases/16/questions");
+ act(()=>services.session.clear());
+ expect(screen.getAllByRole("link")[2]).toHaveAttribute("href","/consultation#consultation-case-selection");
+});
+it("keeps consultation navigation available while loading and retries a failed case list", async () => {
+ let finish: () => void = () => {};
+ const pending = new Promise<void>(resolve => { finish = resolve; });
+ let failed = true;
+ server.use(http.get(`${testApiUrl}/cases`, async () => {
+  await pending;
+  return failed ? apiResponse({errorCode:"UPSTREAM_UNAVAILABLE"},503) : apiResponse({items:[],page:1,size:20,total:0});
+ }));
+ mount(<ConsultationScreen/>);
+ expect(document.querySelector('[aria-busy="true"]')).not.toBeNull();
+ expect(screen.getAllByRole('navigation',{name:'상담 준비 메뉴'})).toHaveLength(1);
+ finish();
+ await screen.findByRole('alert');
+ failed = false;
+ fireEvent.click(screen.getByRole('button',{name:/다시/}));
+ expect(await screen.findByRole('link',{name:'새 급여 내역 시작'})).toHaveAttribute('href','/cases/new');
 });

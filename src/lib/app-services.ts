@@ -1,3 +1,4 @@
+import { createStore } from "zustand/vanilla";
 import { createRefreshAccessToken } from "@/features/auth/api/refresh";
 import { createMemorySession } from "@/features/auth/session";
 import { createAuthApi } from "@/features/auth/api/auth";
@@ -8,6 +9,8 @@ import { createQueryClient } from "@/lib/query/client";
 
 export function createAppServices(baseUrl = getApiBaseUrl()) {
   const session = createMemorySession();
+  // Explicit UI selection only; scoped to this app tree and never persisted.
+  const consultationSelection = createStore<{ caseId?: number; page: number }>(() => ({ page: 1 }));
   const queryClient = createQueryClient();
   const api = createApiClient({
     baseUrl,
@@ -16,6 +19,7 @@ export function createAppServices(baseUrl = getApiBaseUrl()) {
   });
 
   session.subscribe(() => {
+    consultationSelection.setState({ caseId: undefined, page: 1 });
     // Cancel before clearing so late requests cannot repopulate the old cache.
     void queryClient.cancelQueries();
     queryClient.clear();
@@ -23,7 +27,7 @@ export function createAppServices(baseUrl = getApiBaseUrl()) {
 
   const authApi = createAuthApi(api, baseUrl);
   const auth = createAuthController({ api, authApi, session, queryClient });
-  return { api, session, queryClient, authApi, auth };
+  return { api, session, queryClient, authApi, auth, consultationSelection };
 }
 
 export type AppServices = ReturnType<typeof createAppServices>;

@@ -187,3 +187,5 @@
   .row, .workplaceIcon, .create, .heroCreate, .continue, .continue svg { transition: none; }
   .create:active, .heroCreate:active, .continue:active, .continue:hover svg { transform: none; }
 }
+
+.row[data-selected="true"] { border-color: var(--color-accent); box-shadow: 0 0 0 2px var(--color-accent); }

@@ -28,7 +28,7 @@ export function TaskNavigation({ id }: { id: number }) {
     return <Link key={href} href={href} aria-current={active ? "page" : undefined} className="workspace-nav-link border border-border"><span>{label}</span><small>{status}</small></Link>;
   })}</nav></div>;
 }
-export function CaseContext({ id }: { id: number }) {
+export function CaseContext({ id, showStep = true }: { id: number; showStep?: boolean }) {
 const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
 
  const {translate} = useTranslation();
@@ -39,6 +39,6 @@ const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
   // The overview presents its own case header and the same task navigation.
   if (pathname === `/cases/${id}`) return null;
   return <section aria-label={translate("cases.caseContext_current_wageCase")} className={styles.context}>
-    {item && <div className={styles.contextMeta}><div className={styles.contextIdentity}><Link href={`/workplaces/${query.data!.workplaceId}`} className="inline-flex min-h-11 items-center font-bold"><Building2 size={17} aria-hidden="true" />{item.workplaceName}</Link><p className="text-body text-muted">{item.period} · {item.payType}</p></div><p className={styles.contextStep}>{translate("cases.caseCards_current_2", { value1: item.step })}</p></div>}
+    {item && <div className={styles.contextMeta}><div className={styles.contextIdentity}><Link href={`/workplaces/${query.data!.workplaceId}`} className="inline-flex min-h-11 items-center font-bold"><Building2 size={17} aria-hidden="true" />{item.workplaceName}</Link><p className="text-body text-muted">{item.period} · {item.payType}</p></div>{showStep && <p className={styles.contextStep}>{translate("cases.caseCards_current_2", { value1: item.step })}</p>}</div>}
   </section>;
 }
