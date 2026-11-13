@@ -289,3 +289,16 @@ it("renders confirmed review separately from processing and ignores a stale poll
  expect(vm.processingStatus).toBe("REVIEW_REQUIRED");
  expect(vm.statusLabel).not.toBe(createTranslation("ko").translate("common.reviewRequired"));
 });
+
+it("hides completion on CONFIRMED + REVIEW_REQUIRED with optional unconfirmed fields and restores it on IN_PROGRESS",async()=>{
+ const {mount,mocks,app}=await setup();
+ let reviewStatus="CONFIRMED";
+ server.use(http.get(`${testApiUrl}/cases/15/documents/101/review`,()=>apiResponse({documentId:101,processingStatus:"REVIEW_REQUIRED",reviewStatus,canCompleteReview:true,pendingRequiredFieldIds:[],optionalUnconfirmedFieldIds:[503],unconfirmedFieldIds:[503]})));
+ mount(<ReviewConfirmation context={context} version={7} fields={mocks.fields(15,101)} disabled={false}/>);
+ const t=createTranslation("ko").translate;
+ await waitFor(()=>expect(screen.getByRole("region",{name:t("documents.viewModels_review_confirm_complete")})).toBeVisible());
+ expect(screen.queryByRole("button",{name:t("documents.reviewConfirmation_document_review_complete_request")})).not.toBeInTheDocument();
+ reviewStatus="IN_PROGRESS";
+ await act(()=>app.queryClient.invalidateQueries({queryKey:reviewKeys.review(app.session.getSnapshot().generation,15,101)}));
+ expect(await screen.findByRole("button",{name:t("documents.reviewConfirmation_document_review_complete_request")})).toBeEnabled();
+});

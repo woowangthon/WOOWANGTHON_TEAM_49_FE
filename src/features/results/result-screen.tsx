@@ -4,6 +4,9 @@ import {createLocalizedFeaturesResultsViewModels} from './view-models';
 
 import { useTranslation } from '@/i18n/use-translation';
 
+import { ResultReasons } from "./result-reasons";
+import { ResultRefresh } from "./result-refresh";
+import { ResultPayments } from "./result-payments";
 import { Info } from "lucide-react";
 import { useCase } from "@/features/cases/queries";
 import styles from "./result-screen.module.css";
@@ -49,6 +52,9 @@ const {toResultsViewModel} = useLocalized(createLocalizedFeaturesResultsViewMode
  <div className={styles.overview}><ResultSummary compare={false} value={{...vm!,title:q.isError?translate("results.resultPresentation_previous_result_current_confirm"):vm!.title}}/><ResultNextSteps value={vm!} caseId={caseId}/></div>
  <p className={styles.notice}><Info size={16} aria-hidden="true"/><span>{translate("results.resultScreen_difference_unpaid_wage_deduction")}</span></p>
  {q.data.freshness.overall==="FAILED"&&<p role="alert">{translate("results.resultScreen_result_update_failure_previous")}<button className={secondaryButton} onClick={()=>{void q.refetch();void status.refetch();}}>{translate("results.resultScreen_update_status_retry_confirm")}</button></p>}
+ <ResultReasons caseId={caseId} data={q.data}/>
+ <ResultRefresh key={`refresh-${caseId}`} caseId={caseId} data={q.data}/>
+ <ResultPayments key={`payments-${caseId}`} caseId={caseId}/>
  <ResultExplorer key={caseId} data={q.data} compare={false} showDetailsInitially={false} freshnessUnverified={q.isError}/>
 <nav data-case-next aria-label={translate("results.resultScreen_result")}><div><h2>{translate("results.resultScreen_confirm_question")}</h2><p>{translate("results.resultScreen_insufficient_record_company_content")}</p></div><Link className={secondaryButton} href={`/cases/${caseId}/questions`}>{translate("results.resultScreen_confirm_question_consultation")}</Link></nav>
  </>}</div>;

@@ -8,6 +8,7 @@ import { useSessionScope } from "@/hooks/use-session-scope";
 import { documentKeys, type RecomputeReceipt } from "./query-keys";
 import { businessKeys } from "@/lib/query/business-keys";
 import { useRemovalState } from "@/lib/query/use-removal-state";
+import { observeRecompute, type RecomputeObservation } from "./recompute-observation";
 import { documentApi, recomputeActive } from "./api";
 import type { DocumentContext, DocumentDto, DocumentFilters, LinkInput } from "./schemas";
 
@@ -49,7 +50,12 @@ export function useRecomputeStatus(caseId: number) {
   const unobserved = (data: Awaited<ReturnType<ReturnType<typeof documentApi>["recompute"]>> | undefined) => !!receipt.data && data?.activeJob?.jobId !== receipt.data.jobId && data?.latestJob?.jobId !== receipt.data.jobId;
   const query = useQuery({ queryKey: documentKeys.recompute(s.generation, caseId), queryFn: async ({ signal }) => {
       const result = await documentApi(s.api).recompute(caseId, signal);
-      if (!recomputeActive(result)) {
+      if (signal.aborted || s.session.getSnapshot().generation !== s.generation) return result;
+      const key = documentKeys.recomputeObservation(s.generation, caseId);
+      const previous = s.queryClient.getQueryData<RecomputeObservation>(key);
+      const observation = observeRecompute(previous, result, s.queryClient.getQueryData<RecomputeReceipt>(documentKeys.recomputeHint(s.generation, caseId))?.jobId);
+      s.queryClient.setQueryData(key, observation.state);
+      if (observation.refresh) {
         // Existing result snapshots remain visible while the final server versions refresh.
         void s.queryClient.invalidateQueries({ queryKey: businessKeys.case(s.generation, caseId), predicate: q => q.queryKey.includes("readiness") || q.queryKey.includes("results") || q.queryKey.includes("deposit-comparison") || q.queryKey.includes("questions") || q.queryKey.includes("reports") });
       }

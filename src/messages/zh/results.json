@@ -249,5 +249,20 @@
   "sourceEvidence_override": "本案的重新定义",
   "sourceEvidence_sharedDefault": "共享默认值",
   "resultDetail_depositRequirements": "仅上传入账文件并不表示核对完成。请确认交易已提取、已关联此 Case，并检查付款交易及核对范围。请查看已提供的原因和后续操作。",
-  "resultDetail_validationRequirements": "明细合计需要付款、扣款项目及工资单合计。请根据已提供的原因和原始文件，区分提取不完整与无法计算合计。"
+  "resultDetail_validationRequirements": "明细合计需要付款、扣款项目及工资单合计。请根据已提供的原因和原始文件，区分提取不完整与无法计算合计。",
+  "refreshLatest": "更新为最新结果",
+  "recalculating": "正在重新计算",
+  "refreshRetry": "请检查当前输入和任务状态后重试。",
+  "checkFreshness": "各项检查的时效性",
+  "checkCalculation": "计算",
+  "checkComparison": "工资对照",
+  "checkPayslip": "工资单检查",
+  "checkDeposit": "入账对照",
+  "managePayments": "管理付款及 Case 分配",
+  "reasonItemScope": "请核对原件，确认已提取全部支付和扣除明细。",
+  "reasonPaymentScope": "支付范围尚未确认。请检查文档及付款记录。",
+  "reasonDuplicate": "存在重复交易。请检查付款记录。",
+  "reasonPeriod": "来源期间不匹配。请检查文档。",
+  "reasonField": "缺少必要值。请检查文档及计算条件。",
+  "reasonFallback": "这是服务器提供的原因。请检查相关资料。"
 }

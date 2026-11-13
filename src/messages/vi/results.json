@@ -249,5 +249,20 @@
   "sourceEvidence_override": "Xác định lại trường hợp này",
   "sourceEvidence_sharedDefault": "mặc định được chia sẻ",
   "resultDetail_depositRequirements": "Chỉ tải tài liệu tiền gửi lên chưa hoàn tất đối chiếu. Cần trích xuất giao dịch, liên kết với Case và xác nhận khoản chi cùng phạm vi đối chiếu. Xem lý do và hành động tiếp theo được cung cấp.",
-  "resultDetail_validationRequirements": "Tổng chi tiết cần các khoản chi, khấu trừ và tổng trên phiếu lương. Xem lý do và tài liệu gốc để phân biệt trích xuất thiếu với không thể tính tổng."
+  "resultDetail_validationRequirements": "Tổng chi tiết cần các khoản chi, khấu trừ và tổng trên phiếu lương. Xem lý do và tài liệu gốc để phân biệt trích xuất thiếu với không thể tính tổng.",
+  "refreshLatest": "Cập nhật kết quả mới nhất",
+  "recalculating": "Đang tính lại",
+  "refreshRetry": "Kiểm tra dữ liệu hiện tại và trạng thái tác vụ trước khi thử lại.",
+  "checkFreshness": "Độ mới theo kiểm tra",
+  "checkCalculation": "Tính toán",
+  "checkComparison": "Đối chiếu lương",
+  "checkPayslip": "Kiểm tra phiếu lương",
+  "checkDeposit": "Đối chiếu tiền gửi",
+  "managePayments": "Quản lý thanh toán và phân bổ Case",
+  "reasonItemScope": "Kiểm tra mọi khoản trả và khấu trừ đã được trích xuất từ bản gốc.",
+  "reasonPaymentScope": "Chưa xác nhận phạm vi thanh toán. Kiểm tra tài liệu và giao dịch.",
+  "reasonDuplicate": "Giao dịch trùng lặp. Kiểm tra thanh toán.",
+  "reasonPeriod": "Kỳ nguồn không khớp. Kiểm tra tài liệu.",
+  "reasonField": "Thiếu giá trị bắt buộc. Kiểm tra tài liệu và điều kiện tính.",
+  "reasonFallback": "Máy chủ cung cấp lý do này. Kiểm tra hồ sơ liên quan."
 }

@@ -8,6 +8,8 @@ import { resultsSchema, resultsView } from "./schemas";
 import { buildResultScenario } from "@/mocks/shared/result-scenario";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 
+vi.mock("./result-refresh", () => ({ ResultRefresh: () => null }));
+vi.mock("./result-payments", () => ({ ResultPayments: () => null }));
 const hooks = vi.hoisted(() => ({ results: vi.fn(), status: vi.fn() }));
 vi.mock("./queries", () => ({ useResults: hooks.results }));
 vi.mock("@/features/cases/queries", () => ({ useCase: () => ({ data: { caseId: 15 } }) }));

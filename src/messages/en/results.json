@@ -249,5 +249,20 @@
   "sourceEvidence_override": "Redefinition of this case",
   "sourceEvidence_sharedDefault": "Shared defaults",
   "resultDetail_depositRequirements": "Uploading a deposit document alone does not complete comparison. Transactions must be extracted, linked to this Case, and the payment transactions and comparison scope reviewed. Check the provided reason and next action for the missing step.",
-  "resultDetail_validationRequirements": "Detailed totals require payment and deduction items and the stated totals. Check the provided reason and original document to distinguish incomplete extraction from an unavailable total."
+  "resultDetail_validationRequirements": "Detailed totals require payment and deduction items and the stated totals. Check the provided reason and original document to distinguish incomplete extraction from an unavailable total.",
+  "refreshLatest": "Refresh latest results",
+  "recalculating": "Recalculating",
+  "refreshRetry": "Check the current input and job status before retrying.",
+  "checkFreshness": "Freshness by check",
+  "checkCalculation": "Calculation",
+  "checkComparison": "Wage comparison",
+  "checkPayslip": "Payslip validation",
+  "checkDeposit": "Deposit comparison",
+  "managePayments": "Manage payments and Case allocations",
+  "reasonItemScope": "Check that all payment and deduction items were extracted from the original.",
+  "reasonPaymentScope": "Payment scope is unconfirmed. Check documents and payment records.",
+  "reasonDuplicate": "Duplicate transaction. Check payment records.",
+  "reasonPeriod": "Source period mismatch. Check the document.",
+  "reasonField": "Required values are missing. Check documents and calculation conditions.",
+  "reasonFallback": "The server reported this reason. Check the related records."
 }

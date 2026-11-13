@@ -6,6 +6,7 @@ import {createLocalizedFeaturesResultsViewModels} from './view-models';
 
 import { useTranslation } from '@/i18n/use-translation';
 
+import { ResultReasons } from "./result-reasons";
 import Link from "next/link";
 import { ArrowDownUp, ArrowRight } from "lucide-react";
 import type { Results } from "./schemas";
@@ -51,6 +52,7 @@ const {displayScalar, statusLabels} = useLocalized(createLocalizedFeaturesResult
     {"difference" in card.data && <p className={styles.difference} data-status={tone}>{mismatched ? translate("results.resultComparisonTable_comparison_basis_confirm_required") : <><strong>{displayScalar(card.data.difference, "difference", card.unit)}</strong><span>{translate("results.resultComparisonTable_difference")}</span></>}</p>}
     <p className={styles.guidance}>{mismatched ? translate("results.resultDetail_period_unit_match_comparison_basis_confirm") : card.status === "DIFFERENCE" ? translate("results.resultDetail_record_original_add_confirm") : card.status === "MATCH" ? translate("results.resultDetail_current_comparison_record_match") : card.status === "INSUFFICIENT_INFORMATION" ? translate("results.resultDetail_confirm_original_input") : card.status === "REVIEW_REQUIRED" ? translate("results.resultDetail_original_applicable_review") : translate("results.resultDetail_calculation_use_applicable_confirm")}</p>
     {card.status==="INSUFFICIENT_INFORMATION"&&(groupId==="deposit"||groupId==="validation")&&<p className={styles.guidance}>{translate(groupId==="deposit"?"results.resultDetail_depositRequirements":"results.resultDetail_validationRequirements")}</p>}
+    <ResultReasons caseId={caseId} data={card.data}/>
     {groupId !== "calculation" && <p className={styles.disclaimer}>{translate("results.resultDetail_difference_current_comparison_scope_unpaid_wage")}</p>}
     <section className={styles.section} aria-label={translate("results.resultDetail_original_evidence")}><h4 className={styles.sourceHeading}><span>{translate("results.resultDetail_original_evidence")}</span>{!sources.length&&<Link href={`/cases/${caseId}/review`}>{translate("results.resultDetail_document_review_navigate")}<ArrowRight size={14} aria-hidden="true"/></Link>}</h4>
       {sources.length ? <div className={styles.sources}>{sources.map((source, index) => <SourceEvidence key={index} caseId={caseId} value={record(source) ?? {}} compact/>)}</div> : <p className={styles.empty}>{translate("results.resultDetail_result_link_original_evidence_notProvided")}</p>}
