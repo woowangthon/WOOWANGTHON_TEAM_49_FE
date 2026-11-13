@@ -123,9 +123,11 @@ it('keeps SSE running through disclosures, locks scope, and restores saved messa
  const input=screen.getByLabelText('질문');fireEvent.change(input,{target:{value:'설명'}});fireEvent.keyDown(input,{key:'Enter',shiftKey:true});expect(input).toHaveValue('설명');
  fireEvent.click(screen.getByText('참조 범위 변경'));fireEvent.click(screen.getByLabelText('근무지 전체 참조'));
  fireEvent.click(screen.getByRole('button',{name:'전송'}));await screen.findByRole('button',{name:'답변 중지'});
- expect(screen.getByLabelText('근무지 전체 참조')).toBeDisabled();
+ await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('\uB2F5\uBCC0 \uC0DD\uC131 \uC911'));
+ expect(screen.getByLabelText('\uADFC\uBB34\uC9C0 \uC804\uCCB4 \uCC38\uC870')).toBeDisabled();
  fireEvent.click(screen.getByText('대화 관리 · 제목 수정 및 삭제'));fireEvent.click(screen.getByText('참조 범위 변경'));
  await waitFor(()=>expect(input).toBeEnabled(),{timeout:10000});
+ expect(screen.getByRole('status')).not.toHaveTextContent('\uB2F5\uBCC0 \uC0DD\uC131 \uC911');
  const saved=await api.detail(chat.chatId,1);expect(saved.messages.total).toBe(2);expect(saved.messages.items.every(m=>m.scope.scopeType==='WORKPLACE_ALL')).toBe(true);
  expect(screen.getByRole('article',{name:'AI 답변'})).toHaveTextContent('개발용');
 },15000);

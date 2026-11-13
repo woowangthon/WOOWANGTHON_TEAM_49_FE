@@ -39,7 +39,7 @@
   "resultDetail_contract_attendance_basis": "តម្លៃស្តង់ដារនៃកិច្ចសន្យា/ការចូលរួម",
   "resultDetail_payslip": "បង់ថ្លៃដើម",
   "resultDetail_item_sum": "សរុបធាតុលម្អិត",
-  "resultDetail_calculation": "ការគណនាម៉ាស៊ីនមេ",
+  "resultDetail_calculation": "តម្លៃគណនា",
   "resultDetail_payslip_sum": "សរុបបានបញ្ជាក់នៅលើសេចក្តីថ្លែងការណ៍",
   "resultDetail_payslip_2": "តម្លៃដែលបានបញ្ជាក់នៅក្នុងសេចក្តីថ្លែងការណ៍",
   "resultDetail_netPay": "បានចុះបញ្ជីចំនួនប្រាក់ខែជាក់ស្តែង",
@@ -186,8 +186,8 @@
   "sourceEvidence_empty_page_evidence_confirm": "មិនមានកូអរដោណេ ដូច្នេះមិនមានការសង្កត់ធ្ងន់ទេ។ ពិនិត្យទំព័រ និងអត្ថបទគាំទ្រ។",
   "viewModels_record_match": "✓ទិន្នន័យស្របគ្នា។",
   "viewModels_difference_unpaid_wage": "△ ការរកឃើញភាពខុសគ្នា - មិនមែនជាការបញ្ជាក់ពីប្រាក់ឈ្នួលដែលមិនបានបើក",
-  "viewModels_information_insufficient": "? កង្វះព័ត៌មាន",
-  "viewModels_review_required": "! ត្រូវការការពិនិត្យឡើងវិញ",
+  "viewModels_information_insufficient": "កង្វះព័ត៌មាន",
+  "viewModels_review_required": "ត្រូវការការពិនិត្យឡើងវិញ",
   "viewModels_calculation_complete": "ការគណនាបានបញ្ចប់",
   "viewModels_minutes_calculation": "ការគណនាផ្នែក",
   "viewModels_calculation": "គណនា",
@@ -247,5 +247,7 @@
   "sourceEvidence_user_edit": "តម្លៃកែសម្រួលអ្នកប្រើប្រាស់",
   "sourceEvidence_document_extractedValue_extraction_user_confirm_status": "តម្លៃទាញយកឯកសារ (ការស្រង់ចេញ AI/OCR គឺដាច់ដោយឡែកពីស្ថានភាពផ្ទៀងផ្ទាត់អ្នកប្រើប្រាស់)",
   "sourceEvidence_override": "និយមន័យឡើងវិញនៃករណីនេះ។",
-  "sourceEvidence_sharedDefault": "លំនាំដើមដែលបានចែករំលែក"
+  "sourceEvidence_sharedDefault": "លំនាំដើមដែលបានចែករំលែក",
+  "resultDetail_depositRequirements": "ការបង្ហោះឯកសារប្រាក់បញ្ញើតែមួយមុខមិនបញ្ចប់ការផ្ទៀងផ្ទាត់ទេ។ ត្រូវស្រង់ប្រតិបត្តិការ ភ្ជាប់ទៅ Case និងពិនិត្យការទូទាត់និងវិសាលភាពផ្ទៀងផ្ទាត់។ សូមមើលមូលហេតុ និងសកម្មភាពបន្ទាប់ដែលបានផ្តល់។",
+  "resultDetail_validationRequirements": "ផលបូកលម្អិតត្រូវការធាតុទូទាត់ កាត់ប្រាក់ និងផលបូកនៅលើប័ណ្ណប្រាក់ខែ។ សូមមើលមូលហេតុ និងឯកសារដើម ដើម្បីបែងចែកការស្រង់មិនពេញលេញពីការមិនអាចគណនាផលបូក។"
 }

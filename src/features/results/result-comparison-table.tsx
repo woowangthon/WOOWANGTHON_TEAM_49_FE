@@ -45,7 +45,7 @@ const {displayScalar} = useLocalized(createLocalizedFeaturesResultsViewModels);
         <th scope="row" className={styles.item}><small>{row.groupTitle}</small><span>{row.title}</span></th>
         <td><span className={styles.mobileLabel} aria-hidden="true">{translate("results.resultComparisonTable_comparison_basis")}</span><Values values={row.reference} unit={row.unit}/></td>
         <td><span className={styles.mobileLabel} aria-hidden="true">{translate("results.resultComparisonTable_comparison")}</span><Values values={row.compared} unit={row.unit}/></td>
-        <td className={styles.statusCell}><span className={styles.mobileLabel} aria-hidden="true">{translate("results.resultComparisonTable_result")}</span><span className={styles.badge} data-status={row.status}><span aria-hidden="true">{statuses[row.status ?? ""]?.symbol ?? "·"}</span>{statuses[row.status ?? ""]?.label ?? translate("results.resultComparisonTable_status_notProvided")}</span></td>
+        <td className={styles.statusCell}><span className={styles.mobileLabel} aria-hidden="true">{translate("results.resultComparisonTable_result")}</span><span className={styles.badge} data-status={row.status}>{statuses[row.status ?? ""]?.symbol!==""&&<span aria-hidden="true">{statuses[row.status ?? ""]?.symbol ?? "·"}</span>}{statuses[row.status ?? ""]?.label ?? translate("results.resultComparisonTable_status_notProvided")}</span></td>
         <td className={styles.difference}><span className={styles.mobileLabel} aria-hidden="true">{translate("results.resultComparisonTable_difference")}</span><span data-difference={row.status === "DIFFERENCE" && typeof row.difference === "number" && !row.mismatched}>{row.mismatched ? translate("results.resultComparisonTable_comparison_basis_confirm_required") : displayScalar(row.difference, "difference", row.unit)}</span></td>
         <td className={styles.actionCell}><button type="button" className={styles.evidenceButton} aria-label={translate("results.resultComparisonTable_evidence_2", { value1: row.title })} onClick={() => onSelect(row.groupId, row.cardId)}>{translate("results.resultComparisonTable_evidence_3")}<ArrowUpRight size={14} aria-hidden="true"/></button></td>
       </tr>) : <tr><td colSpan={6} className={styles.empty}>{translate("results.resultComparisonTable_comparison_item_empty_status_select")}</td></tr>}</tbody>
@@ -59,8 +59,8 @@ const filters = { ALL: translate("results.resultComparisonTable_all"), MATCH: tr
 const statuses: Record<string, { label: string; symbol: string }> = {
   MATCH: { label: translate("results.resultComparisonTable_record_match"), symbol: "✓" },
   DIFFERENCE: { label: translate("results.resultComparisonTable_difference_2"), symbol: "△" },
-  INSUFFICIENT_INFORMATION: { label: translate("results.resultComparisonTable_information_insufficient"), symbol: "?" },
-  REVIEW_REQUIRED: { label: translate("common.reviewRequired"), symbol: "!" },
+  INSUFFICIENT_INFORMATION: { label: translate("results.resultComparisonTable_information_insufficient"), symbol: "" },
+  REVIEW_REQUIRED: { label: translate("common.reviewRequired"), symbol: "" },
 };
 const knownTitles: Record<string, string> = {
   HOURLY_WAGE: translate("results.resultComparisonTable_hourlyWage_comparison"), WORK_HOURS: translate("results.resultComparisonTable_work_time_comparison"), WORKED_HOURS: translate("results.resultComparisonTable_work_time_comparison_2"),

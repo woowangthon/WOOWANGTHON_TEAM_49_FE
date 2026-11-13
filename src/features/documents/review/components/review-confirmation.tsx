@@ -28,7 +28,7 @@ const {reviewLabels, statusLabels} = useLocalized(createLocalizedFeaturesDocumen
   if(q.isPending)return <QueryFeedback pending />;if(q.isError)return <QueryFeedback error={q.error} retry={()=>{void q.refetch();}} />;
   const data=q.data;
   const groups=groupReviewFields(fields,documentType);
-  const pending=data.pendingRequiredFieldIds??data.unconfirmedFieldIds;
+  const pending=data.pendingRequiredFieldIds??(data.canCompleteReview===true?[]:data.unconfirmedFieldIds);
   const remainingDetails=groups.details.filter(field=>data.unconfirmedFieldIds?.includes(field.fieldId)).length;
   return <section className={`${cardStyle} ${styles.confirmation}`} aria-label={translate("documents.reviewConfirmation_document_all_review")}><div className={styles.confirmationCopy}><h2>{translate("documents.reviewConfirmation_document_confirm")}</h2>
     <p className="text-body">{translate("documents.reviewConfirmation_processing_link_document_review", { value1: statusLabels[data.processingStatus], value2: reviewLabels[data.reviewStatus] })}</p>

@@ -49,3 +49,26 @@ describe("server required review policy",()=>{
   expect((await api.fields(15,101)).fields[0].requiresUserReview).toBeUndefined();
  });
 });
+
+it.each(["UNKNOWN","NOT_IN_DOCUMENT","NONE"] as const)("preserves resolution-only origin for %s and rejects errors",async resolution=>{
+ const {api}=await setup();
+ const {http}=await import("msw");const {testApiUrl,apiResponse}=await import("@/test/server");
+ const {caseFieldUpdatedSchema,caseResolutionUpdatedSchema}=await import("./schemas");
+ const recompute={scheduled:true,jobId:"resolution-job",affectedChecks:["PAYSLIP_VALIDATION"]};
+ const data={fieldId:502,previousValue:null,value:null,status:"MISSING",editedByUser:false,hasCaseOverride:false,effectiveValueOrigin:"SHARED_DEFAULT",affectedCaseIds:[15],caseUpdates:{"15":{inputVersion:8,recompute}},inputVersion:8,recompute,requiresUserReview:true,reviewReason:"MISSING",reviewResolution:resolution,reviewResolved:resolution!=="NONE",usableForAnalysis:false,analysisValueOrigin:"NONE"};
+ expect(caseFieldUpdatedSchema.safeParse(data).success).toBe(false);
+ expect(caseResolutionUpdatedSchema.safeParse(data).success).toBe(true);
+ const path=`${testApiUrl}/cases/:c/documents/:d/fields/:f`;
+ for(const hasCaseOverride of [false,true]){
+ server.use(http.patch(path,()=>apiResponse({...data,hasCaseOverride,effectiveValueOrigin:hasCaseOverride?"CASE_OVERRIDE":"SHARED_DEFAULT"})));
+ expect(await api.patchCase(15,101,502,{reviewResolution:resolution},7)).toMatchObject({reviewResolution:resolution,hasCaseOverride});
+ }
+ for(const status of [500,409,422]){
+ server.use(http.patch(path,()=>apiResponse({errorCode:status===409?"INPUT_VERSION_CONFLICT":"VALIDATION_ERROR"},status)));
+ await expect(api.patchCase(15,101,502,{reviewResolution:resolution},7)).rejects.toMatchObject({status});
+ }
+ for(const invalid of [{...data,recompute:{scheduled:"yes"}},{...data,status:"INVALID"},{...data,hasCaseOverride:true},{...data,reviewResolution:undefined}]){
+ server.use(http.patch(path,()=>apiResponse(invalid)));
+ await expect(api.patchCase(15,101,502,{reviewResolution:resolution},7)).rejects.toBeInstanceOf(Error);
+ }
+});

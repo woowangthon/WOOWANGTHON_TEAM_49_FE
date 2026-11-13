@@ -39,7 +39,7 @@
   "resultDetail_contract_attendance_basis": "合同/出勤标准值",
   "resultDetail_payslip": "工资存根值",
   "resultDetail_item_sum": "详细项目总计",
-  "resultDetail_calculation": "服务器计算",
+  "resultDetail_calculation": "计算值",
   "resultDetail_payslip_sum": "报表中注明的总计",
   "resultDetail_payslip_2": "声明中规定的价值",
   "resultDetail_netPay": "所列实际工资金额",
@@ -186,8 +186,8 @@
   "sourceEvidence_empty_page_evidence_confirm": "没有坐标，所以没有强调。检查页面和支持文本。",
   "viewModels_record_match": "✓ 数据一致",
   "viewModels_difference_unpaid_wage": "△ 发现差异——而非确认未付工资",
-  "viewModels_information_insufficient": "？缺乏信息",
-  "viewModels_review_required": "！需要审查",
+  "viewModels_information_insufficient": "缺乏信息",
+  "viewModels_review_required": "需要审查",
   "viewModels_calculation_complete": "计算完成",
   "viewModels_minutes_calculation": "部分计算",
   "viewModels_calculation": "计算出的",
@@ -247,5 +247,7 @@
   "sourceEvidence_user_edit": "用户编辑值",
   "sourceEvidence_document_extractedValue_extraction_user_confirm_status": "文档提取值（AI/OCR提取与用户验证状态分离）",
   "sourceEvidence_override": "本案的重新定义",
-  "sourceEvidence_sharedDefault": "共享默认值"
+  "sourceEvidence_sharedDefault": "共享默认值",
+  "resultDetail_depositRequirements": "仅上传入账文件并不表示核对完成。请确认交易已提取、已关联此 Case，并检查付款交易及核对范围。请查看已提供的原因和后续操作。",
+  "resultDetail_validationRequirements": "明细合计需要付款、扣款项目及工资单合计。请根据已提供的原因和原始文件，区分提取不完整与无法计算合计。"
 }

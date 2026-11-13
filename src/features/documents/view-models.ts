@@ -42,8 +42,8 @@ function processingErrorMessage(code: string | null | undefined) {
   return code ?? translate("documents.viewModels_document_processing_failure");
 }
 function documentCard(dto: DocumentDto, status?: DocumentStatusDto) {
-  const effective = { ...dto, ...status };
-  return { ...effective, typeLabel: storedTypeLabel(dto.documentType), statusLabel: statusLabels[effective.processingStatus],
+  const effective = { ...dto, ...status, reviewStatus: dto.reviewStatus };
+  return { ...effective, typeLabel: storedTypeLabel(dto.documentType), statusLabel: effective.reviewStatus==="CONFIRMED"&&["REVIEW_REQUIRED","READ_READY"].includes(effective.processingStatus)?translate("documents.reviewPolicy_extractionReviewed"):statusLabels[effective.processingStatus],
     reviewLabel: effective.reviewStatus ? reviewLabels[effective.reviewStatus] : translate("documents.viewModels_review_status_notProvided"),
     uploadedLabel: dto.uploadedAt && Number.isFinite(Date.parse(dto.uploadedAt)) ? new Intl.DateTimeFormat(languageCatalog[defaultLocale].intlLocale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(dto.uploadedAt)) : translate("documents.viewModels_upload_notProvided") };
 }

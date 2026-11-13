@@ -9,6 +9,7 @@ import { AppServicesContext } from "@/hooks/use-app-services";
 import { createAppServices, type AppServices } from "@/lib/app-services";
 import { createDevelopmentScenario, demoAccount, clearMockSession } from "@/mocks/development";
 import { server, testApiUrl, apiResponse } from "@/test/server";
+import { ResultDetail } from "./result-detail";
 import { SourceEvidence } from "./source-evidence";
 import { ResultScreen, ServerValue } from "./result-screen";
 import { resultsApi } from "./api";
@@ -36,7 +37,7 @@ describe("result evidence and screen",()=>{
   expect(screen.queryByRole("heading",{name:"가상_급여명세서.pdf"})).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button",{name:"시급 대조 근거 보기"}));
   expect(screen.getByRole("region",{name:"결과 탐색"})).toBeVisible();
-  await screen.findAllByRole("heading",{name:"가상_급여명세서.pdf"});
+  await screen.findAllByRole("link",{name:/가상_급여명세서.pdf/});
  },15000);
  it("keeps cached results when malformed refetch fails",async()=>{const s=await setup();s.app.queryClient.setDefaultOptions({queries:{retry:false}});s.mount(<ResultScreen caseId={15}/>);await screen.findByRole("heading",{name:"결과 요약 · 최신"});server.use(http.get(`${testApiUrl}/cases/15/results`,()=>apiResponse({caseId:15})));await s.app.queryClient.invalidateQueries({predicate:q=>q.queryKey.at(-1)==="results"});await screen.findByText(/최신 결과 조회에 실패해/);expect(screen.getByRole("heading",{name:"직전 조회 결과 · 최신성 미확인"})).toBeInTheDocument();expect(screen.getByText(/서버 응답 형식이 문서 계약과 일치하지 않습니다/)).toBeInTheDocument();},15000);
  it("formats amounts and hour quantities with accessible text",()=>{render(<ServerValue caseId={15} value={{calculatedSubtotal:2000000,grossPay:null,items:[{amount:0,currency:"KRW"},{unit:"HOUR",value:1.5}]}}/>);expect(screen.getByText("2,000,000 원")).toBeInTheDocument();expect(screen.getByText("0 원")).toBeInTheDocument();expect(screen.getByText("1.5 시간")).toBeInTheDocument();});
@@ -57,4 +58,12 @@ describe("result evidence and screen",()=>{
    expect(screen.getByText(new RegExp(`현재 입력 v${after.currentInputVersion} · 결과 v${after.resultVersion}`))).toBeVisible();
   },{timeout:10000});
  },15000);
+});
+
+it("keeps real evidence and additional information without a debug disclosure",async()=>{
+ const s=await setup();const {container}=s.mount(<ResultDetail caseId={15} groupId="validation" onClose={()=>{}} card={{id:"test",title:"Evidence",status:"INSUFFICIENT_INFORMATION",data:{itemSum:null,statedTotal:100,sources:[source],reasonCode:"EXTRACTION_INCOMPLETE"},version:{snapshotId:1,version:1,inputVersion:7,createdAt:null,freshness:"CURRENT"}}}/>);
+ await screen.findByRole("link",{name:/.*pdf/});
+ expect(container.querySelector("[data-result-detail] > details")).toBeNull();
+ expect(screen.getByText("EXTRACTION_INCOMPLETE")).toBeVisible();
+ expect(screen.getByText(source.text,{exact:false})).toBeVisible();
 });

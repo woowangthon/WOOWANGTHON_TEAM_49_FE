@@ -376,5 +376,6 @@
   "reviewPolicy_progressLabel": "វឌ្ឍនភាពពិនិត្យចាំបាច់",
   "reviewPolicy_resolutionHelp": "មិនរក្សាទុក ឬបញ្ជាក់តម្លៃទេ។ មិនអាចប្រើសម្រាប់វិភាគបានទេ។",
   "reviewPolicy_legacy": "ស្ថានភាពម៉ាស៊ីនមេចាស់។ គោលការណ៍ថ្មីមិនទាន់បានផ្ទៀងផ្ទាត់។",
-  "reviewPolicy_inputConfirmed": "តម្លៃបញ្ចូលត្រូវរក្សាទុកជាតម្លៃដែលអ្នកប្រើបានបញ្ជាក់។"
+  "reviewPolicy_inputConfirmed": "តម្លៃបញ្ចូលត្រូវរក្សាទុកជាតម្លៃដែលអ្នកប្រើបានបញ្ជាក់។",
+  "reviewPolicy_extractionReviewed": "បានស្រង់ទិន្នន័យ · បានកត់ត្រាការពិនិត្យ"
 }

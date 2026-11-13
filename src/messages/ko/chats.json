@@ -14,7 +14,7 @@
   "chatContextBar_scope": "기본 범위: {value1}",
   "chatScreen_request_failure": "요청 실패",
   "chatScreen_pending": "대기",
-  "chatScreen_chatWorkspace_send2": "스트리밍",
+  "chatScreen_chatWorkspace_send2": "답변 생성 중",
   "chatScreen_complete": "완료",
   "chatScreen_cancel_complete": "취소 완료",
   "chatScreen_failure": "실패",

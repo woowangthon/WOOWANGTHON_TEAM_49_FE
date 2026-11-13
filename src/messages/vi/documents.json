@@ -376,5 +376,6 @@
   "reviewPolicy_progressLabel": "Tiến độ kiểm tra bắt buộc",
   "reviewPolicy_resolutionHelp": "Không lưu hoặc xác nhận giá trị. Không thể dùng để phân tích.",
   "reviewPolicy_legacy": "Máy chủ cũ. Chưa xác minh chính sách mới.",
-  "reviewPolicy_inputConfirmed": "Giá trị nhập được lưu với xác nhận của người dùng."
+  "reviewPolicy_inputConfirmed": "Giá trị nhập được lưu với xác nhận của người dùng.",
+  "reviewPolicy_extractionReviewed": "Đã trích xuất · Đã ghi nhận kiểm tra"
 }

@@ -39,7 +39,7 @@
   "resultDetail_contract_attendance_basis": "계약·근태 기준값",
   "resultDetail_payslip": "급여명세서 값",
   "resultDetail_item_sum": "세부 항목 합계",
-  "resultDetail_calculation": "서버 계산값",
+  "resultDetail_calculation": "계산값",
   "resultDetail_payslip_sum": "명세서 기재 합계",
   "resultDetail_payslip_2": "명세서 기재값",
   "resultDetail_netPay": "기재 실수령액",
@@ -186,8 +186,8 @@
   "sourceEvidence_empty_page_evidence_confirm": "좌표가 없어 강조하지 않습니다. 페이지와 근거 문구를 확인하세요.",
   "viewModels_record_match": "✓ 자료상 일치",
   "viewModels_difference_unpaid_wage": "△ 차이 발견 — 미지급임금 확정이 아닙니다",
-  "viewModels_information_insufficient": "? 정보 부족",
-  "viewModels_review_required": "! 검토 필요",
+  "viewModels_information_insufficient": "정보 부족",
+  "viewModels_review_required": "검토 필요",
   "viewModels_calculation_complete": "계산 완료",
   "viewModels_minutes_calculation": "부분 계산",
   "viewModels_calculation": "계산됨",
@@ -247,5 +247,7 @@
   "sourceEvidence_user_edit": "사용자 수정값",
   "sourceEvidence_document_extractedValue_extraction_user_confirm_status": "문서 추출값 (AI/OCR 추출은 사용자 확인 상태와 별도)",
   "sourceEvidence_override": "이 사례의 재정의",
-  "sourceEvidence_sharedDefault": "공유 기본값"
+  "sourceEvidence_sharedDefault": "공유 기본값",
+  "resultDetail_depositRequirements": "입금 문서 업로드만으로는 대조가 완료되지 않아요. 거래 추출, Case 연결, 지급 거래 및 대조 범위 확인이 필요합니다. 현재 부족한 단계는 제공된 사유와 다음 조치를 확인해 주세요.",
+  "resultDetail_validationRequirements": "세부 합계는 지급·공제 항목과 명세서 합계가 필요해요. 항목 추출이 불완전하거나 합계를 산출할 수 없는지는 제공된 사유와 원본을 확인해 주세요."
 }

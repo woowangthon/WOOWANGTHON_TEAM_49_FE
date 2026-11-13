@@ -1,13 +1,13 @@
 import type { ApiClient } from "@/lib/api/client";
 import { decodeWith } from "@/lib/api/schema";
-import { caseFieldUpdatedSchema, sharedFieldUpdatedSchema, fieldsSchema, historyListSchema, reviewConfirmedSchema, overrideRemovedSchema, previewSchema, replacementIdSchema, replacementConfirmedSchema, replacementCreatedSchema, replacementSchema, reviewSchema, type SharedFieldPatch, type FieldPatch, type ReplacementId } from "./schemas";
+import { caseResolutionUpdatedSchema, caseFieldUpdatedSchema, sharedFieldUpdatedSchema, fieldsSchema, historyListSchema, reviewConfirmedSchema, overrideRemovedSchema, previewSchema, replacementIdSchema, replacementConfirmedSchema, replacementCreatedSchema, replacementSchema, reviewSchema, type SharedFieldPatch, type FieldPatch, type ReplacementId } from "./schemas";
 export const caseDocumentPath = (caseId: number, documentId: number) => `/cases/${caseId}/documents/${documentId}`;
 export function reviewApi(api: ApiClient) {
   return {
     preview: (w: number, d: number, signal?: AbortSignal) => api.requestJson(`/workplaces/${w}/documents/${d}/preview`, decodeWith(previewSchema), {signal,expectedStatus:200}),
     file: (w: number, d: number, signal?: AbortSignal) => api.requestBlob(`/workplaces/${w}/documents/${d}/file`, {signal}),
     fields: (c: number, d: number, signal?: AbortSignal) => api.requestJson(`${caseDocumentPath(c,d)}/fields`, decodeWith(fieldsSchema.refine(v=>v.caseId===c&&v.documentId===d)), {signal,expectedStatus:200}),
-    patchCase: (c: number, d: number, f: number, patch: FieldPatch, version: number) => api.requestJson(`${caseDocumentPath(c,d)}/fields/${f}`, decodeWith(caseFieldUpdatedSchema), {expectedStatus:200,method:"PATCH", body:{...patch,expectedInputVersion:version}}),
+    patchCase: (c: number, d: number, f: number, patch: FieldPatch, version: number) => api.requestJson(`${caseDocumentPath(c,d)}/fields/${f}`, (value: unknown) => patch.reviewResolution !== undefined ? decodeWith(caseResolutionUpdatedSchema.refine(data=>data.reviewResolution===patch.reviewResolution&&data.fieldId===f))(value) : decodeWith(caseFieldUpdatedSchema)(value), {expectedStatus:200,method:"PATCH", body:{...patch,expectedInputVersion:version}}),
     patchShared: (w: number, d: number, f: number, patch: SharedFieldPatch) => api.requestJson(`/workplaces/${w}/documents/${d}/fields/${f}`, decodeWith(sharedFieldUpdatedSchema), {expectedStatus:200,method:"PATCH",body:{...patch}}),
     removeOverride: (c: number, d: number, f: number, _version: number) => api.requestJson(`${caseDocumentPath(c,d)}/field-overrides/${f}`, (void _version, decodeWith(overrideRemovedSchema)), {expectedStatus:200,method:"DELETE"}),
     history: (c: number, d: number, f: number, page: number, signal?: AbortSignal) => api.requestJson(`${caseDocumentPath(c,d)}/fields/${f}/history`, decodeWith(historyListSchema.transform(data=>({items:data.items.slice((page-1)*20,page*20),page,size:20,total:data.items.length}))), {signal,expectedStatus:200}),

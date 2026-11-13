@@ -260,3 +260,32 @@ it("N01 preserves an unknown review status and blocks confirmation/editing",asyn
  expect(await screen.findByRole("button",{name:"\uBB38\uC11C \uAC80\uD1A0 \uC644\uB8CC \uC694\uCCAD"})).toBeDisabled();
  for(const button of screen.getAllByRole("button",{name:"수정"})) expect(button).toBeDisabled();
 });
+
+it.each(["UNKNOWN","NOT_IN_DOCUMENT","NONE"] as const)("keeps %s dialog open after rejection, then closes on success",async resolution=>{
+ const s=await setup();const t=createTranslation("ko").translate;
+ if(resolution==="NONE")await reviewApi(s.app.api).patchCase(15,101,502,{reviewResolution:"UNKNOWN"},7);
+ const fields=s.mocks.fields(15,101);const label=t(`documents.reviewPolicy_${resolution}`);
+ s.mount(<FieldsPanel fields={fields} context={context} inputVersion={resolution==="NONE"?8:7} onSource={noop} onDirty={noop} dirty={false}/>);
+ await s.user.click(screen.getByRole("button",{name:label}));
+ server.use(http.patch(`${testApiUrl}/cases/:c/documents/:d/fields/:f`,()=>apiResponse({errorCode:"VALIDATION_ERROR"},422)));
+ await s.user.click(within(screen.getByRole("dialog")).getByRole("button",{name:label}));
+ await waitFor(()=>expect(within(screen.getByRole("dialog")).getByRole("alert")).toBeVisible());
+ expect(screen.queryByText(t("documents.fieldsPanel_save",{value1:""}))).toBeNull();
+ server.use(...s.mocks.handlers);
+ await s.user.click(within(screen.getByRole("dialog")).getByRole("button",{name:label}));
+ await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull());
+});
+
+it("renders confirmed review separately from processing and ignores a stale poll",async()=>{
+ const {createLocalizedFeaturesDocumentsViewModels}=await import("../view-models");
+ const {documentCard}=createLocalizedFeaturesDocumentsViewModels(createTranslation("ko"));
+ const s=await setup();
+ s.mocks.originals.get(101)!.forEach(f=>{f.value=1;f.status="CONFIRMED";});
+ const confirmed=await reviewApi(s.app.api).confirmReview(15,101,7);
+ expect(confirmed.reviewStatus).toBe("CONFIRMED");
+ const dto=s.d.getDocuments().find(d=>d.documentId===101)!;
+ const vm=documentCard({...dto,processingStatus:"REVIEW_REQUIRED"},{documentId:101,processingStatus:"REVIEW_REQUIRED",reviewStatus:"IN_PROGRESS"});
+ expect(vm.reviewStatus).toBe("CONFIRMED");
+ expect(vm.processingStatus).toBe("REVIEW_REQUIRED");
+ expect(vm.statusLabel).not.toBe(createTranslation("ko").translate("common.reviewRequired"));
+});

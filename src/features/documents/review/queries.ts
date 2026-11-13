@@ -79,6 +79,10 @@ export function useReviewAction(context:ReviewContext) {
       await s.queryClient.cancelQueries({queryKey:documentKeys.root(s.generation),predicate:q=>revoked(q.queryKey)});
       s.queryClient.removeQueries({queryKey:documentKeys.root(s.generation),predicate:q=>revoked(q.queryKey)});
     }
+    // Finished processing polls are disabled and will not refetch on invalidation.
+    // Drop their snapshots so refreshed document lists remain authoritative.
+    await s.queryClient.cancelQueries({queryKey:documentKeys.root(s.generation),predicate:q=>q.queryKey[3]==="status"&&q.queryKey[5]===context.documentId});
+    s.queryClient.removeQueries({queryKey:documentKeys.root(s.generation),predicate:q=>q.queryKey[3]==="status"&&q.queryKey[5]===context.documentId});
     await Promise.all([
       s.queryClient.invalidateQueries({queryKey:documentKeys.root(s.generation),predicate:q=>!revoked(q.queryKey)&&!["preview","file"].includes(String(q.queryKey[3]))}),
       s.queryClient.invalidateQueries({queryKey:businessKeys.caseLists(s.generation)}),

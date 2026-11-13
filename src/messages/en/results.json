@@ -39,7 +39,7 @@
   "resultDetail_contract_attendance_basis": "Contract/attendance standard value",
   "resultDetail_payslip": "Pay stub value",
   "resultDetail_item_sum": "Detailed item total",
-  "resultDetail_calculation": "Server calculation",
+  "resultDetail_calculation": "Calculated value",
   "resultDetail_payslip_sum": "Total stated on statement",
   "resultDetail_payslip_2": "Value stated in statement",
   "resultDetail_netPay": "Listed actual salary amount",
@@ -186,8 +186,8 @@
   "sourceEvidence_empty_page_evidence_confirm": "There are no coordinates so there is no emphasis. Check the page and supporting text.",
   "viewModels_record_match": "✓ Data consistent",
   "viewModels_difference_unpaid_wage": "△ Detection of differences – not confirmation of unpaid wages",
-  "viewModels_information_insufficient": "? lack of information",
-  "viewModels_review_required": "! Needs review",
+  "viewModels_information_insufficient": "lack of information",
+  "viewModels_review_required": "Needs review",
   "viewModels_calculation_complete": "Calculation complete",
   "viewModels_minutes_calculation": "Partial calculation",
   "viewModels_calculation": "Calculated",
@@ -247,5 +247,7 @@
   "sourceEvidence_user_edit": "User edit value",
   "sourceEvidence_document_extractedValue_extraction_user_confirm_status": "Document extraction value (AI/OCR extraction is separate from user verification status)",
   "sourceEvidence_override": "Redefinition of this case",
-  "sourceEvidence_sharedDefault": "Shared defaults"
+  "sourceEvidence_sharedDefault": "Shared defaults",
+  "resultDetail_depositRequirements": "Uploading a deposit document alone does not complete comparison. Transactions must be extracted, linked to this Case, and the payment transactions and comparison scope reviewed. Check the provided reason and next action for the missing step.",
+  "resultDetail_validationRequirements": "Detailed totals require payment and deduction items and the stated totals. Check the provided reason and original document to distinguish incomplete extraction from an unavailable total."
 }

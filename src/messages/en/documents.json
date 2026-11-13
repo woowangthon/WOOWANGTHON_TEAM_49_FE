@@ -376,5 +376,6 @@
   "reviewPolicy_progressLabel": "Required review progress",
   "reviewPolicy_resolutionHelp": "This does not save a value or confirm it. It cannot be used for analysis.",
   "reviewPolicy_legacy": "Legacy server review status. The new required review policy is not verified.",
-  "reviewPolicy_inputConfirmed": "Entered values are saved as user confirmed."
+  "reviewPolicy_inputConfirmed": "Entered values are saved as user confirmed.",
+  "reviewPolicy_extractionReviewed": "Extraction complete (review recorded)"
 }

@@ -39,7 +39,7 @@
   "resultDetail_contract_attendance_basis": "Giá trị tiêu chuẩn hợp đồng/tham dự",
   "resultDetail_payslip": "giá trị cuống lương",
   "resultDetail_item_sum": "Tổng số mặt hàng chi tiết",
-  "resultDetail_calculation": "tính toán máy chủ",
+  "resultDetail_calculation": "Giá trị tính toán",
   "resultDetail_payslip_sum": "Tổng số ghi trên sao kê",
   "resultDetail_payslip_2": "Giá trị nêu trong tuyên bố",
   "resultDetail_netPay": "Số tiền lương thực tế được liệt kê",
@@ -186,8 +186,8 @@
   "sourceEvidence_empty_page_evidence_confirm": "Không có tọa độ nên không có điểm nhấn. Kiểm tra trang và văn bản hỗ trợ.",
   "viewModels_record_match": "✓ Dữ liệu nhất quán",
   "viewModels_difference_unpaid_wage": "△ Phát hiện sự khác biệt – không xác nhận tiền lương chưa được trả",
-  "viewModels_information_insufficient": "? thiếu thông tin",
-  "viewModels_review_required": "! Cần xem xét",
+  "viewModels_information_insufficient": "thiếu thông tin",
+  "viewModels_review_required": "Cần xem xét",
   "viewModels_calculation_complete": "Tính toán hoàn tất",
   "viewModels_minutes_calculation": "tính toán từng phần",
   "viewModels_calculation": "tính toán",
@@ -247,5 +247,7 @@
   "sourceEvidence_user_edit": "giá trị chỉnh sửa của người dùng",
   "sourceEvidence_document_extractedValue_extraction_user_confirm_status": "Giá trị trích xuất tài liệu (trích xuất AI/OCR tách biệt với trạng thái xác minh người dùng)",
   "sourceEvidence_override": "Xác định lại trường hợp này",
-  "sourceEvidence_sharedDefault": "mặc định được chia sẻ"
+  "sourceEvidence_sharedDefault": "mặc định được chia sẻ",
+  "resultDetail_depositRequirements": "Chỉ tải tài liệu tiền gửi lên chưa hoàn tất đối chiếu. Cần trích xuất giao dịch, liên kết với Case và xác nhận khoản chi cùng phạm vi đối chiếu. Xem lý do và hành động tiếp theo được cung cấp.",
+  "resultDetail_validationRequirements": "Tổng chi tiết cần các khoản chi, khấu trừ và tổng trên phiếu lương. Xem lý do và tài liệu gốc để phân biệt trích xuất thiếu với không thể tính tổng."
 }

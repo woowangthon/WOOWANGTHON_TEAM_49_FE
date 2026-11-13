@@ -55,6 +55,11 @@ const caseUpdatesWireSchema = z.record(z.string().regex(/^[1-9]\d*$/).refine(key
 const mutationMetaWireSchema = updateMetaSchema.extend({caseUpdates:caseUpdatesWireSchema.optional()});
 export const fieldUpdatedSchema = mutationMetaWireSchema.extend({...reviewFieldMetaSchema.partial().shape, fieldId: id, previousValue:valueSchema, value: valueSchema, status: fieldStatusSchema, editedByUser:z.boolean(), hasCaseOverride:z.boolean(), effectiveValueOrigin:z.enum(["SHARED_DEFAULT","CASE_OVERRIDE"]), affectedCaseIds:z.array(id), caseUpdates:caseUpdatesWireSchema});
 export const caseFieldUpdatedSchema = fieldUpdatedSchema.extend({inputVersion:id, recompute:recomputeSchema, hasCaseOverride:z.literal(true), effectiveValueOrigin:z.literal("CASE_OVERRIDE")});
+// Resolution changes Case review metadata without necessarily creating a value override.
+export const caseResolutionUpdatedSchema = fieldUpdatedSchema.extend({inputVersion:id, recompute:recomputeSchema, ...reviewFieldMetaSchema.shape}).refine(
+ value => value.hasCaseOverride === (value.effectiveValueOrigin === "CASE_OVERRIDE"),
+ {message:"Inconsistent override origin",path:["effectiveValueOrigin"]},
+);
 export const sharedFieldUpdatedSchema = fieldUpdatedSchema.extend({hasCaseOverride:z.literal(false), effectiveValueOrigin:z.literal("SHARED_DEFAULT")});
 export const overrideRemovedSchema = mutationMetaWireSchema.extend({fieldId: id, effectiveValueOrigin: z.literal("SHARED_DEFAULT")});
 // HTML API-047 supplement; P0 only declares free JSON here.

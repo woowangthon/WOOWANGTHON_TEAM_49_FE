@@ -28,7 +28,7 @@ const {documentCard, processingErrorMessage, documentError, documentTypeIssue, i
   const mutation = useDocumentAction();
   const [error, setError] = useMessageState("");
   const active = isProcessing(item.processingStatus);
-  const Icon = active ? LoaderCircle : item.processingStatus === "READY" ? CircleCheck : CircleAlert;
+  const Icon = active ? LoaderCircle : item.processingStatus === "READY" || item.reviewStatus === "CONFIRMED" ? CircleCheck : CircleAlert;
   const caseId = context.kind === "case" ? context.id : undefined;
   const link = linkDetails && linkDetails.linkId === dto.linkId && linkDetails.documentId === dto.documentId && linkDetails.caseId === caseId ? linkDetails : undefined;
   const retryCaseId = caseId ?? dto.linkedCaseIds?.[0];

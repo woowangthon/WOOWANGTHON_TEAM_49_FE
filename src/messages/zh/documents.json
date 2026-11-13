@@ -376,5 +376,6 @@
   "reviewPolicy_progressLabel": "必需审核进度",
   "reviewPolicy_resolutionHelp": "此操作不会保存或确认数值，也无法用于分析。",
   "reviewPolicy_legacy": "旧版服务器审核状态。尚未验证新政策。",
-  "reviewPolicy_inputConfirmed": "输入的值将保存为用户已确认。"
+  "reviewPolicy_inputConfirmed": "输入的值将保存为用户已确认。",
+  "reviewPolicy_extractionReviewed": "提取完成 · 已记录审核"
 }

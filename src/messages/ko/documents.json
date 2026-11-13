@@ -376,5 +376,6 @@
   "reviewPolicy_progressLabel": "필수 검토 진행률",
   "reviewPolicy_resolutionHelp": "값을 입력하거나 확인한 것으로 저장하지 않습니다. 분석에는 사용할 수 없습니다.",
   "reviewPolicy_legacy": "구버전 서버의 검토 상태입니다. 새 필수 검토 정책 적용 여부는 확인되지 않았습니다.",
-  "reviewPolicy_inputConfirmed": "직접 입력한 값은 사용자 확인값으로 저장됩니다."
+  "reviewPolicy_inputConfirmed": "직접 입력한 값은 사용자 확인값으로 저장됩니다.",
+  "reviewPolicy_extractionReviewed": "추출 완료 · 검토 반영"
 }
