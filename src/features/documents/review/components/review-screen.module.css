@@ -102,3 +102,8 @@
   .screen .fieldActions .confirmValue, .screen .fieldActions .editValue, .screen .fieldActions .enterValue { flex: 1 0 auto; }
   .sourceButton { flex-basis: auto; justify-content: flex-start; }
 }
+
+.documentOption { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding-block: 8px; border-bottom: 1px solid var(--color-border); text-align: left; }
+.optionName { flex: 1 1 10rem; min-width: 0; overflow-wrap: anywhere; }
+.documentOption [data-review-status-badges], .statusHeader [data-review-status-badges] { margin-left: auto; justify-content: flex-end; align-items: center; }
+.statusHeader { display: flex; justify-content: flex-end; min-width: 0; }

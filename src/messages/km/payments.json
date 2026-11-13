@@ -26,11 +26,8 @@
   "duplicateCandidates_amount_payment_transaction_comparison_automatic_delete": "ប្រៀបធៀបប្រតិបត្តិការដែលបានកត់ត្រាជាមួយនឹងកាលបរិច្ឆេទ ចំនួនទឹកប្រាក់ និងវិធីទូទាត់ដូចគ្នា។ វាមិនបញ្ចូលគ្នា ឬលុបដោយស្វ័យប្រវត្តិទេ។",
   "duplicateCandidates_duplicate_candidate_empty": "មិនមានបេក្ខជនស្ទួនទេ។",
   "duplicateCandidates_transaction": "ប្រតិបត្តិការ #{value1} · {value2} · {value3} បានឈ្នះ · {value4} · {value5} · {value6}",
-  "duplicateCandidates_notProvided": "ហេតុផលសម្រាប់ការសម្រេចចិត្តមិនត្រូវបានផ្តល់ឱ្យ",
   "duplicateCandidates_candidate_detail_confirm": "ពិនិត្យព័ត៌មានលម្អិតបេក្ខជន #{value1}",
   "paymentScreen_payment_transaction": "ការគ្រប់គ្រងប្រតិបត្តិការទូទាត់",
-  "paymentScreen_deposit_cash_payment_transaction": "ប្រតិបត្តិការទូទាត់ប្រាក់បញ្ញើ/សាច់ប្រាក់",
-  "paymentScreen_transaction_workplace_all_allocation_release_delete_case": "ប្រតិបត្តិការដើមត្រូវបានចែករំលែកនៅទូទាំងកន្លែងធ្វើការ។ ការចេញផ្សាយការចែកចាយ និងការលុបប្រតិបត្តិការដើមគឺខុសគ្នា។ វាក៏អាចប៉ះពាល់ដល់ការបង់ប្រាក់ផ្សេងទៀតផងដែរ។",
   "paymentScreen_allocation_all_amount_count_empty": "វាមិនអាចទាបជាងចំនួនពេញលេញដែលបានចែកចាយរួចហើយនោះទេ។",
   "paymentScreen_payment_count": "មធ្យោបាយនៃការបង់ប្រាក់",
   "paymentScreen_bankAccount_deposit": "ការដាក់ប្រាក់ដោយផ្ទាល់",
@@ -49,7 +46,6 @@
   "paymentScreen_all_allocation_remaining": "ការចែកចាយសរុប៖ {value1} បានឈ្នះ នៅសល់ {value2} បានឈ្នះ",
   "paymentScreen_deposit_notProvided": "អ្នកដាក់ប្រាក់មិនត្រូវបានផ្តល់ឱ្យទេ។",
   "paymentScreen_notProvided": "អត្ថបទខ្លីមិនត្រូវបានផ្តល់ឱ្យទេ។",
-  "paymentScreen_transaction_2": "{value1} · {value2} · ពាណិជ្ជកម្ម #{value3}",
   "paymentScreen_detail_edit": "ព័ត៌មានលម្អិត/កែសម្រួល",
   "paymentScreen_transaction_delete": "លុបប្រតិបត្តិការដើម",
   "paymentScreen_case_allocation": "បរិមាណបែងចែកនេះត្រូវបានចែកចាយ",
@@ -77,5 +73,12 @@
   "confirmTransaction": "បញ្ជាក់ប្រតិបត្តិការពិត",
   "linkedCount": "ប្រតិបត្តិការបានភ្ជាប់ {count}",
   "sourceDocument": "ឯកសារប្រភព #{id}",
-  "optionalConnections": "ការភ្ជាប់គឺជាជម្រើស។ ប្រតិបត្តិការប្រើរួមក្នុងកន្លែងធ្វើការ និងបែងចែកតាមសំណុំរឿង។"
+  "optionalConnections": "ការភ្ជាប់គឺជាជម្រើស។ ប្រតិបត្តិការប្រើរួមក្នុងកន្លែងធ្វើការ និងបែងចែកតាមសំណុំរឿង។",
+  "registered": "បានចុះបញ្ជី · ត្រូវការបញ្ជាក់",
+  "confirmed": "បានបញ្ជាក់",
+  "connected": "បានភ្ជាប់",
+  "autoAmount": "ចំនួនប្រាក់ត្រូវភ្ជាប់៖ {amount} KRW",
+  "confirmAndConnect": "បញ្ជាក់ប្រតិបត្តិការ និងភ្ជាប់",
+  "connectionFailed": "ជំហានដែលបានរក្សាទុកនៅដដែល។ ពិនិត្យប្រតិបត្តិការ និងការភ្ជាប់ រួចព្យាយាមម្តងទៀត។",
+  "manageTransactions": "បញ្ចូលដោយដៃ និងគ្រប់គ្រងការបែងចែក"
 }

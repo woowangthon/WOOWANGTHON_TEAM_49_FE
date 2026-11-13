@@ -26,11 +26,8 @@
   "duplicateCandidates_amount_payment_transaction_comparison_automatic_delete": "같은 날짜·금액·지급방법으로 기록된 거래를 비교해 보세요. 자동으로 합치거나 삭제하지 않아요.",
   "duplicateCandidates_duplicate_candidate_empty": "중복 후보가 없습니다.",
   "duplicateCandidates_transaction": "거래 #{value1} · {value2} · {value3}원 · {value4} · {value5} · {value6}",
-  "duplicateCandidates_notProvided": "판정 사유 미제공",
   "duplicateCandidates_candidate_detail_confirm": "후보 상세 확인 #{value1}",
   "paymentScreen_payment_transaction": "지급 거래 관리",
-  "paymentScreen_deposit_cash_payment_transaction": "입금·현금 지급 거래",
-  "paymentScreen_transaction_workplace_all_allocation_release_delete_case": "원거래는 근무지 전체에서 공유됩니다. 배분 해제와 원거래 삭제는 다릅니다. 다른 내역의 지급액에도 영향을 줄 수 있습니다.",
   "paymentScreen_allocation_all_amount_count_empty": "이미 배분된 전체 금액보다 낮출 수 없습니다.",
   "paymentScreen_payment_count": "지급 수단",
   "paymentScreen_bankAccount_deposit": "계좌 입금",
@@ -49,7 +46,6 @@
   "paymentScreen_all_allocation_remaining": "전체 배분 {value1}원 · 잔여 {value2}원",
   "paymentScreen_deposit_notProvided": "입금자 미제공",
   "paymentScreen_notProvided": "적요 미제공",
-  "paymentScreen_transaction_2": "{value1} · {value2} · 거래 #{value3}",
   "paymentScreen_detail_edit": "상세·수정",
   "paymentScreen_transaction_delete": "원거래 삭제",
   "paymentScreen_case_allocation": "이 내역 배분액",
@@ -77,5 +73,12 @@
   "confirmTransaction": "실제 거래 내용 확인",
   "linkedCount": "연결된 지급 거래 {count}건",
   "sourceDocument": "원본 문서 #{id}",
-  "optionalConnections": "입금 연결은 선택 사항입니다. 원거래는 사업장에 공유되며 Case 배분은 별도로 관리합니다."
+  "optionalConnections": "입금 연결은 선택 사항입니다. 원거래는 사업장에 공유되며 Case 배분은 별도로 관리합니다.",
+  "registered": "등록 완료 · 확인 필요",
+  "confirmed": "확인 완료",
+  "connected": "연결 완료",
+  "autoAmount": "연결할 금액: {amount}원",
+  "confirmAndConnect": "거래를 확인하고 연결",
+  "connectionFailed": "저장한 단계는 유지됩니다. 거래와 연결 상태를 확인한 후 다시 시도해 주세요.",
+  "manageTransactions": "직접 입력·배분 관리"
 }

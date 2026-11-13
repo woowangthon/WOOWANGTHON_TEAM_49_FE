@@ -63,7 +63,7 @@ export function useRecomputeStatus(caseId: number) {
     }, enabled: s.enabled && !removal.pending && !removal.removed,
     refetchInterval: q => q.state.error ? false : q.state.data && recomputeActive(q.state.data) ? 2000
       : unobserved(q.state.data) && Date.now() - receipt.data!.receivedAt < 15_000 ? 2000 : false });
-  return { ...query, awaitingScheduledJob: unobserved(query.data) };
+  return { ...query, awaitingScheduledJob: unobserved(query.data), scheduledJobTimedOut: unobserved(query.data) && query.dataUpdatedAt - receipt.data!.receivedAt >= 15_000 };
 }
 export type DocumentAction =
  | { type: "upload"; context: Exclude<DocumentContext, {kind: "library"}>; file: File; documentType: string; signal: AbortSignal }

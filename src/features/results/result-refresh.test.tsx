@@ -45,3 +45,19 @@ it("deduplicates only supplied reasons and routes scope and payment actions",()=
  expect(resultReasonCodes(value)).toHaveLength(3);expect(resultReasonCodes({status:"INSUFFICIENT_INFORMATION"})).toEqual([]);
  render(<ResultReasons caseId={15} data={value}/>);expect(screen.getByRole("link",{name:t("results.reasonItemScope")})).toHaveAttribute("href","/cases/15/review");expect(screen.getByRole("link",{name:t("results.reasonDuplicate")})).toHaveAttribute("href","/cases/15/conditions#deposit-connections");expect(screen.queryByText(/FUTURE_REASON/)).not.toBeInTheDocument();
 });
+
+it("keeps one loading icon while the 202 receipt is awaiting observation",()=>{
+ mocks.status.mockReturnValue({awaitingScheduledJob:true,data:{activeJob:null,results:{}}});
+ render(<ResultRefresh caseId={15} data={data("STALE")}/>);
+ const button=screen.getByRole("button",{name:t("results.recomputeLabel")});
+ expect(button).toBeDisabled();expect(button).toHaveAttribute("title",t("results.recomputeLabel"));
+ expect(screen.getAllByRole("button")).toHaveLength(1);
+ expect(button.querySelector("svg")).toHaveClass("animate-spin");
+});
+it.each(["isError","scheduledJobTimedOut"])("retries observation through the icon without another POST: %s",field=>{
+ const refetch=vi.fn();mocks.status.mockReturnValue({[field]:true,awaitingScheduledJob:true,refetch});
+ render(<ResultRefresh caseId={15} data={data("STALE")}/>);
+ fireEvent.click(screen.getByRole("button",{name:t("results.recomputeLabel")}));
+ expect(refetch).toHaveBeenCalledOnce();expect(mocks.execute).not.toHaveBeenCalled();
+ expect(screen.getAllByRole("button")).toHaveLength(1);expect(screen.getByRole("alert")).toBeInTheDocument();
+});

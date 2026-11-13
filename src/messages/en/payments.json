@@ -26,11 +26,8 @@
   "duplicateCandidates_amount_payment_transaction_comparison_automatic_delete": "Compare transactions recorded with the same date, amount, and payment method. It does not merge or delete automatically.",
   "duplicateCandidates_duplicate_candidate_empty": "There are no duplicate candidates.",
   "duplicateCandidates_transaction": "Transaction #{value1} · {value2} · {value3} won · {value4} · {value5} · {value6}",
-  "duplicateCandidates_notProvided": "Reason for decision not provided",
   "duplicateCandidates_candidate_detail_confirm": "Check candidate details #{value1}",
   "paymentScreen_payment_transaction": "Payment Transaction Management",
-  "paymentScreen_deposit_cash_payment_transaction": "Deposit/cash payment transactions",
-  "paymentScreen_transaction_workplace_all_allocation_release_delete_case": "The original transaction is shared across the workplace. Release of distribution and deletion of original transaction are different. It may also affect other payments.",
   "paymentScreen_allocation_all_amount_count_empty": "It cannot be lowered than the full amount already distributed.",
   "paymentScreen_payment_count": "Means of payment",
   "paymentScreen_bankAccount_deposit": "Direct deposit",
@@ -49,7 +46,6 @@
   "paymentScreen_all_allocation_remaining": "Total distribution {value1} won · Remaining {value2} won",
   "paymentScreen_deposit_notProvided": "Depositor not provided",
   "paymentScreen_notProvided": "Brief not provided",
-  "paymentScreen_transaction_2": "{value1} · {value2} · Transaction #{value3}",
   "paymentScreen_detail_edit": "Details/Edit",
   "paymentScreen_transaction_delete": "Delete original transaction",
   "paymentScreen_case_allocation": "This breakdown amount is distributed",
@@ -77,5 +73,12 @@
   "confirmTransaction": "Confirm actual transaction",
   "linkedCount": "{count} connected transactions",
   "sourceDocument": "Source document #{id}",
-  "optionalConnections": "Payment connections are optional. Transactions are shared within the workplace; allocations belong to each Case."
+  "optionalConnections": "Payment connections are optional. Transactions are shared within the workplace; allocations belong to each Case.",
+  "registered": "Registered ? Needs confirmation",
+  "confirmed": "Confirmed",
+  "connected": "Connected",
+  "autoAmount": "Amount to connect: KRW {amount}",
+  "confirmAndConnect": "Confirm transaction and connect",
+  "connectionFailed": "Saved steps are preserved. Check the transaction and connection, then try again.",
+  "manageTransactions": "Manual entry and allocations"
 }

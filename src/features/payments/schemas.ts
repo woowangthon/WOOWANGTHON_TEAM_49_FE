@@ -27,6 +27,9 @@ export type AllocationCreate = z.infer<typeof allocationCreate>;
 export type AllocationPatch = z.infer<typeof allocationPatch>;
 export const transaction = transactionCreate.omit({source:true,confirmationStatus:true,sender:true,memo:true}).extend({amount:money,sender:z.string().nullable().optional(),memo:z.string().nullable().optional(),transactionId:z.number().int(),source:z.string(),confirmationStatus:z.string(),totalAllocatedAcrossCases:money,remainingUnallocated:money}).passthrough();
 export const allocation = z.object({allocationId:z.number().int(),caseId:z.number().int(),transactionId:z.number().int(),allocatedAmount:money,transactionAmount:money,totalAllocatedAcrossCases:money,remainingUnallocated:money}).passthrough();
+// List and PATCH responses are intentionally smaller than the POST response.
+export const allocationListItem = allocation.pick({allocationId:true,transactionId:true,allocatedAmount:true}).extend({paymentMethod:method.optional()}).passthrough();
+export const allocationUpdated = allocation.pick({allocationId:true,allocatedAmount:true}).passthrough();
 export type Transaction = z.infer<typeof transaction>;
 
 // The backend Envelope is untyped for this route. Fields verified against

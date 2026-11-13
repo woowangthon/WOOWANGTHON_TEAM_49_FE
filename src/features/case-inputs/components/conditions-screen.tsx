@@ -37,7 +37,7 @@ export function ConditionsScreen({ caseId }: { caseId: number }) {
   if (removal.pending || removal.removed) return <p role="status">{translate("caseInputs.conditionsScreen_delete")}</p>;
   if (owner.isPending || query.isPending) return <QueryFeedback pending />;
   if ((owner.isError && !owner.data) || (query.isError && !query.data)) return <QueryFeedback error={owner.error ?? query.error} retry={() => { void owner.refetch(); void query.refetch(); }} />;
-  return <><ConditionsForm key={caseId} caseId={caseId} initial={query.data!} reload={async () => { const result = await query.refetch(); if (result.isError || !result.data) throw result.error; return result.data; }} /><DepositConnections caseId={caseId}/></>;
+  return <><ConditionsForm key={caseId} caseId={caseId} initial={query.data!} reload={async () => { const result = await query.refetch(); if (result.isError || !result.data) throw result.error; return result.data; }} /></>;
 }
 
 export function ConditionsForm({ caseId, initial, reload }: { caseId: number; initial: Conditions; reload: () => Promise<Conditions> }) {
@@ -148,7 +148,7 @@ const {answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation,
   })(event);
 
   return <div className={styles.screen}>
-    <form data-condition-flow noValidate aria-label={translate("caseInputs.conditionsScreen_calculation")} onSubmit={event => {
+    <form id={id} data-condition-flow noValidate aria-label={translate("caseInputs.conditionsScreen_calculation")} onSubmit={event => {
       if (phase !== "review") { event.preventDefault(); if (phase === "questions") void nextQuestion(); return; }
       void save(event);
     }}>
@@ -200,6 +200,8 @@ const {answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation,
       {conflict && <p role="alert" className={styles.error}>{translate("caseInputs.conditionsScreen_current_input_save_stop_answer_question_loaded")}</p>}
       {errors.root?.server && <p role="alert" ref={errorSummary} tabIndex={-1} className={styles.error}>{errors.root.server.message}</p>}
       {notice && <p role="status" className={styles.notice}>{notice}</p>}
+    </form>
+    <DepositConnections caseId={caseId}/>
       <footer className={styles.footer}>
         {hasDraft && <p className={styles.hint}>{translate("caseInputs.conditionsScreen_save_answer_question_navigate")}</p>}
         {phase === "overview" && (questions.length ? <button type="button" className={styles.primary} onClick={() => { setPage(questions[0]); setEditing(false); setPhase("questions"); }}>{translate("caseInputs.conditionsScreen_confirm_2")}<ArrowRight size={19} aria-hidden="true" /></button> : base.conditions.length ? <button type="button" className={styles.primary} onClick={() => setPhase("review")}>{translate("caseInputs.conditionsScreen_answer_review")}</button> : <Link href={`/cases/${caseId}/result`} className={styles.primary}>{translate("caseInputs.conditionsScreen_result_confirm")}</Link>)}
@@ -209,12 +211,11 @@ const {answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation,
           <div className={styles.footerLinks}>{!editing && questions.indexOf(page) > 0 && <button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => setPage(questions[questions.indexOf(page) - 1])}><ArrowLeft size={16} aria-hidden="true" />{translate("common.previous")}</button>}<button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => { setEditing(false); setPhase("review"); }}>{translate("caseInputs.conditionsScreen_answer_review_2")}</button></div>
         </>}
         {phase === "review" && <>
-          {hasDraft ? <><button type="submit" className={styles.primary} disabled={disabled} onClick={() => { saveToResult.current = true; }}>{isSubmitting ? translate("caseInputs.conditionsScreen_save_3") : translate("caseInputs.conditionsScreen_answer_save_result")}<ArrowRight size={19} aria-hidden="true" /></button><button type="submit" className={styles.textButton} disabled={disabled} onClick={() => { saveToResult.current = false; }}>{translate("caseInputs.conditionsScreen_save_4")}</button></> : <Link href={`/cases/${caseId}/result`} className={styles.primary}>{translate("caseInputs.conditionsScreen_result_confirm")}<ArrowRight size={19} aria-hidden="true" /></Link>}
+          {hasDraft ? <><button form={id} type="submit" className={styles.primary} disabled={disabled} onClick={() => { saveToResult.current = true; }}>{isSubmitting ? translate("caseInputs.conditionsScreen_save_3") : translate("caseInputs.conditionsScreen_answer_save_result")}<ArrowRight size={19} aria-hidden="true" /></button><button form={id} type="submit" className={styles.textButton} disabled={disabled} onClick={() => { saveToResult.current = false; }}>{translate("caseInputs.conditionsScreen_save_4")}</button></> : <Link href={`/cases/${caseId}/result`} className={styles.primary}>{translate("caseInputs.conditionsScreen_result_confirm")}<ArrowRight size={19} aria-hidden="true" /></Link>}
           <button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => setPhase("overview")}>{translate("caseInputs.conditionsScreen_all")}</button>
         </>}
         {phase === "saved" && <><Link href={`/cases/${caseId}/result`} className={styles.primary}>{translate("caseInputs.conditionsScreen_result_confirm")}<ArrowRight size={19} aria-hidden="true" /></Link><button type="button" className={styles.textButton} onClick={() => setPhase("review")}>{translate("caseInputs.conditionsScreen_answer_retry")}</button></>}
         {(conflict || errors.root?.server) && <button className={styles.textButton} type="button" disabled={isSubmitting} onClick={() => { if (!hasDraft || window.confirm(translate("caseInputs.conditionsScreen_draft_current_question_answer"))) void refresh().catch(error => setError("root.server", { message: businessErrorMessage(error) })); }}>{translate("caseInputs.conditionsScreen_current_question_answer_retry_load")}</button>}
       </footer>
-    </form>
   </div>;
 }

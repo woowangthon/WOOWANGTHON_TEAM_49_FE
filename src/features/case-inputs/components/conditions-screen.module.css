@@ -65,3 +65,6 @@
   .timeFields input { padding:12px; font-size:20px; }
   .answerList > li { gap:8px; }
 }
+
+.depositStep { min-width: 0; border-bottom: 1px solid var(--color-border); overflow-wrap: anywhere; }
+.depositSummary { display: flex; align-items: center; justify-content: space-between; min-height: 64px; padding-block: 20px; cursor: pointer; }

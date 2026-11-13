@@ -8,7 +8,7 @@ import { resultsSchema, resultsView } from "./schemas";
 import { buildResultScenario } from "@/mocks/shared/result-scenario";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 
-vi.mock("./result-refresh", () => ({ ResultRefresh: () => null }));
+vi.mock("./result-refresh", () => ({ ResultRefresh: () => <button data-refresh-test>Refresh</button> }));
 vi.mock("./result-payments", () => ({ ResultPayments: () => null }));
 const hooks = vi.hoisted(() => ({ results: vi.fn(), status: vi.fn() }));
 vi.mock("./queries", () => ({ useResults: hooks.results }));
@@ -23,6 +23,15 @@ function show(wire: unknown, isError = false) {
 }
 beforeEach(() => { vi.clearAllMocks(); hooks.status.mockReturnValue({ refetch }); });
 afterEach(cleanup);
+
+it("places refresh beside the scope badge inside the same summary row",()=>{
+ const {container}=show(fixture());
+ const action=container.querySelector("[data-refresh-test]")!;
+ const row=action.parentElement!.parentElement!;
+ expect(row.querySelector("span")).toBeTruthy();
+ expect(row.closest("[data-result-summary]")).toBeTruthy();
+ expect(row.className).toContain("scope");
+});
 
 it("removes the upper CTA and management cards while preserving the bottom navigation", () => {
  const { container } = show(fixture());

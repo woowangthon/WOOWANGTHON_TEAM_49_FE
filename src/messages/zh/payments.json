@@ -26,11 +26,8 @@
   "duplicateCandidates_amount_payment_transaction_comparison_automatic_delete": "比较以相同日期、金额和付款方式记录的交易。它不会自动合并或删除。",
   "duplicateCandidates_duplicate_candidate_empty": "没有重复的候选人。",
   "duplicateCandidates_transaction": "交易 #{value1} · {value2} · {value3} 获胜 · {value4} · {value5} · {value6}",
-  "duplicateCandidates_notProvided": "未提供决定原因",
   "duplicateCandidates_candidate_detail_confirm": "检查候选人详细信息#{value1}",
   "paymentScreen_payment_transaction": "支付交易管理",
-  "paymentScreen_deposit_cash_payment_transaction": "存款/现金支付交易",
-  "paymentScreen_transaction_workplace_all_allocation_release_delete_case": "原始交易在整个工作场所共享。分配的释放和原始交易的删除是不同的。它还可能影响其他付款。",
   "paymentScreen_allocation_all_amount_count_empty": "它不能低于已分配的全额。",
   "paymentScreen_payment_count": "付款方式",
   "paymentScreen_bankAccount_deposit": "直接存款",
@@ -49,7 +46,6 @@
   "paymentScreen_all_allocation_remaining": "总分配：{value1}获胜，剩余{value2}获胜",
   "paymentScreen_deposit_notProvided": "未提供存款人",
   "paymentScreen_notProvided": "未提供简介",
-  "paymentScreen_transaction_2": "{value1} · {value2} · 贸易#{value3}",
   "paymentScreen_detail_edit": "详细信息/编辑",
   "paymentScreen_transaction_delete": "删除原有交易",
   "paymentScreen_case_allocation": "该细目金额已分配",
@@ -77,5 +73,12 @@
   "confirmTransaction": "确认实际交易",
   "linkedCount": "已关联 {count} 笔交易",
   "sourceDocument": "来源文档 #{id}",
-  "optionalConnections": "入账关联为可选项。原交易在工作场所共享，分配按案件管理。"
+  "optionalConnections": "入账关联为可选项。原交易在工作场所共享，分配按案件管理。",
+  "registered": "已登记 · 待确认",
+  "confirmed": "已确认",
+  "connected": "已关联",
+  "autoAmount": "关联金额：{amount}韩元",
+  "confirmAndConnect": "确认交易并关联",
+  "connectionFailed": "已保存的步骤会保留。请检查交易和关联状态后重试。",
+  "manageTransactions": "手动输入与分配管理"
 }

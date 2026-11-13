@@ -26,11 +26,8 @@
   "duplicateCandidates_amount_payment_transaction_comparison_automatic_delete": "So sánh các giao dịch được ghi lại có cùng ngày, số tiền và phương thức thanh toán. Nó không hợp nhất hoặc xóa tự động.",
   "duplicateCandidates_duplicate_candidate_empty": "Không có ứng cử viên trùng lặp.",
   "duplicateCandidates_transaction": "Giao dịch #{value1} · {value2} · {value3} thắng · {value4} · {value5} · {value6}",
-  "duplicateCandidates_notProvided": "Lý do đưa ra quyết định không được cung cấp",
   "duplicateCandidates_candidate_detail_confirm": "Kiểm tra thông tin ứng viên #{value1}",
   "paymentScreen_payment_transaction": "Quản lý giao dịch thanh toán",
-  "paymentScreen_deposit_cash_payment_transaction": "Giao dịch gửi tiền/thanh toán tiền mặt",
-  "paymentScreen_transaction_workplace_all_allocation_release_delete_case": "Giao dịch ban đầu được chia sẻ trên khắp nơi làm việc. Việc phát hành phân phối và xóa giao dịch gốc là khác nhau. Nó cũng có thể ảnh hưởng đến các khoản thanh toán khác.",
   "paymentScreen_allocation_all_amount_count_empty": "Nó không thể được hạ thấp hơn toàn bộ số tiền đã được phân phối.",
   "paymentScreen_payment_count": "phương tiện thanh toán",
   "paymentScreen_bankAccount_deposit": "tiền gửi trực tiếp",
@@ -49,7 +46,6 @@
   "paymentScreen_all_allocation_remaining": "Tổng phân phối: {value1} thắng, {value2} còn lại thắng",
   "paymentScreen_deposit_notProvided": "Người gửi tiền không được cung cấp",
   "paymentScreen_notProvided": "Bản tóm tắt không được cung cấp",
-  "paymentScreen_transaction_2": "{value1} · {value2} · Giao dịch #{value3}",
   "paymentScreen_detail_edit": "Chi tiết/Chỉnh sửa",
   "paymentScreen_transaction_delete": "Xóa giao dịch ban đầu",
   "paymentScreen_case_allocation": "Số tiền chia nhỏ này được phân phối",
@@ -77,5 +73,12 @@
   "confirmTransaction": "Xác nhận giao dịch thực tế",
   "linkedCount": "{count} giao dịch được liên kết",
   "sourceDocument": "Tài liệu nguồn #{id}",
-  "optionalConnections": "Liên kết là tùy chọn. Giao dịch dùng chung tại nơi làm việc; phân bổ theo từng hồ sơ."
+  "optionalConnections": "Liên kết là tùy chọn. Giao dịch dùng chung tại nơi làm việc; phân bổ theo từng hồ sơ.",
+  "registered": "Đã đăng ký · Cần xác nhận",
+  "confirmed": "Đã xác nhận",
+  "connected": "Đã liên kết",
+  "autoAmount": "Số tiền liên kết: {amount} KRW",
+  "confirmAndConnect": "Xác nhận giao dịch và liên kết",
+  "connectionFailed": "Các bước đã lưu được giữ lại. Kiểm tra giao dịch và liên kết rồi thử lại.",
+  "manageTransactions": "Nhập thủ công và phân bổ"
 }

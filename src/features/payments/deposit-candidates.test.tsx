@@ -57,3 +57,53 @@ it("renders an empty state without a failure panel, and retries candidate permis
  mount(<DepositCandidates workplaceId={c.workplaceId} onSelect={vi.fn()}/>);fireEvent.click(screen.getByRole("button",{name:t("payments.importCandidates")}));await screen.findByRole("alert");
  server.use(...mock.handlers);fireEvent.click(screen.getByRole("button",{name:t("common.retry")}));await screen.findByText(t("payments.noCandidates"));expect(screen.queryByRole("heading",{name:t("common.queryFeedback_request_processing_failure")})).not.toBeInTheDocument();
 });
+
+it("previews the full remaining balance and confirms only on explicit connection",async()=>{
+ const {mock,api,c,mount}=await setup();mock.depositCandidates.push(candidate);
+ const keys:string[]=[];
+ const observe=({request}:{request:Request})=>{if(request.method==="POST"&&request.url.endsWith("/cases/15/deposits"))keys.push(request.headers.get("Idempotency-Key")??"");};
+ server.events.on("request:start",observe);
+ mount(<DepositCandidates workplaceId={c.workplaceId} caseId={15} inputVersion={c.inputVersion} onSelect={vi.fn()}/>);
+ fireEvent.click(screen.getByRole("button",{name:t("payments.importCandidates")}));
+ fireEvent.click(await screen.findByRole("button",{name:t("payments.registerCandidate")}));
+ const connect=await screen.findByRole("button",{name:t("payments.confirmAndConnect")});
+ expect(screen.getByText(t("payments.autoAmount",{amount:"100"}))).toBeInTheDocument();
+ expect((await api.allocations(15)).total).toBe(0);
+ expect((await api.list(c.workplaceId)).items[0].confirmationStatus).toBe("USER_REPORTED");
+ expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+ await waitFor(()=>expect(connect).toBeEnabled());fireEvent.click(connect);
+ await screen.findByText(t("payments.connected"));
+ expect((await api.allocations(15)).items[0].allocatedAmount).toBe(100);
+ expect((await api.list(c.workplaceId)).items[0].confirmationStatus).toBe("USER_CONFIRMED");
+ expect(keys).toHaveLength(1);expect(keys[0]).toMatch(/^[0-9a-f-]{36}$/);
+ server.events.removeListener("request:start",observe);
+});
+it("uses the remaining server balance and reuses registration after confirmation failure",async()=>{
+ const {mock,api,c,mount}=await setup();mock.depositCandidates.push(candidate);
+ const tx=await api.create(c.workplaceId,{...candidate.registration,amount:100,transactionDate:"2026-11-10"});
+ server.use(http.get(`${testApiUrl}/workplaces/${c.workplaceId}/payment-transactions/${tx.transactionId}`,()=>apiResponse({...tx,totalAllocatedAcrossCases:60,remainingUnallocated:40})),http.patch(`${testApiUrl}/workplaces/${c.workplaceId}/payment-transactions/${tx.transactionId}`,()=>apiResponse({errorCode:"FORBIDDEN"},403)));
+ mount(<DepositCandidates workplaceId={c.workplaceId} caseId={15} inputVersion={c.inputVersion} onSelect={vi.fn()}/>);
+ fireEvent.click(screen.getByRole("button",{name:t("payments.importCandidates")}));
+ fireEvent.click(await screen.findByRole("button",{name:t("payments.reuseCandidate")}));
+ const connect=await screen.findByRole("button",{name:t("payments.confirmAndConnect")});
+ expect(screen.getByText(t("payments.autoAmount",{amount:"40"}))).toBeInTheDocument();await waitFor(()=>expect(connect).toBeEnabled());fireEvent.click(connect);
+ await screen.findByText(t("payments.connectionFailed"));expect((await api.list(c.workplaceId)).total).toBe(1);
+ expect((await api.allocations(15)).total).toBe(0);
+});
+
+it.each([409,422,403,200])("preserves confirmation and retries allocation failure %s without registering again",async status=>{
+ const {mock,api,c,mount}=await setup();mock.depositCandidates.push(candidate);
+ server.use(http.post(`${testApiUrl}/cases/15/deposits`,()=>apiResponse(status===200?{}:{errorCode:status===409?"INPUT_VERSION_CONFLICT":status===403?"FORBIDDEN":"VALIDATION_ERROR"},status)));
+ mount(<DepositCandidates workplaceId={c.workplaceId} caseId={15} inputVersion={c.inputVersion} onSelect={vi.fn()}/>);
+ fireEvent.click(screen.getByRole("button",{name:t("payments.importCandidates")}));
+ fireEvent.click(await screen.findByRole("button",{name:t("payments.registerCandidate")}));
+ const connect=await screen.findByRole("button",{name:t("payments.confirmAndConnect")});
+ await waitFor(()=>expect(connect).toBeEnabled());fireEvent.click(connect);
+ await screen.findByText(t("payments.connectionFailed"));
+ expect((await api.list(c.workplaceId)).items[0].confirmationStatus).toBe("USER_CONFIRMED");
+ expect((await api.allocations(15)).total).toBe(0);
+ server.use(...mock.handlers);await waitFor(()=>expect(connect).toBeEnabled());fireEvent.click(connect);
+ await screen.findByText(t("payments.connected"));
+ expect((await api.list(c.workplaceId)).total).toBe(1);
+ expect((await api.allocations(15)).items[0].allocatedAmount).toBe(100);
+});

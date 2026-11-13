@@ -53,3 +53,8 @@
  .secondaryAmount { display: block; }
  .secondaryAmount dd { margin-top: 5px; }
 }
+
+.scope { justify-content: space-between; flex-wrap: nowrap; }
+.scopeDetails { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; min-width: 0; }
+.scopeDetails > span { font-size: 11px; }
+.refreshAction { flex: 0 0 auto; max-width: 50%; }
