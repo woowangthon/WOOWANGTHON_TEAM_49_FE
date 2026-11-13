@@ -2,7 +2,7 @@ import { decodeWith } from "@/lib/api/schema";
 import type { ApiClient } from "@/lib/api/client";
 import { questionsSchema,reportSchema,reportsSchema,inquirySchema,centersSchema } from "./schemas";
 export const supportApi=(api:ApiClient)=>({
- // Conditional minimal request: P0 names Inquiry but does not define its fields.
+ // P0 Inquiry fields are optional; an empty body uses the default POLITE tone.
  inquiry:(c:number)=>api.requestJson(`/cases/${c}/company-inquiry`,decodeWith(inquirySchema),{method:"POST",body:{},expectedStatus:200}),
  centers:(region:string,category:string,page:number,signal?:AbortSignal)=>{
   const params=new URLSearchParams({page:String(page),size:"20"});

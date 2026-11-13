@@ -393,15 +393,16 @@ it("returns to the current workplace and never requests removed payment cards", 
 
 it("requires an explicit consultation case and links all existing support features", async () => {
   const { mount, user } = await setup();
+  server.use(http.get(`${testApiUrl}/cases/:id/questions`,()=>apiResponse({questions:[]})),http.get(`${testApiUrl}/cases/:id/reports`,()=>apiResponse({items:[],total:0})));
   mount(<ConsultationScreen />);
   await screen.findAllByRole("radio");
-  expect(screen.queryByRole("navigation", { name: "후속 확인" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "선택한 내역의 상담 준비" })).not.toBeInTheDocument();
   await user.click(screen.getAllByRole("radio")[0]);
-  const links = screen.getByRole("navigation", { name: "후속 확인" });
+  const links = within(screen.getByRole("region", {name:"선택한 내역의 상담 준비"})).getByRole("navigation", {name:"상담 준비 메뉴"});
   const selected = Number(screen.getAllByRole("radio")[0].closest("label")!.textContent!.match(/내역 #(\d+)/)![1]);
   expect(within(links).getByRole("link", {name:"확인 질문"})).toHaveAttribute("href", `/cases/${selected}/questions`);
   expect(within(links).getByRole("link", {name:"회사 문의 초안"})).toHaveAttribute("href", `/cases/${selected}/company-inquiry`);
-  expect(within(links).getByRole("link", {name:"보고서"})).toHaveAttribute("href", `/cases/${selected}/reports`);
+  expect(within(links).getByRole("link", {name:"상담 자료 묶음"})).toHaveAttribute("href", `/cases/${selected}/reports`);
 });
 
 it("uses resolved authentication for the shared logo without requests per click", async () => {

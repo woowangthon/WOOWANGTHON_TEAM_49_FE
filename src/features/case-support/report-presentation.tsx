@@ -20,6 +20,8 @@ export function ReportPresentation({ report:r, busy, downloadDisabled, download,
    <p>{translate("caseSupport.reportPresentation_p7")}<time>{r.createdAt}</time></p>
   </header>
   {r.isCurrent===false&&<p role="note">{translate("caseSupport.reportPresentation_input_report_current_result_minutes_confirm")}</p>}
+  {Object.values(r.referencedSnapshots).some(snapshot=>snapshot.snapshotId===null)&&<p role="note">{translate("caseSupport.missingSnapshots")}</p>}
+  {Object.entries(r.referencedSnapshots).some(([,snapshot])=>snapshot.freshness!=='CURRENT')&&<ul>{Object.entries(r.referencedSnapshots).filter(([,snapshot])=>snapshot.freshness!=='CURRENT').map(([name,snapshot])=><li key={name}>{name}: {snapshot.freshness}</li>)}</ul>}
   {r.status==='PROCESSING'&&<p>{translate("caseSupport.reportPresentation_status_automatic_confirm_complete_download_count_new")}</p>}
   {r.status==='FAILED'&&<p role="alert">{translate("caseSupport.reportPresentation_error_information_confirm_request_new_report_previous", { value1: r.errorCode??translate("caseSupport.reportPresentation_error_notProvided") })}</p>}
   {ready?<ul aria-label={translate("caseSupport.reportPresentation_report_download")} className="divide-y divide-border rounded-panel border border-border">

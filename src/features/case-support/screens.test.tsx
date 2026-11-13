@@ -14,6 +14,9 @@ import { QuestionsScreen } from "./screens";
 import { ReportsScreen } from "./screens";
 import { createDevelopmentScenario } from "@/mocks/development";
 import { supportApi } from "./api";
+import { ConsultationScreen } from "./consultation-screen";
+import { SupportLinks } from "./support-navigation";
+vi.mock("next/navigation",()=>({usePathname:()=>"/cases/15/questions"}));
 let services:ReturnType<typeof createAppServices>;
 beforeEach(async()=>{
  services=createAppServices(testApiUrl);await services.auth.login({email:"worker@example.com",password:"password1234"});
@@ -21,6 +24,45 @@ beforeEach(async()=>{
 });
 afterEach(()=>{cleanup();services.session.clear();services.queryClient.clear();vi.unstubAllGlobals();vi.restoreAllMocks()});
 function mount(node:ReactNode){return render(<AppServicesContext value={services}><QueryClientProvider client={services.queryClient}>{node}</QueryClientProvider></AppServicesContext>)}
+it("marks only the current support destination",()=>{
+ mount(<SupportLinks caseId={15}/>);
+ expect(screen.getByRole('link',{name:'확인 질문'})).toHaveAttribute('aria-current','page');
+ expect(document.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+});
+it("selects a question directly from the full list and resets on case changes",async()=>{
+ const questions=[1,2,3].map(id=>({questionId:id,relatedItemId:null,type:'MISSING_CONDITION',question:`질문 ${id}`,reason:`근거 ${id}`}));
+ server.use(http.get(`${testApiUrl}/cases/:id/questions`,()=>apiResponse({questions})));
+ const ui=mount(<QuestionsScreen caseId={15}/>);
+ fireEvent.click(await screen.findByRole('button',{name:'3. 질문 3'}));
+ expect(screen.getByRole('heading',{name:'질문 3'})).toBeVisible();
+ expect(screen.getByRole('button',{name:'3. 질문 3'})).toHaveAttribute('aria-current','true');
+ ui.rerender(<AppServicesContext value={services}><QueryClientProvider client={services.queryClient}><QuestionsScreen caseId={16}/></QueryClientProvider></AppServicesContext>);
+ expect(await screen.findByRole('heading',{name:'질문 1'})).toBeVisible();
+});
+it("loads document pages beyond 100 and enforces the contract selection limit",async()=>{
+ const mock=createDevelopmentScenario(testApiUrl);server.use(...mock.handlers);await services.auth.login({email:'worker@example.com',password:'password1234'});
+ const pages:number[]=[];
+ server.use(http.get(`${testApiUrl}/cases/15/documents`,({request})=>{const page=Number(new URL(request.url).searchParams.get('page'));pages.push(page);return apiResponse({items:Array.from({length:page===1?100:1},(_,i)=>({documentId:(page-1)*100+i+1,workplaceId:3,documentType:'PAYSLIP',fileName:`file-${(page-1)*100+i+1}.pdf`,processingStatus:'READY',linkedCaseIds:[15],reviewStatus:'NOT_STARTED',progress:100,linkId:i+1,uploadedAt:'2026-11-09T00:00:00Z',errorCode:null,aiMetadata:null})),total:101,page,size:100})}));
+ mount(<ReportsScreen caseId={15}/>);
+ await screen.findByRole('checkbox',{name:'file-1.pdf'});
+ expect(pages).toEqual([1,2]);
+ fireEvent.click(screen.getByRole('button',{name:'전체 선택'}));
+ expect(screen.getByText('선택한 원본 100개')).toBeVisible();
+ fireEvent.click(screen.getByRole('button',{name:'선택 해제'}));
+ expect(screen.getByText('선택한 원본 0개')).toBeVisible();
+});
+it("shows real preparation counts for each selected case and a creation link when empty",async()=>{
+ const mock=createDevelopmentScenario(testApiUrl);server.use(...mock.handlers);await services.auth.login({email:'worker@example.com',password:'password1234'});
+ const item={caseId:15,workplaceId:3,workplace:{name:'근무지'},payType:'MONTHLY',periodStart:'2026-10-01',periodEnd:'2026-10-31',scheduledPayDate:null,status:'CREATED',currentStep:'UPLOAD',documentCount:0,latestCalculationId:null,inputVersion:1,attentionRequired:false,attentionCount:0,updatedAt:'2026-11-01T00:00:00Z'};
+ server.use(http.get(`${testApiUrl}/cases`,()=>apiResponse({items:[item,{...item,caseId:16}],total:2,page:1,size:20})),http.get(`${testApiUrl}/cases/:id/questions`,({params})=>apiResponse({questions:params.id==='15'?[{questionId:1,relatedItemId:null,type:'MISSING_CONDITION',question:'확인',reason:'이유'}]:[]})),http.get(`${testApiUrl}/cases/:id/reports`,()=>apiResponse({items:[],total:0})));
+ const ui=mount(<ConsultationScreen/>);const radios=await screen.findAllByRole('radio');
+ expect(screen.queryByRole('region',{name:'선택한 내역의 상담 준비'})).toBeNull();
+ fireEvent.click(radios[0]);expect(await screen.findByText('확인 질문 1개')).toBeVisible();
+ fireEvent.click(radios[1]);expect(await screen.findByText('확인 질문 0개')).toBeVisible();expect(screen.queryByText('확인 질문 1개')).toBeNull();
+ ui.unmount(); services.queryClient.clear();
+ server.use(http.get(`${testApiUrl}/cases`,()=>apiResponse({items:[],total:0,page:1,size:20})));
+ mount(<ConsultationScreen/>);expect(await screen.findByRole('link',{name:'새 급여 내역 시작'})).toHaveAttribute('href','/cases/new');
+});
 it("shows one support question at a time while keeping inquiry and report routes accessible",async()=>{
  server.use(http.get(`${testApiUrl}/cases/15/questions`,()=>apiResponse({questions:[
   {questionId:1,relatedItemId:null,type:"MISSING_CONDITION",question:"첫 번째 확인 질문",reason:"첫 질문의 근거"},
@@ -78,6 +120,16 @@ it("preserves the editor when clipboard access fails",async()=>{
  fireEvent.click(screen.getByRole('button',{name:'문장 복사'}));
  expect(await screen.findByText(/복사하지 못했습니다/)).toBeVisible();
  expect(screen.getByRole('textbox')).toHaveValue('보존할 문의');
+});
+it("explains an empty server draft without replacing the editor",async()=>{
+ server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,()=>apiResponse({text:'',requiresUserReview:true})));
+ mount(<InquiryScreen caseId={15}/>);
+ fireEvent.click(screen.getByRole('button',{name:'서버 초안 생성'}));
+ fireEvent.change(screen.getByRole('textbox'),{target:{value:'작성 중 문장'}});
+ expect(await screen.findByText(/생성된 초안이 비어 있습니다/)).toBeVisible();
+ expect(screen.getByRole('button',{name:'초안 편집하기'})).toBeDisabled();
+ expect(screen.getByRole('textbox')).toHaveValue('작성 중 문장');
+ expect(screen.getByText('사용자 검토 필수')).toBeVisible();
 });
 it("keeps polling the requested report after navigating the history",async()=>{
  const mock=createDevelopmentScenario(testApiUrl);server.use(...mock.handlers);
