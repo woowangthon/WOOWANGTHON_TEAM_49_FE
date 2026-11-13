@@ -202,7 +202,9 @@ export function createOpenApiContract(path: 'contracts/openapi.json' = 'contract
             if (!declared) return {valid: false, errors: ['Undeclared status: ' + status]};
             const type = mediaType(contentType);
             const binary = ['application/pdf', 'image/png', 'image/jpeg', 'application/zip', 'application/octet-stream'].includes(type);
-            const binaryBody = body instanceof Blob || body instanceof ArrayBuffer;
+            // Response.blob() may use a different Blob realm under jsdom.
+            const blobBody = body instanceof Blob || (body !== null && typeof body === 'object' && Object.prototype.toString.call(body) === '[object Blob]' && typeof (body as Blob).arrayBuffer === 'function');
+            const binaryBody = blobBody || body instanceof ArrayBuffer;
             if (!declared.content && status !== 204 && status !== 304 && binary) return {
                 valid: binaryBody, errors: binaryBody ? [] : ['Expected Blob or ArrayBuffer'],
                 coverage: 'transport-only', unverified: ['Response media type/body unspecified by OpenAPI', 'Binary file contents']
@@ -218,7 +220,7 @@ export function createOpenApiContract(path: 'contracts/openapi.json' = 'contract
             if (binary) {
                 const supported = !schema || Object.keys(resolve(schema)).length === 0 || (resolve(schema).type === 'string' && resolve(schema).format === 'binary' && Object.keys(resolve(schema)).every(k => ['type', 'format', 'title', 'description'].includes(k)));
                 const errors = binaryBody ? [] : ['Expected Blob or ArrayBuffer'];
-                if (body instanceof Blob && body.type && mediaType(body.type) !== type) errors.push('Blob Content-Type mismatch');
+                if (blobBody && (body as Blob).type && mediaType((body as Blob).type) !== type) errors.push('Blob Content-Type mismatch');
                 return {valid: !errors.length && supported, errors, coverage: 'transport-only',
                     unsupported: supported ? [] : ['Binary schema constraints'],
                     unverified: ['Binary file contents', ...(!schema ? ['Binary schema absent'] : [])]};
