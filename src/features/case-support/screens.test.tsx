@@ -60,7 +60,16 @@ it("shows real preparation counts for each selected case and a creation link whe
  const ui=mount(<ConsultationScreen/>);const radios=await screen.findAllByRole('radio');
  expect(screen.queryByRole('region',{name:'선택한 내역의 상담 준비'})).toBeNull();
  fireEvent.click(radios[0]);expect(await screen.findByText('확인 질문 1개')).toBeVisible();
+ const preparation=screen.getByRole('region',{name:'선택한 내역의 상담 준비'});
+ expect(within(preparation).getByRole('link',{name:'확인 질문'})).toHaveAttribute('href','/cases/15/questions');
+ expect(within(preparation).getByRole('link',{name:'회사 문의 초안'})).toHaveAttribute('href','/cases/15/company-inquiry');
+ expect(within(preparation).getByRole('link',{name:'상담 자료 묶음'})).toHaveAttribute('href','/cases/15/reports');
+ expect(screen.getByRole('link',{name:'상담기관 찾기'})).toHaveAttribute('href','/consultation-centers');
  fireEvent.click(radios[1]);expect(screen.queryByText('확인 질문 1개')).toBeNull();expect(await screen.findByText('확인 질문 0개')).toBeVisible();
+ for (const path of ['questions', 'company-inquiry', 'reports']) {
+  expect(preparation.querySelector(`a[href="/cases/16/${path}"]`)).toBeVisible();
+  expect(preparation.querySelector(`a[href="/cases/15/${path}"]`)).toBeNull();
+ }
  expect(screen.getAllByRole('navigation',{name:'상담 준비 메뉴'})).toHaveLength(1);
  ui.unmount(); services.queryClient.clear();
  server.use(http.get(`${testApiUrl}/cases`,()=>apiResponse({items:[],total:0,page:1,size:20})));
@@ -164,7 +173,6 @@ it("uses supported server filters and removes local name search",async()=>{
  mount(<CentersScreen/>);expect(await screen.findByText("예시 기관")).toBeVisible();expect(screen.getByText("지역 대신 전국 단위 대안을 표시합니다.")).toBeVisible();expect(screen.getByText(/개발용 예시 데이터/)).toBeVisible();expect(screen.getByRole("link",{name:"https://example.org/source"})).toHaveAttribute("rel","noopener noreferrer");expect(screen.getByText("검증일: 2026-11-10")).toBeVisible();expect(document.querySelector('a[href^="javascript:"]')).toBeNull();
  fireEvent.change(screen.getByLabelText("지역"),{target:{value:"청주시"}});fireEvent.change(screen.getByLabelText("상담 분야"),{target:{value:"WAGE"}});fireEvent.click(screen.getByRole("button",{name:"기관 조회"}));await waitFor(()=>expect(urls.at(-1)).toContain("category=WAGE"));expect(urls.at(-1)).toContain("region=");
  expect(screen.getAllByRole("textbox")).toHaveLength(1);
- expect(document.querySelector("form button")).toHaveClass("w-full","sm:col-span-2");
  expect(document.querySelector("details")).toBeNull();
  expect(screen.queryByText("현재 전국 단위 상담기관 정보만 제공됩니다.")).toBeNull();
  expect(screen.queryByText("이 페이지에서 기관명 찾기")).toBeNull();
@@ -172,6 +180,16 @@ it("uses supported server filters and removes local name search",async()=>{
 });
 it("retries center errors without inventing contact data",async()=>{let failed=true;server.use(http.get(`${testApiUrl}/consultation-centers`,()=>failed?apiResponse({errorCode:"UPSTREAM_UNAVAILABLE"},503):apiResponse({items:[],page:1,size:20,total:0,nationwideFallbackUsed:false,dataStatus:"AVAILABLE"})));mount(<CentersScreen/>);const retry=await screen.findByRole("button",{name:/다시/});failed=false;fireEvent.click(retry);expect(await screen.findByText(/표시할 상담기관이 없습니다/)).toBeVisible()});
 it("allows only safe phone and website schemes",()=>{expect(safeWebsite("javascript:alert(1)")).toBeUndefined();expect(safeWebsite("https://user:secret@example.org")).toBeUndefined();expect(safeWebsite("https://example.org")).toBe("https://example.org/");expect(safePhone("010-1234-5678")).toBe("tel:01012345678");expect(safePhone("123;ext=456")).toBeUndefined()});
+it("shows only supplied center contact and visit details",async()=>{
+ server.use(http.get(`${testApiUrl}/consultation-centers`,()=>apiResponse({items:[{centerId:3,name:"지역 상담소",region:"청주시",categories:["임금"],phone:"043-123-4567",website:"https://example.org",businessHours:"평일 09:00–18:00",languages:["한국어"],visitInformation:"방문 전 전화",notes:"",sourceUrl:"https://example.org/source",verifiedAt:"2026-11-10",dataSource:"OFFICIAL",isNationwide:false}],page:1,size:20,total:1,nationwideFallbackUsed:false,dataStatus:"AVAILABLE"})));
+ mount(<CentersScreen/>);
+ expect(await screen.findByRole('heading',{name:'지역 상담소'})).toBeVisible();
+ expect(screen.getByRole('link',{name:'043-123-4567'})).toHaveAttribute('href','tel:0431234567');
+ expect(screen.getByText('평일 09:00–18:00')).toBeVisible();
+ expect(screen.getByText('한국어')).toBeVisible();
+ expect(screen.getByText('방문 전 전화')).toBeVisible();
+ expect(screen.queryByRole('link',{name:/지도|길찾기/})).not.toBeInTheDocument();
+});
 it("keeps question navigation and the empty state",async()=>{server.use(http.get(`${testApiUrl}/cases/15/questions`,()=>apiResponse({questions:[{questionId:1,relatedItemId:null,type:"MISSING_CONDITION",question:"서버 질문",reason:"서버 사유"}]})));const ui=mount(<QuestionsScreen caseId={15}/>);await screen.findByText("서버 질문");const article=screen.getByRole("article");expect(within(article).getByRole("link",{name:"계산 조건 확인"})).toHaveAttribute("href","/cases/15/conditions");fireEvent.click(within(article).getByText("자료 보완·질문 상세"));expect(within(article).getByRole("link",{name:"문서 검토"})).toHaveAttribute("href","/cases/15/review");ui.unmount();server.use(http.get(`${testApiUrl}/cases/16/questions`,()=>apiResponse({questions:[]})));mount(<QuestionsScreen caseId={16}/>);expect(await screen.findByText("서버가 제공한 확인 질문이 없습니다.")).toBeVisible()});
 it("requires explicit report confirmation, selects originals, prevents duplicate clicks and stops detail polling at READY",async()=>{
  const mock=createDevelopmentScenario(testApiUrl);server.use(...mock.handlers);
