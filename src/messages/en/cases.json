@@ -20,7 +20,6 @@
   "caseContext_result": "There are results",
   "caseContext_current_progress_step": "Current progress",
   "caseContext_progress": "Before proceeding",
-  "caseContext_complete_confirm": "Unconfirmed whether completed",
   "caseContext_current_wageCase": "Current Salary History",
   "caseCreateScreen_new_wageCase": "New salary history",
   "caseCreateScreen_workplace_select_wage_wagePeriod_input": "Please select your work location and enter the actual salary calculation period.",

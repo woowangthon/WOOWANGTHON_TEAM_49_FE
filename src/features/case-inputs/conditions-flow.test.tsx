@@ -39,6 +39,21 @@ async function setup() {
 }
 
 type User = ReturnType<typeof userEvent.setup>;
+it("keeps the review notice after deposits and divider, before the result action, without nested forms", async () => {
+  const { mount, only, user } = await setup();
+  const initial = only("base_scope_confirmed");
+  initial.conditions = initial.conditions.map(c => ({...c, status: "ANSWERED", value: true}));
+  const ui = mount(<ConditionsForm caseId={15} initial={initial} reload={async () => initial} />);
+  await user.click(screen.getByRole("button", {name: "답변 검토하기"}));
+  const note = screen.getByText(/모든 질문에 답해도/);
+  const divider = ui.container.querySelector("hr")!;
+  const deposit = await screen.findByText("실제 입금된 금액을 입력해주세요.");
+  const result = screen.getByRole("link", {name: "결과 확인"});
+  expect(deposit.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(divider.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(note.compareDocumentPosition(result) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(ui.container.querySelector("form form")).toBeNull();
+});
 const begin = async (user: User) => {
   await waitFor(() => expect(screen.queryByRole("button", { name: "조건 확인하기" }) ?? screen.queryAllByRole("radio")[0] ?? screen.queryByRole("textbox", { name: "약정 근로시간 (시간)" })).not.toBeNull());
   const start = screen.queryByRole("button", { name: "조건 확인하기" });

@@ -1,0 +1,23 @@
+.page { --blue: #2468eb; --ink: #191f28; --muted: #596779; display: grid; gap: 28px; width: 100%; max-width: 1080px; min-width: 0; margin-inline: auto; padding-bottom: 24px; color: var(--ink); container-type: inline-size; overflow-wrap: anywhere; }
+.page > header { padding: 26px 8px 8px; border: 0; background: transparent; box-shadow: none; }
+.page > header h1 { margin-top: 20px; font-size: clamp(2.2rem, 5.5cqi, 3.4rem); font-weight: 800; letter-spacing: -.065em; line-height: 1.27; word-break: keep-all; }
+.page > header > div > p:first-child { width: fit-content; padding: 7px 12px; border-radius: 10px; color: var(--blue); background: #e8f0ff; font-size: .82rem; font-weight: 750; }
+.page > header > div > p:last-child { max-width: 550px; margin-top: 18px; color: var(--muted); font-size: .94rem; line-height: 1.75; }
+.page :where(section, article, fieldset, nav, li) { min-width: 0; }
+.page :where(section, article, fieldset)[class*="rounded-card"], .page [data-case-report-row], .questionList { padding: 28px; border: 1px solid #e5eaf1; border-radius: 25px; background: white; box-shadow: 0 3px 20px rgb(29 50 80 / 4%); }
+.page h2, .page legend { color: var(--ink); font-size: 1.25rem; font-weight: 800; letter-spacing: -.035em; }
+.page [data-case-notice] { padding: 20px 24px; border: 0; border-radius: 18px; color: #4e6380; background: #e8f1ff; font-size: .88rem; line-height: 1.75; }
+.page :where(button, a)[class*="inline-flex"] { max-width: 100%; min-height: 48px; border-radius: 14px; white-space: normal; text-align: center; }
+.page button:disabled { cursor: not-allowed; opacity: .55; }
+.page :global(.ui-button-primary) { color: white; background: var(--blue); border-color: var(--blue); }
+.page :global(.ui-button-primary):hover:not(:disabled) { background: #1758d1; }
+.page :global(.ui-button-secondary):hover:not(:disabled) { color: var(--blue); background: #edf3ff; }
+.page :where(button, a, textarea, input, summary):focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.page textarea { min-height: 260px; border-radius: 15px; background: #f8faff; line-height: 1.8; }
+.page summary { cursor: pointer; padding-block: 8px; }
+.page [data-case-question] h2 { font-size: clamp(1.3rem, 3cqi, 1.75rem); line-height: 1.5; }
+.page [data-case-report-row] { gap: 20px; }
+.page [data-case-report-row] > div { min-width: 0; }
+.badge { display: inline-flex; width: fit-content; padding: 6px 12px; border-radius: 10px; color: #2468eb; background: #e8f0ff; font-size: .82rem; font-weight: 750; }
+.badge[data-status="FAILED"] { color: #a33232; background: #fff0f0; }
+@container (max-width: 35rem) { .page > header { padding: 10px 2px 0; } .page > header h1 { font-size: clamp(1.95rem, 8.5cqi, 2.7rem); } .page :where(section, article, fieldset)[class*="rounded-card"], .page [data-case-report-row], .questionList { padding: 20px; } .page > header > div:nth-child(2) { display: none; } }

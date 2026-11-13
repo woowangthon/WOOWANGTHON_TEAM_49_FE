@@ -14,6 +14,7 @@ import { secondaryButton } from "@/components/ui/styles";
 import { useCase, useCaseRemoval } from "../queries";
 
 import { caseTaskHref } from "./case-cards";
+import { useCaseProgress } from "../use-case-progress";
 import { CaseForm } from "./case-form";
 import { DeleteCase } from "./delete-case";
 import styles from "./case-detail.module.css";
@@ -25,12 +26,13 @@ const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
 
   const query = useCase(id);
   const removal = useCaseRemoval(id);
+  const progress = useCaseProgress(query.data);
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   if (removal.removed) return <div className={styles.screen}><section className={styles.panel}><h1 className="text-title font-bold">{translate("cases.caseDetailScreen_delete_wageCase")}</h1><Link href="/cases" className={`mt-4 ${secondaryButton}`}>{translate("cases.caseDetailScreen_wage_confirm_case_navigate")}</Link></section></div>;
   if (query.isPending) return <div className={`${styles.screen} ${styles.feedback}`}><QueryFeedback pending /></div>;
   if (query.isError) return <div className={`${styles.screen} ${styles.feedback}`}><QueryFeedback error={query.error} retry={() => { void query.refetch(); }} /></div>;
-  const dto = query.data;
+  const dto = {...query.data, currentStep: progress?.next ?? query.data.currentStep};
   const item = caseCard(dto);
 
   return (

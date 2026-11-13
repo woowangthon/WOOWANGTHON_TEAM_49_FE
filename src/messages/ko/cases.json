@@ -20,7 +20,6 @@
   "caseContext_result": "결과 있음",
   "caseContext_current_progress_step": "현재 진행 단계",
   "caseContext_progress": "진행 전",
-  "caseContext_complete_confirm": "완료 여부 미확인",
   "caseContext_current_wageCase": "현재 급여 내역",
   "caseCreateScreen_new_wageCase": "새 급여 내역",
   "caseCreateScreen_workplace_select_wage_wagePeriod_input": "근무지를 선택하고 실제 급여 산정기간을 입력해 주세요.",

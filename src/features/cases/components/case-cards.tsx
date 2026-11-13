@@ -5,6 +5,8 @@ import {createLocalizedFeaturesCasesViewModels} from '../view-models';
 import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { useCaseProgress } from "../use-case-progress";
 import { Building2, CalendarDays, ChevronRight, CircleAlert } from "lucide-react";
 import type { CaseListDto } from "../schemas";
 
@@ -21,7 +23,7 @@ const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
 
  const {translate} = useTranslation();
 
-  if (variant === "workplace") return <ul className={workplaceStyles.caseRows}>{items.map(dto => {
+  if (variant === "workplace") return <ul className={workplaceStyles.caseRows}>{items.map(source => <ProgressCase key={source.caseId} dto={source}>{dto => {
     const card = caseCard(dto);
     return <li key={card.id} className={workplaceStyles.caseCard}>
       <div className={workplaceStyles.caseTop}><span className={workplaceStyles.calendar} aria-hidden="true"><CalendarDays size={23} /></span><span className={workplaceStyles.badge}>{card.status}</span></div>
@@ -30,11 +32,11 @@ const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
       <p className={workplaceStyles.caseAttention} data-attention={dto.attentionRequired}>{card.attention}</p>
       <div className={workplaceStyles.caseBottom}><p><span>{translate("cases.caseCards_current")}</span><strong>{card.step}</strong></p><Link href={`/cases/${card.id}`} aria-label={translate("cases.caseCards_case_start", { value1: card.id })}>{translate("cases.caseCards_start")}<ChevronRight size={15} aria-hidden="true" /></Link></div>
     </li>;
-  })}</ul>;
+  }}</ProgressCase>)}</ul>;
   if (variant === "explorer") {
     return (
       <ul className={styles.rows}>
-        {items.map(dto => {
+        {items.map(source => <ProgressCase key={source.caseId} dto={source}>{dto => {
           const card = caseCard(dto);
           return (
             <li key={card.id} className={styles.row} data-selected={selection ? selection.selectedId === card.id : undefined}>
@@ -61,19 +63,24 @@ const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
               </div>}
             </li>
           );
-        })}
+        }}</ProgressCase>)}
       </ul>
     );
   }
 
   return <ul className={`case-rows ${compact ? "case-rows-compact" : ""}`}>
-    {items.map(dto => {
+    {items.map(source => <ProgressCase key={source.caseId} dto={source}>{dto => {
       const card = caseCard(dto);
       return <li key={card.id} className="case-row">
         <div className="min-w-0"><h3 className="font-bold"><Link href={`/cases/${card.id}`} className="inline-flex min-h-11 items-center underline underline-offset-4">{card.workplaceName}</Link></h3><p className="text-caption text-muted">{card.period}</p><p className="text-caption text-muted">{card.payType}</p></div>
         <div className="min-w-0 space-y-2"><span data-case-status={dto.status} className="inline-block rounded-control bg-neutral-soft px-3 py-1 text-caption font-bold">{card.status}</span><p data-attention={dto.attentionRequired} className="text-caption text-muted">{card.attention}</p></div>
         <div className="min-w-0"><p className="text-caption text-muted">{translate("cases.caseCards_current_2", { value1: card.step })}</p><Link href={`/cases/${card.id}`} className="inline-flex min-h-11 items-center font-bold underline underline-offset-4">{translate("cases.caseCards_start_2")}</Link></div>
       </li>;
-    })}
+    }}</ProgressCase>)}
   </ul>;
+}
+
+function ProgressCase({dto, children}: {dto: CaseListDto; children: (dto: CaseListDto) => ReactNode}) {
+  const progress = useCaseProgress(dto);
+  return children({...dto, currentStep: progress?.next ?? dto.currentStep});
 }

@@ -16,7 +16,7 @@ export const inputKeys = {
 };
 function useInputScope(c: number) {
   const s = useSessionScope(); const removal = useCaseRemoval(c);
-  return { ...s, enabled: s.enabled && !removal.pending && !removal.removed };
+  return { ...s, enabled: s.enabled && Number.isSafeInteger(c) && c > 0 && !removal.pending && !removal.removed };
 }
 export function useManuals(c: number, page: number) {
   const s = useInputScope(c);

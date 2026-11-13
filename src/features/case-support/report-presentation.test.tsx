@@ -15,5 +15,5 @@ it('separates old READY files, preserves null snapshots and delegates downloads'
 });
 it.each(['PROCESSING','FAILED'] as const)('does not expose file actions for %s',status=>{
  render(<ReportPresentation report={{...report,status,errorCode:status==='FAILED'?'MOCK_REPORT_FAILED':null}} busy={false} downloadDisabled={false} download={vi.fn()} feedback={null}/>);
- expect(screen.queryByRole('list')).toBeNull();expect(screen.queryByRole('button')).toBeNull();expect(screen.getByRole('status')).toHaveTextContent(status);if(status==='FAILED')expect(screen.getByRole('alert')).toHaveTextContent('MOCK_REPORT_FAILED');
+ expect(screen.queryByRole('list')).toBeNull();expect(screen.queryByRole('button')).toBeNull();expect(screen.getByRole('status')).toHaveTextContent(status==='FAILED'?'보고서 생성 실패':'보고서 생성 중');expect(screen.getByRole('status')).not.toHaveTextContent(status);if(status==='FAILED')expect(screen.getByRole('alert')).not.toHaveTextContent('MOCK_REPORT_FAILED');
 });

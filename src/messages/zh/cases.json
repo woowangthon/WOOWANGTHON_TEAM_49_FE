@@ -20,7 +20,6 @@
   "caseContext_result": "有结果了",
   "caseContext_current_progress_step": "目前进展",
   "caseContext_progress": "继续之前",
-  "caseContext_complete_confirm": "未确认是否完成",
   "caseContext_current_wageCase": "目前的薪资历史",
   "caseCreateScreen_new_wageCase": "新薪资历史",
   "caseCreateScreen_workplace_select_wage_wagePeriod_input": "请选择您的工作地点并输入实际工资计算期间。",

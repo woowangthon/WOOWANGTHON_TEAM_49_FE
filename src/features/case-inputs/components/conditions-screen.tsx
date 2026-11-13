@@ -168,7 +168,6 @@ const {answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation,
           {editableCondition(condition) && <button type="button" className={styles.textButton} disabled={disabled} aria-label={translate("caseInputs.conditionsScreen_edit", { value1: conditionTitle(condition) })} onClick={() => openQuestion(index)}>{translate("common.edit")}</button>}
         </li>)}</ul>
         {base.conditions.length === 0 && <p className={styles.note}>{translate("caseInputs.conditionsScreen_add_question_empty_calculation_required_record_insufficient")}</p>}
-        {phase === "review" && <p className={styles.note}>{translate("caseInputs.conditionsScreen_all_question_calculation_count_save_check_status")}</p>}
       </>}
 
       {base.conditions.map((condition, index) => {
@@ -202,6 +201,7 @@ const {answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation,
       {notice && <p role="status" className={styles.notice}>{notice}</p>}
     </form>
     <DepositConnections caseId={caseId}/>
+    <hr className={styles.divider} />
       <footer className={styles.footer}>
         {hasDraft && <p className={styles.hint}>{translate("caseInputs.conditionsScreen_save_answer_question_navigate")}</p>}
         {phase === "overview" && (questions.length ? <button type="button" className={styles.primary} onClick={() => { setPage(questions[0]); setEditing(false); setPhase("questions"); }}>{translate("caseInputs.conditionsScreen_confirm_2")}<ArrowRight size={19} aria-hidden="true" /></button> : base.conditions.length ? <button type="button" className={styles.primary} onClick={() => setPhase("review")}>{translate("caseInputs.conditionsScreen_answer_review")}</button> : <Link href={`/cases/${caseId}/result`} className={styles.primary}>{translate("caseInputs.conditionsScreen_result_confirm")}</Link>)}
@@ -211,6 +211,7 @@ const {answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation,
           <div className={styles.footerLinks}>{!editing && questions.indexOf(page) > 0 && <button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => setPage(questions[questions.indexOf(page) - 1])}><ArrowLeft size={16} aria-hidden="true" />{translate("common.previous")}</button>}<button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => { setEditing(false); setPhase("review"); }}>{translate("caseInputs.conditionsScreen_answer_review_2")}</button></div>
         </>}
         {phase === "review" && <>
+        {phase === "review" && <p className={styles.note}>{translate("caseInputs.conditionsScreen_all_question_calculation_count_save_check_status")}</p>}
           {hasDraft ? <><button form={id} type="submit" className={styles.primary} disabled={disabled} onClick={() => { saveToResult.current = true; }}>{isSubmitting ? translate("caseInputs.conditionsScreen_save_3") : translate("caseInputs.conditionsScreen_answer_save_result")}<ArrowRight size={19} aria-hidden="true" /></button><button form={id} type="submit" className={styles.textButton} disabled={disabled} onClick={() => { saveToResult.current = false; }}>{translate("caseInputs.conditionsScreen_save_4")}</button></> : <Link href={`/cases/${caseId}/result`} className={styles.primary}>{translate("caseInputs.conditionsScreen_result_confirm")}<ArrowRight size={19} aria-hidden="true" /></Link>}
           <button type="button" className={styles.textButton} disabled={isSubmitting} onClick={() => setPhase("overview")}>{translate("caseInputs.conditionsScreen_all")}</button>
         </>}

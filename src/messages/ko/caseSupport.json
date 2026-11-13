@@ -108,7 +108,6 @@
   "screens_record_question_detail": "자료 보완·질문 상세",
   "screens_manual_record": "수기 자료",
   "screens_document_review": "문서 검토",
-  "screens_item": "{value1} · 관련 항목: {value2}",
   "screens_consultation_record": "상담 자료 묶음",
   "screens_selected_original_retry_confirm": "선택한 원본을 다시 확인하세요.",
   "screens_consultation_record_2": "상담에 가져갈 자료",
