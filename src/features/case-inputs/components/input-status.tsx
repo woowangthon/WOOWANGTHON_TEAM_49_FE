@@ -1,5 +1,10 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
+
+import {createLocalizedFeaturesCaseInputsSchemas} from '../schemas';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { jobText } from "@/features/documents/api";
 import Link from "next/link";
@@ -9,12 +14,15 @@ import { useRecomputeStatus } from "@/features/documents/queries";
 import { recomputeActive, recomputeSchema } from "@/features/documents/api";
 import type { z } from "zod";
 import { useReadiness } from "../queries";
-import { checkTypes, type Readiness } from "../schemas";
+import {type Readiness} from "../schemas";
 
-export const checkLabels = { WAGE_CALCULATION: translate("caseInputs.inputStatus_wage_calculation"), CONTRACT_ATTENDANCE_COMPARISON: translate("caseInputs.inputStatus_contract_attendance_comparison"), PAYSLIP_VALIDATION: translate("caseInputs.inputStatus_payslip_sum_check"), DEPOSIT_COMPARISON: translate("caseInputs.inputStatus_deposit_comparison") };
-const resultLabels: Record<string, string> = { calculation: translate("caseInputs.inputStatus_wage_calculation"), comparison: translate("caseInputs.inputStatus_contract_attendance_comparison"), payslipValidation: translate("caseInputs.inputStatus_payslip_sum_check"), depositComparison: translate("caseInputs.inputStatus_deposit_comparison") };
-const missingLabels: Record<string, string> = { contract_wage: translate("caseInputs.inputStatus_contract_wage"), regular_minutes: translate("caseInputs.inputStatus_work_time"), contract: translate("caseInputs.inputStatus_contract_record"), attendance: translate("caseInputs.inputStatus_attendance_record"), comparison_basis_confirmation: translate("caseInputs.inputStatus_comparison_basis_confirm"), confirmed_payslip_totals_and_items: translate("caseInputs.inputStatus_payslip_total_amount"), payslip_net_pay: translate("caseInputs.inputStatus_payslip_netPay"), allocated_payment: translate("caseInputs.inputStatus_case_allocation_deposit"), verified_statutory_rules: translate("caseInputs.inputStatus_allowance"), overtime_hours: translate("caseInputs.inputStatus_work_time_2") };
 export function ReadinessView({ data, caseId, compact = false }: { data: Readiness; caseId: number; compact?: boolean }) {
+const {checkLabels, missingLabels} = useLocalized(createPresentation);
+
+const {checkTypes} = useLocalized(createLocalizedFeaturesCaseInputsSchemas);
+
+ const {translate} = useTranslation();
+
   return <section data-ui="caseInputs-inputStatus_ariaLabel_section" aria-label={translate("caseInputs.inputStatus_run")} className="min-w-0 space-y-4"><h2 className="text-title font-bold">{translate("caseInputs.inputStatus_run")}</h2><p>{translate("caseInputs.inputStatus_input_version_run_result_match_check_complete", { value1: data.inputVersion })}</p>
     <div className={`grid min-w-0 gap-4 ${compact ? "grid-cols-1" : "sm:grid-cols-2"}`}>{checkTypes.map(type => {
       const check = data.checks.find(c => c.checkType === type);
@@ -22,6 +30,10 @@ export function ReadinessView({ data, caseId, compact = false }: { data: Readine
     })}</div><p className="text-body text-muted">{translate("caseInputs.inputStatus_result_comparison_sum_check_confirm_count_wage")}</p></section>;
 }
 export function RecomputeView({ data }: { data: z.infer<typeof recomputeSchema> }) {
+const {resultLabels} = useLocalized(createPresentation);
+
+ const {translate} = useTranslation();
+
   const active = recomputeActive(data);
   const job = data.activeJob ?? data.latestJob;
   return <section aria-label={translate("caseInputs.inputStatus_automatic_update_status")} className={`${cardStyle} min-w-0 break-words space-y-3`}><h2 className="text-title font-bold">{translate("caseInputs.inputStatus_automatic_update_status")}</h2><p role="status">{active ? translate("caseInputs.inputStatus_automatic_update") : translate("caseInputs.inputStatus_current_progress_none")}{job ? ` · ${job.status}` : ""}</p>{data.currentInputVersion !== undefined && <p>{translate("caseInputs.inputStatus_current_input_version", { value1: data.currentInputVersion })}</p>}
@@ -32,7 +44,16 @@ export function RecomputeView({ data }: { data: z.infer<typeof recomputeSchema> 
     <p className="text-muted">{translate("caseInputs.inputStatus_current_response_all_calculation_complete_match")}</p></section>;
 }
 export function InputStatus({ caseId, compact = false }: { caseId: number; compact?: boolean }) {
+ const {translate} = useTranslation();
+
   const ready = useReadiness(caseId); const recompute = useRecomputeStatus(caseId);
   return <div className="min-w-0 space-y-6">{recompute.awaitingScheduledJob && <p role="status">{translate("caseInputs.inputStatus_save_response_automatic_update_count_confirm_status")}</p>}{recompute.isPending ? <QueryFeedback pending /> : recompute.isError ? <QueryFeedback error={recompute.error} retry={() => { void recompute.refetch(); }} /> : <><RecomputeView data={recompute.data} /><button className={secondaryButton} disabled={recompute.isFetching} onClick={() => { void recompute.refetch(); }}>{translate("caseInputs.inputStatus_update_status_retry")}</button></>}
     {ready.isPending ? <QueryFeedback pending /> : ready.isError ? <QueryFeedback error={ready.error} retry={() => { void ready.refetch(); }} /> : <ReadinessView data={ready.data} caseId={caseId} compact={compact} />}</div>;
+}
+
+function createPresentation({translate}: Translation) {
+const checkLabels = { WAGE_CALCULATION: translate("caseInputs.inputStatus_wage_calculation"), CONTRACT_ATTENDANCE_COMPARISON: translate("caseInputs.inputStatus_contract_attendance_comparison"), PAYSLIP_VALIDATION: translate("caseInputs.inputStatus_payslip_sum_check"), DEPOSIT_COMPARISON: translate("caseInputs.inputStatus_deposit_comparison") };
+const resultLabels: Record<string, string> = { calculation: translate("caseInputs.inputStatus_wage_calculation"), comparison: translate("caseInputs.inputStatus_contract_attendance_comparison"), payslipValidation: translate("caseInputs.inputStatus_payslip_sum_check"), depositComparison: translate("caseInputs.inputStatus_deposit_comparison") };
+const missingLabels: Record<string, string> = { contract_wage: translate("caseInputs.inputStatus_contract_wage"), regular_minutes: translate("caseInputs.inputStatus_work_time"), contract: translate("caseInputs.inputStatus_contract_record"), attendance: translate("caseInputs.inputStatus_attendance_record"), comparison_basis_confirmation: translate("caseInputs.inputStatus_comparison_basis_confirm"), confirmed_payslip_totals_and_items: translate("caseInputs.inputStatus_payslip_total_amount"), payslip_net_pay: translate("caseInputs.inputStatus_payslip_netPay"), allocated_payment: translate("caseInputs.inputStatus_case_allocation_deposit"), verified_statutory_rules: translate("caseInputs.inputStatus_allowance"), overtime_hours: translate("caseInputs.inputStatus_work_time_2") };
+return {checkLabels, resultLabels, missingLabels};
 }

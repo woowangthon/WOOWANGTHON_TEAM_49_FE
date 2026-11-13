@@ -1,8 +1,11 @@
+"use client";
+import { useTranslation } from '@/i18n/use-translation';
 
-import { translate } from "@/i18n/translate";
 import { secondaryButton } from "./styles";
 
 export function Pagination({ page, size, total, onPage, busy = false }: { page: number; size: number; total: number; onPage: (page: number) => void; busy?: boolean }) {
+ const {translate} = useTranslation();
+
   const last = Math.max(1, Math.ceil(total / size));
   return (
     <nav aria-label={translate("common.pagination_page_navigate")} className="mt-6 flex flex-wrap items-center justify-between gap-3">

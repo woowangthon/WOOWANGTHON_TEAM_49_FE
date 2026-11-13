@@ -1,21 +1,28 @@
 "use client";
-import { translate, translateContent } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+import {message as describeMessage} from '@/i18n/message';
 
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
+import {createLocalizedFeaturesCaseInputsConditionPresentation} from '../condition-presentation';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import {Controller, useWatch} from 'react-hook-form';
+import {useForm} from '@/i18n/use-localized-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, ArrowRight, Check, FileText } from "lucide-react";
 import { useCase, useCaseRemoval } from "@/features/cases/queries";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { ApiError } from "@/lib/api/error";
-import { businessErrorMessage } from "@/lib/api/form-errors";
+
 import { useConditions, useInputAction } from "../queries";
 import { type Condition, type Conditions } from "../schemas";
-import { answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation, conditionTitle, conditionValues, editableCondition } from "../condition-presentation";
+import {editableCondition} from "../condition-presentation";
 import { ConditionDuration } from "./condition-duration";
 import styles from "./conditions-screen.module.css";
 
@@ -23,6 +30,8 @@ type Phase = "overview" | "questions" | "review" | "saved";
 const needsAnswer = (condition: Condition) => editableCondition(condition) && condition.status === "REQUIRED";
 
 export function ConditionsScreen({ caseId }: { caseId: number }) {
+ const {translate} = useTranslation();
+
   const owner = useCase(caseId); const removal = useCaseRemoval(caseId); const query = useConditions(caseId);
   if (removal.pending || removal.removed) return <p role="status">{translate("caseInputs.conditionsScreen_delete")}</p>;
   if (owner.isPending || query.isPending) return <QueryFeedback pending />;
@@ -31,13 +40,18 @@ export function ConditionsScreen({ caseId }: { caseId: number }) {
 }
 
 export function ConditionsForm({ caseId, initial, reload }: { caseId: number; initial: Conditions; reload: () => Promise<Conditions> }) {
+const {businessErrorMessage} = useLocalized(createLocalizedLibApiFormErrors);
+const {answerLabel, conditionAnswer, conditionCheckLabels, conditionExplanation, conditionTitle, conditionValues, editableCondition} = useLocalized(createLocalizedFeaturesCaseInputsConditionPresentation);
+
+ const {translate, translateContent} = useTranslation();
+
   const initialQuestions = initial.conditions.map((condition, index) => needsAnswer(condition) ? index : -1).filter(index => index >= 0);
   const [base, setBase] = useState(initial);
   const [phase, setPhase] = useState<Phase>(initialQuestions.length === 1 ? "questions" : "overview");
   const [page, setPage] = useState(initialQuestions[0] ?? 0);
   const [editing, setEditing] = useState(false);
   const [conflict, setConflict] = useState(false);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useMessageState("");
   const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
   const [resetEpoch, setResetEpoch] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null), errorSummary = useRef<HTMLParagraphElement>(null);
@@ -48,7 +62,7 @@ export function ConditionsForm({ caseId, initial, reload }: { caseId: number; in
       const value = values[condition.conditionId] ?? "";
       if (value === String(condition.value ?? "") && (!needsAnswer(condition) || value === "")) continue;
       if (value.trim() === "" || (condition.type === "NUMBER" && value !== "UNKNOWN" && !/^\d+$/.test(value)) || !conditionAnswer(condition, value).success) {
-        context.addIssue({ code: "custom", path: ["values", condition.conditionId], message: condition.type === "NUMBER" ? translate("caseInputs.conditionsScreen_time_atLeast_count_minutes_input_sum") : translate("caseInputs.conditionsScreen_answer_select") });
+        context.addIssue({ code: "custom", path: ["values", condition.conditionId], message: condition.type === "NUMBER" ? describeMessage("caseInputs.conditionsScreen_time_atLeast_count_minutes_input_sum") : describeMessage("caseInputs.conditionsScreen_answer_select") });
       }
     }
   });
@@ -87,10 +101,10 @@ export function ConditionsForm({ caseId, initial, reload }: { caseId: number; in
     const navigation = (window as Window & { navigation?: EventTarget }).navigation;
     window.addEventListener("beforeunload", beforeUnload); document.addEventListener("click", leavingLink, true); navigation?.addEventListener("navigate", traverse);
     return () => { window.removeEventListener("beforeunload", beforeUnload); document.removeEventListener("click", leavingLink, true); navigation?.removeEventListener("navigate", traverse); };
-  }, [hasDraft]);
+  }, [hasDraft, translate]);
 
   async function refresh() {
-    const latest = await reload(); setBase(latest); reset({ values: conditionValues(latest) }); setConfirmedIds([]); setResetEpoch(previous => previous + 1); setConflict(false); setEditing(false); setPhase("review"); setNotice(translate("caseInputs.conditionsScreen_current_question_answer_loaded"));
+    const latest = await reload(); setBase(latest); reset({ values: conditionValues(latest) }); setConfirmedIds([]); setResetEpoch(previous => previous + 1); setConflict(false); setEditing(false); setPhase("review"); setNotice(describeMessage("caseInputs.conditionsScreen_current_question_answer_loaded"));
   }
   async function nextQuestion() {
     if (!current || !values[current.conditionId] || !await trigger(`values.${current.conditionId}`)) return;
@@ -111,12 +125,12 @@ export function ConditionsForm({ caseId, initial, reload }: { caseId: number; in
     try {
       if (answers.length) {
         await mutation.mutateAsync({ type: "conditions", body: { answers, expectedInputVersion: base.inputVersion } }); accepted = true;
-        await refresh(); setNotice(translate("caseInputs.conditionsScreen_change_save_check_status_automatic_update"));
+        await refresh(); setNotice(describeMessage("caseInputs.conditionsScreen_change_save_check_status_automatic_update"));
       }
       if (saveToResult.current) { allowLeave.current = true; router.push(`/cases/${caseId}/result`); }
       else setPhase("saved");
     } catch (error) {
-      if (accepted) { setConflict(true); setError("root.server", { message: translate("caseInputs.conditionsScreen_save_current_question_failure_retry_answer") }); return; }
+      if (accepted) { setConflict(true); setError("root.server", { message: describeMessage("caseInputs.conditionsScreen_save_current_question_failure_retry_answer") }); return; }
       if (error instanceof ApiError && error.errorCode === "INPUT_VERSION_CONFLICT") setConflict(true);
       let firstInvalid: string | undefined;
       if (error instanceof ApiError && error.status === 422) for (const issue of error.fieldErrors) {

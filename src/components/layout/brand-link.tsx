@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";

@@ -1,10 +1,14 @@
 
-import { translate } from "@/i18n/translate";
+import { createTranslation } from '@/i18n/translate';
+import { getLocale } from 'next-intl/server';
+
 import Link from "next/link";
 
 import { StatePanel } from "@/components/ui/state-panel";
 
-export default function NotFound() {
+export default async function NotFound() {
+ const {translate} = createTranslation(await getLocale());
+
   return (
     <main id="main-content" className="grid min-h-dvh place-items-center p-4">
       <StatePanel

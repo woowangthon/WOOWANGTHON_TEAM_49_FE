@@ -1,6 +1,8 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesCasesViewModels} from '@/features/cases/view-models';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { ArrowRight, Building2, CalendarDays, ChevronRight, ClipboardList, Files, FolderOpen, Plus } from "lucide-react";
@@ -9,13 +11,17 @@ import { useState } from "react";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { CaseCards, caseTaskHref } from "@/features/cases/components/case-cards";
 import { useCases } from "@/features/cases/queries";
-import { caseCard } from "@/features/cases/view-models";
+
 import { useWorkplaces } from "@/features/workplaces/queries";
 
 import styles from "./dashboard.module.css";
 import { WorkflowProgress } from "./workflow-progress";
 
 export function DashboardScreen() {
+const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
+
+ const {translate} = useTranslation();
+
   const [attentionLimit, setAttentionLimit] = useState(3);
   const workplaces = useWorkplaces();
   const cases = useCases();

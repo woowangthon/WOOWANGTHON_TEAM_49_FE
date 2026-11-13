@@ -1,5 +1,11 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
+
+import {createLocalizedFeaturesResultsSchemas} from './schemas';
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '@/features/documents/review/view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useState } from "react";
@@ -8,16 +14,26 @@ import { QueryFeedback } from "@/components/ui/query-feedback";
 import { secondaryButton } from "@/components/ui/styles";
 import { OriginalViewer } from "@/features/documents/review/components/original-viewer";
 import { useFields } from "@/features/documents/review/queries";
-import { fieldStatusLabels } from "@/features/documents/review/view-models";
-import { resultSourceSchema, type ResultSource } from "./schemas";
+
+import {type ResultSource} from "./schemas";
 import { useSourceDocument } from "./queries";
 import styles from "./source-evidence.module.css";
-const types:Record<string,string>={PAYSLIP:translate("results.sourceEvidence_payslip"),CONTRACT:translate("results.sourceEvidence_contract"),ATTENDANCE:translate("results.sourceEvidence_attendance_record"),DEPOSIT:translate("results.sourceEvidence_deposit_record")};
+
 export function SourceEvidence({caseId,value,compact=false}:{caseId:number;value:Record<string,unknown>;compact?:boolean}) {
+const {resultSourceSchema} = useLocalized(createLocalizedFeaturesResultsSchemas);
+
+ const {translate} = useTranslation();
+
  const parsed=resultSourceSchema.safeParse(value);
  return parsed.success?<Evidence caseId={caseId} source={parsed.data} compact={compact}/>:<p role="alert">{translate("results.sourceEvidence_original_source_format_confirm_count_empty")}</p>;
 }
 function Evidence({caseId,source,compact}:{caseId:number;source:ResultSource;compact:boolean}) {
+const {types} = useLocalized(createPresentation);
+
+const {fieldStatusLabels} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+
+ const {translate} = useTranslation();
+
  const doc=useSourceDocument(caseId,source.documentId);
  const fields=useFields(caseId,source.documentId,!!doc.data && !doc.isError);
  const [open,setOpen]=useState(false);
@@ -38,4 +54,9 @@ function Evidence({caseId,source,compact}:{caseId:number;source:ResultSource;com
  {open && <OriginalViewer workplaceId={doc.data.workplaceId} documentId={source.documentId} source={source}/>}</>}
  {doc.isSuccess&&!doc.isFetching&&<><p>{translate("results.sourceEvidence_result_evidence", { value1: source.text ?? translate("results.sourceEvidence_evidence_notProvided") })}</p><p>{translate("results.sourceEvidence_result_original_page_current_field_information_count", { value1: source.page ?? translate("common.notProvided") })}</p>{!source.boundingBox && <p>{translate("results.sourceEvidence_empty_page_evidence_confirm")}</p>}</>}
  </section>;
+}
+
+function createPresentation({translate}: Translation) {
+const types:Record<string,string>={PAYSLIP:translate("results.sourceEvidence_payslip"),CONTRACT:translate("results.sourceEvidence_contract"),ATTENDANCE:translate("results.sourceEvidence_attendance_record"),DEPOSIT:translate("results.sourceEvidence_deposit_record")};
+return {types};
 }

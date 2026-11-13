@@ -22,4 +22,3 @@ export function paymentMocks(getCases:()=>CaseDetailDto[],base:string,changed:(c
  http.delete(`${base}/cases/:c/deposits/:a`,({params})=>{const i=allocations.findIndex(a=>a.caseId===Number(params.c)&&a.allocationId===Number(params.a));if(i<0)return fail("RESOURCE_NOT_FOUND",404);allocations.splice(i,1);const c=getCases().find(c=>c.caseId===Number(params.c));if(c)changed(c);return new HttpResponse(null,{status:204});})
  ];return {handlers,manual,transactions,allocations};
 }
-

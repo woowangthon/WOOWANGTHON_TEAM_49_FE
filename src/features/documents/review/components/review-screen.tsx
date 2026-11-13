@@ -1,5 +1,11 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsViewModels} from '../../view-models';
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { jobText } from "@/features/documents/api";
 import { useSearchParams } from "next/navigation";
@@ -14,11 +20,11 @@ import { useCase, useCaseRemoval } from "@/features/cases/queries";
 import { useDocuments, useDocumentStatus, useDocumentAction, useRecomputeStatus } from "../../queries";
 import { recomputeActive } from "../../api";
 import type { DocumentDto } from "../../schemas";
-import { documentTypeIssue, processingErrorMessage, isProcessing, statusLabels } from "../../view-models";
+
 import { DocumentTypeResolution } from "../../components/document-type-resolution";
 import { useFields } from "../queries";
 import type { SourceDto } from "../schemas";
-import { recomputeJobLabel, reviewError, reviewStateView } from "../view-models";
+
 import { discardChanges, useUnsavedChanges } from "../use-unsaved";
 import { OriginalViewer } from "./original-viewer";
 import { FieldsPanel } from "./fields-panel";
@@ -26,13 +32,17 @@ import { CaseNextStep } from "@/features/cases/components/case-next-step";
 import { ReviewConfirmation } from "./review-confirmation";
 import styles from "./review-screen.module.css";
 export function ReviewScreen({id,initialDocumentId}:{id:number;initialDocumentId?:number}){
+const {statusLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
+ const {translate} = useTranslation();
+
   const back=safeChatReturn(useSearchParams().get("returnTo"));
   const c=useCase(id);const removal=useCaseRemoval(id);const documents=useDocuments({kind:"case",id},{page:1,size:100});
   const [selected,setSelected]=useState(initialDocumentId);
   const [editDirty,setEditDirty]=useState(false);
   const dirty=editDirty;useUnsavedChanges(dirty);
   const changeDocument=(documentId:number)=>{
-    if(dirty&&!discardChanges())return;setEditDirty(false);setSelected(documentId);
+    if(dirty&&!discardChanges(translate))return;setEditDirty(false);setSelected(documentId);
     window.history.replaceState(null,"",`/cases/${id}/review?documentId=${documentId}`);
   };
   if(removal.pending||removal.removed)return <p role="status">{translate("documents.reviewScreen_delete")}</p>;
@@ -47,7 +57,12 @@ export function ReviewScreen({id,initialDocumentId}:{id:number;initialDocumentId
   </div>;
 }
 function ReviewDocument({dto,caseId,version,period,dirty,onDirty}:{dto:DocumentDto;caseId:number;version:number;period:{start:string;end:string};dirty:boolean;onDirty:(dirty:boolean)=>void}){
-  const retry=useDocumentAction();const [retryError,setRetryError]=useState("");
+const {documentTypeIssue, processingErrorMessage, isProcessing, statusLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+const {recomputeJobLabel, reviewError, reviewStateView} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+
+ const {translate} = useTranslation();
+
+  const retry=useDocumentAction();const [retryError,setRetryError]=useMessageState("");
   const status=useDocumentStatus({kind:"case",id:caseId},dto);const processing=status.data?.processingStatus??dto.processingStatus;
   const typeIssue=isProcessing(processing)?undefined:documentTypeIssue(dto,status.data?status.data.errorCode:dto.errorCode);
   const fields=useFields(caseId,dto.documentId,!isProcessing(processing));const recompute=useRecomputeStatus(caseId);
@@ -60,7 +75,7 @@ function ReviewDocument({dto,caseId,version,period,dirty,onDirty}:{dto:DocumentD
     {status.isError&&<QueryFeedback error={status.error} retry={()=>{void status.refetch();}} />}
     {recompute.isError?<QueryFeedback error={recompute.error} retry={()=>{void recompute.refetch();}} />:<p hidden={!!recompute.data && !recomputeActive(recompute.data) && recompute.data.latestJob?.status !== "FAILED"} role="status" className="text-body text-muted">{!recompute.data?translate("documents.reviewScreen_update_status_load"):recomputeActive(recompute.data)?translate("documents.reviewScreen_input_change_result_update"):translate("documents.reviewScreen_update_all_calculation_complete", { value1: recomputeJobLabel(jobText(recompute.data.latestJob?.status??recompute.data.activeJob?.status)) })}</p>}
     {typeIssue&&<div className={cardStyle}><DocumentTypeResolution key={typeIssue.code} dto={dto} issue={typeIssue} disabled={dirty} /></div>}
-    {processing==="FAILED"&&<div className={`${cardStyle} space-y-3`}><p>{processingErrorMessage(status.data?.errorCode??dto.errorCode)}</p><p>{translate("documents.reviewScreen_document_processing_failure_original_confirm_count")}</p>{retryError&&<p role="alert">{retryError}</p>}<button className={secondaryButton} disabled={retry.isPending||dirty} onClick={async()=>{setRetryError("");try{await retry.mutateAsync({type:"retry",caseId,documentId:dto.documentId});}catch(error){setRetryError(reviewError(error));}}}>{translate("documents.documentCard_document_processing_2")}</button></div>}
+    {processing==="FAILED"&&<div className={`${cardStyle} space-y-3`}><p>{processingErrorMessage(status.data?.errorCode??dto.errorCode)}</p><p>{translate("documents.reviewScreen_document_processing_failure_original_confirm_count")}</p>{retryError&&<p role="alert">{retryError}</p>}<button className={secondaryButton} disabled={retry.isPending||dirty} onClick={async()=>{setRetryError("");try{await retry.mutateAsync({type:"retry",caseId,documentId:dto.documentId});}catch(error){setRetryError(reviewError(error, true));}}}>{translate("documents.documentCard_document_processing_2")}</button></div>}
     <div onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const next=event.key==="Home"?"original":event.key==="End"?"fields":tab==="original"?"fields":"original";setTab(next);document.getElementById(`${next}-tab`)?.focus();}} role="tablist" aria-label={translate("documents.reviewScreen_original_field")} className={`review-tabs ${styles.tabs}`}><button id="original-tab" role="tab" tabIndex={tab==="original"?0:-1} aria-selected={tab==="original"} aria-controls="original-panel" onClick={()=>setTab("original")}>{translate("documents.reviewScreen_original")}</button><button id="fields-tab" role="tab" tabIndex={tab==="fields"?0:-1} aria-selected={tab==="fields"} aria-controls="fields-panel" onClick={()=>setTab("fields")}>{translate("documents.reviewScreen_extraction_field")}</button></div>
     <div className={`review-comparison grid min-w-0 ${styles.comparison}`}>
       <div id="original-panel" tabIndex={-1} role="tabpanel" aria-labelledby="original-tab" className={`${styles.original} ${tab==="original"?"block":"review-inactive"}`}><button className={`${secondaryButton} mb-3 review-return-button`} onClick={()=>{setTab("fields");requestAnimationFrame(()=>sourceTrigger.current?.focus());}}>{translate("documents.reviewScreen_extraction_field_2")}</button><OriginalViewer workplaceId={dto.workplaceId} documentId={dto.documentId} source={source} sourceRequest={sourceRequest} /></div>

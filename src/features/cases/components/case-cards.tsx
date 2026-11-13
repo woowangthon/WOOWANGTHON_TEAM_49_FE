@@ -1,9 +1,13 @@
+"use client";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesCasesViewModels} from '../view-models';
 
-import { translate } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
+
 import Link from "next/link";
 import { Building2, CalendarDays, ChevronRight, CircleAlert } from "lucide-react";
 import type { CaseListDto } from "../schemas";
-import { caseCard } from "../view-models";
+
 import styles from "./case-explorer.module.css";
 import workplaceStyles from "@/features/workplaces/components/workplace-space.module.css";
 
@@ -13,6 +17,10 @@ export function caseTaskHref(dto: CaseListDto) {
 }
 
 export function CaseCards({ items, compact = false, variant = "default" }: { items: CaseListDto[]; compact?: boolean; variant?: "default" | "explorer" | "workplace" }) {
+const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
+
+ const {translate} = useTranslation();
+
   if (variant === "workplace") return <ul className={workplaceStyles.caseRows}>{items.map(dto => {
     const card = caseCard(dto);
     return <li key={card.id} className={workplaceStyles.caseCard}>

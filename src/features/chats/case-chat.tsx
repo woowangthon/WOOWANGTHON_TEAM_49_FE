@@ -1,5 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useRef, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
@@ -15,6 +15,8 @@ export function CaseChat({ caseId }: { caseId: number }) {
 }
 
 function CaseChatPanel({ caseId, workplaceId }: { caseId: number; workplaceId: number }) {
+ const {translate} = useTranslation();
+
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [visited, setVisited] = useState(false);

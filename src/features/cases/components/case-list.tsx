@@ -1,7 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
-import { activeLocale as defaultLocale } from "@/i18n/config";
-
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { Check, FileText, FolderOpen, Info, Plus } from "lucide-react";
@@ -16,6 +14,8 @@ import { CaseCards } from "./case-cards";
 import styles from "./case-explorer.module.css";
 
 export function CaseList({ workplaceId }: { workplaceId?: number }) {
+ const {translate, locale: defaultLocale} = useTranslation();
+
   const [page, setPage] = useState(1);
   const query = useCases(page, 20, workplaceId);
   const createHref = workplaceId === undefined ? "/cases/new" : `/cases/new?workplaceId=${workplaceId}`;

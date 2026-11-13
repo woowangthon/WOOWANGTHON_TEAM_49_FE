@@ -1,15 +1,23 @@
+"use client";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesWorkplacesViewModels} from '../view-models';
 
-import { translate } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
+
 import Link from "next/link";
 import { ArrowLeft, Building2 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { WorkplaceDto } from "../schemas";
-import { workplaceCard } from "../view-models";
+
 import styles from "./workplace-space.module.css";
 
 export function WorkplaceHeader({ id, workplace, active, compact = false, children }: {
   id: number; workplace?: WorkplaceDto; active: "cases" | "documents" | "chats"; compact?: boolean; children?: ReactNode;
 }) {
+const {workplaceCard} = useLocalized(createLocalizedFeaturesWorkplacesViewModels);
+
+ const {translate} = useTranslation();
+
   const item = workplace ? workplaceCard(workplace) : undefined;
   const name = item?.name ?? translate("workplaces.workplaceHeader_workplace", { value1: id });
   return <header className={styles.header} data-compact={compact}>

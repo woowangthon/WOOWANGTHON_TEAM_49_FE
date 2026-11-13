@@ -1,5 +1,6 @@
+import {MessageError} from '@/i18n/message-error';
+import { syncLocaleCookie, resolveLocale, defaultLocale } from '@/i18n/config';
 
-import { translate } from "@/i18n/translate";
 import type { QueryClient } from "@tanstack/react-query";
 
 import type { ApiClient } from "@/lib/api/client";
@@ -37,6 +38,7 @@ export function createAuthController({ api, authApi, session, queryClient }: {
   });
 
   function remember(user: CurrentUser) {
+    if (typeof document !== "undefined") syncLocaleCookie(resolveLocale(user.language));
     queryClient.setQueryData(authKeys.me(session.getSnapshot().generation), user);
     update({ status: "authenticated", notice: null });
   }
@@ -75,18 +77,18 @@ export function createAuthController({ api, authApi, session, queryClient }: {
           update({
             status: "anonymous",
             notice: error instanceof ApiError && error.status === 401
-              ? null : translate("auth.controller_previous_login_status_confirm_failure_retry"),
+              ? null : "auth.controller_previous_login_status_confirm_failure_retry",
           });
         }
       })().finally(() => { restoration = undefined; });
       return restoration;
     },
     async login(body: LoginRequest) {
-      if (snapshot.status === "signing-out") throw new Error(translate("auth.controller_logout_processing"));
+      if (snapshot.status === "signing-out") throw new MessageError("auth.controller_logout_processing");
       const current = ++operation;
       initialized = true;
       const result = await authApi.login(body);
-      if (current !== operation) throw new DOMException(translate("auth.controller_authentication_request_cancel"), "AbortError");
+      if (current !== operation) throw new DOMException("auth.controller_authentication_request_cancel", "AbortError");
       try { requireUsableSession(result); } catch (error) { session.clear(); throw error; }
       session.start(result.accessToken);
       remember(result.user);
@@ -96,12 +98,13 @@ export function createAuthController({ api, authApi, session, queryClient }: {
       ++operation;
       initialized = true;
       const token = session.getSnapshot().accessToken;
+      if (typeof document !== "undefined") syncLocaleCookie(defaultLocale);
       update({ status: "signing-out", notice: null });
       // Cancels user requests, clears query/mutation caches, and hides protected content now.
       session.clear();
       logoutFlight = authApi.logout(token).then(
-        () => update({ status: "anonymous", signedOut: true, notice: translate("auth.controller_logout") }),
-        () => update({ status: "anonymous", signedOut: true, notice: translate("auth.controller_logout_confirm_failure_retry_login_count") }),
+        () => update({ status: "anonymous", signedOut: true, notice: "auth.controller_logout" }),
+        () => update({ status: "anonymous", signedOut: true, notice: "auth.controller_logout_confirm_failure_retry_login_count" }),
       ).finally(() => { logoutFlight = undefined; });
       return logoutFlight;
     },

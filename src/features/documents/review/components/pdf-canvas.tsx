@@ -1,9 +1,11 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 export default function PdfCanvas({url,page,pageCount,rotation,onRendered}:{url:string;page:number;pageCount:number|null;rotation:number|null;onRendered:(page:number,rotation:number)=>void}){
+ const {translate} = useTranslation();
+
   const canvas=useRef<HTMLCanvasElement>(null);
   const [loaded,setLoaded]=useState<{url:string;pdf:PDFDocumentProxy}>();
   const [rendered,setRendered]=useState<{page:number;url:string}>();

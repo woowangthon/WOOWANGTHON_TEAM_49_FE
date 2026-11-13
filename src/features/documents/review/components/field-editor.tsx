@@ -1,8 +1,15 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {errorMessage} from "@/i18n/message";
+import {message as describeMessage} from '@/i18n/message';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import {useWatch} from 'react-hook-form';
+import {useForm} from '@/i18n/use-localized-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -15,17 +22,21 @@ import { ApiError } from "@/lib/api/error";
 import { useReviewAction, useFields } from "../queries";
 import { updateMetaSchema, valueSchema } from "../schemas";
 import type { ExtractedField, FieldPatch, ReviewContext, UpdateMeta } from "../schemas";
-import { fieldEditorView, parseFieldValue, reviewError } from "../view-models";
+
 const editorSchema=z.object({text:z.string(),scalar:z.enum(["string","number","boolean"])});
 type EditorValues=z.infer<typeof editorSchema>;
-function defaults(field:ExtractedField,unknownShared=false):EditorValues {
-  return fieldEditorView(field,unknownShared);
+function defaults(field:ExtractedField,unknownShared:boolean,getView:ReturnType<typeof createLocalizedFeaturesDocumentsReviewViewModels>["fieldEditorView"]):EditorValues {
+  return getView(field,unknownShared);
 }
 export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved,linkedCaseIds}:{field:ExtractedField;scope:"case"|"shared";context:ReviewContext;version:number;onClose:()=>void;onDirty:(dirty:boolean)=>void;onSaved:(meta:UpdateMeta)=>void;linkedCaseIds?:number[]}){
+const {fieldEditorView, parseFieldValue, reviewError} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+
+ const {translate} = useTranslation();
+
   const id=useId();const mutation=useReviewAction(context);const latestCase=useCase(context.caseId);const latestFields=useFields(context.caseId,context.documentId);
   const [baseVersion,setBaseVersion]=useState(version);const [conflict,setConflict]=useState(false);
   const [prepared,setPrepared]=useState<FieldPatch>();const locked=useRef(false);
-  const form=useForm<EditorValues>({resolver:zodResolver(editorSchema),defaultValues:defaults(field,scope==="shared"&&field.hasCaseOverride)});
+  const form=useForm<EditorValues>({resolver:zodResolver(editorSchema),defaultValues:defaults(field,scope==="shared"&&field.hasCaseOverride,fieldEditorView)});
   const {register,handleSubmit,setError,setFocus,reset,formState:{errors,isSubmitting,isDirty}}=form;
   const scalar=useWatch({control:form.control,name:"scalar"});
   const structured=fieldEditorView(field).kind==="structured";
@@ -44,7 +55,7 @@ export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved
   };
   return <form aria-label={translate("documents.fieldEditor_ariaLabel_form", { value1: scope==="case"?translate("documents.fieldEditor_case_override"):translate("documents.fieldEditor_sharedDefault") })} className="mt-4 min-w-0 space-y-4 rounded-control border border-border p-4" onSubmit={event=>{void handleSubmit(async values=>{
     if(conflict||locked.current)return;
-    let value;try{value=structured?valueSchema.parse(JSON.parse(values.text)):parseFieldValue(field,values.text,false,values.scalar);}catch(error){setError("text",{message:error instanceof Error?error.message:translate("documents.fieldEditor_confirm")});return;}
+    let value;try{value=structured?valueSchema.parse(JSON.parse(values.text)):parseFieldValue(field,values.text,false,values.scalar);}catch(error){setError("text",{message:error instanceof Error?errorMessage(error):describeMessage("documents.fieldEditor_confirm")});return;}
     const patch:FieldPatch={value};
     if(scope==="shared")setPrepared(patch);else await save(patch);
   })(event);}}>
@@ -57,7 +68,7 @@ export function FieldEditor({field,scope,context,version,onClose,onDirty,onSaved
     {errors.root?.server&&<p ref={summary} tabIndex={-1} role="alert">{errors.root.server.message}</p>}
     {conflict&&<button type="button" className={secondaryButton} disabled={latestCase.isFetching||latestFields.isFetching} onClick={async()=>{
       const [c,f]=await Promise.all([latestCase.refetch(),latestFields.refetch()]);const fresh=f.data?.fields.find(v=>v.fieldId===field.fieldId);
-      if(!c.isError&&!f.isError&&c.data&&fresh){reset(defaults(fresh,scope==="shared"&&fresh.hasCaseOverride));setBaseVersion(c.data.inputVersion);setConflict(false);}
+      if(!c.isError&&!f.isError&&c.data&&fresh){reset(defaults(fresh,scope==="shared"&&fresh.hasCaseOverride,fieldEditorView));setBaseVersion(c.data.inputVersion);setConflict(false);}
     }}>{translate("documents.fieldEditor_current_draft_retry_load")}</button>}
     <div className="flex flex-wrap gap-2"><button type="submit" className={primaryButton} disabled={busy||conflict}>{translate("documents.fieldEditor_edit_save")}</button><button type="button" className={secondaryButton} disabled={busy} onClick={()=>{if(!isDirty||window.confirm(translate("documents.fieldEditor_save_change")))onClose();}}>{translate("documents.fieldEditor_close")}</button></div>
     {prepared&&<ConfirmDialog title={translate("documents.fieldEditor_sharedDefault_change_impact")} busy={mutation.isPending} onClose={()=>setPrepared(undefined)} action={<button type="button" className={primaryButton} disabled={mutation.isPending} onClick={()=>{void save(prepared);}}>{translate("documents.fieldEditor_sharedDefault_save_confirm")}</button>}>

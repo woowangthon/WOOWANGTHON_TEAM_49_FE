@@ -6,15 +6,14 @@ import { createAppServices } from "@/lib/app-services";
 import { AppProviders } from "./providers";
 
 const route = vi.hoisted(() => ({ pathname: "/" }));
-vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));
+vi.mock("next/navigation", () => ({ usePathname: () => route.pathname, useRouter: () => ({refresh: vi.fn()}) }));
 vi.mock("@/lib/app-services", async () => {
-  const { QueryClient } = await import("@tanstack/react-query");
-  return {
-    createAppServices: vi.fn(() => ({
-      queryClient: new QueryClient(),
-      auth: { restore: vi.fn().mockResolvedValue(undefined) },
-    })),
-  };
+  const actual = await vi.importActual<typeof import('@/lib/app-services')>('@/lib/app-services');
+  return {createAppServices: vi.fn(() => {
+    const services = actual.createAppServices();
+    services.auth.restore = vi.fn().mockResolvedValue(undefined);
+    return services;
+  })};
 });
 
 beforeEach(() => { vi.clearAllMocks(); route.pathname = "/"; });

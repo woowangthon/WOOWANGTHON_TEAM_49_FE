@@ -1,14 +1,19 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesCasesViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { Building2 } from "lucide-react";
 import styles from "./case-workspace.module.css";
 import { usePathname } from "next/navigation";
 import { useCase } from "../queries";
-import { caseCard } from "../view-models";
+
 import { useDocuments } from "@/features/documents/queries";
 export function TaskNavigation({ id }: { id: number }) {
+ const {translate} = useTranslation();
+
   const pathname = usePathname();
   const query = useCase(id);
   const docs = useDocuments({kind: "case", id}, {page: 1, size: 100});
@@ -24,6 +29,10 @@ export function TaskNavigation({ id }: { id: number }) {
   })}</nav></div>;
 }
 export function CaseContext({ id }: { id: number }) {
+const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
+
+ const {translate} = useTranslation();
+
   const pathname = usePathname();
   const query = useCase(id);
   const item = query.data ? caseCard(query.data) : null;

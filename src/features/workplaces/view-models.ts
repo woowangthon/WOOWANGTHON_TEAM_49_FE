@@ -1,8 +1,9 @@
-
-import { translate } from "@/i18n/translate";
 import type { WorkplaceDto } from "./schemas";
+import {type Translation} from '@/i18n/translate';
 
-export function workplaceCard(dto: WorkplaceDto) {
+export function createLocalizedFeaturesWorkplacesViewModels(translation: Translation) {
+  const {translate} = translation;
+function workplaceCard(dto: WorkplaceDto) {
   return {
     id: dto.workplaceId,
     name: dto.name,
@@ -11,4 +12,6 @@ export function workplaceCard(dto: WorkplaceDto) {
     employment: dto.employmentStatus === "CURRENT" ? translate("workplaces.workplaceForm_employed") : translate("workplaces.workplaceForm_employmentEnd"),
     caseCount: dto.caseCount,
   };
+}
+return {workplaceCard};
 }

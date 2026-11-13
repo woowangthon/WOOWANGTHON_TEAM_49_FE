@@ -1,6 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
-
+import { useTranslation } from '@/i18n/use-translation';
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
@@ -11,6 +10,8 @@ import { AuthPending } from "./auth-pending";
 
 /** Presentation guard only. Backend ownership checks remain authoritative. */
 export function AuthGate({ mode, children }: { mode: "guest" | "protected"; children: ReactNode }) {
+ const {translate} = useTranslation();
+
   const { status, signedOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();

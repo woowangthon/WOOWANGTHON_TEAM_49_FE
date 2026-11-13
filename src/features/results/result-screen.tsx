@@ -1,5 +1,8 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesResultsViewModels} from './view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { Info } from "lucide-react";
 import { useCase } from "@/features/cases/queries";
@@ -10,12 +13,16 @@ import { SelectedSnapshot } from "./selected-snapshot";
 import type { SnapshotKind } from "./snapshot-link";
 import { useRecomputeStatus } from "@/features/documents/queries";
 import { SourceEvidence } from "./source-evidence";
-import { displayScalar, resultRows, toResultsViewModel } from "./view-models";
+
 import Link from "next/link";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { secondaryButton } from "@/components/ui/styles";
 import { useResults } from "./queries";
 export function ServerValue({value,caseId,fieldKey,unit}:{value:unknown;caseId:number;fieldKey?:string;unit?:string|null}) {
+const {displayScalar, resultRows} = useLocalized(createLocalizedFeaturesResultsViewModels);
+
+ const {translate} = useTranslation();
+
  if(value===null || typeof value!=="object")return <span>{displayScalar(value,fieldKey,unit)}</span>;
  if(Array.isArray(value))return value.length?<div className="space-y-3">{value.map((v,i)=><div key={i} className="border-l-2 border-line pl-3"><ServerValue value={v} caseId={caseId} fieldKey={fieldKey==="items"?"resultItem":undefined} unit={unit}/></div>)}</div>:<p>{translate("results.resultScreen_provided_item_none")}</p>;
  const obj=value as Record<string,unknown>;
@@ -25,6 +32,10 @@ export function ServerValue({value,caseId,fieldKey,unit}:{value:unknown;caseId:n
  return <dl className="min-w-0 space-y-3 [overflow-wrap:anywhere]">{resultRows(obj,validation?"KRW":fieldKey==="counts"?"COUNT":unit).map(row=><div key={row.key} className="min-w-0"><dt className="font-bold">{row.label}</dt><dd className="pl-2"><ServerValue value={row.value} caseId={caseId} fieldKey={row.key} unit={row.unit}/></dd></div>)}</dl>;
 }
 export function ResultScreen({caseId, selection, returnTo}:{caseId:number;compare?:boolean;selection?:{kind:SnapshotKind;id:number;version:number}|null;returnTo?:string}) {
+const {toResultsViewModel} = useLocalized(createLocalizedFeaturesResultsViewModels);
+
+ const {translate} = useTranslation();
+
  const context=useCase(caseId);
  const q=useResults(caseId); const status=useRecomputeStatus(caseId);
  const vm=q.data?toResultsViewModel(q.data):undefined;

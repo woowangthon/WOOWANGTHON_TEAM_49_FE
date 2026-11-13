@@ -1,5 +1,6 @@
+"use client";
+import { useTranslation } from '@/i18n/use-translation';
 
-import { translate } from "@/i18n/translate";
 import { BrandLink } from "./brand-link";
 import type { ReactNode } from "react";
 
@@ -13,6 +14,8 @@ export function AppShell({
   children: ReactNode;
   navigation?: ReactNode;
 }) {
+ const {translate} = useTranslation();
+
   const menu = navigation ?? <p className="text-body text-muted">{translate("navigation.appShell_create_menu_empty")}</p>;
 
   return (

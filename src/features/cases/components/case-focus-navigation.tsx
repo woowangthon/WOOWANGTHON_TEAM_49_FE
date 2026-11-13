@@ -1,5 +1,6 @@
+"use client";
+import { useTranslation } from '@/i18n/use-translation';
 
-import { translate } from "@/i18n/translate";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 
 export function CaseFocusNavigation({ label, index, count, onChange, busy = false, emphasizeNext = false }: {
@@ -10,6 +11,8 @@ export function CaseFocusNavigation({ label, index, count, onChange, busy = fals
   busy?: boolean;
   emphasizeNext?: boolean;
 }) {
+ const {translate} = useTranslation();
+
   if (count === 0) return null;
   return <nav data-case-focus-navigation aria-label={translate("cases.caseFocusNavigation_navigate", { value1: label })}>
     <div><p aria-live="polite">{label} {index + 1} / {count}</p><progress aria-label={translate("cases.caseFocusNavigation_ariaLabel_div", { value1: label })} value={index + 1} max={count} /></div>

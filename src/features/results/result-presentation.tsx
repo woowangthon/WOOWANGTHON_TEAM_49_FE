@@ -1,14 +1,26 @@
+"use client";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesResultsViewModels} from './view-models';
 
-import { translate } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
+
 ﻿import { cardStyle } from "@/components/ui/styles";
-import { displayScalar, statusLabels, toResultsViewModel } from "./view-models";
+
 import { ServerValue } from "./result-screen";
 import Link from "next/link";
 import { ArrowRight, FileCheck2, MessageSquareText, ReceiptText } from "lucide-react";
 import styles from "./result-screen.module.css";
-type Model = ReturnType<typeof toResultsViewModel>;
-function Badge({status}:{status:string|null|undefined}) { return <span className="inline-block rounded-full bg-neutral-soft px-3 py-1 text-sm font-bold">{status ? statusLabels[status] ?? status : translate("results.resultComparisonTable_status_notProvided")}</span>; }
+type Model = ReturnType<ReturnType<typeof createLocalizedFeaturesResultsViewModels>["toResultsViewModel"]>;
+function Badge({status}:{status:string|null|undefined}) {
+const {statusLabels} = useLocalized(createLocalizedFeaturesResultsViewModels);
+
+ const {translate} = useTranslation();
+ return <span className="inline-block rounded-full bg-neutral-soft px-3 py-1 text-sm font-bold">{status ? statusLabels[status] ?? status : translate("results.resultComparisonTable_status_notProvided")}</span>; }
 export function ResultSummary({value,compare=false}:{value:Model;compare?:boolean}) {
+const {displayScalar} = useLocalized(createLocalizedFeaturesResultsViewModels);
+
+ const {translate} = useTranslation();
+
  const d=value.dto;
  const grossAvailable=d.calculation?.grossPay!==null && d.calculation?.grossPay!==undefined;
  const subtotalAvailable=d.calculation?.calculatedSubtotal!==null && d.calculation?.calculatedSubtotal!==undefined;
@@ -36,6 +48,8 @@ export function ResultSummary({value,compare=false}:{value:Model;compare?:boolea
  </section>;
 }
 export function ResultNextSteps({value,caseId}:{value:Model;caseId:number}) {
+ const {translate} = useTranslation();
+
  const d=value.dto;
  const needsInput=d.summary.counts.insufficientInformation===null || d.summary.counts.reviewRequired===null || d.summary.counts.insufficientInformation>0 || d.summary.counts.reviewRequired>0 || d.summary.calculationStatus!=="COMPLETE";
  return <aside className={styles.nextSteps} aria-label={translate("results.resultPresentation_result_confirm_next")}>
@@ -48,12 +62,17 @@ export function ResultNextSteps({value,caseId}:{value:Model;caseId:number}) {
  </aside>;
 }
 export function ResultChecks({value,caseId}:{value:Model;caseId:number}) {
+const {displayScalar} = useLocalized(createLocalizedFeaturesResultsViewModels);
+
+ const {translate} = useTranslation();
+
  const d=value.dto;
  return <section className="space-y-4"><h2 className="text-xl font-bold">{translate("results.resultPresentation_check_result")}</h2>
  <article className={`${cardStyle} border-l-[5px] border-l-primary`}><h3 className="font-bold">{translate("results.resultExplorer_contract_attendance_payslip_comparison")}</h3><Badge status={d.comparison?.status ?? d.summary.comparisonStatus}/>{d.comparison?.items.map((item,i)=><div key={i} className="my-4 space-y-3"><Badge status={item.status}/><dl className="grid gap-3 md:grid-cols-2">{(["contractValue","attendanceValue","payslipValue","difference"] as const).filter(k=>k in item).map(k=><div key={k}><dt>{{contractValue:translate("results.resultPresentation_contract"),attendanceValue:translate("results.resultPresentation_attendance"),payslipValue:translate("results.resultPresentation_payslip"),difference:translate("results.resultComparisonTable_difference")}[k]}</dt><dd className="text-xl font-bold">{displayScalar(item[k],k,item.comparisonBasis?.unit)}</dd></div>)}</dl><details><summary>{translate("results.resultPresentation_comparison_scope_review")}</summary><ServerValue caseId={caseId} value={item}/></details></div>)}</article>
  <h3 className="font-bold">{translate("results.resultPresentation_payslip_sum_check")}</h3><div className="grid gap-4 xl:grid-cols-3">{(["paymentTotal","deductionTotal","netPay"] as const).map(key=>{const check=d.payslipValidation?.[key];return <article key={key} className={`${cardStyle} border-l-[5px] border-l-primary space-y-3`}><h4 className="font-bold">{{paymentTotal:translate("results.resultExplorer_payment_sum"),deductionTotal:translate("results.resultExplorer_deduction_sum"),netPay:translate("results.resultExplorer_netPay")}[key]}</h4><Badge status={check?.status}/><dl>{check&&(["itemSum","statedTotal","calculated","stated","difference"] as const).filter(k=>k in check).map(k=><div key={k}><dt>{{itemSum:translate("results.resultComparisonTable_sum"),statedTotal:translate("results.resultPresentation_payslip_total"),calculated:translate("results.resultDetail_calculation"),stated:translate("results.resultPresentation_payslip_2"),difference:translate("results.resultComparisonTable_difference")}[k]}</dt><dd className="font-bold">{displayScalar(check[k],k,"KRW")}</dd></div>)}</dl>{!check&&<p>{translate("results.resultPresentation_check_result_none")}</p>}</article>})}</div></section>;
 }
 export function ResultItem({item,caseId}:{item:Model["items"][number];caseId:number}) {
+ const {translate} = useTranslation();
+
  return <article className={`${cardStyle} border-l-[5px] ${item.status==="MATCH"?"border-l-success":"border-l-warning"} space-y-4`}><h3 className="text-xl font-bold">{item.title}</h3><Badge status={item.status}/><p>{translate("results.resultPresentation_wagePeriod_unit", { value1: item.dto.periodStart ?? translate("common.notProvided"), value2: item.dto.periodEnd ?? translate("common.notProvided"), value3: item.dto.unit ?? translate("common.notProvided") })}</p><dl className="grid min-w-0 gap-3 md:grid-cols-3">{item.values.map(v=><div key={v.key} className="min-w-0 rounded-control bg-neutral-soft p-4"><dt>{v.label}</dt><dd className="mt-2 text-2xl font-bold">{v.text}</dd></div>)}</dl>{item.dto.nextAction&&<p>{item.dto.nextAction}</p>}<details><summary className="font-bold">{translate("results.resultPresentation_evidence_calculation_review_expand")}</summary><ServerValue caseId={caseId} value={item.dto}/></details></article>;
 }
-

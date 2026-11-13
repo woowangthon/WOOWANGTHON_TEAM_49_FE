@@ -104,5 +104,6 @@
   "chatScreen_result": "공식 결과 스냅샷 보기",
   "markdown_image": "이미지",
   "chatScreen_source_information_notProvided": "출처 정보 미제공",
-  "chatScreen_original_document_notProvided": "원본 문서 ID가 제공되지 않았습니다."
+  "chatScreen_original_document_notProvided": "원본 문서 ID가 제공되지 않았습니다.",
+  "streamFailure": "{code} · {retry}"
 }

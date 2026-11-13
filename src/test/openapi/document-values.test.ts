@@ -1,9 +1,13 @@
+import {createTranslation} from '@/i18n/translate';
 import {describe, expect, it} from "vitest";
 import {createOpenApiContract} from "./contract";
 import {fieldSchema, fieldsSchema, valueSchema} from "@/features/documents/review/schemas";
 import {processingSchema} from "@/features/documents/schemas";
-import {displayValue, fieldEditorView, parseFieldValue} from "@/features/documents/review/view-models";
-import {isProcessing} from "@/features/documents/view-models";
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '@/features/documents/review/view-models';
+import {createLocalizedFeaturesDocumentsViewModels} from '@/features/documents/view-models';
+
+const {displayValue, fieldEditorView, parseFieldValue} = createLocalizedFeaturesDocumentsReviewViewModels(createTranslation('ko'));
+const {isProcessing} = createLocalizedFeaturesDocumentsViewModels(createTranslation('ko'));
 const contract=createOpenApiContract("contracts/openapi.json");
 const field={fieldId:1,key:"items",label:"Items",value:null,valueType:"JSON",status:"DEFERRED",editedByUser:false,effectiveValueOrigin:"SHARED_DEFAULT",hasCaseOverride:false,confirmedAt:null,source:null};
 describe("A03/A06 independent P0 alignment",()=>{

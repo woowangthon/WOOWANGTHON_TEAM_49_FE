@@ -133,7 +133,7 @@ describe("MSW authentication integration", () => {
     );
     await app.auth.restore();
     expect(app.auth.getSnapshot().status).toBe("anonymous");
-    expect(app.auth.getSnapshot().notice).toContain("확인하지 못했습니다");
+    expect(app.auth.getSnapshot().notice).toBe("auth.controller_previous_login_status_confirm_failure_retry");
     expect(app.session.getSnapshot().accessToken).toBeNull();
     expect(app.queryClient.getQueryCache().getAll()).toHaveLength(0);
   });
@@ -161,7 +161,7 @@ describe("MSW authentication integration", () => {
     await vi.waitFor(() => expect(logoutHeader).toBe(`Bearer ${testLogin.accessToken}`));
     release();
     await logout;
-    expect(app.auth.getSnapshot()).toEqual({ status: "anonymous", signedOut: true, notice: "로그아웃되었습니다." });
+    expect(app.auth.getSnapshot()).toEqual({ status: "anonymous", signedOut: true, notice: "auth.controller_logout" });
   });
 
   it.each([401, 500])("keeps the client signed out and reports server logout failure (%i) without refreshing", async (status) => {
@@ -175,7 +175,7 @@ describe("MSW authentication integration", () => {
     await app.auth.logout();
     await app.auth.restore();
     expect(app.auth.getSnapshot().status).toBe("anonymous");
-    expect(app.auth.getSnapshot().notice).toContain("서버 세션 종료는 확인하지 못했으므로");
+    expect(app.auth.getSnapshot().notice).toBe("auth.controller_logout_confirm_failure_retry_login_count");
     expect(app.session.getSnapshot().accessToken).toBeNull();
     expect(refreshes).toBe(0);
   });

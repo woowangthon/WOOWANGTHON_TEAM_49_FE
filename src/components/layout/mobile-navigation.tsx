@@ -1,11 +1,14 @@
 "use client";
-import { translate } from "@/i18n/translate";
-
+import { useTranslation } from '@/i18n/use-translation';
 
 import { Menu, X } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
-export function MobileNavigation({ children, label=translate("navigation.mobileNavigation_menu"), title=translate("navigation.mobileNavigation_monthlyWage_menu"), breakpoint="64rem" }: { children: ReactNode; label?:string; title?:string; breakpoint?:string }) {
+export function MobileNavigation({ children, label, title, breakpoint="64rem" }: { children: ReactNode; label?:string; title?:string; breakpoint?:string }) {
+ const {translate} = useTranslation();
+ label ??= translate("navigation.mobileNavigation_menu");
+ title ??= translate("navigation.mobileNavigation_monthlyWage_menu");
+
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dialogId = useId();

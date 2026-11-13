@@ -1,13 +1,17 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
 
+import {createLocalizedFeaturesResultsViewModels} from './view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { ArrowDownUp, ArrowRight } from "lucide-react";
 import type { Results } from "./schemas";
 import { ServerValue } from "./result-screen";
 import { SourceEvidence } from "./source-evidence";
-import { displayScalar, statusLabels } from "./view-models";
+
 import styles from "./result-detail.module.css";
 
 export type ResultCard = {
@@ -16,23 +20,18 @@ export type ResultCard = {
 };
 type Value = { key: string; label: string; value: unknown };
 const metadataKeys = ["version", "basedOnInputVersion", "inputVersion", "createdAt", "freshness", "confirmedAt"];
-const labels: Record<string, string> = { MATCH: translate("results.resultComparisonTable_record_match"), DIFFERENCE: translate("results.resultComparisonTable_difference_2"), INSUFFICIENT_INFORMATION: translate("results.resultComparisonTable_information_insufficient"), REVIEW_REQUIRED: translate("common.reviewRequired") };
+
 function record(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 }
-function valuesFor(card: ResultCard, groupId: string): Value[][] {
-  const d = card.data;
-  const value = (key: string, label: string): Value => ({ key, label, value: d[key] });
-  if (groupId === "comparison") {
-    const reference = [value("contractValue", translate("results.resultDetail_contract")), value("attendanceValue", translate("results.resultDetail_attendance"))].filter(v => v.key in d);
-    return [reference.length ? reference : [value("contractValue", translate("results.resultDetail_contract_attendance_basis"))], [value("payslipValue", translate("results.resultDetail_payslip"))]];
-  }
-  if (groupId === "validation") return [["itemSum" in d ? value("itemSum", translate("results.resultDetail_item_sum")) : value("calculated", translate("results.resultDetail_calculation"))], ["statedTotal" in d ? value("statedTotal", translate("results.resultDetail_payslip_sum")) : value("stated", translate("results.resultDetail_payslip_2"))]];
-  if (groupId === "deposit") return [[value("payslipNetPay", translate("results.resultDetail_netPay"))], [value("linkedPaymentTotal", translate("results.resultDetail_link_payment_sum"))]];
-  return [[value("amount", translate("results.resultDetail_calculation_amount"))]];
-}
 
 export function ResultDetail({ caseId, card, groupId, onClose }: { caseId: number; card: ResultCard; groupId: string; onClose: () => void }) {
+const {labels, valuesFor} = useLocalized(createPresentation);
+
+const {displayScalar, statusLabels} = useLocalized(createLocalizedFeaturesResultsViewModels);
+
+ const {translate} = useTranslation();
+
   const columns = valuesFor(card, groupId);
   const basis = record(card.data.comparisonBasis) ?? card.period;
   const mismatched = basis?.semanticMatch === false;
@@ -60,4 +59,20 @@ export function ResultDetail({ caseId, card, groupId, onClose }: { caseId: numbe
     <details className={styles.section}><summary>?????? ???????? ??</summary><ServerValue caseId={caseId} value={card.data} unit={card.unit}/><ServerValue caseId={caseId} value={card.version}/></details>
     <footer className={styles.actions}><Link href={`/cases/${caseId}/questions`}>{translate("results.resultDetail_confirm_question")}<ArrowRight size={16} aria-hidden="true"/></Link><button type="button" aria-label={translate("results.resultDetail_confirm_detail_close")} onClick={onClose}>{translate("results.resultDetail_confirm")}</button></footer>
   </article>;
+}
+
+function createPresentation({translate}: Translation) {
+const labels: Record<string, string> = { MATCH: translate("results.resultComparisonTable_record_match"), DIFFERENCE: translate("results.resultComparisonTable_difference_2"), INSUFFICIENT_INFORMATION: translate("results.resultComparisonTable_information_insufficient"), REVIEW_REQUIRED: translate("common.reviewRequired") };
+function valuesFor(card: ResultCard, groupId: string): Value[][] {
+  const d = card.data;
+  const value = (key: string, label: string): Value => ({ key, label, value: d[key] });
+  if (groupId === "comparison") {
+    const reference = [value("contractValue", translate("results.resultDetail_contract")), value("attendanceValue", translate("results.resultDetail_attendance"))].filter(v => v.key in d);
+    return [reference.length ? reference : [value("contractValue", translate("results.resultDetail_contract_attendance_basis"))], [value("payslipValue", translate("results.resultDetail_payslip"))]];
+  }
+  if (groupId === "validation") return [["itemSum" in d ? value("itemSum", translate("results.resultDetail_item_sum")) : value("calculated", translate("results.resultDetail_calculation"))], ["statedTotal" in d ? value("statedTotal", translate("results.resultDetail_payslip_sum")) : value("stated", translate("results.resultDetail_payslip_2"))]];
+  if (groupId === "deposit") return [[value("payslipNetPay", translate("results.resultDetail_netPay"))], [value("linkedPaymentTotal", translate("results.resultDetail_link_payment_sum"))]];
+  return [[value("amount", translate("results.resultDetail_calculation_amount"))]];
+}
+return {labels, valuesFor};
 }

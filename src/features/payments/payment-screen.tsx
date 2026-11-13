@@ -1,24 +1,27 @@
 "use client";
-import { translate } from "@/i18n/translate";
-import { activeLocale as defaultLocale } from "@/i18n/config";
+import {message as describeMessage} from '@/i18n/message';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { ApiError } from "@/lib/api/error";
 import { DuplicateCandidates } from "./duplicate-candidates";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import {useForm} from '@/i18n/use-localized-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { transactionCreate,type Transaction,type TransactionCreate } from "./schemas";
 import { usePayments } from "./queries";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { cardStyle,secondaryButton } from "@/components/ui/styles";
 export function PaymentScreen({workplaceId,caseId,inputVersion}:{workplaceId:number;caseId?:number;inputVersion?:number}) {
+ const {translate, locale: defaultLocale} = useTranslation();
+
  const [deleting,setDeleting]=useState<Transaction>(); const [affected,setAffected]=useState<number[]>();
  const [page,setPage]=useState(1);const {api,transactions:q,allocations,action}=usePayments(workplaceId,page,caseId);const [edit,setEdit]=useState<Transaction>();
  const form=useForm<TransactionCreate>({resolver:zodResolver(transactionCreate),defaultValues:{paymentMethod:"BANK_TRANSFER",transactionDate:"",source:"USER_INPUT",confirmationStatus:"USER_REPORTED"}});
  const run=(f:()=>Promise<unknown>)=>action.mutate(f);
  return <section id="payments" className="min-w-0 space-y-4 [overflow-wrap:anywhere]" aria-label={translate("payments.paymentScreen_payment_transaction")}><h2 className="text-title font-bold">{translate("payments.paymentScreen_deposit_cash_payment_transaction")}</h2><p>{translate("payments.paymentScreen_transaction_workplace_all_allocation_release_delete_case")}</p>
  <DuplicateCandidates workplaceId={workplaceId} onSelect={t=>{setEdit(t);form.reset({paymentMethod:t.paymentMethod,transactionDate:t.transactionDate,amount:t.amount,sender:t.sender??"",memo:t.memo??"",source:"USER_INPUT",confirmationStatus:"USER_REPORTED"});}}/>
- <form className={`${cardStyle} grid min-w-0 gap-3 sm:grid-cols-2`} onSubmit={form.handleSubmit(v=>{if(edit && v.amount < edit.totalAllocatedAcrossCases){action.reset();form.setError("amount",{message:translate("payments.paymentScreen_allocation_all_amount_count_empty")});return;}run(async()=>{if(edit)await api.update(workplaceId,edit.transactionId,{paymentMethod:v.paymentMethod,transactionDate:v.transactionDate,amount:v.amount,sender:v.sender,memo:v.memo,confirmationStatus:v.confirmationStatus});else await api.create(workplaceId,v);setEdit(undefined);form.reset();});})}>
+ <form className={`${cardStyle} grid min-w-0 gap-3 sm:grid-cols-2`} onSubmit={form.handleSubmit(v=>{if(edit && v.amount < edit.totalAllocatedAcrossCases){action.reset();form.setError("amount",{message:describeMessage("payments.paymentScreen_allocation_all_amount_count_empty")});return;}run(async()=>{if(edit)await api.update(workplaceId,edit.transactionId,{paymentMethod:v.paymentMethod,transactionDate:v.transactionDate,amount:v.amount,sender:v.sender,memo:v.memo,confirmationStatus:v.confirmationStatus});else await api.create(workplaceId,v);setEdit(undefined);form.reset();});})}>
  <label>{translate("payments.paymentScreen_payment_count")}<select className="ui-control " {...form.register("paymentMethod")}><option value="BANK_TRANSFER">{translate("payments.paymentScreen_bankAccount_deposit")}</option><option value="CASH">{translate("payments.paymentScreen_cash_payment")}</option></select></label>
  <label>{translate("payments.paymentScreen_transaction")}<input className="ui-control " type="date" {...form.register("transactionDate")}/></label><label>{translate("payments.paymentScreen_amount")}<input className="ui-control " type="number" min="0" max="1000000000000" step="1" {...form.register("amount",{valueAsNumber:true})}/></label>
  <label>{translate("payments.paymentScreen_deposit")}<input className="ui-control " maxLength={200} {...form.register("sender")}/></label><label>{translate("payments.paymentScreen_label5")}<input className="ui-control " maxLength={1000} {...form.register("memo")}/></label>

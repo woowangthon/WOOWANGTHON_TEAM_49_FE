@@ -1,11 +1,13 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesCasesViewModels} from '@/features/cases/view-models';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useState } from "react";
 import { useCases } from "@/features/cases/queries";
-import { caseCard } from "@/features/cases/view-models";
+
 import { PageHeading } from "@/components/ui/page-heading";
 import { Pagination } from "@/components/ui/pagination";
 import { QueryFeedback } from "@/components/ui/query-feedback";
@@ -13,6 +15,10 @@ import { cardStyle, secondaryButton } from "@/components/ui/styles";
 import { SupportLinks } from "./screens";
 
 export function ConsultationScreen() {
+const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
+
+ const {translate} = useTranslation();
+
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<number>();
   const query = useCases(page);

@@ -70,5 +70,10 @@
   "env_authentication_information_none": "API Base URL은 인증 정보·쿼리·해시가 없는 HTTP(S) URL이어야 합니다.",
   "unconfirmed": "미확정",
   "format_time": "원/시간",
-  "format_unit_notProvided": " (단위 미제공)"
+  "format_unit_notProvided": " (단위 미제공)",
+  "languageLabel": "언어",
+  "languageSelect": "표시 언어 선택",
+  "languageKo": "한국어",
+  "languageError": "언어 설정을 변경하지 못했습니다. 다시 시도해 주세요.",
+  "accountTitle": "계정"
 }

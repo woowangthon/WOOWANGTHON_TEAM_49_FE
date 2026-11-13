@@ -1,5 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useState } from "react";
@@ -18,6 +18,8 @@ import { useDocuments } from "../queries";
 import { DocumentList } from "./document-list";
 import { UploadForm } from "./upload-form";
 export function LibraryScreen() {
+ const {translate} = useTranslation();
+
   return <div className={`${workplaceStyles.screen} ${documentStyles.screen} ${libraryStyles.screen}`}>
     <header className={libraryStyles.header}>
       <div className={libraryStyles.copy}><p className={libraryStyles.eyebrow}>{translate("documents.documentScreens_wage_start")}</p><h1>{translate("documents.documentScreens_library")}</h1><p className={libraryStyles.intro}>{translate("documents.documentScreens_workplace_record")}<br />{translate("documents.documentScreens_required_continue_confirm")}</p><Link href="/workplaces" className={libraryStyles.register}><FileUp size={18} aria-hidden="true" />{translate("documents.documentScreens_workplace_record_create")}</Link></div>
@@ -28,6 +30,8 @@ export function LibraryScreen() {
   </div>;
 }
 export function WorkplaceDocumentsScreen({ id }: { id: number }) {
+ const {translate} = useTranslation();
+
   const [uploadOpen, setUploadOpen] = useState(false);
   const query = useWorkplace(id);
   const removal = useWorkplaceRemoval(id);
@@ -43,6 +47,8 @@ export function WorkplaceDocumentsScreen({ id }: { id: number }) {
   </div>;
 }
 export function CaseUploadScreen({ id }: { id: number }) {
+ const {translate} = useTranslation();
+
   const query = useCase(id);
   const removal = useCaseRemoval(id);
   if (removal.pending || removal.removed) return <p role="status">{translate("documents.documentScreens_delete_wageCase")}</p>;
@@ -51,6 +57,8 @@ export function CaseUploadScreen({ id }: { id: number }) {
   return <CaseDocuments id={id} workplaceName={(typeof query.data.workplace.name === "string" ? query.data.workplace.name : translate("documents.documentScreens_workplace_information_notProvided"))} inputVersion={query.data.inputVersion} />;
 }
 function CaseDocuments({ id, workplaceName, inputVersion }: { id: number; workplaceName: string; inputVersion: number }) {
+ const {translate} = useTranslation();
+
   const docs = useDocuments({ kind: "case", id }, { page: 1, size: 20 });
   const canAdd = !!docs.data && !docs.isError && docs.data.total < 20;
   return <div className="document-screen min-w-0 space-y-6">

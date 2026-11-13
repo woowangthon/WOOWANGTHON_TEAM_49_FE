@@ -1,9 +1,12 @@
+"use client";
+import { useTranslation } from '@/i18n/use-translation';
 
-import { translate } from "@/i18n/translate";
 import type { ComponentProps, ReactNode } from "react";
 import { cardVariants, primaryButton, secondaryButton, tertiaryButton, dangerButton } from "./styles";
 
 export function Button({ variant = "primary", pending = false, disabled, children, className = "", type = "button", ...props }: ComponentProps<"button"> & { variant?: "primary" | "secondary" | "tertiary" | "danger"; pending?: boolean }) {
+ const {translate} = useTranslation();
+
   return <button {...props} type={type} disabled={disabled || pending} aria-busy={pending || undefined} className={`${{ primary: primaryButton, secondary: secondaryButton, tertiary: tertiaryButton, danger: dangerButton }[variant]} ${className}`}>{children}{pending && <span className="ml-2">{translate("common.processing")}</span>}</button>;
 }
 export function Section({ variant = "default", title, description, children, className = "", ...props }: Omit<ComponentProps<"section">, "title"> & { variant?: keyof typeof cardVariants; title?: string; description?: string }) {

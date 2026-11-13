@@ -1,5 +1,10 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
+
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -8,10 +13,12 @@ import { QueryFeedback } from "@/components/ui/query-feedback";
 import { cardStyle, secondaryButton } from "@/components/ui/styles";
 import { useOriginalFile, usePreview } from "../queries";
 import { useObjectUrl } from "../use-object-url";
-import { highlightBox } from "../view-models";
+
 import type { PreviewDto, SourceDto } from "../schemas";
-const PdfCanvas=dynamic(()=>import("./pdf-canvas"),{ssr:false,loading:()=> <p role="status">{translate("documents.originalViewer_pdf")}</p>});
+
 export function OriginalViewer({workplaceId,documentId,source,sourceRequest=0,onReady}:{workplaceId:number;documentId:number;source?:SourceDto|null;sourceRequest?:number;onReady?:(ready:boolean)=>void}){
+ const {translate} = useTranslation();
+
   const preview=usePreview(workplaceId,documentId);const file=useOriginalFile(workplaceId,documentId);
   const url=useObjectUrl(file.data);
   const [retryKey,setRetryKey]=useState(0);
@@ -24,6 +31,12 @@ export function OriginalViewer({workplaceId,documentId,source,sourceRequest=0,on
   return <ViewerContent key={`${documentId}-${retryKey}`} url={url} preview={preview.data} source={source} sourceRequest={sourceRequest} onRetry={retry} onReady={onReady} />;
 }
 export function ViewerContent({url,preview,source,sourceRequest=0,onRetry,onReady}:{url:string;preview:PreviewDto;source?:SourceDto|null;sourceRequest?:number;onRetry:()=>void;onReady?:(ready:boolean)=>void}){
+const {PdfCanvas} = useLocalized(createPresentation);
+
+const {highlightBox} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+
+ const {translate} = useTranslation();
+
   const scrollArea=useRef<HTMLDivElement>(null);
   const marker=useRef<HTMLDivElement>(null);
   const [manualPage,setManualPage]=useState<{page:number;source:SourceDto|null|undefined;request:number}>();
@@ -90,4 +103,9 @@ export function ViewerContent({url,preview,source,sourceRequest=0,onRetry,onRead
     </div>
     </div>
   </section>;
+}
+
+function createPresentation({translate}: Translation) {
+const PdfCanvas=dynamic(()=>import("./pdf-canvas"),{ssr:false,loading:()=> <p role="status">{translate("documents.originalViewer_pdf")}</p>});
+return {PdfCanvas};
 }

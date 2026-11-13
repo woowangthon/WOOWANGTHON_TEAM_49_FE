@@ -1,14 +1,16 @@
+import {createTranslation} from '@/i18n/translate';
 import { describe, expect, it } from "vitest";
 import { http } from "msw";
 import { createOpenApiContract } from "./contract";
 import { fieldWireSchema, fieldsSchema, fieldSchema } from "@/features/documents/review/schemas";
-import { fieldView, reviewStateView } from "@/features/documents/review/view-models";
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '@/features/documents/review/view-models';
 import { loginResponseSchema, userSchema } from "@/features/auth/schemas";
 import { documentSchema } from "@/features/documents/schemas";
 import { documentApi } from "@/features/documents/api";
 import { createAppServices } from "@/lib/app-services";
 import { apiResponse, server, testApiUrl } from "@/test/server";
 
+const {fieldView, reviewStateView} = createLocalizedFeaturesDocumentsReviewViewModels(createTranslation('ko'));
 const contract = createOpenApiContract();
 const user = {userId:0,email:"opaque",name:""};
 const login = {accessToken:"token",tokenType:"Bearer",expiresIn:1800,user};

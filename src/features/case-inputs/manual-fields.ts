@@ -1,18 +1,20 @@
-
-import { translate } from "@/i18n/translate";
 import { z } from "zod";
 import type { ManualInput, ManualRecord, RecordType } from "./schemas";
+import {type Translation} from '@/i18n/translate';
 
-export const typeLabels: Record<RecordType, string> = { CONTRACT: translate("caseInputs.manualFields_work_contract"), ATTENDANCE: translate("caseInputs.manualFields_attendance"), PAYSLIP: translate("caseInputs.manualFields_wage"), DEPOSIT: translate("caseInputs.manualFields_deposit_cash_count") };
 type Field = { key: string; label: string; kind: "money" | "minutes" | "date" | "datetime" | "list" | "text" | "method"; required?: boolean };
-export const manualFields: Record<RecordType, Field[]> = {
+
+export function createLocalizedFeaturesCaseInputsManualFields(translation: Translation) {
+  const {translate} = translation;
+const typeLabels: Record<RecordType, string> = { CONTRACT: translate("caseInputs.manualFields_work_contract"), ATTENDANCE: translate("caseInputs.manualFields_attendance"), PAYSLIP: translate("caseInputs.manualFields_wage"), DEPOSIT: translate("caseInputs.manualFields_deposit_cash_count") };
+const manualFields: Record<RecordType, Field[]> = {
   CONTRACT: [{ key: "hourlyWage", label: translate("caseInputs.manualFields_hourlyWage"), kind: "money" }, { key: "monthlyBasePay", label: translate("caseInputs.manualFields_basePay"), kind: "money" }],
   ATTENDANCE: [{ key: "workDate", label: translate("caseInputs.manualFields_work"), kind: "date", required: true }, { key: "clockIn", label: translate("caseInputs.manualFields_time"), kind: "datetime", required: true }, { key: "clockOut", label: translate("caseInputs.manualFields_time_2"), kind: "datetime", required: true }, { key: "breakMinutes", label: translate("caseInputs.manualFields_time_minutes"), kind: "minutes", required: true }],
   PAYSLIP: [{ key: "grossPay", label: translate("caseInputs.manualFields_payment_total"), kind: "money" }, { key: "totalDeductions", label: translate("caseInputs.manualFields_deduction_total"), kind: "money" }, { key: "netPay", label: translate("caseInputs.manualFields_netPay"), kind: "money" }, { key: "paymentItems", label: translate("caseInputs.manualFields_payment_list"), kind: "list" }, { key: "deductionItems", label: translate("caseInputs.manualFields_deduction_list"), kind: "list" }, { key: "hourlyWage", label: translate("caseInputs.manualFields_hourlyWage"), kind: "money" }, { key: "basePay", label: translate("caseInputs.manualFields_basePay_2"), kind: "money" }, { key: "workedMinutes", label: translate("caseInputs.manualFields_work_time_minutes"), kind: "minutes" }],
   DEPOSIT: [{ key: "paymentMethod", label: translate("caseInputs.manualFields_count"), kind: "method", required: true }, { key: "transactionDate", label: translate("caseInputs.manualFields_count_2"), kind: "date", required: true }, { key: "amount", label: translate("caseInputs.manualFields_count_3"), kind: "money", required: true }, { key: "sender", label: translate("caseInputs.manualFields_manualFields_dEPOSIT_label4"), kind: "text" }, { key: "memo", label: translate("caseInputs.manualFields_manualFields_dEPOSIT_label5"), kind: "text" }],
 };
 const integer = (text: string) => /^-?\d+$/.test(text) && Number.isSafeInteger(Number(text));
-export function manualFormSchema(type: RecordType, periodStart: string, periodEnd: string) {
+function manualFormSchema(type: RecordType, periodStart: string, periodEnd: string) {
   return z.object({ values: z.record(z.string(), z.string()) }).superRefine(({ values }, ctx) => {
     const error = (key: string, message: string) => ctx.addIssue({ code: "custom", path: ["values", key], message });
     for (const f of manualFields[type]) {
@@ -34,7 +36,7 @@ export function manualFormSchema(type: RecordType, periodStart: string, periodEn
     }
   });
 }
-export function manualDefaults(type: RecordType, data: ManualRecord["data"] = {}) {
+function manualDefaults(type: RecordType, data: ManualRecord["data"] = {}) {
   return { values: Object.fromEntries(manualFields[type].map(f => {
     const v = data[f.key];
     if (v == null) return [f.key, ""];
@@ -42,7 +44,7 @@ export function manualDefaults(type: RecordType, data: ManualRecord["data"] = {}
     return [f.key, Array.isArray(v) ? v.join(", ") : String(v)];
   })) };
 }
-export function toManualInput(type: RecordType, values: Record<string, string>, original: ManualRecord["data"] = {}): ManualInput {
+function toManualInput(type: RecordType, values: Record<string, string>, original: ManualRecord["data"] = {}): ManualInput {
   // PATCH replaces all data; preserve unedited fields that a newer server may provide.
   const data = { ...original };
   const originalValues = manualDefaults(type, original).values;
@@ -54,4 +56,6 @@ export function toManualInput(type: RecordType, values: Record<string, string>, 
   }
   if (type === "DEPOSIT") { data.source = "USER_INPUT"; data.confirmationStatus = "USER_REPORTED"; }
   return { recordType: type, data, source: "USER_INPUT" };
+}
+return {typeLabels, manualFields, manualFormSchema, manualDefaults, toManualInput};
 }

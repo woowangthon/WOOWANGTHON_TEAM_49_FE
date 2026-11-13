@@ -1,14 +1,19 @@
-'use client';
+"use client";
+import {useMessageState} from '@/i18n/use-message-state';
+import {message as describeMessage, errorMessage} from '@/i18n/message';
 
-import { translate, translateContent } from "@/i18n/translate";
-import { activeLocale as defaultLocale } from "@/i18n/config";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesCasesViewModels} from '@/features/cases/view-models';
+import {createLocalizedFeaturesChatsApi} from './api';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { MobileNavigation } from '@/components/layout/mobile-navigation';
 import { ChatMarkdown } from './markdown';
 import { WorkplaceHeader } from '@/features/workplaces/components/workplace-header';
 import { useWorkplace } from '@/features/workplaces/queries';
-import { caseCard } from '@/features/cases/view-models';
+
 import workplaceStyles from '@/features/workplaces/components/workplace-space.module.css';
 import styles from './chat-space.module.css';
 import { snapshotHref } from '@/features/results/snapshot-link';
@@ -22,10 +27,10 @@ import { useCases } from '@/features/cases/queries';
 import { useSourceDocument } from '@/features/results/queries';
 import { SourceEvidence } from '@/features/results/source-evidence';
 import { primaryButton,secondaryButton } from '@/components/ui/styles';
-import { chatApi,type Message } from './api';
+import {type Message} from './api';
 import { consumeChat } from './stream';
 import { Pagination } from '@/components/ui/pagination';
-import { ChatContextBar, scopeLabel } from './chat-context-bar';
+import { ChatContextBar, createChatPresentation } from './chat-context-bar';
 import type { ChatScope } from './api';
 import './chat.css';
 export function ChatScreen({workplaceId,chatId,embeddedCaseId}:{workplaceId:number;chatId?:number;embeddedCaseId?:number}){
@@ -33,11 +38,17 @@ export function ChatScreen({workplaceId,chatId,embeddedCaseId}:{workplaceId:numb
  return <ChatWorkspace key={`${s.generation}:${workplaceId}:${chatId}:${embeddedCaseId}`} workplaceId={workplaceId} chatId={chatId} embeddedCaseId={embeddedCaseId}/>;
 }
 function ChatWorkspace({workplaceId:w,chatId:initialId,embeddedCaseId}:{workplaceId:number;chatId?:number;embeddedCaseId?:number}){
+const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
+const {chatApi} = useLocalized(createLocalizedFeaturesChatsApi);
+
+ const {translate, locale: defaultLocale} = useTranslation();
+ const {} = useLocalized(createChatPresentation);
+
  const [localId,setLocalId]=useState<number>();
  const id=embeddedCaseId?localId:initialId;
  const navigateChat=(chatId?:number)=>{if(busy)return;if(embeddedCaseId){setHistory(1);setContent('');setDraft('');setAll(false);setError('');setTitle('');pendingMessage.current=undefined;setLocalId(chatId);}else if(chatId)router.push(`/workplaces/${w}/chats/${chatId}`);else router.replace(`/workplaces/${w}/chats`);};
  const s=useSessionScope(),api=chatApi(s.api,w),router=useRouter();
- const [page,setPage]=useState(1),[history,setHistory]=useState(1),[title,setTitle]=useState(''),[caseId,setCaseId]=useState(embeddedCaseId?String(embeddedCaseId):''),[content,setContent]=useState(''),[all,setAll]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[phase,setPhase]=useState(''),[draft,setDraft]=useState(''),[run,setRun]=useState<string>(),[mode,setMode]=useState('');
+ const [page,setPage]=useState(1),[history,setHistory]=useState(1),[title,setTitle]=useState(''),[caseId,setCaseId]=useState(embeddedCaseId?String(embeddedCaseId):''),[content,setContent]=useState(''),[all,setAll]=useState(false),[error,setError]=useMessageState(''),[busy,setBusy]=useState(false),[phase,setPhase]=useMessageState(''),[draft,setDraft]=useState(''),[run,setRun]=useState<string>(),[mode,setMode]=useState('');
  const [confirmDelete,setConfirmDelete]=useState(false),[showLatest,setShowLatest]=useState(false);
  const pendingMessage=useRef<{signature:string;id:string}|undefined>(undefined);
  const lock=useRef(false),abort=useRef<AbortController|undefined>(undefined),viewport=useRef<HTMLDivElement>(null),follow=useRef(true);
@@ -59,10 +70,10 @@ function ChatWorkspace({workplaceId:w,chatId:initialId,embeddedCaseId}:{workplac
  useEffect(()=>()=>abort.current?.abort(),[]);
  useEffect(()=>{if(follow.current&&viewport.current)viewport.current.scrollTop=viewport.current.scrollHeight;},[draft,detail.data]);
  const refresh=()=>s.queryClient.invalidateQueries({queryKey:prefix});
- async function action(fn:()=>Promise<unknown>){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await fn();await refresh();}catch(e){setError(e instanceof Error?e.message:translate("chats.chatScreen_request_failure"));}finally{lock.current=false;setBusy(false);}}
+ async function action(fn:()=>Promise<unknown>){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await fn();await refresh();}catch(e){setError(e instanceof Error?errorMessage(e):describeMessage("chats.chatScreen_request_failure"));}finally{lock.current=false;setBusy(false);}}
  async function send(retry?:number){
   if(!id||lock.current||(!retry&&!content.trim()))return;
-  lock.current=true;setBusy(true);setError('');setDraft('');setRun(undefined);setPhase(translate("chats.chatScreen_pending"));
+  lock.current=true;setBusy(true);setError('');setDraft('');setRun(undefined);setPhase(describeMessage("chats.chatScreen_pending"));
   const ctrl=new AbortController();abort.current=ctrl;
   try{
    const signature=JSON.stringify([content,all]);
@@ -70,15 +81,15 @@ function ChatWorkspace({workplaceId:w,chatId:initialId,embeddedCaseId}:{workplac
    const stream=await api.stream(id,ctrl.signal,content,all?{scopeType:'WORKPLACE_ALL'}:undefined,retry,retry?undefined:pendingMessage.current?.id);
    await consumeChat(stream,event=>{
     if(ctrl.signal.aborted)return;
-    if(event.event==='message_start'){pendingMessage.current=undefined;setRun(event.data.runId);setMode(event.data.aiMode??'');setPhase(translate("chats.chatScreen_chatWorkspace_send2"));setContent('');}
+    if(event.event==='message_start'){pendingMessage.current=undefined;setRun(event.data.runId);setMode(event.data.aiMode??'');setPhase(describeMessage("chats.chatScreen_chatWorkspace_send2"));setContent('');}
     if(event.event==='content_delta')setDraft(v=>v+event.data.delta);
-    if(event.event==='message_done')setPhase(event.data.status==='COMPLETED'?translate("chats.chatScreen_complete"):event.data.status==='CANCELLED'?translate("chats.chatScreen_cancel_complete"):translate("chats.chatScreen_failure"));
-    if(event.event==='error'){setPhase(translate("chats.chatScreen_failure_2"));setError(`${event.data.errorCode} · ${event.data.retryable?translate("chats.chatScreen_retry"):translate("chats.chatScreen_retry_2")}`);}
+    if(event.event==='message_done')setPhase(event.data.status==='COMPLETED'?describeMessage("chats.chatScreen_complete"):event.data.status==='CANCELLED'?describeMessage("chats.chatScreen_cancel_complete"):describeMessage("chats.chatScreen_failure"));
+    if(event.event==='error'){setPhase(describeMessage("chats.chatScreen_failure_2"));setError(describeMessage("chats.streamFailure", {code:event.data.errorCode, retry:describeMessage(event.data.retryable ? "chats.chatScreen_retry" : "chats.chatScreen_retry_2")}));}
    });
-  }catch(e){if(!ctrl.signal.aborted){setPhase(translate("chats.chatScreen_failure_save_status_confirm_required"));setError(e instanceof Error?e.message:translate("chats.chatScreen_error"));}}
+  }catch(e){if(!ctrl.signal.aborted){setPhase(describeMessage("chats.chatScreen_failure_save_status_confirm_required"));setError(e instanceof Error?errorMessage(e):describeMessage("chats.chatScreen_error"));}}
   finally{if(!ctrl.signal.aborted){await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}}
  }
- async function cancel(){if(!id||!run)return;setPhase(translate("chats.chatScreen_cancel_request"));try{await api.cancel(id,run);setPhase(translate("chats.chatScreen_cancel_count_status_confirm"));abort.current?.abort();await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}catch(e){setPhase(translate("chats.chatScreen_cancel_failure"));setError(e instanceof Error?e.message:translate("chats.chatScreen_cancel_failure"));}}
+ async function cancel(){if(!id||!run)return;setPhase(describeMessage("chats.chatScreen_cancel_request"));try{await api.cancel(id,run);setPhase(describeMessage("chats.chatScreen_cancel_count_status_confirm"));abort.current?.abort();await refresh();if(s.queryClient.getQueryState([...prefix,'detail',id,history])?.status==='success')setDraft('');setBusy(false);lock.current=false;}catch(e){setPhase(describeMessage("chats.chatScreen_cancel_failure"));setError(e instanceof Error?errorMessage(e):describeMessage("chats.chatScreen_cancel_failure"));}}
  const chatList=( <div className="v2-chat-list"><h2 className="font-bold">{translate("chats.chatScreen_chat_list")}</h2>
  {list.isPending?<p>{translate("chats.chatScreen_chat_load")}</p>:list.isError?<p role="alert">{translate("chats.chatScreen_chat_list_failure")}<button className={secondaryButton} onClick={()=>void list.refetch()}>{translate("chats.chatScreen_chat_list_retry")}</button></p>:list.data.items.length?list.data.items.filter(c=>!embeddedCaseId||(c.defaultScope.scopeType==='CASE'&&c.defaultScope.caseId===embeddedCaseId)).map(c=><Link onClick={e=>{if(embeddedCaseId){e.preventDefault();navigateChat(c.chatId);}}} className="v2-chat-session" key={c.chatId} aria-current={id===c.chatId?"page":undefined} href={`/workplaces/${w}/chats/${c.chatId}`}><strong>{c.title}</strong><small className="block font-normal"><span className="line-clamp-2">{c.lastMessagePreview}</span><time dateTime={c.updatedAt} className="block">{new Date(c.updatedAt).toLocaleDateString(defaultLocale, {year:"numeric",month:"long",day:"numeric"})}</time></small></Link>):<p>{translate("chats.chatScreen_save_chat_empty")}</p>}
  {!!list.data?.total&&<Pagination page={page} size={20} total={list.data.total} onPage={setPage} busy={list.isFetching}/>}
@@ -114,6 +125,9 @@ function ChatWorkspace({workplaceId:w,chatId:initialId,embeddedCaseId}:{workplac
  </section></div></div>;
 }
 export function StoredMessage({message:m,retry,busy,returnTo,currentScope}:{message:Message;retry:()=>void;busy:boolean;returnTo?:string;currentScope?:ChatScope}){
+ const {translate, translateContent} = useTranslation();
+ const {scopeLabel} = useLocalized(createChatPresentation);
+
  const caseId=m.scope.scopeType==='CASE'?m.scope.caseId:undefined;
  const different=currentScope&&scopeLabel(currentScope)!==scopeLabel(m.scope);
  return <article aria-label={m.role==='USER'?translate("chats.chatScreen_message"):translate("chats.chatScreen_answer_3")} className={`v2-chat-bubble ${m.role==='USER'?'v2-chat-user':''}`}>
@@ -134,10 +148,16 @@ export function StoredMessage({message:m,retry,busy,returnTo,currentScope}:{mess
 }
 
 function ChatSource({caseId,value,returnTo}:{caseId:number;value:NonNullable<Message['sources']>[number];returnTo?:string}){
+ const {translate} = useTranslation();
+ const {} = useLocalized(createChatPresentation);
+
  if(value.documentId===null)return <p>{translate("chats.chatScreen_original_document_notProvided")}</p>;
  return <LinkedChatSource caseId={caseId} value={{...value,documentId:value.documentId}} returnTo={returnTo}/>;
 }
 function LinkedChatSource({caseId,value,returnTo}:{caseId:number;value:NonNullable<Message['sources']>[number]&{documentId:number};returnTo?:string}){
+ const {translate} = useTranslation();
+ const {} = useLocalized(createChatPresentation);
+
  const doc=useSourceDocument(caseId,value.documentId);
  if(doc.isPending||doc.isFetching)return <p>{translate("chats.chatScreen_source_access_confirm")}</p>;
  if(doc.isError||!doc.data)return <p>{translate("chats.chatScreen_delete_access_count_none_source")}</p>;

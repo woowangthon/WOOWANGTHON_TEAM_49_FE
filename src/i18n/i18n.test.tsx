@@ -4,9 +4,11 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { createTranslator } from 'next-intl';
 import { parse, TYPE, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 import messages from '@/messages/ko';
-import { translate, translateContent, format, type MessageKey } from './translate';
-import { formatQuantity, formatDate } from '@/lib/format';
+import { createTranslation, type MessageKey } from './translate';
+const {translate, translateContent, format} = createTranslation('ko');
+import {createLocalizedLibFormat} from '@/lib/format';
 
+const {formatQuantity, formatDate} = createLocalizedLibFormat(createTranslation('ko'));
 describe('language pack integration', () => {
   it('formats every message without missing arguments or runtime ICU errors', () => {
     const onError = vi.fn();

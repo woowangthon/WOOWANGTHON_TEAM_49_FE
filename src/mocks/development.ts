@@ -1,3 +1,4 @@
+import { languageRequestSchema } from '@/features/auth/language';
 import { loginValidator } from "./shared/auth-validation";
 import { signupRequestSchema, forgotPasswordRequestSchema, resetPasswordRequestSchema } from "@/features/auth/schemas";
 import { caseDocumentResponse, settleMockDocument } from "./shared/document-handlers";
@@ -145,7 +146,7 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
 export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   const seed = createBusinessScenario(baseUrl, true, 0);
   const stores = new Map([[7, seed]]);
-  const users = new Map([[demoAccount.email, { ...demoProfile, userId: 7 }]]);
+  const users = new Map([[demoAccount.email, { ...demoProfile, userId: 7, language: "ko" }]]);
   let activeUser = users.get(demoAccount.email)!;
   let token = "";
   latestResetToken = "";
@@ -153,7 +154,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
   const deleted = new Set<string>();
   let receipt = false;
   const fail = (errorCode: string, status: number) => apiResponse({ errorCode }, status);
-  const issue = () => { token = `mock-only-${crypto.randomUUID()}`; return { accessToken: token, tokenType: "Bearer", expiresIn: 1800, user: { userId: activeUser.userId, email: activeUser.email, name: activeUser.name } }; };
+  const issue = () => { token = `mock-only-${crypto.randomUUID()}`; return { accessToken: token, tokenType: "Bearer", expiresIn: 1800, user: { userId: activeUser.userId, email: activeUser.email, name: activeUser.name, language: activeUser.language } }; };
   const handlers = [
     http.post(`${baseUrl}/auth/forgot-password`, async ({ request }) => {
       const body = await request.json() as { email: string };
@@ -180,7 +181,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       const body = await request.json() as typeof demoProfile;
       if (!signupRequestSchema.safeParse(body).success) return fail("VALIDATION_ERROR", 422);
       if (users.has(body.email)) return fail("EMAIL_ALREADY_EXISTS", 409);
-      users.set(body.email, { ...body, userId: users.size + 7 });
+      users.set(body.email, { ...body, userId: users.size + 7, language: "ko" });
       stores.set(users.get(body.email)!.userId, createBusinessScenario(baseUrl, false, users.get(body.email)!.userId * 100000));
       return apiResponse({ userId: users.get(body.email)!.userId, email: body.email, name: body.name }, 201);
     }),
@@ -205,7 +206,13 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
     http.all(`${baseUrl}/*`, ({ request }) => {
       if (!token || request.headers.get("Authorization") !== `Bearer ${token}`) return fail("AUTH_REQUIRED", 401);
     }),
-    http.get(`${baseUrl}/users/me`, () => apiResponse({ userId: activeUser.userId, email: activeUser.email, name: activeUser.name })),
+    http.get(`${baseUrl}/users/me`, () => apiResponse({ userId: activeUser.userId, email: activeUser.email, name: activeUser.name, language: activeUser.language })),
+    http.patch(`${baseUrl}/users/me/language`, async ({request}) => {
+      const parsed = languageRequestSchema.safeParse(await request.json().catch(() => null));
+      if (!parsed.success) return fail("VALIDATION_ERROR", 422);
+      activeUser.language = parsed.data.language;
+      return apiResponse({language: activeUser.language});
+    }),
     http.delete(`${baseUrl}/users/me`, async ({ request }) => {
       const body = await request.json() as { confirmation?: string };
       if (body.confirmation !== "DELETE_ACCOUNT") return fail("VALIDATION_ERROR", 422);

@@ -1,6 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
-
+import {MessageError} from '@/i18n/message-error';
 
 import { createContext, useContext, useSyncExternalStore } from "react";
 
@@ -10,7 +9,7 @@ export const AppServicesContext = createContext<AppServices | null>(null);
 
 export function useAppServices() {
   const services = useContext(AppServicesContext);
-  if (!services) throw new Error(translate("common.useAppServices_use"));
+  if (!services) throw new MessageError("common.useAppServices_use");
   return services;
 }
 

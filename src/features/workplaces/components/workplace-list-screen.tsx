@@ -1,6 +1,8 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesWorkplacesViewModels} from '../view-models';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
@@ -11,10 +13,14 @@ import { QueryFeedback } from "@/components/ui/query-feedback";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 
 import { useWorkplaces } from "../queries";
-import { workplaceCard } from "../view-models";
+
 import styles from "./workplace-list.module.css";
 
 export function WorkplaceListScreen() {
+const {workplaceCard} = useLocalized(createLocalizedFeaturesWorkplacesViewModels);
+
+ const {translate} = useTranslation();
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const id = useId();

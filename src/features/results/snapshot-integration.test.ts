@@ -6,7 +6,8 @@ import { chatMocks } from '@/mocks/shared/chat-handlers';
 import { createAppServices } from '@/lib/app-services';
 import { chatApi } from '@/features/chats/api';
 import { consumeChat } from '@/features/chats/stream';
-import { loadSnapshot } from './selected-snapshot';
+import {loadSnapshot} from './selected-snapshot';
+
 import { snapshotKind } from './snapshot-link';
 it('resolves all real mock references, preserves past refs after input change and rejects missing snapshots',async()=>{
  const m=managementMocks(),inputs=inputMocks(m.getCases,testApiUrl);
@@ -20,5 +21,5 @@ it('resolves all real mock references, preserves past refs after input change an
  inputs.notifyInputChange(15);inputs.setJobStatus(15,'PARTIAL');const after=(await api.detail(c.chatId,1)).messages.items[1];expect(after.resultRefs).toEqual(original.resultRefs);expect(after.sourceMayBeOutdated).toBe(true);
  for(let i=0;i<21;i++){inputs.notifyInputChange(15);inputs.setJobStatus(15,'PARTIAL');}
  const oldest=(original.resultRefs ?? []).find(r=>r.type==='comparison')!;expect((await loadSnapshot(app.api,15,'comparison',oldest.snapshotId,oldest.version)).version).toBe(oldest.version);
- await expect(loadSnapshot(app.api,15,'comparison',99999,1)).rejects.toThrow('찾을 수');await expect(loadSnapshot(app.api,15,'calculation',99999,1)).rejects.toThrow();
+ await expect(loadSnapshot(app.api,15,'comparison',99999,1)).rejects.toMatchObject({messageKey:'results.selectedSnapshot_history_notFound_delete_access_permission_confirm'});await expect(loadSnapshot(app.api,15,'calculation',99999,1)).rejects.toThrow();
 },15000);

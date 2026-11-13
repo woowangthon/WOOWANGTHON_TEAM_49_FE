@@ -1,5 +1,12 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesCaseInputsSchemas} from '../schemas';
+import {createLocalizedFeaturesCaseInputsManualFields} from '../manual-fields';
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useState } from "react";
@@ -10,14 +17,19 @@ import { SelectField } from "@/components/ui/select-field";
 import { Pagination } from "@/components/ui/pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cardStyle, primaryButton, secondaryButton } from "@/components/ui/styles";
-import { businessErrorMessage } from "@/lib/api/form-errors";
+
 import { useInputAction, useManual, useManuals } from "../queries";
-import { recordTypes, type ManualSaved, type RecordType } from "../schemas";
-import { manualFields, typeLabels } from "../manual-fields";
+import {type ManualSaved, type RecordType} from "../schemas";
+
 import { ManualForm } from "./manual-form";
 import { InputStatus } from "./input-status";
 
 export function ManualScreen({ caseId }: { caseId: number }) {
+const {recordTypes} = useLocalized(createLocalizedFeaturesCaseInputsSchemas);
+const {typeLabels} = useLocalized(createLocalizedFeaturesCaseInputsManualFields);
+
+ const {translate} = useTranslation();
+
   const owner = useCase(caseId); const removal = useCaseRemoval(caseId);
   const [visited, setVisited] = useState<RecordType[]>(["CONTRACT"]);
   const [mode, setMode] = useState<"new" | "records">("new");
@@ -44,8 +56,13 @@ export function ManualScreen({ caseId }: { caseId: number }) {
   </div>;
 }
 function ManualDetail({ caseId, recordId, periodStart, periodEnd, onClose, onDeleted, onSaved }: { caseId: number; recordId: number; periodStart: string; periodEnd: string; onClose: () => void; onDeleted: () => void; onSaved: (r: ManualSaved) => void }) {
+const {businessErrorMessage} = useLocalized(createLocalizedLibApiFormErrors);
+const {manualFields, typeLabels} = useLocalized(createLocalizedFeaturesCaseInputsManualFields);
+
+ const {translate} = useTranslation();
+
   const record = useManual(caseId, recordId); const mutation = useInputAction(caseId);
-  const [editing, setEditing] = useState(false); const [deleting, setDeleting] = useState(false); const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false); const [deleting, setDeleting] = useState(false); const [error, setError] = useMessageState("");
   if (record.isPending) return <QueryFeedback pending />;
   if (record.isError) return <QueryFeedback error={record.error} retry={() => { void record.refetch(); }} />;
   if (record.data.recordType === "DEPOSIT") return <p>{translate("caseInputs.manualScreen_deposit_transaction_allocation_manual_provided")}</p>;
@@ -53,6 +70,6 @@ function ManualDetail({ caseId, recordId, periodStart, periodEnd, onClose, onDel
     <details className="border-t border-border pt-3"><summary className="min-h-11 cursor-pointer font-bold">{translate("caseInputs.manualScreen_original_detail")}</summary><p>{translate("caseInputs.manualScreen_source", { value1: recordId, value2: record.data.source })}</p><pre className="whitespace-pre-wrap break-all">{JSON.stringify(record.data.data, null, 2)}</pre></details>
     <div hidden={!editing}><ManualForm caseId={caseId} type={record.data.recordType} initial={record.data} periodStart={periodStart} periodEnd={periodEnd} onSaved={r => { setEditing(false); onSaved(r); }} /></div>
     {error && <p role="alert">{error}</p>}<div className="flex flex-wrap gap-3"><button className={secondaryButton} onClick={() => setEditing(!editing)}>{editing ? translate("caseInputs.manualScreen_edit_close") : translate("caseInputs.manualScreen_edit")}</button><button className={secondaryButton} onClick={() => setDeleting(true)}>{translate("caseInputs.manualScreen_delete")}</button><button className={secondaryButton} onClick={onClose}>{translate("caseInputs.manualScreen_detail_close")}</button></div>
-    {deleting && <ConfirmDialog title={translate("caseInputs.manualScreen_manual_delete")} busy={mutation.isPending} onClose={() => setDeleting(false)} action={<button className={primaryButton} disabled={mutation.isPending} onClick={async () => { try { await mutation.mutateAsync({ type: "remove", recordId }); onDeleted(); } catch (e) { setError(businessErrorMessage(e)); setDeleting(false); } }}>{translate("caseInputs.manualScreen_manual_delete_confirm")}</button>}><p>{translate("caseInputs.manualScreen_user_input_delete_check_retry_update")}</p></ConfirmDialog>}
+    {deleting && <ConfirmDialog title={translate("caseInputs.manualScreen_manual_delete")} busy={mutation.isPending} onClose={() => setDeleting(false)} action={<button className={primaryButton} disabled={mutation.isPending} onClick={async () => { try { await mutation.mutateAsync({ type: "remove", recordId }); onDeleted(); } catch (e) { setError(businessErrorMessage(e, true)); setDeleting(false); } }}>{translate("caseInputs.manualScreen_manual_delete_confirm")}</button>}><p>{translate("caseInputs.manualScreen_user_input_delete_check_retry_update")}</p></ConfirmDialog>}
   </section>;
 }

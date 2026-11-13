@@ -1,6 +1,5 @@
 "use client";
-import { translate, translateContent } from "@/i18n/translate";
-
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useState, type Ref } from "react";
 import styles from "./conditions-screen.module.css";
@@ -9,6 +8,8 @@ export function ConditionDuration({ id, value, onChange, onBlur, inputRef, disab
   id: string; value: string; onChange: (value: string) => void; onBlur: () => void;
   inputRef: Ref<HTMLInputElement>; disabled: boolean; error?: string;
 }) {
+ const {translate, translateContent} = useTranslation();
+
   const numeric = /^\d+$/.test(value);
   const [parts, setParts] = useState({ hours: numeric ? String(Math.floor(Number(value) / 60)) : "", minutes: numeric ? String(Number(value) % 60) : "" });
   function change(key: "hours" | "minutes", text: string) {

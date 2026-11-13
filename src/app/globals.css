@@ -292,3 +292,13 @@
  .document-management:not([open]) { grid-column:2; grid-row:2; justify-self:end; }
  .document-action-group { display:flex; }
 }
+
+/* Dedicated row keeps language controls clear of every route header and modal. */
+.global-language-bar { display:flex; justify-content:flex-end; min-height:48px; padding:4px 16px; background:var(--color-surface); border-bottom:1px solid var(--color-border); }
+.language-selector { position:relative; max-width:100%; }
+.language-trigger { display:flex; align-items:center; gap:6px; min-height:40px; padding:0 10px; font-size:13px; border-radius:8px; }
+.language-trigger:hover { background:var(--color-surface-muted); }
+.language-menu { position:absolute; right:0; top:100%; z-index:60; min-width:160px; max-width:calc(100vw - 32px); padding:6px; border:1px solid var(--color-border); border-radius:10px; background:var(--color-surface); box-shadow:0 8px 24px #0002; }
+.language-menu button { width:100%; display:flex; align-items:center; gap:10px; min-height:44px; padding:8px; border-radius:6px; }
+.language-menu button:hover { background:var(--color-surface-muted); }
+.language-error { position:absolute; right:0; z-index:60; width:240px; max-width:calc(100vw - 32px); padding:10px; background:var(--color-surface); color:var(--color-danger-foreground); }

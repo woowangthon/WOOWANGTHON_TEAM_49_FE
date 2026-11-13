@@ -1,18 +1,23 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { dangerButton } from "@/components/ui/styles";
-import { businessErrorMessage } from "@/lib/api/form-errors";
 
 import { useDeleteWorkplace, useWorkplace } from "../queries";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 
 function DeleteWorkplaceDialog({ id, onClose }: { id: number; onClose: () => void }) {
+const {businessErrorMessage} = useLocalized(createLocalizedLibApiFormErrors);
+
+ const {translate} = useTranslation();
+
   const query = useWorkplace(id, true);
   const mutation = useDeleteWorkplace(id);
   const [checked, setChecked] = useState(false);
@@ -35,6 +40,8 @@ function DeleteWorkplaceDialog({ id, onClose }: { id: number; onClose: () => voi
   );
 }
 export function DeleteWorkplace({ id }: { id: number }) {
+ const {translate} = useTranslation();
+
   const [open, setOpen] = useState(false);
   return <><button type="button" className={dangerButton} onClick={() => setOpen(true)}>{translate("workplaces.deleteWorkplace_workplace_delete")}</button>{open && <DeleteWorkplaceDialog id={id} onClose={() => setOpen(false)} />}</>;
 }

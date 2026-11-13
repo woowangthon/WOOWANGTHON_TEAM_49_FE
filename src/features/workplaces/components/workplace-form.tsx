@@ -1,23 +1,30 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
+import {createLocalizedFeaturesWorkplacesSchemas} from '../schemas';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
+import {useForm} from '@/i18n/use-localized-form';
 
 import { SelectField } from "@/components/ui/select-field";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 import { TextField } from "@/components/ui/text-field";
 import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
-import { applyBusinessFormError } from "@/lib/api/form-errors";
 
 import { useCreateWorkplace, useUpdateWorkplace } from "../queries";
-import { workplaceFormSchema, type WorkplaceDto, type WorkplaceFormValues, type WorkplaceWrite } from "../schemas";
+import {type WorkplaceDto, type WorkplaceFormValues, type WorkplaceWrite} from "../schemas";
 
 const fields = ["name", "industry", "region", "employmentStatus"] as const;
 export function WorkplaceForm({ initial, onSaved, onCancel }: { initial?: WorkplaceDto; onSaved?: () => void; onCancel?: () => void }) {
+const {applyBusinessFormError} = useLocalized(createLocalizedLibApiFormErrors);
+const {workplaceFormSchema} = useLocalized(createLocalizedFeaturesWorkplacesSchemas);
+
+ const {translate} = useTranslation();
+
   const id = useId();
   const router = useRouter();
   const create = useCreateWorkplace();

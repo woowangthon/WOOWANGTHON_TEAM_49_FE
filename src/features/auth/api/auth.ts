@@ -1,3 +1,5 @@
+import { languageRequestSchema, languageResponseSchema } from '../language';
+import type { BackendLanguage } from '@/i18n/config';
 import { createMemorySession } from "@/features/auth/session";
 import { createApiClient, type ApiClient } from "@/lib/api/client";
 import { protocolError } from "@/lib/api/response";
@@ -27,6 +29,7 @@ export function createAuthApi(api: ApiClient, baseUrl: string) {
     deleteAccount: () => api.requestAccepted("/users/me", { method: "DELETE", body: { confirmation: "DELETE_ACCOUNT" }, refresh: false }),
     // Receipt cookie only. Never refresh or send a Bearer credential here.
     deletionStatus: (signal?: AbortSignal) => api.requestJson("/users/me/deletion", decode(deletionSchema), { auth: "none", refresh: false, expectedStatus: 200, signal }),
+    changeLanguage: (language: BackendLanguage) => api.requestJson('/users/me/language', decode(languageResponseSchema), {method: 'PATCH', body: languageRequestSchema.parse({language}), expectedStatus: 200}),
     getMe: (signal?: AbortSignal) => api.requestJson("/users/me", decode(userSchema), { signal, expectedStatus: 200 }),
     async logout(accessToken: string | null) {
       // Main session is revoked immediately. Keep only this bounded logout request alive.

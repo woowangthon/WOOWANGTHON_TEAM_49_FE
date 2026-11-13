@@ -1,12 +1,20 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from "@/i18n/use-message-state";
+import {message as describeMessage} from '@/i18n/message';
 
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
+
+import {createLocalizedFeaturesAuthSchemas} from '../schemas';
+import {createLocalizedFeaturesAuthDeletion} from '../deletion';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import {useForm} from '@/i18n/use-localized-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { TextField } from "@/components/ui/text-field";
@@ -16,27 +24,23 @@ import { useAppServices, useSessionGeneration } from "@/hooks/use-app-services";
 import { ApiError } from "@/lib/api/error";
 import { mockEnabled } from "@/lib/config/mock";
 import { useCurrentUser } from "../hooks/use-auth";
-import { forgotPasswordRequestSchema, resetPasswordRequestSchema } from "../schemas";
-import { deletionDescription, deletionPollInterval } from "../deletion";
+import {forgotPasswordRequestSchema} from "../schemas";
 
-function errorText(error: unknown) {
-  if (error instanceof ApiError) {
-    if (error.status === 401 || error.status === 403) return translate("auth.accountScreens_access_permission_none_authentication_expired");
-    if (error.status === 409) return translate("auth.accountScreens_current_status_request_count_empty_processing_confirm");
-    if (error.status === 429) return translate("auth.accountScreens_request_retry");
-    if (error.status === 422 || error.status === 400) return translate("auth.accountScreens_input_token_valid_expired_use_new");
-  }
-  return translate("auth.accountScreens_request_complete_failure_link_confirm_retry");
-}
 const recoverySchema = z.object({ email: z.string().trim().pipe(forgotPasswordRequestSchema.shape.email), token: z.string(), newPassword: z.string(), confirm: z.string() });
 export function RecoveryScreen({ reset = false }: { reset?: boolean }) {
+const {errorText} = useLocalized(createPresentation);
+
+const {resetPasswordRequestSchema} = useLocalized(createLocalizedFeaturesAuthSchemas);
+
+ const {translate} = useTranslation();
+
   const { authApi, session } = useAppServices();
   const router = useRouter();
   const [done, setDone] = useState(false);
   const [mockToken, setMockToken] = useState("");
   const errorSummary = useRef<HTMLParagraphElement>(null);
   const lock = useRef(false);
-  const schema = reset ? recoverySchema.extend({ email: z.string(), ...resetPasswordRequestSchema.shape }).refine(v => v.newPassword === v.confirm, { path: ["confirm"], message: translate("auth.accountScreens_password_match") }) : recoverySchema;
+  const schema = reset ? recoverySchema.extend({ email: z.string(), ...resetPasswordRequestSchema.shape }).refine(v => v.newPassword === v.confirm, { path: ["confirm"], message: describeMessage("auth.accountScreens_password_match") }) : recoverySchema;
   const { register, handleSubmit, setValue, setError, resetField, formState: { errors, isSubmitting } } = useForm<z.infer<typeof recoverySchema>>({ resolver: zodResolver(schema), defaultValues: { email: "", token: "", newPassword: "", confirm: "" } });
   useEffect(() => {
     if (!isSubmitting && errors.root) errorSummary.current?.focus();
@@ -59,7 +63,7 @@ export function RecoveryScreen({ reset = false }: { reset?: boolean }) {
         session.clear(); router.replace("/login");
       } else { await authApi.forgotPassword(values.email); }
       setDone(true);
-    } catch (error) { setError("root", { message: errorText(error) }); }
+    } catch (error) { setError("root", { message: errorText(error, true) }); }
     finally { lock.current = false; }
   }
   return <section className="t8-auth-card"><h1 className="text-[30px] font-extrabold tracking-tight">{reset ? translate("auth.accountScreens_password_reset") : translate("auth.accountScreens_password")}</h1>
@@ -83,18 +87,22 @@ export function RecoveryScreen({ reset = false }: { reset?: boolean }) {
 }
 
 export function SettingsScreen() {
+const {errorText} = useLocalized(createPresentation);
+
+ const {translate} = useTranslation();
+
   const user = useCurrentUser();
   const { authApi, auth } = useAppServices();
   const router = useRouter();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useMessageState("");
   const lock = useRef(false);
   async function remove() {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError("");
     try { await authApi.deleteAccount(); auth.acceptDeletion(); router.replace("/account-deletion"); }
-    catch (error) { setError(errorText(error)); }
+    catch (error) { setError(errorText(error, true)); }
     finally { lock.current = false; setBusy(false); }
   }
   return <div className="min-w-0 max-w-[760px] space-y-6"><section className={cardStyle}><h1 className="text-2xl font-bold">{translate("auth.accountScreens_account_settings")}</h1>
@@ -106,6 +114,12 @@ export function SettingsScreen() {
   </div>;
 }
 export function DeletionStatusScreen() {
+const {errorText} = useLocalized(createPresentation);
+
+const {deletionDescription, deletionPollInterval} = useLocalized(createLocalizedFeaturesAuthDeletion);
+
+ const {translate} = useTranslation();
+
   const { authApi } = useAppServices();
   const generation = useSessionGeneration();
   const status = useQuery({ queryKey: ["account-deletion", generation], queryFn: ({ signal }) => authApi.deletionStatus(signal), retry: false,
@@ -115,4 +129,18 @@ export function DeletionStatusScreen() {
     {status.isPending ? <p role="status">{translate("auth.accountScreens_count")}</p> : status.isError ? <p role="alert">{translate("auth.accountScreens_count_none_expired_automatic_stop", { value1: errorText(status.error) })}</p> : <><p role="status">{deletionDescription(status.data)}</p><dl><dt>{translate("auth.accountScreens_save")}</dt><dd>{status.data.normalStoragePurgeDueAt ?? translate("auth.accountScreens_notProvided")}</dd></dl><p>{translate("auth.accountScreens_automatic_current_response_contract_confirm_count_empty")}</p></>}
     <button className={primaryButton + " my-4"} disabled={status.isFetching} onClick={() => void status.refetch()}>{translate("auth.accountScreens_status_retry_confirm")}</button><p>{translate("auth.accountScreens_pending_status_automatic_complete_error_unknown_stop")}</p><Link className="inline-flex min-h-11 items-center underline" href="/login">{translate("auth.accountScreens_login_2")}</Link>
   </section>;
+}
+
+function createPresentation({translate}: Translation) {
+function errorText(error: unknown, deferred = false) {
+ const render = deferred ? describeMessage : translate;
+  if (error instanceof ApiError) {
+    if (error.status === 401 || error.status === 403) return render("auth.accountScreens_access_permission_none_authentication_expired");
+    if (error.status === 409) return render("auth.accountScreens_current_status_request_count_empty_processing_confirm");
+    if (error.status === 429) return render("auth.accountScreens_request_retry");
+    if (error.status === 422 || error.status === 400) return render("auth.accountScreens_input_token_valid_expired_use_new");
+  }
+  return render("auth.accountScreens_request_complete_failure_link_confirm_retry");
+}
+return {errorText};
 }

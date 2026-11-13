@@ -1,5 +1,9 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsSchemas} from '../schemas';
+import {createLocalizedFeaturesDocumentsViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useId, useRef, useState } from "react";
 import { FolderOpen, Search } from "lucide-react";
@@ -10,8 +14,8 @@ import { TextField } from "@/components/ui/text-field";
 import { WorkplacePicker } from "@/features/workplaces/components/workplace-picker";
 import { cardStyle, secondaryButton } from "@/components/ui/styles";
 import { useDocuments } from "../queries";
-import { uploadDocumentTypes, processingStatuses, type DocumentContext } from "../schemas";
-import { statusLabels, storedTypeLabel } from "../view-models";
+import {type DocumentContext} from "../schemas";
+
 import { DocumentCard } from "./document-card";
 import styles from "./workplace-documents.module.css";
 import libraryStyles from "./library.module.css";
@@ -21,6 +25,8 @@ export function DocumentList(props: Parameters<typeof FilteredDocumentList>[0]) 
 }
 
 function ConnectedDocumentList({context, inputVersion}: Parameters<typeof FilteredDocumentList>[0]) {
+ const {translate} = useTranslation();
+
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(false);
   const query = useDocuments(context, {page, size:20});
@@ -33,6 +39,11 @@ function ConnectedDocumentList({context, inputVersion}: Parameters<typeof Filter
 }
 
 function FilteredDocumentList({ context, inputVersion, selectableCaseId, canConnect, variant = "default" }: { variant?: "default" | "workplace" | "library"; context: DocumentContext; inputVersion?: number; selectableCaseId?: number; canConnect?: boolean }) {
+const {uploadDocumentTypes, processingStatuses} = useLocalized(createLocalizedFeaturesDocumentsSchemas);
+const {statusLabels, storedTypeLabel} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
+ const {translate} = useTranslation();
+
   const id = useId();
   const [editing, setEditing] = useState(false);
   const [page, setPage] = useState(1);

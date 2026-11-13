@@ -1,5 +1,4 @@
 "use client";
-
 import { useMutation,useQuery } from "@tanstack/react-query";
 import { useSessionScope } from "@/hooks/use-session-scope";
 import { documentKeys } from "@/features/documents/query-keys";

@@ -1,6 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
-
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useId, useRef, type ReactNode } from "react";
 import { secondaryButton } from "./styles";
@@ -9,6 +8,8 @@ export function ResultCarousel({ count, index, onIndexChange, title, children }:
   count: number; index: number; onIndexChange: (index: number) => void;
   title: string; children: ReactNode;
 }) {
+ const {translate} = useTranslation();
+
   const id = useId();
   const touch = useRef<{ x: number; y: number } | null>(null);
   const current = Math.max(0, Math.min(index, count - 1));

@@ -1,27 +1,37 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsSchemas} from '../schemas';
+import {createLocalizedFeaturesDocumentsViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useId, useState } from "react";
 import { SelectField } from "@/components/ui/select-field";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 import { useDocumentAction } from "../queries";
-import { documentTypes, type ConcreteDocumentType, type DocumentDto } from "../schemas";
-import { documentError, documentTypeIssue, typeLabels } from "../view-models";
+import {type ConcreteDocumentType, type DocumentDto} from "../schemas";
 
-type Issue = NonNullable<ReturnType<typeof documentTypeIssue>>;
+type Issue = NonNullable<ReturnType<ReturnType<typeof createLocalizedFeaturesDocumentsViewModels>["documentTypeIssue"]>>;
 
 /** Resolves DOCUMENT_TYPE_MISMATCH / DOCUMENT_TYPE_UNRESOLVED through the P0 document type PATCH. */
 export function DocumentTypeResolution({ dto, issue, disabled = false }: { dto: DocumentDto; issue: Issue; disabled?: boolean }) {
+const {documentTypes} = useLocalized(createLocalizedFeaturesDocumentsSchemas);
+const {documentError, typeLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
+ const {translate} = useTranslation();
+
   const id = useId();
   const mutation = useDocumentAction();
   const [choosing, setChoosing] = useState(!issue.detected);
   const [selected, setSelected] = useState<ConcreteDocumentType | "">("");
-  const [error, setError] = useState("");
+  const [error, setError] = useMessageState("");
   const busy = mutation.isPending || disabled;
   const change = async (documentType: ConcreteDocumentType) => {
     setError("");
     try { await mutation.mutateAsync({ type: "changeType", workplaceId: dto.workplaceId, documentId: dto.documentId, documentType }); }
-    catch (e) { setError(documentError(e)); }
+    catch (e) { setError(documentError(e, true)); }
   };
   return <section aria-labelledby={`${id}-title`} className="mt-3 min-w-0 space-y-3 rounded-control border border-border bg-neutral-soft p-4">
     <h4 id={`${id}-title`} className="text-body font-bold">{translate("documents.documentTypeResolution_document_type_confirm_required")}</h4>

@@ -1,3 +1,4 @@
+import {createTranslation} from '@/i18n/translate';
 import { createOpenApiContract } from "@/test/openapi/contract";
 import { caseDocumentResponse } from "@/mocks/shared/document-handlers";
 // @vitest-environment jsdom
@@ -27,7 +28,9 @@ import { FieldEditor } from "./components/field-editor";
 import { documentApi } from "../api";
 import { reviewApi } from "./api";
 import { reviewKeys } from "./query-keys";
-import { displayValue,fieldView,highlightBox,parseFieldValue } from "./view-models";
+import {createLocalizedFeaturesDocumentsReviewViewModels} from './view-models';
+
+const {displayValue, fieldView, highlightBox, parseFieldValue} = createLocalizedFeaturesDocumentsReviewViewModels(createTranslation('ko'));
 const navigation=vi.hoisted(()=>({replace:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>navigation,usePathname:()=>"/cases/15/review",useSearchParams:()=>new URLSearchParams()}));
 const apps:AppServices[]=[];const NativeURL=URL;

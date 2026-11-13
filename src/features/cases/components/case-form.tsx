@@ -1,11 +1,16 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {message as describeMessage} from '@/i18n/message';
 
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
+import {createLocalizedFeaturesCasesSchemas} from '../schemas';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
+import {useForm} from '@/i18n/use-localized-form';
 
 import { SelectField } from "@/components/ui/select-field";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
@@ -15,12 +20,12 @@ import { useWorkplace } from "@/features/workplaces/queries";
 import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { useSessionScope } from "@/hooks/use-session-scope";
 import { ApiError } from "@/lib/api/error";
-import { applyBusinessFormError } from "@/lib/api/form-errors";
+
 import { businessKeys } from "@/lib/query/business-keys";
 
 import { caseApi } from "../api";
 import { useCreateCase, useUpdateCase } from "../queries";
-import { caseFormSchema, type CaseDetailDto, type CaseFormValues, type CasePatch } from "../schemas";
+import {type CaseDetailDto, type CaseFormValues, type CasePatch} from "../schemas";
 
 const fields = ["payType", "periodStart", "periodEnd", "scheduledPayDate"] as const;
 function formValues(dto: CaseDetailDto): CaseFormValues {
@@ -28,6 +33,11 @@ function formValues(dto: CaseDetailDto): CaseFormValues {
 }
 
 export function CaseForm({ initial, defaultWorkplaceId = null, onSaved, onCancel }: { initial?: CaseDetailDto; defaultWorkplaceId?: number | null; onSaved?: () => void; onCancel?: () => void }) {
+const {applyBusinessFormError} = useLocalized(createLocalizedLibApiFormErrors);
+const {caseFormSchema} = useLocalized(createLocalizedFeaturesCasesSchemas);
+
+ const {translate} = useTranslation();
+
   const id = useId();
   const router = useRouter();
   const scope = useSessionScope();
@@ -73,7 +83,7 @@ export function CaseForm({ initial, defaultWorkplaceId = null, onSaved, onCancel
         await update.mutateAsync(patch);
         onSaved?.();
       } else {
-        if (!workplaceId || !workplace.isSuccess) { setError("root.server", { message: translate("cases.caseForm_workplace_select_information_confirm") }); return; }
+        if (!workplaceId || !workplace.isSuccess) { setError("root.server", { message: describeMessage("cases.caseForm_workplace_select_information_confirm") }); return; }
         const result = await create.mutateAsync({ workplaceId, payType: values.payType, periodStart: values.periodStart, periodEnd: values.periodEnd, scheduledPayDate });
         setCompleted(true);
         router.replace(`/cases/${result.caseId}/upload`);

@@ -1,5 +1,5 @@
+import {MessageError} from '@/i18n/message-error';
 
-import { translate } from "@/i18n/translate";
 import type { MemorySession } from "@/features/auth/session";
 import { parseApiBaseUrl } from "@/lib/config/env";
 import type { JsonValue } from "@/types/api";
@@ -43,7 +43,7 @@ export function createApiClient(options: ClientOptions) {
       !url.pathname.startsWith(`${new URL(baseUrl).pathname.replace(/\/$/, "")}/`) ||
       url.hash
     ) {
-      throw new Error(translate("errors.client_start"));
+      throw new MessageError("errors.client_start");
     }
     return url.toString();
   }
@@ -51,7 +51,7 @@ export function createApiClient(options: ClientOptions) {
   function assertCurrent(generation: number, signal: AbortSignal) {
     signal.throwIfAborted();
     if (options.session.getSnapshot().generation !== generation) {
-      throw new DOMException(translate("errors.client_change"), "AbortError");
+      throw new DOMException("errors.client_change", "AbortError");
     }
   }
 
@@ -99,7 +99,7 @@ export function createApiClient(options: ClientOptions) {
       headers.set("Accept", accept);
       const token = authenticated ? options.session.getSnapshot().accessToken : null;
       if (token) headers.set("Authorization", `Bearer ${token}`);
-      if (init.body !== undefined && init.formData) throw new Error(translate("errors.client_count_empty"));
+      if (init.body !== undefined && init.formData) throw new MessageError("errors.client_count_empty");
       if (init.formData) headers.delete("Content-Type");
       else if (init.body !== undefined) headers.set("Content-Type", "application/json");
 

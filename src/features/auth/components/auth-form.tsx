@@ -1,24 +1,31 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesAuthFormErrors} from '../form-errors';
+import {createLocalizedFeaturesAuthSchemas} from '../schemas';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLayoutEffect, useId, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import {useForm} from '@/i18n/use-localized-form';
 import { z } from "zod";
 
 import { TextField } from "@/components/ui/text-field";
 import { useAppServices } from "@/hooks/use-app-services";
 import { mockEnabled } from "@/lib/config/mock";
 
-import { applyAuthError, type AuthFormValues } from "../form-errors";
+import {type AuthFormValues} from "../form-errors";
 import { useAuth } from "../hooks/use-auth";
 import { loginHref, safeReturnTo } from "../redirect";
-import { loginRequestSchema, signupFormSchema } from "../schemas";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+const {applyAuthError} = useLocalized(createLocalizedFeaturesAuthFormErrors);
+const {loginRequestSchema, signupFormSchema} = useLocalized(createLocalizedFeaturesAuthSchemas);
+
+ const {translate} = useTranslation();
+
   const signup = mode === "signup";
   const { auth, authApi } = useAppServices();
   const { notice } = useAuth();

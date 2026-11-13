@@ -1,22 +1,35 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+import {message as describeMessage} from '@/i18n/message';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsSchemas} from '../schemas';
+import {createLocalizedFeaturesDocumentsViewModels} from '../view-models';
+import {createLocalizedFeaturesDocumentsFileValidation} from '../file-validation';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import {useForm} from '@/i18n/use-localized-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { UploadCloud } from "lucide-react";
 import { SelectField } from "@/components/ui/select-field";
 import { cardStyle, primaryButton, secondaryButton } from "@/components/ui/styles";
-import { uploadDocumentTypes, uploadSchema, type DocumentContext } from "../schemas";
+import {uploadDocumentTypes, type DocumentContext} from "../schemas";
 import { useDocumentAction } from "../queries";
-import { documentError, typeLabels } from "../view-models";
-import { validateFile, validateImageDimensions } from "../file-validation";
+
 const formSchema = z.object({ documentType: z.enum(uploadDocumentTypes) });
 export function UploadForm({ context, disabled = false }: { context: Exclude<DocumentContext, {kind: "library"}>; disabled?: boolean }) {
+const {uploadDocumentTypes, uploadSchema} = useLocalized(createLocalizedFeaturesDocumentsSchemas);
+const {documentError, typeLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+const {validateFile, validateImageDimensions} = useLocalized(createLocalizedFeaturesDocumentsFileValidation);
+
+ const {translate} = useTranslation();
+
   const id = useId();
   const [file, setFile] = useState<File>();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useMessageState("");
   const [candidates, setCandidates] = useState<number[]>([]);
   const [success, setSuccess] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -31,22 +44,22 @@ export function UploadForm({ context, disabled = false }: { context: Exclude<Doc
     if (locked.current || disabled) return;
     setSuccess(false); setCandidates([]);
     if (!files?.length) return;
-    if (files.length !== 1) { setMessage(translate("documents.uploadForm_file_select_complete_next_create_count")); return; }
-    const error = validateFile(files[0]);
+    if (files.length !== 1) { setMessage(describeMessage("documents.uploadForm_file_select_complete_next_create_count")); return; }
+    const error = validateFile(files[0], true);
     setMessage(error ?? ""); setFile(error ? undefined : files[0]);
   };
   return <form className={`${cardStyle} space-y-5`} aria-label={translate("documents.documentScreens_new_file_upload")} onSubmit={event => { void handleSubmit(async values => {
     if (locked.current || disabled) return;
-    if (!file) { setMessage(translate("documents.uploadForm_file_select")); input.current?.focus(); return; }
+    if (!file) { setMessage(describeMessage("documents.uploadForm_file_select")); input.current?.focus(); return; }
     locked.current = true; setBusy(true); setSuccess(false); setCandidates([]); setMessage("");
     controller.current = new AbortController();
     try {
-      const error = validateFile(file) ?? await validateImageDimensions(file);
+      const error = validateFile(file, true) ?? await validateImageDimensions(file, true);
       if (error) { setMessage(error); return; }
       if (!mounted.current || controller.current.signal.aborted) return;
       const receipt = await mutation.mutateAsync({ type: "upload", context, file, documentType: values.documentType, signal: controller.current.signal });
       if (mounted.current) { setCandidates(uploadSchema.parse(receipt).duplicateCandidateIds); setFile(undefined); setSuccess(true); if (input.current) input.current.value = ""; }
-    } catch (error) { if (mounted.current) setMessage(documentError(error)); }
+    } catch (error) { if (mounted.current) setMessage(documentError(error, true)); }
     finally { locked.current = false; if (mounted.current) setBusy(false); }
   })(event); }}>
     <h2 className="text-title font-bold">{translate("documents.documentScreens_new_file_upload")}</h2>

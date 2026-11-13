@@ -1,13 +1,20 @@
+"use client";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
 
-import { translate } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
+
 import { developmentDiagnostic } from "@/lib/api/diagnostic";
-import { businessErrorMessage } from "@/lib/api/form-errors";
 
 import { Section } from "./presentation";
 
 import { secondaryButton } from "./styles";
 
 export function QueryFeedback({ pending = false, error, retry }: { pending?: boolean; error?: unknown; retry?: () => void }) {
+const {businessErrorMessage} = useLocalized(createLocalizedLibApiFormErrors);
+
+ const {translate} = useTranslation();
+
   const diagnostic = developmentDiagnostic(error);
   return (
     <Section role={error ? "alert" : "status"} aria-busy={pending || undefined}>

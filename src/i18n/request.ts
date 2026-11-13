@@ -1,9 +1,8 @@
 import { getRequestConfig } from 'next-intl/server';
-import { activeLocale, timeZone } from './config';
+import { cookies } from 'next/headers';
+import { resolveLocale, localeCookie, timeZone } from './config';
 import { messageLoaders } from './catalog.generated';
-
-export default getRequestConfig(async () => ({
-  locale: activeLocale,
-  messages: await messageLoaders[activeLocale](),
-  timeZone,
-}));
+export default getRequestConfig(async () => {
+  const locale = resolveLocale((await cookies()).get(localeCookie)?.value);
+  return {locale, messages: await messageLoaders[locale](), timeZone};
+});

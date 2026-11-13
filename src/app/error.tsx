@@ -1,7 +1,6 @@
 "use client";
 import { useTranslations } from "next-intl";
 
-
 import { StatePanel } from "@/components/ui/state-panel";
 
 export default function ErrorBoundary({ reset }: { error: Error & { digest?: string }; reset: () => void }) {

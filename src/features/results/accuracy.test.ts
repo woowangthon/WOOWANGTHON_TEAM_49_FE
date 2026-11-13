@@ -1,3 +1,4 @@
+import {createTranslation} from '@/i18n/translate';
 import { describe, expect, it } from "vitest";
 import { http } from "msw";
 import { server, testApiUrl, apiResponse } from "@/test/server";
@@ -11,8 +12,11 @@ import { reviewApi } from "@/features/documents/review/api";
 import { documentApi } from "@/features/documents/api";
 import { resultsApi } from "./api";
 import { calculationSchema, comparisonSchema, historySchemas, jobSchema, resultsSchema, validationSchema } from "./schemas";
-import { toResultsViewModel } from "./view-models";
-import { formatQuantity } from "@/lib/format";
+import {createLocalizedFeaturesResultsViewModels} from './view-models';
+import {createLocalizedLibFormat} from '@/lib/format';
+
+const {toResultsViewModel} = createLocalizedFeaturesResultsViewModels(createTranslation('ko'));
+const {formatQuantity} = createLocalizedLibFormat(createTranslation('ko'));
 async function setup() {
  const m=managementMocks();const docs=documentMocks(m.getCases());const review=reviewMocks(m.getCases(),docs.getDocuments());
  const mock=inputMocks(m.getCases,testApiUrl,c=>docs.getLinks().filter(l=>l.caseId===c).map(l=>({documentId:l.documentId,fields:review.fields(c,l.documentId)})));

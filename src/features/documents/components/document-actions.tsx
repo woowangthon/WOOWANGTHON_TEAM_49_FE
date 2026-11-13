@@ -1,5 +1,10 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useState } from "react";
@@ -9,19 +14,23 @@ import { dangerButton, secondaryButton } from "@/components/ui/styles";
 import { useCase } from "@/features/cases/queries";
 import { ApiError } from "@/lib/api/error";
 import { useDocumentAction, useDocumentImpact } from "../queries";
-import { documentError } from "../view-models";
+
 import type { DocumentDto } from "../schemas";
 
 function OriginalDeletion({ dto, onClose }: { dto: DocumentDto; onClose: () => void }) {
+const {documentError} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
+ const {translate} = useTranslation();
+
   const impact = useDocumentImpact(dto.workplaceId, dto.documentId);
   const mutation = useDocumentAction();
   const [checked, setChecked] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useMessageState("");
   const [stale, setStale] = useState(false);
   const data = impact.data;
   return <ConfirmDialog title={translate("documents.documentActions_original_delete_impact_confirm")} busy={mutation.isPending} onClose={onClose} action={<button className={dangerButton} disabled={!checked || !data || impact.isFetching || impact.isError || stale || mutation.isPending} onClick={async () => {
     try { await mutation.mutateAsync({ type: "remove", workplaceId: dto.workplaceId, documentId: dto.documentId }); onClose(); }
-    catch (e) { setError(documentError(e)); setChecked(false); setStale(true); }
+    catch (e) { setError(documentError(e, true)); setChecked(false); setStale(true); }
   }}>{translate("documents.documentActions_original_delete_request")}</button>}>
     <p className="break-all font-bold">{dto.fileName}</p>
     {impact.isPending ? <QueryFeedback pending /> : impact.isError ? <QueryFeedback error={impact.error} retry={() => { void impact.refetch(); }} /> : data && <>
@@ -37,15 +46,19 @@ function OriginalDeletion({ dto, onClose }: { dto: DocumentDto; onClose: () => v
   </ConfirmDialog>;
 }
 function UnlinkConfirmation({ dto, caseId, version, onClose }: { dto: DocumentDto; caseId: number; version: number; onClose: () => void }) {
+const {documentError} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
+ const {translate} = useTranslation();
+
   const mutation = useDocumentAction();
   const latest = useCase(caseId);
   const [inputVersion, setInputVersion] = useState(version);
   const [conflict, setConflict] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useMessageState("");
   return <ConfirmDialog title={translate("documents.documentActions_case_link_release")} busy={mutation.isPending} onClose={onClose} action={<button className={dangerButton} disabled={conflict || mutation.isPending} onClick={async () => {
     if (dto.linkId == null) return;
     try { await mutation.mutateAsync({ type: "unlink", caseId, linkId: dto.linkId, expectedInputVersion: inputVersion }); onClose(); }
-    catch (e) { setError(documentError(e)); if (e instanceof ApiError && e.errorCode === "INPUT_VERSION_CONFLICT") setConflict(true); }
+    catch (e) { setError(documentError(e, true)); if (e instanceof ApiError && e.errorCode === "INPUT_VERSION_CONFLICT") setConflict(true); }
   }}>{translate("documents.documentActions_link_release")}</button>}>
     <p className="break-all">{dto.fileName}</p><p>{translate("documents.documentActions_case_link_applicable_information_release_workplace_original")}</p>
     {error && <p role="alert">{error}</p>}
@@ -53,6 +66,8 @@ function UnlinkConfirmation({ dto, caseId, version, onClose }: { dto: DocumentDt
   </ConfirmDialog>;
 }
 export function DocumentActions({ dto, caseId, inputVersion }: { dto: DocumentDto; caseId?: number; inputVersion?: number }) {
+ const {translate} = useTranslation();
+
   const [mode, setMode] = useState<"remove" | "unlink">();
   return <><div className="mt-4 flex flex-wrap gap-2">
     {caseId && dto.linkId != null && inputVersion && <button type="button" className={secondaryButton} onClick={() => setMode("unlink")}>{translate("documents.documentActions_case_link_release_2")}</button>}

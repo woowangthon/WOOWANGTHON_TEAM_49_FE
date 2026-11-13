@@ -1,12 +1,13 @@
 "use client";
-import { translate } from "@/i18n/translate";
-
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
 import { secondaryButton } from "./styles";
 
 export function ConfirmDialog({ title, children, action, onClose, busy = false }: { title: string; children: ReactNode; action: ReactNode; onClose: () => void; busy?: boolean }) {
+ const {translate} = useTranslation();
+
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {

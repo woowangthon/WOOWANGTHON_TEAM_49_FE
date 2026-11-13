@@ -1,19 +1,30 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
+import {createLocalizedFeaturesDocumentsSchemas} from '../schemas';
+import {createLocalizedFeaturesDocumentsViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
+import {useForm} from '@/i18n/use-localized-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TextField } from "@/components/ui/text-field";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 import { ApiError } from "@/lib/api/error";
-import { applyBusinessFormError } from "@/lib/api/form-errors";
+
 import { useFormErrorFocus } from "@/hooks/use-form-error-focus";
 import { useCase } from "@/features/cases/queries";
-import { linkFormSchema, type LinkDto } from "../schemas";
+import {type LinkDto} from "../schemas";
 import { useDocumentAction } from "../queries";
-import { documentError } from "../view-models";
+
 export function LinkForm({ caseId, documentId, link, inputVersion, onDone }: { caseId: number; documentId: number; link?: LinkDto; inputVersion: number; onDone: () => void }) {
+const {applyBusinessFormError} = useLocalized(createLocalizedLibApiFormErrors);
+const {linkFormSchema} = useLocalized(createLocalizedFeaturesDocumentsSchemas);
+const {documentError} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
+ const {translate} = useTranslation();
+
   const id = useId();
   const mutation = useDocumentAction();
   const latest = useCase(caseId);

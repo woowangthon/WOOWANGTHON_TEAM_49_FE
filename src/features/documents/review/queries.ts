@@ -1,14 +1,19 @@
 "use client";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsViewModels} from '../view-models';
+
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSessionScope } from "@/hooks/use-session-scope";
 import { businessKeys } from "@/lib/query/business-keys";
 import type { CaseDetailDto } from "@/features/cases/schemas";
 import { documentKeys } from "../query-keys";
-import { isProcessing } from "../view-models";
+
 import { reviewApi } from "./api";
 import { reviewKeys } from "./query-keys";
 import { updateMetaSchema, type FieldPatch, type ReplacementId, type ReviewContext } from "./schemas";
 export function useFields(c:number,d:number,enabled=true) {
+const {isProcessing} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
   const s=useSessionScope();
   return useQuery({queryKey:reviewKeys.fields(s.generation,c,d),queryFn:({signal})=>reviewApi(s.api).fields(c,d,signal),enabled:s.enabled&&enabled,
     refetchInterval:q=>q.state.error?false:isProcessing(q.state.data?.processingStatus)?2000:false});
@@ -26,6 +31,8 @@ export function useFieldHistory(c:number,d:number,f:number,page:number) {
   const s=useSessionScope();return useQuery({queryKey:reviewKeys.history(s.generation,c,d,f,page),queryFn:({signal})=>reviewApi(s.api).history(c,d,f,page,signal),enabled:s.enabled});
 }
 export function useReplacement(c:number,r:ReplacementId) {
+const {isProcessing} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
   const s=useSessionScope();return useQuery({queryKey:reviewKeys.replacement(s.generation,c,r),queryFn:({signal})=>reviewApi(s.api).replacement(c,r,signal),enabled:s.enabled,
     refetchInterval:q=>q.state.error?false:isProcessing(q.state.data?.processingStatus)?2000:false});
 }

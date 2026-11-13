@@ -1,5 +1,10 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useState } from "react";
@@ -7,17 +12,21 @@ import { CircleCheck, CircleAlert, FileText, LoaderCircle } from "lucide-react";
 import { secondaryButton } from "@/components/ui/styles";
 import { useDocumentAction, useDocumentStatus } from "../queries";
 import type { DocumentContext } from "../schemas";
-import { documentCard, processingErrorMessage, documentError, documentTypeIssue, isProcessing, type DocumentViewModel } from "../view-models";
+import {type DocumentViewModel} from "../view-models";
 import { DocumentTypeResolution } from "./document-type-resolution";
 import { DocumentActions } from "./document-actions";
 import { LinkForm } from "./link-form";
 export function DocumentCard({ dto, context, linkDetails, inputVersion, selectableCaseId, canConnect = true, onEditingChange }: DocumentViewModel & { context: DocumentContext; inputVersion?: number; selectableCaseId?: number; canConnect?: boolean; onEditingChange?: (editing: boolean) => void }) {
+const {documentCard, processingErrorMessage, documentError, documentTypeIssue, isProcessing} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
+ const {translate} = useTranslation();
+
   const status = useDocumentStatus(context.kind === "library" ? { kind: "workplace", id: dto.workplaceId } : context, dto);
   const item = documentCard(dto, status.data);
   const [visibleLinks, setVisibleLinks] = useState(5);
   const [editing, setEditing] = useState(false);
   const mutation = useDocumentAction();
-  const [error, setError] = useState("");
+  const [error, setError] = useMessageState("");
   const active = isProcessing(item.processingStatus);
   const Icon = active ? LoaderCircle : item.processingStatus === "READY" ? CircleCheck : CircleAlert;
   const caseId = context.kind === "case" ? context.id : undefined;
@@ -31,7 +40,7 @@ export function DocumentCard({ dto, context, linkDetails, inputVersion, selectab
     {status.isError && <div role="alert" className="mt-3 text-body">{documentError(status.error)}<button className={`mt-2 ${secondaryButton}`} onClick={() => { void status.refetch(); }}>{translate("documents.documentCard_status_retry")}</button></div>}
     <p className="document-date text-caption text-muted">{item.uploadedLabel}</p>
     {typeIssue && <DocumentTypeResolution key={typeIssue.code} dto={dto} issue={typeIssue} />}
-    {item.processingStatus === "FAILED" && <div className="mt-3"><p className="break-all text-body">{processingErrorMessage(item.errorCode)}</p>{retryCaseId ? <button className={`mt-2 ${secondaryButton}`} disabled={mutation.isPending} onClick={async () => { setError(""); try { await mutation.mutateAsync({ type: "retry", caseId: retryCaseId, documentId: dto.documentId }); } catch (e) { setError(documentError(e)); } }}>{translate("documents.documentCard_document_processing_2")}</button> : <p className="text-caption">{translate("documents.documentCard_failure_processing_case_link_use_count")}</p>}</div>}
+    {item.processingStatus === "FAILED" && <div className="mt-3"><p className="break-all text-body">{processingErrorMessage(item.errorCode)}</p>{retryCaseId ? <button className={`mt-2 ${secondaryButton}`} disabled={mutation.isPending} onClick={async () => { setError(""); try { await mutation.mutateAsync({ type: "retry", caseId: retryCaseId, documentId: dto.documentId }); } catch (e) { setError(documentError(e, true)); } }}>{translate("documents.documentCard_document_processing_2")}</button> : <p className="text-caption">{translate("documents.documentCard_failure_processing_case_link_use_count")}</p>}</div>}
     {error && <p role="alert" className="mt-3">{error}</p>}
     <details className="document-management mt-3"><summary className="cursor-pointer text-body font-bold">{translate("documents.documentCard_record_detail")}</summary>
     <Link className="mt-2 inline-flex min-h-11 items-center break-all text-body underline" href={`/workplaces/${dto.workplaceId}/documents`}>{translate("documents.documentCard_library", { value1: dto.workplaceName ?? translate("documents.documentCard_workplace", { value1: dto.workplaceId }) })}</Link>

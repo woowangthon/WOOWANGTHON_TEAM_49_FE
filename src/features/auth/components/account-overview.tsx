@@ -1,6 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
-
+import { useTranslation } from '@/i18n/use-translation';
 
 import { StatePanel } from "@/components/ui/state-panel";
 
@@ -8,6 +7,8 @@ import { useCurrentUser } from "../hooks/use-auth";
 
 /** Current user data is provided by the existing auth Query cache. */
 export function AccountOverview() {
+ const {translate} = useTranslation();
+
   const user = useCurrentUser();
   if (user.isPending) return <StatePanel title={translate("auth.accountOverview_information_load")} description={translate("auth.accountOverview_accountOverview_description")} live />;
   if (user.isError) return <StatePanel title={translate("auth.accountOverview_information_loadFailure")} description={translate("auth.accountOverview_link_confirm_retry")} action={<button type="button" onClick={() => { void user.refetch(); }} className="min-h-11 rounded-control bg-primary px-4 py-3 text-body font-bold text-surface">{translate("common.retry")}</button>} />;

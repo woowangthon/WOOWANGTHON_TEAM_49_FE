@@ -1,5 +1,5 @@
+import {MessageError} from '@/i18n/message-error';
 
-import { translate } from "@/i18n/translate";
 ﻿import { z } from 'zod';
 import { ApiError } from '@/lib/api/error';
 import { decodeWith } from '@/lib/api/schema';
@@ -29,7 +29,7 @@ export async function consumeChat(stream:ReadableStream<Uint8Array>,onEvent:(eve
   onEvent({event,data:value} as ChatEvent);
   if(event==='message_done'||event==='error')return;
  }
- throw new Error(translate("chats.stream_link_answer_complete_confirm_save_status_retry"));
+ throw new MessageError("chats.stream_link_answer_complete_confirm_save_status_retry");
  } catch (error) {
   if(error instanceof Error && error.name==="AbortError") throw error;
   const failure = protocolError(200,"sse");

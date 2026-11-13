@@ -1,12 +1,16 @@
 
-import { translate } from "@/i18n/translate";
+import { createTranslation } from '@/i18n/translate';
+import { getLocale } from 'next-intl/server';
+
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { AuthPending } from "@/features/auth/components/auth-pending";
 
-export default function AuthLayout({ children }: { children: ReactNode }) {
+export default async function AuthLayout({ children }: { children: ReactNode }) {
+ const {translate} = createTranslation(await getLocale());
+
   return (
     <div className="flex min-h-dvh min-w-0 flex-col">
       <header className="mx-auto flex h-20 w-full max-w-6xl items-center px-4 sm:px-8">

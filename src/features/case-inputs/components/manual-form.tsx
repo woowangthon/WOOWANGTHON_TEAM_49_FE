@@ -1,30 +1,39 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
+
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
+import {createLocalizedFeaturesCaseInputsManualFields} from '../manual-fields';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { StepFormNavigation } from "@/components/ui/step-form-navigation";
 import { useId, useLayoutEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import {useForm} from '@/i18n/use-localized-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TextField } from "@/components/ui/text-field";
 import { SelectField } from "@/components/ui/select-field";
 import { cardStyle, primaryButton, secondaryButton } from "@/components/ui/styles";
-import { businessErrorMessage } from "@/lib/api/form-errors";
+
 import { ApiError } from "@/lib/api/error";
-import { manualDefaults, manualFields, manualFormSchema, toManualInput, typeLabels } from "../manual-fields";
+
 import { useInputAction } from "../queries";
 import type { ManualRecord, ManualSaved, RecordType } from "../schemas";
 
-const inputSteps: Record<RecordType, { label: string; keys: string[] }[]> = {
-  CONTRACT: [{ label: translate("caseInputs.manualForm_wage_information_input"), keys: ["hourlyWage", "monthlyBasePay"] }],
-  ATTENDANCE: [{ label: translate("caseInputs.manualForm_work"), keys: ["workDate", "clockIn", "clockOut"] }, { label: translate("caseInputs.manualForm_time"), keys: ["breakMinutes"] }],
-  PAYSLIP: [{ label: translate("caseInputs.manualForm_total_input"), keys: ["grossPay", "totalDeductions", "netPay"] }, { label: translate("caseInputs.manualForm_payment_deduction_detail"), keys: ["paymentItems", "deductionItems"] }, { label: translate("caseInputs.manualForm_work_wage"), keys: ["hourlyWage", "basePay", "workedMinutes"] }],
-  DEPOSIT: [{ label: translate("caseInputs.manualForm_payment_count_amount"), keys: ["paymentMethod", "transactionDate", "amount"] }, { label: translate("caseInputs.manualForm_inputSteps_dEPOSIT_label2"), keys: ["sender", "memo"] }],
-};
 export function ManualForm({ caseId, type, periodStart, periodEnd, initial, onSaved }: { caseId: number; type: RecordType; periodStart: string; periodEnd: string; initial?: ManualRecord; onSaved: (receipt: ManualSaved) => void }) {
+const {inputSteps} = useLocalized(createPresentation);
+
+const {businessErrorMessage} = useLocalized(createLocalizedLibApiFormErrors);
+const {manualDefaults, manualFields, manualFormSchema, toManualInput, typeLabels} = useLocalized(createLocalizedFeaturesCaseInputsManualFields);
+
+ const {translate} = useTranslation();
+
   const id = useId(); const mutation = useInputAction(caseId); const locked = useRef(false); const summary = useRef<HTMLParagraphElement>(null);
   const [step, setStep] = useState(0);
   const steps = inputSteps[type];
-  const [failure, setFailure] = useState("");
+  const [failure, setFailure] = useMessageState("");
   const form = useForm({ resolver: zodResolver(manualFormSchema(type, periodStart, periodEnd)), defaultValues: manualDefaults(type, initial?.data) });
   const { register, handleSubmit, setError, setFocus, formState: { errors, isSubmitting, isDirty } } = form;
   useLayoutEffect(() => { if (isSubmitting) return; const field = Object.keys(errors.values ?? {})[0]; if (field) setFocus(`values.${field}`); else if (failure) summary.current?.focus(); }, [errors, failure, isSubmitting, setFocus, step]);
@@ -39,7 +48,7 @@ export function ManualForm({ caseId, type, periodStart, periodEnd, initial, onSa
         const key = e.field.split(".").at(-1)!;
         if (manualFields[type].some(f => f.key === key)) { setError(`values.${key}`, { message: e.reason }); setStep(steps.findIndex(s => s.keys.includes(key))); }
       }
-      setFailure(businessErrorMessage(error));
+      setFailure(businessErrorMessage(error, true));
     } finally { locked.current = false; }
   }, invalid => { const field = Object.keys(invalid.values ?? {})[0]; if (field) setStep(steps.findIndex(s => s.keys.includes(field))); })(event); }}>
     <h2 className="text-title font-bold">{typeLabels[type]} {initial ? translate("common.edit") : translate("caseInputs.manualForm_manual_input_2")}</h2><p>{translate("caseInputs.manualForm_original_document_none_select_item_confirm_input")}</p>
@@ -57,4 +66,14 @@ export function ManualForm({ caseId, type, periodStart, periodEnd, initial, onSa
     <button type="button" className={secondaryButton} disabled={isSubmitting} onClick={() => { form.reset(); setFailure(""); }}>{translate("caseInputs.manualForm_input_cancel")}</button>
     {initial && <details><summary className="min-h-11 cursor-pointer font-bold">{translate("caseInputs.manualForm_edit_save")}</summary><p>{translate("caseInputs.manualForm_type_record_all_field_select_confirm")}</p></details>}
   </form>;
+}
+
+function createPresentation({translate}: Translation) {
+const inputSteps: Record<RecordType, { label: string; keys: string[] }[]> = {
+  CONTRACT: [{ label: translate("caseInputs.manualForm_wage_information_input"), keys: ["hourlyWage", "monthlyBasePay"] }],
+  ATTENDANCE: [{ label: translate("caseInputs.manualForm_work"), keys: ["workDate", "clockIn", "clockOut"] }, { label: translate("caseInputs.manualForm_time"), keys: ["breakMinutes"] }],
+  PAYSLIP: [{ label: translate("caseInputs.manualForm_total_input"), keys: ["grossPay", "totalDeductions", "netPay"] }, { label: translate("caseInputs.manualForm_payment_deduction_detail"), keys: ["paymentItems", "deductionItems"] }, { label: translate("caseInputs.manualForm_work_wage"), keys: ["hourlyWage", "basePay", "workedMinutes"] }],
+  DEPOSIT: [{ label: translate("caseInputs.manualForm_payment_count_amount"), keys: ["paymentMethod", "transactionDate", "amount"] }, { label: translate("caseInputs.manualForm_inputSteps_dEPOSIT_label2"), keys: ["sender", "memo"] }],
+};
+return {inputSteps};
 }

@@ -1,5 +1,11 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '../view-models';
+import {createLocalizedFeaturesDocumentsViewModels} from '../../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useCase } from "@/features/cases/queries";
 import { ApiError } from "@/lib/api/error";
@@ -8,13 +14,17 @@ import { QueryFeedback } from "@/components/ui/query-feedback";
 import { cardStyle, primaryButton } from "@/components/ui/styles";
 import { useReview, useReviewAction } from "../queries";
 import type { ExtractedField, ReviewContext } from "../schemas";
-import { reviewError } from "../view-models";
-import { reviewLabels, statusLabels } from "../../view-models";
+
 import type { DocumentDto } from "../../schemas";
 import { groupReviewFields } from "../field-groups";
 import styles from "./review-screen.module.css";
 export function ReviewConfirmation({context,version,fields,disabled,documentType="PAYSLIP"}:{context:ReviewContext;version:number;fields:ExtractedField[];disabled:boolean;documentType?:DocumentDto["documentType"]}){
-  const latest=useCase(context.caseId);const [conflict,setConflict]=useState(false);const q=useReview(context.caseId,context.documentId);const mutation=useReviewAction(context);const [error,setError]=useState("");
+const {reviewError} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+const {reviewLabels, statusLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
+ const {translate} = useTranslation();
+
+  const latest=useCase(context.caseId);const [conflict,setConflict]=useState(false);const q=useReview(context.caseId,context.documentId);const mutation=useReviewAction(context);const [error,setError]=useMessageState("");
   if(q.isPending)return <QueryFeedback pending />;if(q.isError)return <QueryFeedback error={q.error} retry={()=>{void q.refetch();}} />;
   const data=q.data;
   const groups=groupReviewFields(fields,documentType);
@@ -28,6 +38,6 @@ export function ReviewConfirmation({context,version,fields,disabled,documentType
     <p className="text-caption text-muted">{translate("documents.reviewConfirmation_review_complete_original")}</p>
     {error&&<p role="alert">{error}</p>}
     {conflict&&<button className={primaryButton} disabled={q.isFetching||latest.isFetching} onClick={async()=>{const results=await Promise.all([q.refetch(),latest.refetch()]);if(results.every(r=>!r.isError)){setConflict(false);setError("");}}}>{translate("documents.reviewConfirmation_current_review_status_version_confirm")}</button>}
-    </div><div className={styles.confirmationAction}><button className={primaryButton} disabled={disabled||conflict||mutation.isPending||data.processingStatus==="UPLOADED"||data.processingStatus==="PROCESSING"} onClick={async()=>{setError("");try{await mutation.mutateAsync({type:"confirm-review",version});}catch(e){setError(reviewError(e));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}}}>{mutation.isPending?translate("documents.reviewConfirmation_review_status_confirm"):translate("documents.reviewConfirmation_document_review_complete_request")}</button><p>{translate("documents.reviewConfirmation_complete_item_review")}</p></div>
+    </div><div className={styles.confirmationAction}><button className={primaryButton} disabled={disabled||conflict||mutation.isPending||data.processingStatus==="UPLOADED"||data.processingStatus==="PROCESSING"} onClick={async()=>{setError("");try{await mutation.mutateAsync({type:"confirm-review",version});}catch(e){setError(reviewError(e, true));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}}}>{mutation.isPending?translate("documents.reviewConfirmation_review_status_confirm"):translate("documents.reviewConfirmation_document_review_complete_request")}</button><p>{translate("documents.reviewConfirmation_complete_item_review")}</p></div>
   </section>;
 }

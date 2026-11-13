@@ -1,27 +1,20 @@
 
-import { translate } from "@/i18n/translate";
+
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
+
 import type { ReactNode } from "react";
 import { FileCheck2, FilePenLine, FileText, FileUp, ListChecks, MessageSquare, MessagesSquare, ReceiptText, Settings2 } from "lucide-react";
 import styles from "./case-workspace.module.css";
 
-const stages = {
-  upload: { label: translate("cases.caseContext_record"), icon: FileUp },
-  manual: { label: translate("cases.caseStageHeader_stages_manual_label"), icon: FilePenLine },
-  review: { label: translate("cases.caseStageHeader_original_confirm"), icon: FileCheck2 },
-  conditions: { label: translate("cases.caseStageHeader_calculation_confirm"), icon: Settings2 },
-  result: { label: translate("cases.caseStageHeader_wage"), icon: ReceiptText },
-  compare: { label: translate("cases.caseStageHeader_record_difference_confirm"), icon: ListChecks },
-  questions: { label: translate("cases.caseStageHeader_consultation"), icon: MessagesSquare },
-  inquiry: { label: translate("cases.caseStageHeader_company"), icon: MessageSquare },
-  reports: { label: translate("cases.caseStageHeader_consultation_record"), icon: FileText },
-};
-
 export function CaseStageHeader({ stage, title, description, action }: {
-  stage: keyof typeof stages;
+  stage: keyof ReturnType<typeof createPresentation>["stages"];
   title: string;
   description: string;
   action?: ReactNode;
 }) {
+const {stages} = useLocalized(createPresentation);
+
   const { label, icon: Icon } = stages[stage];
   return <header className={styles.hero} data-stage={stage}>
     <div className={styles.heroCopy}>
@@ -36,4 +29,19 @@ export function CaseStageHeader({ stage, title, description, action }: {
       <span className={styles.artDot} />
     </div>
   </header>;
+}
+
+function createPresentation({translate}: Translation) {
+const stages = {
+  upload: { label: translate("cases.caseContext_record"), icon: FileUp },
+  manual: { label: translate("cases.caseStageHeader_stages_manual_label"), icon: FilePenLine },
+  review: { label: translate("cases.caseStageHeader_original_confirm"), icon: FileCheck2 },
+  conditions: { label: translate("cases.caseStageHeader_calculation_confirm"), icon: Settings2 },
+  result: { label: translate("cases.caseStageHeader_wage"), icon: ReceiptText },
+  compare: { label: translate("cases.caseStageHeader_record_difference_confirm"), icon: ListChecks },
+  questions: { label: translate("cases.caseStageHeader_consultation"), icon: MessagesSquare },
+  inquiry: { label: translate("cases.caseStageHeader_company"), icon: MessageSquare },
+  reports: { label: translate("cases.caseStageHeader_consultation_record"), icon: FileText },
+};
+return {stages};
 }

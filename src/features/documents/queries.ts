@@ -1,5 +1,7 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {MessageError} from '@/i18n/message-error';
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsViewModels} from './view-models';
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSessionScope } from "@/hooks/use-session-scope";
@@ -8,7 +10,6 @@ import { businessKeys } from "@/lib/query/business-keys";
 import { useRemovalState } from "@/lib/query/use-removal-state";
 import { documentApi, recomputeActive } from "./api";
 import type { DocumentContext, DocumentDto, DocumentFilters, LinkInput } from "./schemas";
-import { isProcessing } from "./view-models";
 
 export { documentKeys } from "./query-keys";
 
@@ -18,11 +19,13 @@ export function useDocuments(context: DocumentContext, filters: DocumentFilters)
   return useQuery({ queryKey: documentKeys.list(s.generation, context, filters), queryFn: ({ signal }) => documentApi(s.api).list(context, filters, signal), enabled: s.enabled && !removal.pending && !removal.removed });
 }
 export function useDocumentStatus(context: DocumentContext, dto: DocumentDto) {
+const {isProcessing} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+
   const s = useSessionScope();
   return useQuery({
     queryKey: documentKeys.status(s.generation, context, dto.documentId),
     queryFn: async ({ signal }) => {
-      if (context.kind === "library") throw new Error(translate("documents.queries_original_detail_required"));
+      if (context.kind === "library") throw new MessageError("documents.queries_original_detail_required");
       const result = await documentApi(s.api).status(context, dto.documentId, signal);
       if (!isProcessing(result.processingStatus)) {
         void s.queryClient.invalidateQueries({ queryKey: documentKeys.lists(s.generation) });

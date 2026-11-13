@@ -1,6 +1,8 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesCasesViewModels} from '../view-models';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useState } from "react";
@@ -10,13 +12,17 @@ import { QueryFeedback } from "@/components/ui/query-feedback";
 import { secondaryButton } from "@/components/ui/styles";
 
 import { useCase, useCaseRemoval } from "../queries";
-import { caseCard } from "../view-models";
+
 import { caseTaskHref } from "./case-cards";
 import { CaseForm } from "./case-form";
 import { DeleteCase } from "./delete-case";
 import styles from "./case-detail.module.css";
 
 export function CaseDetailScreen({ id }: { id: number }) {
+const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
+
+ const {translate} = useTranslation();
+
   const query = useCase(id);
   const removal = useCaseRemoval(id);
   const [editing, setEditing] = useState(false);
@@ -64,7 +70,6 @@ export function CaseDetailScreen({ id }: { id: number }) {
         </dl>
         <p className={styles.note}><Info size={16} aria-hidden="true" /><span>{translate("cases.caseDetailScreen_case_status_step_check_calculation_comparison_complete")}</span></p>
       </section>
-
 
       <section className={styles.management} aria-label={translate("cases.caseDetailScreen_wageCase_2")}>
         {editing ? <>

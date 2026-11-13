@@ -1,5 +1,10 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useRef, useState } from "react";
 import { ArrowUpRight, Check, ChevronDown, CircleAlert, ScanText } from "lucide-react";
@@ -11,13 +16,17 @@ import { useCase } from "@/features/cases/queries";
 import { useFields, useReviewAction } from "../queries";
 import { updateMetaSchema } from "../schemas";
 import type { ExtractedField, ReviewContext, SourceDto, UpdateMeta } from "../schemas";
-import { fieldView, reviewError } from "../view-models";
+
 import { groupReviewFields, hasMissingFieldValue, isExtractionMissing } from "../field-groups";
 import { discardChanges } from "../use-unsaved";
 import { FieldEditor } from "./field-editor";
 import { FieldHistory } from "./field-history";
 import styles from "./review-screen.module.css";
 export function FieldsPanel({actionsDisabled=false,fields,context,inputVersion,onSource,onDirty,dirty,linkedCaseIds,documentType="PAYSLIP",period}:{actionsDisabled?:boolean;fields:ExtractedField[];context:ReviewContext;inputVersion:number;onSource:(source:SourceDto|null)=>void;onDirty:(value:boolean)=>void;dirty:boolean;linkedCaseIds?:number[];documentType?:DocumentDto["documentType"];period?:{start:string;end:string}}){
+const {fieldView, reviewError} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+
+ const {translate} = useTranslation();
+
   const fieldList=useRef<HTMLDivElement>(null);
   const [editor,setEditor]=useState<{fieldId:number;scope:"case"|"shared"}>();
   const [detailsOpen,setDetailsOpen]=useState(false);
@@ -26,13 +35,13 @@ export function FieldsPanel({actionsDisabled=false,fields,context,inputVersion,o
   const detailsRemaining=details.length-countConfirmed(details);
   const missing=fields.filter(isExtractionMissing);
   const [history,setHistory]=useState<number>();const [remove,setRemove]=useState<ExtractedField>();
-  const [error,setError]=useState("");const [conflict,setConflict]=useState(false);const [receipt,setReceipt]=useState<UpdateMeta>();
+  const [error,setError]=useMessageState("");const [conflict,setConflict]=useState(false);const [receipt,setReceipt]=useState<UpdateMeta>();
   const mutation=useReviewAction(context);const latestCase=useCase(context.caseId);const latestFields=useFields(context.caseId,context.documentId);
   const perform=async(field:ExtractedField,confirmed:boolean)=>{
     if(actionsDisabled||!fieldView(field).canEdit||mutation.isPending||conflict||dirty)return;
-    setError("");try{const data=await mutation.mutateAsync({type:"case-field",fieldId:field.fieldId,patch:{confirmed},version:inputVersion});setReceipt(updateMetaSchema.parse(data));}catch(e){setError(reviewError(e));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}
+    setError("");try{const data=await mutation.mutateAsync({type:"case-field",fieldId:field.fieldId,patch:{confirmed},version:inputVersion});setReceipt(updateMetaSchema.parse(data));}catch(e){setError(reviewError(e, true));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);}
   };
-  const edit=(fieldId:number,scope:"case"|"shared")=>{if(dirty&&!discardChanges())return;setEditor({fieldId,scope});};
+  const edit=(fieldId:number,scope:"case"|"shared")=>{if(dirty&&!discardChanges(translate))return;setEditor({fieldId,scope});};
   const renderField=(field:ExtractedField)=>{const vm=fieldView(field);const absent=hasMissingFieldValue(field);return <article id={`review-field-${field.fieldId}`} tabIndex={-1} aria-label={field.label} key={field.fieldId} data-review-field data-missing={absent} data-confirmed={field.status==="CONFIRMED"} className={styles.field}>
       <div className={styles.fieldHeading}><h3>{field.label}</h3><span className={absent?styles.missingBadge:field.status==="CONFIRMED"?styles.confirmedBadge:field.status==="CONFLICTED"?styles.missingBadge:styles.requiredBadge}>{absent?<><CircleAlert size={13} aria-hidden="true" />{translate("documents.fieldsPanel_extraction")}</>:field.status==="CONFIRMED"?<><Check size={13} aria-hidden="true" />{vm.statusLabel}</>:field.status==="CONFLICTED"?translate("documents.fieldsPanel_span2"):translate("documents.fieldsPanel_count_confirm")}</span></div>
       {!absent&&<p data-review-value className={styles.fieldValue}>{vm.valueLabel}{field.value!==null&&vm.unitLabel&&<span>{vm.unitLabel}</span>}</p>}
@@ -85,6 +94,6 @@ export function FieldsPanel({actionsDisabled=false,fields,context,inputVersion,o
     </section>
     <p className={styles.footnote}>{translate("documents.fieldsPanel_none_count_item_processing")}</p>
     </div>
-    {remove&&<ConfirmDialog title={translate("documents.fieldsPanel_sharedDefault")} busy={mutation.isPending} onClose={()=>setRemove(undefined)} action={<button className={primaryButton} disabled={actionsDisabled||mutation.isPending||conflict} onClick={async()=>{try{const result=await mutation.mutateAsync({type:"remove-override",fieldId:remove.fieldId,version:inputVersion});setReceipt(updateMetaSchema.parse(result));setRemove(undefined);}catch(e){setError(reviewError(e));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);setRemove(undefined);}}}>{translate("documents.fieldsPanel_override_confirm")}</button>}><p>{translate("documents.fieldsPanel_override_sharedDefault_retry_applicable_change", { value1: remove.label })}</p></ConfirmDialog>}
+    {remove&&<ConfirmDialog title={translate("documents.fieldsPanel_sharedDefault")} busy={mutation.isPending} onClose={()=>setRemove(undefined)} action={<button className={primaryButton} disabled={actionsDisabled||mutation.isPending||conflict} onClick={async()=>{try{const result=await mutation.mutateAsync({type:"remove-override",fieldId:remove.fieldId,version:inputVersion});setReceipt(updateMetaSchema.parse(result));setRemove(undefined);}catch(e){setError(reviewError(e, true));if(e instanceof ApiError&&e.errorCode==="INPUT_VERSION_CONFLICT")setConflict(true);setRemove(undefined);}}}>{translate("documents.fieldsPanel_override_confirm")}</button>}><p>{translate("documents.fieldsPanel_override_sharedDefault_retry_applicable_change", { value1: remove.label })}</p></ConfirmDialog>}
   </section>;
 }

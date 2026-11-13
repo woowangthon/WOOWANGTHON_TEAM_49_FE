@@ -1,7 +1,11 @@
+import {conditionIds} from './schemas';
+import {type Condition, type Conditions} from "./schemas";
+import {createLocalizedFeaturesCaseInputsSchemas as localized11} from './schemas';
+import {type Translation} from '@/i18n/translate';
 
-import { translate } from "@/i18n/translate";
-import { conditionAnswerSchema, conditionIds, type Condition, type Conditions } from "./schemas";
-
+export function createLocalizedFeaturesCaseInputsConditionPresentation(translation: Translation) {
+  const {translate} = translation;
+const {conditionAnswerSchema} = localized11(translation);
 const titles: Record<string, string> = {
   workplace_size: translate("caseInputs.conditionPresentation_workplace_work"),
   regular_minutes: translate("caseInputs.conditionPresentation_period_time"),
@@ -17,19 +21,19 @@ const explanations: Record<string, string> = {
   hours_basis_confirmed: translate("caseInputs.conditionPresentation_time_payment_period_confirm"),
   base_pay_basis_confirmed: translate("caseInputs.conditionPresentation_basePay_included_wage_item_applicable_period_confirm"),
 };
-export const conditionCheckLabels: Record<string, string> = {
+const conditionCheckLabels: Record<string, string> = {
   WAGE_CALCULATION: translate("caseInputs.inputStatus_wage_calculation"), PAYSLIP_VALIDATION: translate("caseInputs.inputStatus_payslip_sum_check"),
   DEPOSIT_COMPARISON: translate("caseInputs.inputStatus_deposit_comparison"), CONTRACT_ATTENDANCE_COMPARISON: translate("caseInputs.inputStatus_contract_attendance_comparison"),
 };
-export const conditionTitle = (condition: Condition) => titles[condition.conditionId] ?? condition.question;
-export const conditionExplanation = (condition: Condition) => explanations[condition.conditionId] ?? translate("caseInputs.conditionPresentation_record_content_confirm");
-export const editableCondition = (condition: Condition) => (conditionIds as readonly string[]).includes(condition.conditionId) && condition.status !== "NOT_APPLICABLE" && condition.type === (condition.conditionId === "workplace_size" ? "SELECT" : condition.conditionId === "regular_minutes" ? "NUMBER" : "BOOLEAN");
-export const conditionValues = (data: Conditions) => Object.fromEntries(data.conditions.map(condition => [condition.conditionId, condition.value === null ? "" : String(condition.value)]));
-export function conditionAnswer(condition: Condition, value: string) {
+const conditionTitle = (condition: Condition) => titles[condition.conditionId] ?? condition.question;
+const conditionExplanation = (condition: Condition) => explanations[condition.conditionId] ?? translate("caseInputs.conditionPresentation_record_content_confirm");
+
+const conditionValues = (data: Conditions) => Object.fromEntries(data.conditions.map(condition => [condition.conditionId, condition.value === null ? "" : String(condition.value)]));
+function conditionAnswer(condition: Condition, value: string) {
   if (value.trim() === "" || (condition.type === "NUMBER" && value !== "UNKNOWN" && !/^\d+$/.test(value))) return conditionAnswerSchema.safeParse({ conditionId: condition.conditionId, value: null });
   return conditionAnswerSchema.safeParse({ conditionId: condition.conditionId, value: value === "UNKNOWN" ? value : condition.type === "NUMBER" ? Number(value) : condition.type === "BOOLEAN" ? value === "true" ? true : value === "false" ? false : value : value });
 }
-export function answerLabel(condition: Condition, value: string) {
+function answerLabel(condition: Condition, value: string) {
   if (condition.status === "NOT_APPLICABLE") return translate("caseInputs.conditionPresentation_none");
   if (value === "") return translate("caseInputs.conditionPresentation_unanswered");
   if (value === "UNKNOWN") return translate("caseInputs.conditionPresentation_unknown_confirm");
@@ -38,3 +42,7 @@ export function answerLabel(condition: Condition, value: string) {
   if (condition.type === "BOOLEAN") return value === "true" ? translate("common.yes") : value === "false" ? translate("common.no") : translate("caseInputs.conditionPresentation_answer_confirm_required");
   return ({ LESS_THAN_5: translate("caseInputs.conditionsScreen_label_lESSTHAN5_fieldset"), AT_LEAST_5: translate("caseInputs.conditionsScreen_atLeast") } as Record<string, string>)[value] ?? value;
 }
+return {conditionCheckLabels, conditionTitle, conditionExplanation, editableCondition, conditionValues, conditionAnswer, answerLabel};
+}
+
+export const editableCondition = (condition: Condition) => (conditionIds as readonly string[]).includes(condition.conditionId) && condition.status !== "NOT_APPLICABLE" && condition.type === (condition.conditionId === "workplace_size" ? "SELECT" : condition.conditionId === "regular_minutes" ? "NUMBER" : "BOOLEAN");

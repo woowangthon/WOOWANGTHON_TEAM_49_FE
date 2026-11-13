@@ -7,7 +7,7 @@ import { createAppServices } from "@/lib/app-services";
 describe("account lifecycle on isolated MSW", () => {
   let app: ReturnType<typeof createAppServices>;
   beforeEach(() => { clearMockSession(); server.use(...createDevelopmentScenario(testApiUrl).handlers); app = createAppServices(testApiUrl); });
-  it("reads only the documented current user", async () => { await app.auth.login(demoAccount); expect(await app.authApi.getMe()).toEqual({ userId: 7, email: demoAccount.email, name: demoProfile.name }); });
+  it("reads only the documented current user", async () => { await app.auth.login(demoAccount); expect(await app.authApi.getMe()).toEqual({ userId: 7, language: "ko", email: demoAccount.email, name: demoProfile.name }); });
   it("accepts recovery without revealing account existence", async () => {
     const send = (email: string) => fetch(testApiUrl + "/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
     const known = await send(demoAccount.email), unknown = await send("unknown@example.com");

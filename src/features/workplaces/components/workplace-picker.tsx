@@ -1,6 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
-
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { useId, useState, type ReactNode } from "react";
@@ -12,6 +11,8 @@ import { secondaryButton } from "@/components/ui/styles";
 import { useWorkplaces } from "../queries";
 
 export function WorkplacePicker({ value, onChange, action }: { action?: ReactNode; value: number | null; onChange: (id: number, name: string) => void }) {
+ const {translate} = useTranslation();
+
   const [page, setPage] = useState(1);
   const id = useId();
   const query = useWorkplaces(page);

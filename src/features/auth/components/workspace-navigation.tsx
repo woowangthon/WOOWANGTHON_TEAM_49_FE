@@ -1,5 +1,5 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +11,8 @@ import { QueryFeedback } from "@/components/ui/query-feedback";
 import { Pagination } from "@/components/ui/pagination";
 
 export function WorkspaceNavigation() {
+ const {translate} = useTranslation();
+
   const { auth } = useAppServices();
   const pathname = usePathname();
   const [page, setPage] = useState(1);

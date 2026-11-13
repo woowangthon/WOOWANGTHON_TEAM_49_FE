@@ -1,6 +1,8 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedLibApiFormErrors} from '@/lib/api/form-errors';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
@@ -8,11 +10,14 @@ import { useId, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { dangerButton } from "@/components/ui/styles";
-import { businessErrorMessage } from "@/lib/api/form-errors";
 
 import { useCaseImpact, useDeleteCase } from "../queries";
 
 function DeleteCaseDialog({ id, onClose }: { id: number; onClose: () => void }) {
+const {businessErrorMessage} = useLocalized(createLocalizedLibApiFormErrors);
+
+ const {translate} = useTranslation();
+
   const query = useCaseImpact(id);
   const mutation = useDeleteCase(id);
   const [checked, setChecked] = useState(false);
@@ -37,6 +42,8 @@ function DeleteCaseDialog({ id, onClose }: { id: number; onClose: () => void }) 
   );
 }
 export function DeleteCase({ id }: { id: number }) {
+ const {translate} = useTranslation();
+
   const [open, setOpen] = useState(false);
   return <><button type="button" className={dangerButton} onClick={() => setOpen(true)}>{translate("cases.deleteCase_case_delete")}</button>{open && <DeleteCaseDialog id={id} onClose={() => setOpen(false)} />}</>;
 }

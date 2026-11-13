@@ -1,8 +1,9 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useTranslation} from "@/i18n/use-translation";
 import { useEffect, useState, type ReactNode } from "react";
 
 export default function MockBoundary({ children }: { children: ReactNode }) {
+  const {translate} = useTranslation();
   const [runtime, setRuntime] = useState<{ reset: () => void }>();
   const [error, setError] = useState(false);
   const [unhandled, setUnhandled] = useState(false);

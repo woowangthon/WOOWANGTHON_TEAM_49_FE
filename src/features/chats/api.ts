@@ -1,20 +1,25 @@
 
-import { translate } from "@/i18n/translate";
-﻿import { z } from 'zod';
+import {message as describeMessage} from '@/i18n/message';
+import { z } from 'zod';
 import { decodeWith, pageSchema } from '@/lib/api/schema';
 import type { ApiClient } from '@/lib/api/client';
-export const scopeSchema=z.discriminatedUnion('scopeType',[z.object({scopeType:z.literal('CASE'),caseId:z.number().int().positive()}),z.object({scopeType:z.literal('WORKPLACE_ALL')})]);
-export const chatTitleSchema = z.string().min(1, translate("chats.api_input")).max(200, translate("chats.api_atMost_input"));
-export const chatCreateSchema = z.strictObject({ title: chatTitleSchema.optional(), defaultScope: scopeSchema });
-export const chatPatchSchema = z.strictObject({ title: chatTitleSchema });
+import {createTranslation, type Translation} from '@/i18n/translate';
+import {defaultLocale} from '@/i18n/config';
 export type ChatScope=z.infer<typeof scopeSchema>;
-export const sourceSchema=z.object({documentId:z.number().int().positive().nullable(),caseId:z.number().int().positive(),page:z.number().int().positive().nullable(),fieldId:z.number().int().positive().nullable().optional(),text:z.string().optional()}).passthrough();
-export const refSchema=z.object({caseId:z.number().int().positive().optional(),type:z.string(),snapshotId:z.number().int().positive(),version:z.number().int().positive()});
-export const messageSchema=z.object({messageId:z.number().int().positive(),role:z.enum(['USER','ASSISTANT']),content:z.string(),status:z.enum(['PENDING','STREAMING','COMPLETED','FAILED','CANCELLED']),scope:scopeSchema,sources:z.array(sourceSchema).optional(),resultRefs:z.array(refSchema).optional(),sourceMayBeOutdated:z.boolean(),runId:z.string().nullable(),errorCode:z.string().nullable().optional()}).passthrough();
-export const sessionSchema=z.object({chatId:z.number().int().positive(),workplaceId:z.number().int().positive(),title:z.string(),defaultScope:scopeSchema,updatedAt:z.string(),lastMessagePreview:z.string().nullable().optional()}).passthrough();
-export const detailSchema=z.object({session:sessionSchema,messages:pageSchema(messageSchema)});
 export type Message=z.infer<typeof messageSchema>;
-export function chatApi(api:ApiClient,w:number){
+
+export function createLocalizedFeaturesChatsApi(translation: Translation) {
+  const {} = translation;
+const scopeSchema=z.discriminatedUnion('scopeType',[z.object({scopeType:z.literal('CASE'),caseId:z.number().int().positive()}),z.object({scopeType:z.literal('WORKPLACE_ALL')})]);
+const chatTitleSchema = z.string().min(1, describeMessage("chats.api_input")).max(200, describeMessage("chats.api_atMost_input"));
+const chatCreateSchema = z.strictObject({ title: chatTitleSchema.optional(), defaultScope: scopeSchema });
+const chatPatchSchema = z.strictObject({ title: chatTitleSchema });
+const sourceSchema=z.object({documentId:z.number().int().positive().nullable(),caseId:z.number().int().positive(),page:z.number().int().positive().nullable(),fieldId:z.number().int().positive().nullable().optional(),text:z.string().optional()}).passthrough();
+const refSchema=z.object({caseId:z.number().int().positive().optional(),type:z.string(),snapshotId:z.number().int().positive(),version:z.number().int().positive()});
+const messageSchema=z.object({messageId:z.number().int().positive(),role:z.enum(['USER','ASSISTANT']),content:z.string(),status:z.enum(['PENDING','STREAMING','COMPLETED','FAILED','CANCELLED']),scope:scopeSchema,sources:z.array(sourceSchema).optional(),resultRefs:z.array(refSchema).optional(),sourceMayBeOutdated:z.boolean(),runId:z.string().nullable(),errorCode:z.string().nullable().optional()}).passthrough();
+const sessionSchema=z.object({chatId:z.number().int().positive(),workplaceId:z.number().int().positive(),title:z.string(),defaultScope:scopeSchema,updatedAt:z.string(),lastMessagePreview:z.string().nullable().optional()}).passthrough();
+const detailSchema=z.object({session:sessionSchema,messages:pageSchema(messageSchema)});
+function chatApi(api:ApiClient,w:number){
  const root=`/workplaces/${w}/chats`;
  return {
  list:(page:number,signal?:AbortSignal)=>api.requestJson(`${root}?page=${page}&size=20`,decodeWith(pageSchema(sessionSchema)),{signal,expectedStatus:200}),
@@ -26,3 +31,7 @@ export function chatApi(api:ApiClient,w:number){
  cancel:(id:number,run:string)=>api.requestAccepted(`${root}/${id}/runs/${encodeURIComponent(run)}/cancel`,{method:'POST',expectedStatus:202,refresh:false}),
  };
 }
+return {scopeSchema, chatTitleSchema, chatCreateSchema, chatPatchSchema, sourceSchema, refSchema, messageSchema, sessionSchema, detailSchema, chatApi};
+}
+
+export const {scopeSchema, chatTitleSchema, chatCreateSchema, chatPatchSchema, sourceSchema, refSchema, messageSchema, sessionSchema, detailSchema, chatApi} = createLocalizedFeaturesChatsApi(createTranslation(defaultLocale));

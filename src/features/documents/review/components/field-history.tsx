@@ -1,13 +1,19 @@
 "use client";
-import { translate } from "@/i18n/translate";
-import { activeLocale as defaultLocale } from "@/i18n/config";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useState } from "react";
 import { Pagination } from "@/components/ui/pagination";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { useFieldHistory } from "../queries";
-import { displayValue } from "../view-models";
+
 export function FieldHistory({caseId,documentId,fieldId}:{caseId:number;documentId:number;fieldId:number}){
+const {displayValue} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+
+ const {translate, locale: defaultLocale} = useTranslation();
+
   const [page,setPage]=useState(1);const q=useFieldHistory(caseId,documentId,fieldId,page);
   if(q.isPending)return <QueryFeedback pending />;if(q.isError)return <QueryFeedback error={q.error} retry={()=>{void q.refetch();}} />;
   return <section className="mt-4 min-w-0 space-y-3" aria-label={translate("documents.fieldHistory_field_editHistory")}><h4 className="text-body font-bold">{translate("documents.fieldHistory_editHistory")}</h4>

@@ -1,5 +1,5 @@
+import {MessageError} from '@/i18n/message-error';
 
-import { translate } from "@/i18n/translate";
 export interface SessionSnapshot {
   readonly accessToken: string | null;
   readonly generation: number;
@@ -31,7 +31,7 @@ export function createMemorySession() {
     getSnapshot: () => snapshot,
     /** Call after successful login/account switch, even if the token happens to match. */
     start(accessToken: string) {
-      if (!accessToken.trim()) throw new Error(translate("auth.session_use_count_empty"));
+      if (!accessToken.trim()) throw new MessageError("auth.session_use_count_empty");
       replace(accessToken);
     },
     clear: () => replace(null),

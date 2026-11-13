@@ -22,7 +22,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang={locale} className="h-full antialiased">
       <body className="min-h-full">
         <a href="#main-content" className="skip-link">{t("layout_body")}</a>
-        <NextIntlClientProvider><AppProviders>{children}</AppProviders></NextIntlClientProvider>
+        <NextIntlClientProvider><AppProviders initialLocale={locale}>{children}</AppProviders></NextIntlClientProvider>
       </body>
     </html>
   );

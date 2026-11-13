@@ -1,19 +1,30 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useMessageState} from '@/i18n/use-message-state';
+
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesDocumentsFileValidation} from '../../file-validation';
+import {createLocalizedFeaturesDocumentsReviewViewModels} from '../view-models';
+import {createLocalizedFeaturesDocumentsViewModels} from '../../view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useEffect, useId, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { cardStyle, primaryButton, secondaryButton } from "@/components/ui/styles";
 import { useCase } from "@/features/cases/queries";
-import { validateFile, validateImageDimensions } from "../../file-validation";
-import { isProcessing, statusLabels } from "../../view-models";
+
 import { useReplacement, useReviewAction } from "../queries";
 import { replacementCreatedSchema, type ReplacementId, type ReviewContext, type SourceDto } from "../schemas";
-import { reviewError } from "../view-models";
+
 import { OriginalViewer } from "./original-viewer";
 export function ReplacementPanel({context,version,replacementId,onCreated,onConfirmed,onDirty,disabled,onReset}:{context:ReviewContext;version:number;replacementId?:ReplacementId;onCreated:(id:ReplacementId)=>void;onReset?:()=>void;onConfirmed:(documentId:number)=>void;onDirty:(value:boolean)=>void;disabled:boolean}){
-  const id=useId();const [file,setFile]=useState<File>();const [error,setError]=useState("");const [busy,setBusy]=useState(false);
+const {validateFile, validateImageDimensions} = useLocalized(createLocalizedFeaturesDocumentsFileValidation);
+const {reviewError} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+
+ const {translate} = useTranslation();
+
+  const id=useId();const [file,setFile]=useState<File>();const [error,setError]=useMessageState("");const [busy,setBusy]=useState(false);
   const controller=useRef<AbortController|null>(null);const locked=useRef(false);const mutation=useReviewAction(context);
   useEffect(()=>()=>controller.current?.abort(),[]);
   useEffect(()=>{onDirty(!!file||busy);},[file,busy,onDirty]);useEffect(()=>()=>onDirty(false),[onDirty]);
@@ -28,16 +39,21 @@ export function ReplacementPanel({context,version,replacementId,onCreated,onConf
       if(!file||locked.current)return;locked.current=true;setBusy(true);setError("");controller.current=new AbortController();
       try{const invalid=validateFile(file)??await validateImageDimensions(file);if(invalid){setError(invalid);return;}controller.current.signal.throwIfAborted();
         const data=await mutation.mutateAsync({type:"replace",file,version,signal:controller.current.signal});const receipt=replacementCreatedSchema.parse(data);setFile(undefined);onCreated(receipt.replacementId);
-      }catch(e){setError(reviewError(e));}finally{locked.current=false;setBusy(false);}
+      }catch(e){setError(reviewError(e, true));}finally{locked.current=false;setBusy(false);}
     }}>{translate("documents.replacementPanel_new_original_request")}</button>{busy&&<button className={secondaryButton} onClick={()=>controller.current?.abort()}>{translate("documents.uploadForm_request_pending_stop")}</button>}</div>
     <p className="text-caption text-muted">{translate("documents.replacementPanel_request_pending_stop_processing_cancel_count_confirm")}</p>
   </section>;
 }
 function ReplacementCandidate({context,replacementId,onConfirmed,disabled,onReset}:{context:ReviewContext;replacementId:ReplacementId;onConfirmed:(documentId:number)=>void;disabled:boolean;onReset?:()=>void}){
+const {isProcessing, statusLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+const {reviewError} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
+
+ const {translate} = useTranslation();
+
   const confirmLock=useRef(false);const [compareOriginal,setCompareOriginal]=useState(false);
   const q=useReplacement(context.caseId,replacementId);const mutation=useReviewAction(context);const latest=useCase(context.caseId);
   const [source,setSource]=useState<SourceDto|null>();const [originalReady,setOriginalReady]=useState(false);const [confirmVersion,setConfirmVersion]=useState<number>();const [checked,setChecked]=useState(false);const [dialog,setDialog]=useState(false);
-  const [error,setError]=useState("");const [conflict,setConflict]=useState(false);
+  const [error,setError]=useMessageState("");const [conflict,setConflict]=useState(false);
   if(q.isPending)return <QueryFeedback pending />;if(q.isError)return <QueryFeedback error={q.error} retry={()=>{void q.refetch();}} />;
   const data=q.data;
   if(String(data.replacementId)!==String(replacementId)||data.documentId===context.documentId)return <p role="alert">{translate("documents.replacementPanel_request_new_original_information_match_stop")}</p>;
@@ -63,7 +79,7 @@ function ReplacementCandidate({context,replacementId,onConfirmed,disabled,onRese
     {dialog&&<ConfirmDialog title={translate("documents.replacementPanel_case_original_link")} busy={mutation.isPending} onClose={()=>setDialog(false)} action={<button className={primaryButton} disabled={mutation.isPending||!latest.data} onClick={async()=>{
       if(confirmVersion===undefined||candidateId===undefined||confirmLock.current)return;confirmLock.current=true;
       try{await mutation.mutateAsync({type:"confirm-replacement",replacementId,version:confirmVersion});setDialog(false);onConfirmed(candidateId);}
-      catch(e){setError(reviewError(e));setConflict(true);setChecked(false);setDialog(false);}finally{confirmLock.current=false;}
+      catch(e){setError(reviewError(e, true));setConflict(true);setChecked(false);setDialog(false);}finally{confirmLock.current=false;}
     }}>{translate("documents.replacementPanel_new_original_link_confirm")}</button>}><p>{translate("documents.replacementPanel_case_link_document_original", { value1: data.documentId })}</p></ConfirmDialog>}
   </section>;
 }

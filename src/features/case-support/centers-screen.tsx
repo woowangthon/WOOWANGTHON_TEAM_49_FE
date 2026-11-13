@@ -1,5 +1,5 @@
 "use client";
-import { translate, translateContent } from "@/i18n/translate";
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +16,8 @@ export function safeWebsite(value?: string | null) {
 export function safePhone(value?: string | null) { return value && /^\+?[0-9][0-9 ()-]{2,24}$/.test(value) ? `tel:${value.replace(/[ ()-]/g, "")}` : undefined; }
 
 export function CentersScreen() {
+ const {translate, translateContent} = useTranslation();
+
   const s = useSessionScope();
   const [region, setRegion] = useState("");
   const [category, setCategory] = useState("");

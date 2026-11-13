@@ -1,3 +1,4 @@
+import {createTranslation} from "@/i18n/translate";
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -42,7 +43,8 @@ it("waits for the image, centers the source inside its viewport and replaces the
 });
 
 it("clamps display padding at page edges without modifying source coordinates",async()=>{
-  const {highlightBox}=await import("./view-models");
+  const {createLocalizedFeaturesDocumentsReviewViewModels}=await import("./view-models");
+  const {highlightBox}=createLocalizedFeaturesDocumentsReviewViewModels(createTranslation("ko"));
   const preview={documentId:101,mediaType:"image/png",pageCount:1,coordinateSystem:"RELATIVE_0_1",rotationDegrees:0,supportsHighlight:true};
   const source={documentId:101,page:1,coordinateSystem:"RELATIVE_0_1",boundingBox:[0,0,1,1] as [number,number,number,number]};
   expect(highlightBox(preview,source,1)).toEqual({left:"0%",top:"0%",width:"100%",height:"100%"});

@@ -1,6 +1,8 @@
 "use client";
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import {createLocalizedFeaturesWorkplacesViewModels} from '../view-models';
 
+import { useTranslation } from '@/i18n/use-translation';
 
 import { PaymentScreen } from "@/features/payments/payment-screen";
 import Link from "next/link";
@@ -15,11 +17,15 @@ import { cardStyle, secondaryButton } from "@/components/ui/styles";
 import { CaseList } from "@/features/cases/components/case-list";
 
 import { useWorkplace, useWorkplaceRemoval } from "../queries";
-import { workplaceCard } from "../view-models";
+
 import { DeleteWorkplace } from "./delete-workplace";
 import { WorkplaceForm } from "./workplace-form";
 
 export function WorkplaceDetailScreen({ id }: { id: number }) {
+const {workplaceCard} = useLocalized(createLocalizedFeaturesWorkplacesViewModels);
+
+ const {translate} = useTranslation();
+
   const query = useWorkplace(id);
   const removal = useWorkplaceRemoval(id);
   const [editing, setEditing] = useState(false);

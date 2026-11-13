@@ -1,38 +1,42 @@
 
-import { translate } from "@/i18n/translate";
+import {message as describeMessage} from '@/i18n/message';
 import { z } from "zod";
+import {createTranslation, type Translation} from '@/i18n/translate';
+import {defaultLocale} from '@/i18n/config';
 
-export const loginRequestSchema = z.object({
-  email: z.string().trim().pipe(z.email(translate("auth.schemas_valid_email_address_input"))),
+export function createLocalizedFeaturesAuthSchemas(translation: Translation) {
+  const {} = translation;
+const loginRequestSchema = z.object({
+  email: z.string().trim().pipe(z.email(describeMessage("auth.schemas_valid_email_address_input"))),
   // P0 does not specify length/complexity rules. The server remains authoritative.
-  password: z.string().min(1, translate("auth.schemas_password_input")),
+  password: z.string().min(1, describeMessage("auth.schemas_password_input")),
 });
-
-// Request DTOs preserve P0 values; form normalization is separate.
-const email = z.string().min(3, translate("auth.schemas_input_length_format_confirm")).max(254, translate("auth.schemas_input_length_format_confirm")).regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, translate("auth.schemas_input_length_format_confirm"));
-const password = z.string().min(8, translate("auth.schemas_input_length_format_confirm")).max(128, translate("auth.schemas_input_length_format_confirm"));
-export const signupRequestSchema = z.strictObject({
-  email, password, name: z.string().min(1, translate("auth.schemas_name_input")).max(100, translate("auth.schemas_input_length_format_confirm")),
+const email = z.string().min(3, describeMessage("auth.schemas_input_length_format_confirm")).max(254, describeMessage("auth.schemas_input_length_format_confirm")).regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, describeMessage("auth.schemas_input_length_format_confirm"));
+const password = z.string().min(8, describeMessage("auth.schemas_input_length_format_confirm")).max(128, describeMessage("auth.schemas_input_length_format_confirm"));
+const signupRequestSchema = z.strictObject({
+  email, password, name: z.string().min(1, describeMessage("auth.schemas_name_input")).max(100, describeMessage("auth.schemas_input_length_format_confirm")),
 });
-export const signupFormSchema = signupRequestSchema.extend({
+const signupFormSchema = signupRequestSchema.extend({
   email: z.string().trim().pipe(email), name: z.string().trim().pipe(signupRequestSchema.shape.name),
 });
-export const forgotPasswordRequestSchema = z.strictObject({ email });
-export const resetPasswordRequestSchema = z.strictObject({
-  token: z.string().min(20, translate("auth.schemas_input_length_format_confirm")).max(200, translate("auth.schemas_input_length_format_confirm")),
+const forgotPasswordRequestSchema = z.strictObject({ email });
+const resetPasswordRequestSchema = z.strictObject({
+  token: z.string().min(20, describeMessage("auth.schemas_input_length_format_confirm")).max(200, describeMessage("auth.schemas_input_length_format_confirm")),
   newPassword: password,
 });
-
-/** P0 login user fields only; createdAt and other P4 fields are not assumed. */
-export const userSchema = z.object({
+const userSchema = z.object({
+  language: z.string().nullish(),
   userId: z.number().int(),
   email: z.string(),
   name: z.string(),
 });
-
-export const loginResponseSchema = z.object({
+const loginResponseSchema = z.object({
   accessToken: z.string(),
   tokenType: z.literal("Bearer"),
   expiresIn: z.number().int(),
   user: userSchema,
 });
+return {loginRequestSchema, signupRequestSchema, signupFormSchema, forgotPasswordRequestSchema, resetPasswordRequestSchema, userSchema, loginResponseSchema};
+}
+
+export const {loginRequestSchema, signupRequestSchema, signupFormSchema, forgotPasswordRequestSchema, resetPasswordRequestSchema, userSchema, loginResponseSchema} = createLocalizedFeaturesAuthSchemas(createTranslation(defaultLocale));

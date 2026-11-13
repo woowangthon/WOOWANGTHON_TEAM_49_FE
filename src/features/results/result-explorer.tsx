@@ -1,22 +1,24 @@
 "use client";
 
-import { translate } from "@/i18n/translate";
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
 
+import {createLocalizedFeaturesResultsViewModels} from './view-models';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import { useId, useState, type ReactNode } from "react";
 import { Calculator, Check, ChevronRight, CircleHelp, Files, Landmark, ReceiptText, Search, TriangleAlert } from "lucide-react";
 import { ResultCarousel } from "@/components/ui/result-carousel";
 import type { Results } from "./schemas";
-import { statusLabels } from "./view-models";
+
 import { ServerValue } from "./result-screen";
 import styles from "./result-explorer.module.css";
 import { ResultComparisonTable } from "./result-comparison-table";
 import { ResultDetail, type ResultCard } from "./result-detail";
 
 export type ResultGroup = { id: string; title: string; cards: ResultCard[] };
-const checks = { paymentTotal: translate("results.resultExplorer_payment_sum"), deductionTotal: translate("results.resultExplorer_deduction_sum"), netPay: translate("results.resultExplorer_netPay") } as const;
-const filters = { ALL: translate("results.resultComparisonTable_all"), DIFFERENCE: translate("results.resultComparisonTable_difference"), INSUFFICIENT_INFORMATION: translate("results.resultComparisonTable_information_insufficient"), REVIEW_REQUIRED: translate("common.reviewRequired"), MATCH: translate("results.resultComparisonTable_match") };
-const comparisonTitles: Record<string, string> = { HOURLY_WAGE: translate("results.resultComparisonTable_hourlyWage_comparison") };
+
 const groupIcons = { calculation: Calculator, comparison: Files, validation: ReceiptText, deposit: Landmark };
 const shortcuts = [
  { status: "DIFFERENCE", count: "difference", Icon: TriangleAlert, tone: styles.difference },
@@ -24,15 +26,14 @@ const shortcuts = [
  { status: "REVIEW_REQUIRED", count: "reviewRequired", Icon: Search, tone: styles.review },
 ] as const;
 function text(v: unknown, fallback: string) { return typeof v === "string" ? v : fallback; }
-export function resultGroups(d: Results, compare: boolean): ResultGroup[] {
- return [
-  ...(!compare ? [{ id: "calculation", title: translate("results.resultExplorer_wage_calculation_item"), cards: (d.calculation?.items ?? []).map((v, i) => ({ id: `${v.type ?? "item"}-${i}`, title: v.label ?? v.type ?? translate("results.resultExplorer_calculation_item", { value1: i + 1 }), status: v.status, data: v, unit: v.currency, version: d.versions.calculation })) }] : []),
-  { id: "comparison", title: compare ? translate("results.resultExplorer_contract_attendance_payslip_comparison") : translate("results.resultExplorer_record_comparison"), cards: (d.comparison?.items ?? []).map((v, i) => ({ id: `${v.type ?? "item"}-${i}`, title: text(v.title, comparisonTitles[v.type ?? ""] ?? v.type ?? translate("results.resultExplorer_comparison_item", { value1: i + 1 })), status: v.status, data: v, unit: v.comparisonBasis?.unit, period: v.comparisonBasis ?? undefined, version: d.versions.comparison })) },
-  { id: "validation", title: translate("results.resultExplorer_payslip_sum_check"), cards: d.payslipValidation ? (Object.keys(checks) as (keyof typeof checks)[]).map(key => ({ id: key, title: checks[key], status: d.payslipValidation![key].status, data: d.payslipValidation![key], unit: "KRW", version: d.versions.payslipValidation })) : [] },
-  { id: "deposit", title: translate("results.resultExplorer_deposit_comparison"), cards: d.depositComparison ? [{ id: "deposit", title: translate("results.resultExplorer_link_payment_payslip_comparison"), status: typeof d.depositComparison.status === "string" ? d.depositComparison.status : undefined, data: d.depositComparison, unit: "KRW", version: d.versions.depositComparison }] : [] },
- ];
-}
+
 export function ResultExplorer({ data, compare, before, after, freshnessUnverified = false, showDetailsInitially = true }: { data: Results; compare: boolean; before?: ReactNode; after?: ReactNode; freshnessUnverified?: boolean; showDetailsInitially?: boolean }) {
+const {filters, resultGroups} = useLocalized(createResultPresentation);
+
+const {statusLabels} = useLocalized(createLocalizedFeaturesResultsViewModels);
+
+ const {translate} = useTranslation();
+
  const groups = resultGroups(data, compare);
  const [detailsVisible, setDetailsVisible] = useState(showDetailsInitially);
  const [active, setActive] = useState(groups[0].id);
@@ -109,4 +110,19 @@ export function ResultExplorer({ data, compare, before, after, freshnessUnverifi
   {evidenceStatus&&<section id={`${id}-evidence`} tabIndex={-1} aria-label={translate("results.resultExplorer_add_evidence_confirm")} className={styles.evidence}><h2>{translate("results.resultExplorer_add_evidence_confirm")}</h2><p role="status">{translate("results.resultExplorer_item_confirm_status_none_detail_provided_scope", { value1: filters[evidenceStatus as keyof typeof filters] })}</p>{evidenceItems.map(item => <article key={item.id} className={styles.evidenceItem}><h3>{item.title} · {statusLabels[item.status]}</h3><ServerValue caseId={data.caseId} value={item}/></article>)}</section>}
   {after}
  </>;
+}
+
+export function createResultPresentation({translate}: Translation) {
+const checks = { paymentTotal: translate("results.resultExplorer_payment_sum"), deductionTotal: translate("results.resultExplorer_deduction_sum"), netPay: translate("results.resultExplorer_netPay") } as const;
+const filters = { ALL: translate("results.resultComparisonTable_all"), DIFFERENCE: translate("results.resultComparisonTable_difference"), INSUFFICIENT_INFORMATION: translate("results.resultComparisonTable_information_insufficient"), REVIEW_REQUIRED: translate("common.reviewRequired"), MATCH: translate("results.resultComparisonTable_match") };
+const comparisonTitles: Record<string, string> = { HOURLY_WAGE: translate("results.resultComparisonTable_hourlyWage_comparison") };
+function resultGroups(d: Results, compare: boolean): ResultGroup[] {
+ return [
+  ...(!compare ? [{ id: "calculation", title: translate("results.resultExplorer_wage_calculation_item"), cards: (d.calculation?.items ?? []).map((v, i) => ({ id: `${v.type ?? "item"}-${i}`, title: v.label ?? v.type ?? translate("results.resultExplorer_calculation_item", { value1: i + 1 }), status: v.status, data: v, unit: v.currency, version: d.versions.calculation })) }] : []),
+  { id: "comparison", title: compare ? translate("results.resultExplorer_contract_attendance_payslip_comparison") : translate("results.resultExplorer_record_comparison"), cards: (d.comparison?.items ?? []).map((v, i) => ({ id: `${v.type ?? "item"}-${i}`, title: text(v.title, comparisonTitles[v.type ?? ""] ?? v.type ?? translate("results.resultExplorer_comparison_item", { value1: i + 1 })), status: v.status, data: v, unit: v.comparisonBasis?.unit, period: v.comparisonBasis ?? undefined, version: d.versions.comparison })) },
+  { id: "validation", title: translate("results.resultExplorer_payslip_sum_check"), cards: d.payslipValidation ? (Object.keys(checks) as (keyof typeof checks)[]).map(key => ({ id: key, title: checks[key], status: d.payslipValidation![key].status, data: d.payslipValidation![key], unit: "KRW", version: d.versions.payslipValidation })) : [] },
+  { id: "deposit", title: translate("results.resultExplorer_deposit_comparison"), cards: d.depositComparison ? [{ id: "deposit", title: translate("results.resultExplorer_link_payment_payslip_comparison"), status: typeof d.depositComparison.status === "string" ? d.depositComparison.status : undefined, data: d.depositComparison, unit: "KRW", version: d.versions.depositComparison }] : [] },
+ ];
+}
+return {checks, filters, comparisonTitles, resultGroups};
 }

@@ -1,5 +1,6 @@
+"use client";
+import { useTranslation } from '@/i18n/use-translation';
 
-import { translate } from "@/i18n/translate";
 ﻿import type { ReactNode } from 'react';
 import { cardStyle, secondaryButton } from '@/components/ui/styles';
 import type { Report } from './schemas';
@@ -8,6 +9,8 @@ import type { Report } from './schemas';
 export function ReportPresentation({ report:r, busy, downloadDisabled, download, feedback }: {
  report:Report; busy:boolean; downloadDisabled:boolean; download:(kind:'pdf'|'originals')=>void; feedback:ReactNode;
 }) {
+ const {translate} = useTranslation();
+
  const ready=r.status==='READY';
  return <article className={`${cardStyle} space-y-4`} aria-label={translate("caseSupport.reportPresentation_report", { value1: r.reportId })}>
   <header className="space-y-2 border-b border-border pb-4">

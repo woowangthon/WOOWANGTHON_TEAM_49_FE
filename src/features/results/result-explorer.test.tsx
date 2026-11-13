@@ -3,10 +3,12 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { ResultExplorer, resultGroups } from "./result-explorer";
+import { ResultExplorer, createResultPresentation } from "./result-explorer";
 import { ResultCarousel } from "@/components/ui/result-carousel";
 import { buildResultScenario } from "@/mocks/shared/result-scenario";
 import type { CaseDetailDto } from "@/features/cases/schemas";
+import {createTranslation} from '@/i18n/translate';
+const {resultGroups}=createResultPresentation(createTranslation('ko'));
 const fixture = () => buildResultScenario({caseId:15,inputVersion:7,periodStart:"2026-01-01",periodEnd:"2026-01-31"} as CaseDetailDto,2,[],[],[]);
 afterEach(cleanup);
 it("groups actual response sections without inferring titles or altering values", () => {

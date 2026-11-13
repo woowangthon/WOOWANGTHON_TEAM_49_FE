@@ -1,6 +1,11 @@
-'use client';
-import { translate } from "@/i18n/translate";
-import { activeLocale as defaultLocale } from "@/i18n/config";
+"use client";
+import {useMessageState} from '@/i18n/use-message-state';
+import {message as describeMessage} from '@/i18n/message';
+
+import {useLocalized} from '@/i18n/use-translation';
+import type {Translation} from '@/i18n/translate';
+
+import { useTranslation } from '@/i18n/use-translation';
 
 import Link from 'next/link';
 import { BrandLink } from '@/components/layout/brand-link';
@@ -14,25 +19,16 @@ type MotionStyle = CSSProperties & {
     '--i'?: number;
     '--delay'?: string;
 };
-const features = [
-    { id: 'gather', number: '01', label: translate("auth.landing_record"), detail: translate("auth.landing_features_detail"), icon: Files },
-    { id: 'verify', number: '02', label: translate("auth.landing_original_confirm"), detail: translate("auth.landing_confirm"), icon: ScanLine },
-    { id: 'calculate', number: '03', label: translate("auth.landing_wage_calculation"), detail: translate("auth.landing_workingConditions_basis"), icon: Calculator },
-    { id: 'compare', number: '04', label: translate("auth.landing_payslip_deposit_comparison"), detail: translate("auth.landing_difference_evidence"), icon: Wallet },
-];
-const documents = [
-    { icon: FileText, name: translate("auth.landing_contract"), file: translate("auth.landing_contract_2"), status: translate("auth.landing_confirm_2"), color: 'violet' },
-    { icon: Clock3, name: translate("auth.landing_attendance"), file: translate("auth.landing_attendance_2"), status: translate("auth.landing_time_confirm"), color: 'blue' },
-    { icon: FileText, name: translate("auth.landing_payslip"), file: translate("auth.landing_payslip_2"), status: translate("auth.landing_amount_confirm"), color: 'yellow' },
-    { icon: Wallet, name: translate("auth.landing_deposit"), file: translate("auth.landing_deposit_case"), status: translate("auth.landing_transaction_link"), color: 'pink' },
-];
-const inquiry = translate("auth.landing_payslip_netPay_current_confirm_deposit_sum_difference");
+
 function Logo() {
+ const {translate} = useTranslation();
+
     return <BrandLink className={classes("logo")} aria-label={translate("auth.landing_monthlyWage")}><span className={classes("logo-symbol")} aria-hidden="true"><Link2 aria-hidden="true" size={26} strokeWidth={3}/></span>{translate("common.brand")}<span className={classes("logo-dot")}>.</span></BrandLink>;
 }
 function Counter({ value }: {
     value: number;
 }) {
+    const {locale: defaultLocale} = useTranslation();
     const ref = useRef<HTMLSpanElement>(null);
     const [number, setNumber] = useState(value);
     useEffect(() => {
@@ -59,6 +55,8 @@ function Counter({ value }: {
     return <span ref={ref}><span aria-hidden="true">{number.toLocaleString(defaultLocale)}</span><span className={classes("sr-only")}>{value.toLocaleString(defaultLocale)}</span></span>;
 }
 function DocumentRows({ compact = false }) {
+const {documents} = useLocalized(createPresentation);
+
     return <div className={classes(compact ? 'document-rows compact' : 'document-rows')}>
     {documents.map(({ icon: Icon, name, file, status, color }, i) => <div className={classes("document-row")} style={{ '--i': i } as MotionStyle} key={name}>
       <span className={classes('file-icon ' + color)}><Icon aria-hidden="true" size={23}/></span><div><strong>{name}</strong><span>{file}</span></div><span className={classes("file-status")}>{status}<Check aria-hidden="true" size={13}/></span>
@@ -66,6 +64,8 @@ function DocumentRows({ compact = false }) {
   </div>;
 }
 function PayBreakdown({ count = false }) {
+ const {translate} = useTranslation();
+
     return <div className={classes("pay-breakdown")}>
     <span className={classes("mini-label")}>{translate("auth.landing_deduction_wage_example")}</span>
     <div className={classes("pay-total")}>{count ? <Counter value={2200000}/> : '2,200,000'}<small>{translate("common.won")}</small></div>
@@ -75,6 +75,8 @@ function PayBreakdown({ count = false }) {
   </div>;
 }
 function VerifyPreview() {
+ const {translate} = useTranslation();
+
     return <div className={classes("verify-preview")}>
     <div className={classes("mini-paper")}><span className={classes("paper-kicker")}>{translate("auth.landing_original_page")}</span><h4>{translate("auth.landing_payslip")}</h4><div className={classes("paper-rule")}/><div><span>{translate("auth.landing_payment_total")}</span><b>2,200,000</b></div><div><span>{translate("auth.landing_deduction_total")}</span><b>100,000</b></div><div className={classes("source-highlight")}><span>{translate("auth.landing_netPay")}</span><b>2,100,000</b></div><span className={classes("paper-stamp")}>{translate("auth.landing_div8")}</span></div>
     <span className={classes("source-arrow")}><MoveRight aria-hidden="true" size={22}/></span>
@@ -82,11 +84,15 @@ function VerifyPreview() {
   </div>;
 }
 function ComparePreview() {
+ const {translate} = useTranslation();
+
     return <div className={classes("compare-preview")}><div className={classes("compare-pair")}><div><FileText aria-hidden="true" size={24}/><span>{translate("auth.landing_payslip_netPay")}</span><strong>2,100,000<small>{translate("common.won")}</small></strong></div><div><Wallet aria-hidden="true" size={24}/><span>{translate("auth.landing_link_deposit_sum")}</span><strong>2,000,000<small>{translate("common.won")}</small></strong></div></div><div className={classes("difference-line")}><span>{translate("auth.landing_current_record_confirm_difference")}</span><strong>{translate("auth.landing_div13")}</strong></div><div className={classes("linked-transfers")}><span><Check aria-hidden="true" size={14}/> {translate("auth.landing_span3")}</span><span><Check aria-hidden="true" size={14}/> {translate("auth.landing_span4")}</span></div><p className={classes("visual-note")}>{translate("auth.landing_difference_unpaid")}</p></div>;
 }
 function HeroPreview({ active }: {
     active: number;
 }) {
+ const {translate} = useTranslation();
+
     return <div className={classes("product-preview")} aria-label={translate("auth.landing_example")}>
     <div className={classes("preview-toolbar")}><span className={classes("preview-dots")} aria-hidden="true"><i /><i /><i /></span><span>{translate("common.brand")}</span><span className={classes("example-label")}>{translate("auth.landing_example_2")}</span></div>
     <div className={classes("preview-content")} id="landing-preview" aria-live="polite" aria-atomic="true" key={active}>
@@ -100,9 +106,13 @@ function HeroPreview({ active }: {
   </div>;
 }
 export function Landing() {
+const {features, inquiry} = useLocalized(createPresentation);
+
+ const {translate} = useTranslation();
+
     const [active, setActive] = useState(0);
     const [menuOpen, setMenuOpen] = useState(false);
-    const [copyStatus, setCopyStatus] = useState('');
+    const [copyStatus, setCopyStatus] = useMessageState('');
     const copyRef = useRef<HTMLParagraphElement>(null);
     const rootRef = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLButtonElement>(null);
@@ -144,10 +154,10 @@ export function Landing() {
     async function copyInquiry() {
         try {
             await navigator.clipboard.writeText(inquiry);
-            setCopyStatus(translate("auth.landing_example_3"));
+            setCopyStatus(describeMessage("auth.landing_example_3"));
         }
         catch {
-            setCopyStatus(translate("auth.landing_select"));
+            setCopyStatus(describeMessage("auth.landing_select"));
             copyRef.current?.focus();
         }
     }
@@ -209,4 +219,21 @@ export function Landing() {
     </main>
     <footer className={classes("site-footer section-wrap")}><div className={classes("footer-top")}><Logo /><a href="#main-content">{translate("auth.landing_a2")}<ArrowUpRight aria-hidden="true" size={16}/></a></div><p>{translate("auth.landing_monthlyWage_work_confirm_wage_record_link")}</p><p className={classes("footer-note")}>{translate("auth.landing_page_document_amount_example_calculation_comparison_result")}<br />{translate("auth.landing_answer_calculation_result_confirm")}</p><span className={classes("copyright")}>{translate("auth.landing_monthlyWage_6")}</span></footer>
   </div>;
+}
+
+function createPresentation({translate}: Translation) {
+const features = [
+    { id: 'gather', number: '01', label: translate("auth.landing_record"), detail: translate("auth.landing_features_detail"), icon: Files },
+    { id: 'verify', number: '02', label: translate("auth.landing_original_confirm"), detail: translate("auth.landing_confirm"), icon: ScanLine },
+    { id: 'calculate', number: '03', label: translate("auth.landing_wage_calculation"), detail: translate("auth.landing_workingConditions_basis"), icon: Calculator },
+    { id: 'compare', number: '04', label: translate("auth.landing_payslip_deposit_comparison"), detail: translate("auth.landing_difference_evidence"), icon: Wallet },
+];
+const documents = [
+    { icon: FileText, name: translate("auth.landing_contract"), file: translate("auth.landing_contract_2"), status: translate("auth.landing_confirm_2"), color: 'violet' },
+    { icon: Clock3, name: translate("auth.landing_attendance"), file: translate("auth.landing_attendance_2"), status: translate("auth.landing_time_confirm"), color: 'blue' },
+    { icon: FileText, name: translate("auth.landing_payslip"), file: translate("auth.landing_payslip_2"), status: translate("auth.landing_amount_confirm"), color: 'yellow' },
+    { icon: Wallet, name: translate("auth.landing_deposit"), file: translate("auth.landing_deposit_case"), status: translate("auth.landing_transaction_link"), color: 'pink' },
+];
+const inquiry = translate("auth.landing_payslip_netPay_current_confirm_deposit_sum_difference");
+return {features, documents, inquiry};
 }

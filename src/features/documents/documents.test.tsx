@@ -1,3 +1,4 @@
+import {createTranslation} from '@/i18n/translate';
 import { caseDocumentResponse } from "@/mocks/shared/document-handlers";
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
@@ -22,8 +23,10 @@ import { LinkForm } from "./components/link-form";
 import { documentApi } from "./api";
 import { documentKeys, useRecomputeStatus } from "./queries";
 import { revokeDocumentScope } from "./cache";
-import { MAX_FILE_SIZE, validateFile, validateImageDimensions } from "./file-validation";
+import {createLocalizedFeaturesDocumentsFileValidation} from './file-validation';
 import { caseDocumentSchema, documentSchema } from "./schemas";
+
+const {MAX_FILE_SIZE, validateFile, validateImageDimensions} = createLocalizedFeaturesDocumentsFileValidation(createTranslation('ko'));
 const nav = vi.hoisted(() => ({replace: vi.fn()}));
 vi.mock("next/navigation", () => ({useRouter: () => nav, usePathname: () => "/library", useSearchParams: () => new URLSearchParams()}));
 const apps: AppServices[] = [];
@@ -382,7 +385,6 @@ it("keeps compact row metadata separate and reveals linked cases five at a time"
  expect(screen.getByRole("link",{name:"내역 #6"})).toBeVisible();
  expect(mocks.requests.filter(r=>r.method!=="GET")).toHaveLength(0);
 });
-
 
 it.each([null, 777])("A05 lists and opens details without a nested link (%s)", async linkId => {
   const {app,mount,user,mocks} = await setup();

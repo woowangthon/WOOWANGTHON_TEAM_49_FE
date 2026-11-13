@@ -1,9 +1,12 @@
+import {getTranslations} from 'next-intl/server';
 
-import { translate } from "@/i18n/translate";
 import type { Metadata } from "next";
 import { CaseList } from "@/features/cases/components/case-list";
 
-export const metadata: Metadata = { title: translate("common.page_wage_confirm_case") };
+export async function generateMetadata(): Promise<Metadata> {
+ const t = await getTranslations();
+ return { title: t("common.page_wage_confirm_case") };
+}
 
 export default function CasesPage() {
   return <CaseList />;
