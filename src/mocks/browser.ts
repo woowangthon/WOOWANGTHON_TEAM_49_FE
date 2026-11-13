@@ -1,7 +1,7 @@
 import { setupWorker } from "msw/browser";
 import { http, HttpResponse } from "msw";
 import { getApiBaseUrl } from "@/lib/config/env";
-import { clearMockSession, createDevelopmentScenario } from "./development";
+import { clearMockSession, clearMockLanguages, createDevelopmentScenario } from "./development";
 
 const state = globalThis as typeof globalThis & { wageitdaMock?: Promise<{ reset: () => void }> };
 export function startMockWorker() {
@@ -18,6 +18,6 @@ export function startMockWorker() {
     const worker = setupWorker(...createDevelopmentScenario().handlers, blockedApi);
     await worker.start({ quiet: true, serviceWorker: { url: "/mockServiceWorker.js" }, onUnhandledFrame: "bypass" });
     if (!navigator.serviceWorker.controller) throw new Error("Mock Service Worker가 페이지를 제어하지 못했습니다. 새로고침해 주세요.");
-    return { reset() { clearMockSession(); worker.resetHandlers(...createDevelopmentScenario().handlers, blockedApi); } };
+    return { reset() { clearMockSession(); clearMockLanguages(); worker.resetHandlers(...createDevelopmentScenario().handlers, blockedApi); } };
   })();
 }

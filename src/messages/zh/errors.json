@@ -1,0 +1,14 @@
+{
+  "client_start": "API 路径必须是相对路径，以基本 URL 内的 / 开头。",
+  "client_change": "会话已更改。",
+  "client_count_empty": "JSON 和多部分主体不能一起发送。",
+  "formErrors_request_processing_failure_retry": "无法处理您的请求。请稍后重试。",
+  "formErrors_response_format_document_contract_match_retry": "服务器响应格式与文档合同不匹配。数值不是随意补充的。请再次检查。",
+  "formErrors_record_access_permission_empty": "您无权访问该材料。",
+  "formErrors_record_notFound_delete_access_count_none": "没有找到数据。该材料已被删除或无法访问。",
+  "formErrors_change_save_current_information_confirm_retry_edit": "首先保存其他更改。请检查最新信息并重新编辑。",
+  "formErrors_link_record_current_status_request_processing_count": "由于链接材料或其当前状态，无法处理您的请求。请检查链接的历史记录以获取最新信息。",
+  "formErrors_input_confirm_request_processing_failure": "请检查您输入的值。服务器无法处理您的请求。",
+  "formErrors_request_retry": "我们有很多要求。请稍后重试。",
+  "formErrors_record_load_saveFailure_link_confirm_retry": "无法加载或保存数据。请检查您的连接并重试。"
+}

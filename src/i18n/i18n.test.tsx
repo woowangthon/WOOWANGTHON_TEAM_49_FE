@@ -3,17 +3,22 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { createTranslator } from 'next-intl';
 import { parse, TYPE, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
-import messages from '@/messages/ko';
+import {catalogs, locales, messageLoaders} from './catalog.generated';
+import {languageCatalog} from './config';
 import { createTranslation, type MessageKey } from './translate';
 const {translate, translateContent, format} = createTranslation('ko');
 import {createLocalizedLibFormat} from '@/lib/format';
 
 const {formatQuantity, formatDate} = createLocalizedLibFormat(createTranslation('ko'));
 describe('language pack integration', () => {
-  it('formats every message without missing arguments or runtime ICU errors', () => {
+  it.each(locales)('loads and formats every %s message without ICU errors', async locale => {
+    const messages = await messageLoaders[locale]();
+    expect(messages).toEqual(catalogs[locale]);
+    expect(Object.keys(messages).sort()).toEqual(Object.keys(catalogs.ko).sort());
     const onError = vi.fn();
-    const t = createTranslator({locale: 'ko', messages, onError});
+    const t = createTranslator({locale, messages, onError});
     for (const [ns, catalog] of Object.entries(messages)) {
+      expect(Object.keys(catalog).sort()).toEqual(Object.keys(catalogs.ko[ns as keyof typeof catalogs.ko]).sort());
       for (const [key, message] of Object.entries(catalog)) {
         const values: Record<string, string | number | Date | (() => string)> = {};
         function argumentsFor(elements: MessageFormatElement[]) {
@@ -31,6 +36,24 @@ describe('language pack integration', () => {
       }
     }
     expect(onError).not.toHaveBeenCalled();
+  });
+  it.each(locales)('preserves KRW, zero and missing values in %s', locale => {
+    const translation = createTranslation(locale);
+    const {formatQuantity} = createLocalizedLibFormat(translation);
+    expect(formatQuantity(0, 'KRW')).toContain('0');
+    expect(formatQuantity(null, 'KRW')).toBe(translation.translate('common.unconfirmed'));
+    expect(formatQuantity(undefined, 'KRW')).toBe(translation.translate('common.notProvided'));
+    expect(translation.format.number(2300000, {style:'currency',currency:'KRW'})).toBe(new Intl.NumberFormat(languageCatalog[locale].intlLocale,{style:'currency',currency:'KRW'}).format(2300000));
+    render(<p>{translation.translateContent('caseSupport.centersScreen_contact',{value1:<a href="tel:1350">1350</a>})}</p>);
+    expect(screen.getByRole('link').getAttribute('href')).toBe('tel:1350');
+    cleanup();
+  });
+  it.each(locales)('supports ICU plural and select branches in %s', locale => {
+    const t = createTranslator({locale,messages:{plural:'{count, plural, =0 {none} one {# item} other {# items}}',select:'{state, select, ready {ready} other {pending}}'}});
+    expect(t('plural',{count:0})).toBe('none');
+    expect(t('plural',{count:2})).toContain('2');
+    expect(t('select',{state:'ready'})).toBe('ready');
+    expect(t('select',{state:'unknown'})).toBe('pending');
   });
   it('preserves zero, missing values, source dates and source text', () => {
     expect(formatQuantity(0, 'KRW')).toBe('0 원');

@@ -23,18 +23,19 @@ function mount(app = createAppServices(testApiUrl)) {
 }
 describe('user locale and selector', () => {
   it('keeps backend codes separate from installed packs and missing fields', () => {
-    expect(defaultLocale).toBe('ko'); expect(locales).toEqual(['ko']);
-    for (const language of [undefined, null, 'en', 'vi', 'zh', 'km', 'invalid']) expect(resolveLocale(language)).toBe('ko');
+    expect(defaultLocale).toBe('ko'); expect([...locales].sort()).toEqual(['en','km','ko','vi','zh']);
+    for (const language of [undefined, null, 'zh-CN', 'invalid']) expect(resolveLocale(language)).toBe('ko');
+    for (const language of locales) expect(resolveLocale(language)).toBe(language);
     expect(userSchema.parse({...testUser, language:'en'}).language).toBe('en');
     expect(userSchema.parse(testUser).language).toBeUndefined();
   });
-  it('shows only Korean, supports keyboard and makes no guest PATCH', async () => {
+  it('shows installed packs, supports keyboard and makes no redundant PATCH', async () => {
     const {app, current} = mount(); await act(() => app.auth.restore());
     const patch = vi.spyOn(app.authApi, 'changeLanguage');
     const user = userEvent.setup(); const button = screen.getByRole('button', {name:'표시 언어 선택'});
     button.focus(); await user.keyboard('{ArrowDown}');
-    expect(screen.getAllByRole('menuitemradio')).toHaveLength(1);
-    await waitFor(() => expect(screen.getByRole('menuitemradio', {name:'한국어'})).toHaveFocus());
+    expect(screen.getAllByRole('menuitemradio')).toHaveLength(5);
+    await waitFor(() => expect(screen.getAllByRole('menuitemradio')[0]).toHaveFocus());
     await user.keyboard('{Escape}'); expect(button).toHaveFocus();
     await act(() => current().select('ko')); expect(patch).not.toHaveBeenCalled();
   });
@@ -42,7 +43,7 @@ describe('user locale and selector', () => {
     server.use(http.post(`${testApiUrl}/auth/login`, () => apiResponse({...testLogin,user:{...testUser, language:'en'}})));
     const app=createAppServices(testApiUrl); await app.auth.login({email:testUser.email,password:'password1234'});
     const get=vi.spyOn(app.authApi,'getMe'); const patch=vi.spyOn(app.authApi,'changeLanguage');const {current}=mount(app);
-    expect(current().locale).toBe('ko'); await act(()=>current().select('ko'));
+    expect(current().locale).toBe('en'); await act(()=>current().select('en'));
     expect(get).not.toHaveBeenCalled();expect(patch).not.toHaveBeenCalled();
     expect(app.queryClient.getQueryData(authKeys.me(app.session.getSnapshot().generation))).toMatchObject({language:'en'});
     await act(()=>app.auth.logout());expect(current().locale).toBe('ko');
@@ -50,7 +51,7 @@ describe('user locale and selector', () => {
   });
   it('falls back on cache error and rejects unavailable choices', async () => {
     const {app,current}=mount();await act(()=>app.auth.login({email:testUser.email,password:'password1234'}));
-    const patch=vi.spyOn(app.authApi,'changeLanguage');await act(()=>current().select('en' as Locale));expect(patch).not.toHaveBeenCalled();
+    const patch=vi.spyOn(app.authApi,'changeLanguage');await act(()=>current().select('invalid' as Locale));expect(patch).not.toHaveBeenCalled();
     await act(async()=>{app.queryClient.getQueryCache().find({queryKey:authKeys.me(app.session.getSnapshot().generation)})?.setState({status:'error'});});
     expect(current().locale).toBe('ko');await waitFor(()=>expect(document.documentElement.lang).toBe('ko'));
   });

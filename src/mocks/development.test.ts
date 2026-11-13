@@ -1,17 +1,26 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
 import { server, testApiUrl } from "@/test/server";
-import { clearMockSession, createDevelopmentScenario, demoAccount, demoProfile } from "./development";
+import { clearMockSession, clearMockLanguages, createDevelopmentScenario, demoAccount, demoProfile } from "./development";
 
 describe("browser development scenario through the existing MSW infrastructure", () => {
   let token: string;
   beforeEach(async () => {
     clearMockSession();
+    clearMockLanguages();
     server.use(...createDevelopmentScenario(testApiUrl).handlers);
     const response = await fetch(`${testApiUrl}/auth/login`, { method: "POST", body: JSON.stringify(demoAccount) });
     token = (await response.json()).data.accessToken;
   });
   const request = (path: string, token: string, method = "GET", body?: unknown) => fetch(`${testApiUrl}${path}`, { method, headers: { Authorization: `Bearer ${token}` }, ...(body ? { body: JSON.stringify(body) } : {}) });
+  it.each(['en','zh','vi','km'])('restores saved %s after a page reload scenario', async language => {
+    expect((await request('/users/me/language',token,'PATCH',{language})).status).toBe(200);
+    server.use(...createDevelopmentScenario(testApiUrl).handlers);
+    const restored = await (await fetch(`${testApiUrl}/auth/refresh`,{method:'POST'})).json();
+    expect(restored.data.user.language).toBe(language);
+    const response = await request('/users/me',restored.data.accessToken);
+    expect((await response.json()).data.language).toBe(language);
+  });
   it("restores the demo session and revokes refresh on 204 logout", async () => {
     expect((await fetch(`${testApiUrl}/auth/refresh`, { method: "POST" })).status).toBe(200);
     const result = await request("/auth/logout", token, "POST");

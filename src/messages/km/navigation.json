@@ -1,0 +1,9 @@
+{
+  "appShell_create_menu_empty": "មិនមានម៉ឺនុយដែលបានចុះឈ្មោះទេ។",
+  "appShell_ariaLabel_aside": "របារចំហៀង",
+  "appShell_menu": "ម៉ឺនុយមេ",
+  "mobileNavigation_menu": "ម៉ឺនុយ",
+  "mobileNavigation_monthlyWage_menu": "ម៉ឺនុយ Wageitda",
+  "mobileNavigation_ariaLabel_button": "បើក {value1}",
+  "mobileNavigation_close": "{value1} បិទ"
+}

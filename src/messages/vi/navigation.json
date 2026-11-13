@@ -1,0 +1,9 @@
+{
+  "appShell_create_menu_empty": "Không có menu nào được đăng ký.",
+  "appShell_ariaLabel_aside": "thanh bên",
+  "appShell_menu": "thực đơn chính",
+  "mobileNavigation_menu": "thực đơn",
+  "mobileNavigation_monthlyWage_menu": "Trình đơn Wageitda",
+  "mobileNavigation_ariaLabel_button": "Mở {value1}",
+  "mobileNavigation_close": "{value1} Đóng"
+}

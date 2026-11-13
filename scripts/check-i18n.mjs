@@ -4,12 +4,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import {parse} from '@formatjs/icu-messageformat-parser';
+import {validateLanguagePacks} from './validate-language-packs.mjs';
 
 function files(dir) {
   return fs.readdirSync(dir, {withFileTypes: true}).flatMap(e => e.isDirectory() ? files(path.join(dir, e.name)) : [path.join(dir, e.name)]);
 }
 verifyPolicyFixtures();
-const errors = [];
+const errors = validateLanguagePacks();
 const messages = new Map();
 for (const file of files('src/messages').filter(f => f.endsWith('.json'))) {
   const source = fs.readFileSync(file, 'utf8');
@@ -66,7 +67,9 @@ for (const file of files('src').filter(f => /\.(tsx?|css)$/.test(f) && (!f.inclu
       for (let parent = node.parent; parent; parent = parent.parent) {
         if (ts.isCallExpression(parent) && parent.expression.getText(ast) === 'console.debug') debugLog = true;
       }
-      if (!debugLog && /[가-힣]/.test(text)) errors.push(`${file}:${ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1}: hardcoded Korean`);
+      // Native language names are intentionally stable across display languages.
+      const nativeLanguageName = file.replaceAll('\\', '/') === 'src/i18n/config.ts' && text === '\uD55C\uAD6D\uC5B4';
+      if (!debugLog && !nativeLanguageName && /[가-힣]/.test(text)) errors.push(`${file}:${ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1}: hardcoded Korean`);
     }
     ts.forEachChild(node, visit);
   }

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const root = 'src/messages';
-const locales = fs.readdirSync(root, {withFileTypes: true}).filter(e => e.isDirectory()).map(e => e.name).sort();
+const locales = fs.readdirSync(root, {withFileTypes: true}).filter(e => e.isDirectory()).map(e => e.name).sort((a,b) => a === 'ko' ? -1 : b === 'ko' ? 1 : a.localeCompare(b));
 if (locales.some(locale => !['ko', 'en', 'vi', 'zh', 'km'].includes(locale))) throw new Error('Language pack must use a backend language code');
 const baseline = fs.readdirSync(`${root}/ko`).filter(f => f.endsWith('.json')).sort();
 for (const locale of locales) {

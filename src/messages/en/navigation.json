@@ -1,0 +1,9 @@
+{
+  "appShell_create_menu_empty": "There are no registered menus.",
+  "appShell_ariaLabel_aside": "Sidebar",
+  "appShell_menu": "Main menu",
+  "mobileNavigation_menu": "Menu",
+  "mobileNavigation_monthlyWage_menu": "Wageitda menu",
+  "mobileNavigation_ariaLabel_button": "{value1} Open",
+  "mobileNavigation_close": "{value1} Close"
+}

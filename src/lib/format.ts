@@ -1,8 +1,9 @@
 import {type Translation} from '@/i18n/translate';
+import {languageCatalog} from '@/i18n/config';
 
 export function createLocalizedLibFormat(translation: Translation) {
   const {translate, locale: defaultLocale} = translation;
-const numberFormat = new Intl.NumberFormat(defaultLocale, { maximumFractionDigits: 10 });
+const numberFormat = new Intl.NumberFormat(languageCatalog[defaultLocale].intlLocale, { maximumFractionDigits: 10 });
 function formatQuantity(value: number | null | undefined, unit?: string | null): string {
  if (value === undefined) return translate("common.notProvided");
  if (value === null) return translate("common.unconfirmed");

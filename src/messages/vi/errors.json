@@ -1,0 +1,14 @@
+{
+  "client_start": "Đường dẫn API phải tương đối, bắt đầu bằng / bên trong URL cơ sở.",
+  "client_change": "Phiên đã thay đổi.",
+  "client_count_empty": "JSON và nội dung nhiều phần không thể được gửi cùng nhau.",
+  "formErrors_request_processing_failure_retry": "Yêu cầu của bạn không thể được xử lý. Vui lòng thử lại sau.",
+  "formErrors_response_format_document_contract_match_retry": "Định dạng phản hồi của máy chủ không khớp với hợp đồng tài liệu. Các giá trị không được bổ sung tùy tiện. Vui lòng kiểm tra lại.",
+  "formErrors_record_access_permission_empty": "Bạn không có quyền truy cập tài liệu này.",
+  "formErrors_record_notFound_delete_access_count_none": "Không tìm thấy dữ liệu. Tài liệu này đã bị xóa hoặc không thể truy cập được.",
+  "formErrors_change_save_current_information_confirm_retry_edit": "Những thay đổi khác đã được lưu trước tiên. Vui lòng kiểm tra thông tin mới nhất và chỉnh sửa lại.",
+  "formErrors_link_record_current_status_request_processing_count": "Yêu cầu của bạn không thể được xử lý do tài liệu được liên kết hoặc trạng thái hiện tại của nó. Vui lòng kiểm tra lịch sử liên kết để biết thông tin mới nhất.",
+  "formErrors_input_confirm_request_processing_failure": "Vui lòng kiểm tra các giá trị bạn đã nhập. Máy chủ không thể xử lý yêu cầu của bạn.",
+  "formErrors_request_retry": "Chúng tôi có rất nhiều yêu cầu. Vui lòng thử lại sau.",
+  "formErrors_record_load_saveFailure_link_confirm_retry": "Không thể tải hoặc lưu dữ liệu. Vui lòng kiểm tra kết nối của bạn và thử lại."
+}

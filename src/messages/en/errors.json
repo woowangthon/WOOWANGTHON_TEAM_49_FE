@@ -1,0 +1,14 @@
+{
+  "client_start": "The API path must be relative, starting with / inside the Base URL.",
+  "client_change": "The session has changed.",
+  "client_count_empty": "JSON and multipart bodies cannot be sent together.",
+  "formErrors_request_processing_failure_retry": "Your request could not be processed. Please try again later.",
+  "formErrors_response_format_document_contract_match_retry": "The server response format does not match the document contract. The values ​​were not arbitrarily supplemented. Please check again.",
+  "formErrors_record_access_permission_empty": "You do not have permission to access this material.",
+  "formErrors_record_notFound_delete_access_count_none": "No data found. This material has been deleted or is inaccessible.",
+  "formErrors_change_save_current_information_confirm_retry_edit": "Other changes were saved first. Please check the latest information and edit again.",
+  "formErrors_link_record_current_status_request_processing_count": "Your request cannot be processed because of the linked material or its current status. Please check the linked history for the latest information.",
+  "formErrors_input_confirm_request_processing_failure": "Please check the values ​​you entered. The server was unable to process your request.",
+  "formErrors_request_retry": "We have a lot of requests. Please try again later.",
+  "formErrors_record_load_saveFailure_link_confirm_retry": "Failed to load or save data. Please check your connection and try again."
+}

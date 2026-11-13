@@ -20,6 +20,15 @@ const marker = "wageitda_mock_session";
 let latestResetToken = "";
 export function readDevelopmentResetToken() { return latestResetToken; }
 export function clearMockSession() { document.cookie = `${marker}=; Path=/; Max-Age=0; SameSite=Lax`; }
+// Development-only synthetic DB preference: language codes, never profile data.
+function mockLanguage(userId: number) {
+  const value = document.cookie.split('; ').find(v => v.startsWith(`wageitda_mock_language_${userId}=`))?.split('=')[1];
+  const parsed = languageRequestSchema.safeParse({language: value});
+  return parsed.success ? parsed.data.language : 'ko';
+}
+export function clearMockLanguages() {
+  for (const part of document.cookie.split('; ')) if (part.startsWith('wageitda_mock_language_')) document.cookie = `${part.split('=')[0]}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
 
 function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number) {
   const management = managementMocks({ baseUrl, count: 2, empty: !seed, idOffset });
@@ -192,6 +201,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       if (!user || deleted.has(user.email) || user.password !== body.password) return fail("INVALID_CREDENTIALS", 401);
       receipt = false;
       activeUser = user;
+      activeUser.language = mockLanguage(user.userId);
       document.cookie = `${marker}=${encodeURIComponent(user.email)}; Path=/; SameSite=Lax`;
       return apiResponse(issue());
     }),
@@ -200,6 +210,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       const user = email && users.get(decodeURIComponent(email));
       if (!user || deleted.has(user.email)) return fail("AUTH_REQUIRED", 401);
       activeUser = user;
+      activeUser.language = mockLanguage(user.userId);
       return apiResponse(issue());
     }),
     http.post(`${baseUrl}/auth/logout`, () => { token = ""; clearMockSession(); return new HttpResponse(null, { status: 204 }); }),
@@ -211,6 +222,7 @@ export function createDevelopmentScenario(baseUrl = getApiBaseUrl()) {
       const parsed = languageRequestSchema.safeParse(await request.json().catch(() => null));
       if (!parsed.success) return fail("VALIDATION_ERROR", 422);
       activeUser.language = parsed.data.language;
+      document.cookie = `wageitda_mock_language_${activeUser.userId}=${parsed.data.language}; Path=/; SameSite=Lax`;
       return apiResponse({language: activeUser.language});
     }),
     http.delete(`${baseUrl}/users/me`, async ({ request }) => {

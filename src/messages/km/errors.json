@@ -1,0 +1,14 @@
+{
+  "client_start": "ផ្លូវ API ត្រូវតែទាក់ទងដោយចាប់ផ្តើមជាមួយ / នៅខាងក្នុង URL មូលដ្ឋាន។",
+  "client_change": "សម័យបានផ្លាស់ប្តូរ។",
+  "client_count_empty": "តួ JSON និងពហុផ្នែកមិនអាចផ្ញើជាមួយគ្នាបានទេ។",
+  "formErrors_request_processing_failure_retry": "សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។",
+  "formErrors_response_format_document_contract_match_retry": "ទម្រង់ឆ្លើយតបរបស់ម៉ាស៊ីនមេមិនត្រូវគ្នានឹងកិច្ចសន្យាឯកសារទេ។ តម្លៃមិនត្រូវបានបំពេញបន្ថែមតាមអំពើចិត្ត។ សូមពិនិត្យម្តងទៀត។",
+  "formErrors_record_access_permission_empty": "អ្នកមិនមានសិទ្ធិចូលប្រើសម្ភារៈនេះទេ។",
+  "formErrors_record_notFound_delete_access_count_none": "រកមិនឃើញទិន្នន័យទេ។ សម្ភារៈនេះត្រូវបានលុប ឬមិនអាចចូលប្រើបាន។",
+  "formErrors_change_save_current_information_confirm_retry_edit": "ការផ្លាស់ប្តូរផ្សេងទៀតត្រូវបានរក្សាទុកជាមុន។ សូមពិនិត្យមើលព័ត៌មានចុងក្រោយ ហើយកែសម្រួលម្តងទៀត។",
+  "formErrors_link_record_current_status_request_processing_count": "សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ ដោយសារសម្ភារៈដែលបានភ្ជាប់ ឬស្ថានភាពបច្ចុប្បន្នរបស់វា។ សូមពិនិត្យមើលប្រវត្តិដែលបានភ្ជាប់សម្រាប់ព័ត៌មានចុងក្រោយបំផុត។",
+  "formErrors_input_confirm_request_processing_failure": "សូមពិនិត្យមើលតម្លៃដែលអ្នកបានបញ្ចូល។ ម៉ាស៊ីនមេមិនអាចដំណើរការសំណើរបស់អ្នកបានទេ។",
+  "formErrors_request_retry": "យើងមានសំណើជាច្រើន។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។",
+  "formErrors_record_load_saveFailure_link_confirm_retry": "បរាជ័យក្នុងការផ្ទុក ឬរក្សាទុកទិន្នន័យ។ សូមពិនិត្យមើលការតភ្ជាប់របស់អ្នក ហើយព្យាយាមម្តងទៀត។"
+}

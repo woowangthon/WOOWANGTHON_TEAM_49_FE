@@ -1,0 +1,9 @@
+{
+  "appShell_create_menu_empty": "没有注册菜单。",
+  "appShell_ariaLabel_aside": "侧边栏",
+  "appShell_menu": "主菜单",
+  "mobileNavigation_menu": "菜单",
+  "mobileNavigation_monthlyWage_menu": "Wageitda 菜单",
+  "mobileNavigation_ariaLabel_button": "打开{value1}",
+  "mobileNavigation_close": "{value1} 关闭"
+}

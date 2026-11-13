@@ -6,6 +6,7 @@ import {createLocalizedLibApiFormErrors as localized17} from '@/lib/api/form-err
 import {type ConcreteDocumentType, type DocumentDto, type DocumentStatusDto, type LinkDto} from "./schemas";
 import {createLocalizedFeaturesDocumentsSchemas as localized7} from './schemas';
 import {type Translation} from '@/i18n/translate';
+import {languageCatalog} from '@/i18n/config';
 
 export interface DocumentViewModel { dto: DocumentDto; linkDetails?: LinkDto }
 
@@ -44,7 +45,7 @@ function documentCard(dto: DocumentDto, status?: DocumentStatusDto) {
   const effective = { ...dto, ...status };
   return { ...effective, typeLabel: storedTypeLabel(dto.documentType), statusLabel: statusLabels[effective.processingStatus],
     reviewLabel: effective.reviewStatus ? reviewLabels[effective.reviewStatus] : translate("documents.viewModels_review_status_notProvided"),
-    uploadedLabel: dto.uploadedAt && Number.isFinite(Date.parse(dto.uploadedAt)) ? new Intl.DateTimeFormat(defaultLocale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(dto.uploadedAt)) : translate("documents.viewModels_upload_notProvided") };
+    uploadedLabel: dto.uploadedAt && Number.isFinite(Date.parse(dto.uploadedAt)) ? new Intl.DateTimeFormat(languageCatalog[defaultLocale].intlLocale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(dto.uploadedAt)) : translate("documents.viewModels_upload_notProvided") };
 }
 function documentError(error: unknown, deferred = false) {
   const translate = deferred ? describeMessage : translation.translate;

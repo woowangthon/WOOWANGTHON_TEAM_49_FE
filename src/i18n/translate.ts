@@ -1,6 +1,6 @@
 import { createTranslator, createFormatter } from 'next-intl';
 import { catalogs } from './catalog.generated';
-import { timeZone, type Locale } from './config';
+import { languageCatalog, timeZone, type Locale } from './config';
 import type {} from './types';
 import type { ReactNode } from 'react';
 
@@ -14,7 +14,9 @@ export function createTranslation(locale: Locale) {
   function translateContent(key: MessageKey, values: Record<string, ReactNode>): ReactNode {
     return translator.rich(key, Object.fromEntries(Object.entries(values).map(([name, value]) => [name, () => value])));
   }
-  return {locale, translate, translateContent, format: createFormatter({locale, timeZone})};
+  // next-intl narrows this option to AppConfig.Locale, although Intl accepts
+  // regional BCP 47 tags. The cast is confined to formatting, never API codes.
+  return {locale, translate, translateContent, format: createFormatter({locale: languageCatalog[locale].intlLocale as Locale, timeZone})};
 }
 export type Translation = ReturnType<typeof createTranslation>;
 export type MessageKey = Parameters<Translation['translate']>[0];

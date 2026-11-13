@@ -1,12 +1,23 @@
 // @vitest-environment jsdom
 import { File as NodeFile } from "node:buffer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createDevelopmentScenario, clearMockSession, demoAccount } from "./development";
+import { createDevelopmentScenario, clearMockSession, clearMockLanguages, demoAccount } from "./development";
 import { server, testApiUrl } from "@/test/server";
 import { createAppServices } from "@/lib/app-services";
 const a={email:'a@example.com',password:'password123',name:'A'}, b={email:'b@example.com',password:'password123',name:'B'};
 describe('independent development business stores',()=>{
  let app:ReturnType<typeof createAppServices>;
+ beforeEach(()=>clearMockLanguages());
+ it('keeps saved language isolated between accounts and after logout',async()=>{
+  await app.authApi.changeLanguage('vi');
+  await app.auth.logout();
+  await app.auth.login({email:b.email,password:b.password});
+  expect((await app.authApi.getMe()).language).toBe('ko');
+  await app.authApi.changeLanguage('km');
+  await app.auth.login({email:a.email,password:a.password});
+  expect((await app.authApi.getMe()).language).toBe('vi');
+  clearMockLanguages();
+ });
  beforeEach(async()=>{ const nativeForm=await new Response(new URLSearchParams()).formData(); vi.stubGlobal("FormData",nativeForm.constructor);vi.stubGlobal("File",NodeFile);clearMockSession();server.use(...createDevelopmentScenario(testApiUrl).handlers);app=createAppServices(testApiUrl);await app.authApi.signup(a);await app.authApi.signup(b);await app.auth.login({ email: a.email, password: a.password })});
  const body=async(r:Response)=> (await r.json()).data;
  function req(path:string,method='GET',data?:unknown){return fetch(testApiUrl+path,{method,headers:{Authorization:'Bearer '+app.session.getSnapshot().accessToken,'Content-Type':'application/json'},...(data?{body:JSON.stringify(data)}:{})})}
