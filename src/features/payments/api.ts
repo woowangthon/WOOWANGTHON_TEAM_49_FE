@@ -1,3 +1,4 @@
+import { depositCandidates } from "./schemas";
 import { protocolError } from "@/lib/api/response";
 import { depositComparisonSchema,duplicateSchema } from "./comparison-schemas";
 import type { ApiClient } from "@/lib/api/client";
@@ -6,6 +7,7 @@ import { transaction, allocation, transactionCreate, transactionPatch, allocatio
 export function paymentsApi(api:ApiClient) {
  const t=(w:number)=>`/workplaces/${w}/payment-transactions`, a=(c:number)=>`/cases/${c}/deposits`;
  return {
+ candidates:(w:number,signal?:AbortSignal)=>api.requestJson(`/workplaces/${w}/deposit-candidates`,decodeWith(depositCandidates),{signal,expectedStatus:200}),
  duplicates:(w:number)=>api.requestJson(`${t(w)}/duplicate-candidates`,decodeWith(duplicateSchema),{expectedStatus:200}),
  comparison:(c:number)=>api.requestJson(`/cases/${c}/deposit-comparison`,decodeWith(depositComparisonSchema.nullable()),{expectedStatus:200}),
  history:(c:number,page=1,signal?:AbortSignal)=>api.requestJson(`/cases/${c}/deposit-comparisons?page=${page}&size=20`,decodeWith(pageSchema(depositComparisonSchema)),{signal,expectedStatus:200}),

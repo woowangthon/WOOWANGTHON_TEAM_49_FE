@@ -252,7 +252,6 @@
   "replacementPanel_case_link_document_original": "使用文档 #{value1} 替换此历史记录中的现有连接。其他历史记录和共享源均得到维护。",
   "reviewConfirmation_document_all_review": "查看整个文档",
   "reviewConfirmation_document_confirm": "我们要完成文件验证吗？",
-  "reviewConfirmation_processing_link_document_review": "处理：{value1}·查看链接文档：{value2}",
   "reviewConfirmation_confirm_field": "选中的字段 {value1} / {value2}",
   "reviewConfirmation_item_confirm_expand": "详细项目中有{value1}未确认值。请展开并查看“检查详细信息”。",
   "reviewConfirmation_complete_item": "不完整项目：{value1}",
@@ -275,8 +274,6 @@
   "reviewScreen_select": "· 精选",
   "reviewScreen_review_link_document_empty": "没有可供查看的链接文档",
   "reviewScreen_selected_document_release_record_empty_create_link": "所选文档已发布或尚未包含任何数据。请在数据注册屏幕上检查连接状态。",
-  "reviewScreen_document_processing": "文件处理：",
-  "reviewScreen_user_review": "用户评论：",
   "reviewScreen_update_status_load": "正在加载服务器更新状态...",
   "reviewScreen_input_change_result_update": "服务器结果根据输入更改进行更新。保留过去的结果。",
   "reviewScreen_update_all_calculation_complete": "服务器更新：{value1}。任务结束并不意味着所有计算都完成了。",
@@ -377,5 +374,11 @@
   "reviewPolicy_resolutionHelp": "此操作不会保存或确认数值，也无法用于分析。",
   "reviewPolicy_legacy": "旧版服务器审核状态。尚未验证新政策。",
   "reviewPolicy_inputConfirmed": "输入的值将保存为用户已确认。",
-  "reviewPolicy_extractionReviewed": "提取完成 · 已记录审核"
+  "reviewPolicy_extractionReviewed": "提取完成 · 已记录审核",
+  "badgeExtracted": "提取完成",
+  "badgeProcessing": "处理中",
+  "badgeFailed": "处理失败",
+  "badgeConfirmed": "审核完成",
+  "badgeReviewing": "审核中",
+  "badgeNotStarted": "未审核"
 }

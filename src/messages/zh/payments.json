@@ -66,5 +66,16 @@
   "paymentScreen_delete_cancel": "取消 删除",
   "paymentScreen_impact_confirm_all_delete": "影响已确认，全部移除",
   "paymentScreen_delete_request_impact_confirm": "删除请求/检查服务器影响",
-  "duplicateCandidates_cash": "现金"
+  "duplicateCandidates_cash": "现金",
+  "connections": "关联入账记录",
+  "importCandidates": "从入账记录导入",
+  "noCandidates": "暂无入账候选记录。",
+  "registerCandidate": "登记交易（未确认）",
+  "reuseCandidate": "加载已有交易",
+  "unavailableCandidate": "请核对必要信息及来源。",
+  "candidateRegistered": "交易已登记。请核实交易后保存案件分配金额。",
+  "confirmTransaction": "确认实际交易",
+  "linkedCount": "已关联 {count} 笔交易",
+  "sourceDocument": "来源文档 #{id}",
+  "optionalConnections": "入账关联为可选项。原交易在工作场所共享，分配按案件管理。"
 }

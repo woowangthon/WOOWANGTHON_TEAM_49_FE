@@ -60,11 +60,11 @@ it("preserves zero, null, absent fields and semantic mismatch without inferring 
   render(<ResultComparisonTable groups={groups} resultVersion={0} onSelect={vi.fn()}/>);
   const hourlyRow = screen.getByRole("row", { name: /시급 대조/ });
   expect(within(hourlyRow).getByText("0 원/시간")).toBeVisible();
-  expect(within(hourlyRow).getByText("미확정·확정 불가")).toBeVisible();
+  expect(within(hourlyRow).getByText("미확정")).toBeVisible();
   expect(within(hourlyRow).getByText("비교 기준 확인 필요")).toBeVisible();
   expect(screen.queryByText("999 원/시간")).not.toBeInTheDocument();
   const paymentRow = screen.getByRole("row", { name: /지급 합계/ });
-  expect(within(paymentRow).getByText("미확정·확정 불가")).toBeVisible();
+  expect(within(paymentRow).getByText("미확정")).toBeVisible();
   expect(within(paymentRow).getAllByText("0 원")).toHaveLength(2);
   expect(screen.queryByText("888 원")).not.toBeInTheDocument();
   expect(within(screen.getByRole("row", { name: /공제 합계/ })).getAllByText("미제공")).toHaveLength(2);

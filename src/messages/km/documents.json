@@ -252,7 +252,6 @@
   "replacementPanel_case_link_document_original": "ជំនួសការតភ្ជាប់ដែលមានស្រាប់ក្នុងប្រវត្តិនេះជាមួយឯកសារ #{value1} ។ ប្រវត្តិ និងប្រភពចែករំលែកផ្សេងទៀតត្រូវបានរក្សាទុក។",
   "reviewConfirmation_document_all_review": "ពិនិត្យឯកសារទាំងមូល",
   "reviewConfirmation_document_confirm": "តើយើងនឹងបញ្ចប់ការផ្ទៀងផ្ទាត់ឯកសារទេ?",
-  "reviewConfirmation_processing_link_document_review": "ដំណើរការ៖ {value1} · ពិនិត្យឯកសារដែលបានភ្ជាប់៖ {value2}",
   "reviewConfirmation_confirm_field": "វាលដែលបានពិនិត្យ {value1} / {value2}",
   "reviewConfirmation_item_confirm_expand": "មានតម្លៃ {value1} ដែលមិនបានបញ្ជាក់នៅក្នុងធាតុលម្អិត។ សូមពង្រីក និងពិនិត្យមើល 'ពិនិត្យព័ត៌មានលម្អិត'។",
   "reviewConfirmation_complete_item": "ធាតុមិនពេញលេញ៖ {value1}",
@@ -275,8 +274,6 @@
   "reviewScreen_select": "· បានជ្រើសរើស",
   "reviewScreen_review_link_document_empty": "មិនមានឯកសារភ្ជាប់ដើម្បីពិនិត្យទេ។",
   "reviewScreen_selected_document_release_record_empty_create_link": "ឯកសារដែលបានជ្រើសរើសត្រូវបានចេញផ្សាយ ឬមិនទាន់មានទិន្នន័យណាមួយនៅឡើយ។ សូមពិនិត្យមើលស្ថានភាពការតភ្ជាប់នៅលើអេក្រង់ចុះឈ្មោះទិន្នន័យ។",
-  "reviewScreen_document_processing": "ដំណើរការឯកសារ៖",
-  "reviewScreen_user_review": "ការពិនិត្យអ្នកប្រើប្រាស់៖",
   "reviewScreen_update_status_load": "កំពុងផ្ទុកស្ថានភាពអាប់ដេតម៉ាស៊ីនមេ...",
   "reviewScreen_input_change_result_update": "លទ្ធផលម៉ាស៊ីនមេកំពុងត្រូវបានធ្វើបច្ចុប្បន្នភាពយោងទៅតាមការផ្លាស់ប្តូរការបញ្ចូល។ លទ្ធផលកន្លងមកត្រូវបានរក្សាទុក។",
   "reviewScreen_update_all_calculation_complete": "ការធ្វើបច្ចុប្បន្នភាពម៉ាស៊ីនមេ៖ {value1} ។ ការបញ្ចប់កិច្ចការមិនមានន័យថាការគណនាទាំងអស់បានបញ្ចប់នោះទេ។",
@@ -377,5 +374,11 @@
   "reviewPolicy_resolutionHelp": "មិនរក្សាទុក ឬបញ្ជាក់តម្លៃទេ។ មិនអាចប្រើសម្រាប់វិភាគបានទេ។",
   "reviewPolicy_legacy": "ស្ថានភាពម៉ាស៊ីនមេចាស់។ គោលការណ៍ថ្មីមិនទាន់បានផ្ទៀងផ្ទាត់។",
   "reviewPolicy_inputConfirmed": "តម្លៃបញ្ចូលត្រូវរក្សាទុកជាតម្លៃដែលអ្នកប្រើបានបញ្ជាក់។",
-  "reviewPolicy_extractionReviewed": "បានស្រង់ទិន្នន័យ · បានកត់ត្រាការពិនិត្យ"
+  "reviewPolicy_extractionReviewed": "បានស្រង់ទិន្នន័យ · បានកត់ត្រាការពិនិត្យ",
+  "badgeExtracted": "បានស្រង់ទិន្នន័យ",
+  "badgeProcessing": "កំពុងដំណើរការ",
+  "badgeFailed": "ដំណើរការបរាជ័យ",
+  "badgeConfirmed": "បានពិនិត្យ",
+  "badgeReviewing": "កំពុងពិនិត្យ",
+  "badgeNotStarted": "មិនទាន់ពិនិត្យ"
 }

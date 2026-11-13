@@ -9,6 +9,7 @@ import {createLocalizedFeaturesCaseInputsConditionPresentation} from '../conditi
 import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
+import { DepositConnections } from "@/features/payments/deposit-connections";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import {Controller, useWatch} from 'react-hook-form';
@@ -36,7 +37,7 @@ export function ConditionsScreen({ caseId }: { caseId: number }) {
   if (removal.pending || removal.removed) return <p role="status">{translate("caseInputs.conditionsScreen_delete")}</p>;
   if (owner.isPending || query.isPending) return <QueryFeedback pending />;
   if ((owner.isError && !owner.data) || (query.isError && !query.data)) return <QueryFeedback error={owner.error ?? query.error} retry={() => { void owner.refetch(); void query.refetch(); }} />;
-  return <ConditionsForm key={caseId} caseId={caseId} initial={query.data!} reload={async () => { const result = await query.refetch(); if (result.isError || !result.data) throw result.error; return result.data; }} />;
+  return <><ConditionsForm key={caseId} caseId={caseId} initial={query.data!} reload={async () => { const result = await query.refetch(); if (result.isError || !result.data) throw result.error; return result.data; }} /><DepositConnections caseId={caseId}/></>;
 }
 
 export function ConditionsForm({ caseId, initial, reload }: { caseId: number; initial: Conditions; reload: () => Promise<Conditions> }) {

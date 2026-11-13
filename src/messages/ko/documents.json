@@ -252,7 +252,6 @@
   "replacementPanel_case_link_document_original": "이 내역의 기존 연결을 문서 #{value1}로 교체합니다. 다른 내역과 공유 원본은 유지됩니다.",
   "reviewConfirmation_document_all_review": "문서 전체 검토",
   "reviewConfirmation_document_confirm": "문서 확인을 마무리할까요?",
-  "reviewConfirmation_processing_link_document_review": "처리: {value1} · 연결 문서 검토: {value2}",
   "reviewConfirmation_confirm_field": "확인된 필드 {value1} / {value2}",
   "reviewConfirmation_item_confirm_expand": "세부 항목에도 미확인 값이 {value1}개 있어요. ‘세부 항목 확인’을 펼쳐 살펴봐 주세요.",
   "reviewConfirmation_complete_item": "미완료 항목: {value1}",
@@ -275,8 +274,6 @@
   "reviewScreen_select": " · 선택됨",
   "reviewScreen_review_link_document_empty": "검토할 연결 문서가 없습니다",
   "reviewScreen_selected_document_release_record_empty_create_link": "선택한 문서가 해제되었거나 아직 자료가 없습니다. 자료 등록 화면에서 연결 상태를 확인해 주세요.",
-  "reviewScreen_document_processing": "문서 처리: ",
-  "reviewScreen_user_review": "사용자 검토: ",
   "reviewScreen_update_status_load": "서버 갱신 상태를 불러오는 중…",
   "reviewScreen_input_change_result_update": "입력 변경에 따른 서버 결과 갱신 중입니다. 과거 결과는 유지됩니다.",
   "reviewScreen_update_all_calculation_complete": "서버 갱신: {value1}. 작업 종료가 모든 계산의 완료를 뜻하지는 않습니다.",
@@ -377,5 +374,11 @@
   "reviewPolicy_resolutionHelp": "값을 입력하거나 확인한 것으로 저장하지 않습니다. 분석에는 사용할 수 없습니다.",
   "reviewPolicy_legacy": "구버전 서버의 검토 상태입니다. 새 필수 검토 정책 적용 여부는 확인되지 않았습니다.",
   "reviewPolicy_inputConfirmed": "직접 입력한 값은 사용자 확인값으로 저장됩니다.",
-  "reviewPolicy_extractionReviewed": "추출 완료 · 검토 반영"
+  "reviewPolicy_extractionReviewed": "추출 완료 · 검토 반영",
+  "badgeExtracted": "추출 완료",
+  "badgeProcessing": "처리 중",
+  "badgeFailed": "처리 실패",
+  "badgeConfirmed": "검토 완료",
+  "badgeReviewing": "검토 중",
+  "badgeNotStarted": "검토 전"
 }

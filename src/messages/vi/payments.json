@@ -66,5 +66,16 @@
   "paymentScreen_delete_cancel": "Hủy Xóa",
   "paymentScreen_impact_confirm_all_delete": "Đã xác nhận tác động, loại bỏ hoàn toàn",
   "paymentScreen_delete_request_impact_confirm": "Yêu cầu xóa/Kiểm tra tác động của máy chủ",
-  "duplicateCandidates_cash": "tiền mặt"
+  "duplicateCandidates_cash": "tiền mặt",
+  "connections": "Liên kết khoản thanh toán",
+  "importCandidates": "Nhập từ hồ sơ tiền gửi",
+  "noCandidates": "Không có giao dịch đề xuất.",
+  "registerCandidate": "Đăng ký giao dịch (chưa xác nhận)",
+  "reuseCandidate": "Tải giao dịch hiện có",
+  "unavailableCandidate": "Cần kiểm tra thông tin và nguồn.",
+  "candidateRegistered": "Đã đăng ký. Hãy xác nhận giao dịch rồi lưu phân bổ cho hồ sơ.",
+  "confirmTransaction": "Xác nhận giao dịch thực tế",
+  "linkedCount": "{count} giao dịch được liên kết",
+  "sourceDocument": "Tài liệu nguồn #{id}",
+  "optionalConnections": "Liên kết là tùy chọn. Giao dịch dùng chung tại nơi làm việc; phân bổ theo từng hồ sơ."
 }

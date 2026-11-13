@@ -63,6 +63,8 @@ function createBusinessScenario(baseUrl: string, seed: boolean, idOffset: number
   const polls = new Map<number, number>();
   const fail = (errorCode: string, status: number) => apiResponse({ errorCode }, status);
   const sync = () => {
+    // Synthetic OCR rows for mock DEPOSIT documents only; no real OCR is performed.
+    inputs.depositCandidates.splice(0,inputs.depositCandidates.length,...documents.filter(d=>d.documentType==="DEPOSIT"&&["READY","READ_READY","REVIEW_REQUIRED"].includes(d.processingStatus)).map(d=>({workplaceId:d.workplaceId,registration:{source:"DOCUMENT" as const,sourceDocumentId:d.documentId,sourceCandidateId:`mock-${d.documentId}`,sourceRowId:"transaction_1",paymentMethod:"BANK_TRANSFER" as const,transactionDate:"2026-11-10",amount:100000,confirmationStatus:"USER_REPORTED" as const},registerable:true,reasonCode:null,existingTransactionId:null,requiresUserConfirmation:true,requiresCaseAllocation:true})));
     const links = docs.getLinks();
     // A deleted Case removes links, preserving workplace originals.
     for (let i = links.length - 1; i >= 0; i--) if (!cases.some(c => c.caseId === links[i].caseId)) links.splice(i, 1);

@@ -66,5 +66,16 @@
   "paymentScreen_delete_cancel": "បោះបង់ លុប",
   "paymentScreen_impact_confirm_all_delete": "ផលប៉ះពាល់ត្រូវបានបញ្ជាក់ ការដកចេញពេញលេញ",
   "paymentScreen_delete_request_impact_confirm": "សំណើលុប/ពិនិត្យផលប៉ះពាល់ម៉ាស៊ីនមេ",
-  "duplicateCandidates_cash": "សាច់ប្រាក់"
+  "duplicateCandidates_cash": "សាច់ប្រាក់",
+  "connections": "ភ្ជាប់ការទូទាត់",
+  "importCandidates": "នាំចូលពីកំណត់ត្រាប្រាក់បញ្ញើ",
+  "noCandidates": "គ្មានប្រតិបត្តិការដែលបានណែនាំ។",
+  "registerCandidate": "ចុះបញ្ជីប្រតិបត្តិការ (មិនទាន់បញ្ជាក់)",
+  "reuseCandidate": "ផ្ទុកប្រតិបត្តិការដែលមាន",
+  "unavailableCandidate": "សូមពិនិត្យព័ត៌មានចាំបាច់ និងប្រភព។",
+  "candidateRegistered": "បានចុះបញ្ជី។ សូមបញ្ជាក់ប្រតិបត្តិការ រួចរក្សាទុកចំនួនបែងចែក។",
+  "confirmTransaction": "បញ្ជាក់ប្រតិបត្តិការពិត",
+  "linkedCount": "ប្រតិបត្តិការបានភ្ជាប់ {count}",
+  "sourceDocument": "ឯកសារប្រភព #{id}",
+  "optionalConnections": "ការភ្ជាប់គឺជាជម្រើស។ ប្រតិបត្តិការប្រើរួមក្នុងកន្លែងធ្វើការ និងបែងចែកតាមសំណុំរឿង។"
 }

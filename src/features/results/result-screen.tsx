@@ -4,9 +4,9 @@ import {createLocalizedFeaturesResultsViewModels} from './view-models';
 
 import { useTranslation } from '@/i18n/use-translation';
 
-import { ResultReasons } from "./result-reasons";
+
 import { ResultRefresh } from "./result-refresh";
-import { ResultPayments } from "./result-payments";
+
 import { Info } from "lucide-react";
 import { useCase } from "@/features/cases/queries";
 import styles from "./result-screen.module.css";
@@ -32,7 +32,7 @@ const {displayScalar, resultRows} = useLocalized(createLocalizedFeaturesResultsV
  if(typeof obj.documentId==="number")return <SourceEvidence caseId={caseId} value={obj}/>;
  const validation=fieldKey==="paymentTotal"||fieldKey==="deductionTotal"||fieldKey==="netPay";
  if(fieldKey==="resultItem" && !Object.keys(obj).length)return <p>{translate("results.resultScreen_detail_item_notProvided")}</p>;
- return <dl className="min-w-0 space-y-3 [overflow-wrap:anywhere]">{resultRows(obj,validation?"KRW":fieldKey==="counts"?"COUNT":unit).map(row=><div key={row.key} className="min-w-0"><dt className="font-bold">{row.label}</dt><dd className="pl-2"><ServerValue value={row.value} caseId={caseId} fieldKey={row.key} unit={row.unit}/></dd></div>)}</dl>;
+ return <dl className="min-w-0 space-y-3 [overflow-wrap:anywhere]">{resultRows(obj,validation?"KRW":fieldKey==="counts"?"COUNT":unit).filter(row=>!["reasonCode","reasonCodes"].includes(row.key)).map(row=><div key={row.key} className="min-w-0"><dt className="font-bold">{row.label}</dt><dd className="pl-2"><ServerValue value={row.value} caseId={caseId} fieldKey={row.key} unit={row.unit}/></dd></div>)}</dl>;
 }
 export function ResultScreen({caseId, selection, returnTo}:{caseId:number;compare?:boolean;selection?:{kind:SnapshotKind;id:number;version:number}|null;returnTo?:string}) {
 const {toResultsViewModel} = useLocalized(createLocalizedFeaturesResultsViewModels);
@@ -49,12 +49,10 @@ const {toResultsViewModel} = useLocalized(createLocalizedFeaturesResultsViewMode
  {returnTo&&<Link href={returnTo} className={secondaryButton}>{translate("results.resultScreen_div4")}</Link>}{selection!==undefined&&<SelectedSnapshot caseId={caseId} selection={selection}/>}
  {!q.data ? <QueryFeedback pending={q.isPending} error={q.error} retry={()=>void q.refetch()}/> : <>
  {q.isError && <><p role="alert">{translate("results.resultScreen_current_result_failure_previous_retry_confirm")}</p><QueryFeedback error={q.error} retry={()=>void q.refetch()}/></>}
- <div className={styles.overview}><ResultSummary compare={false} value={{...vm!,title:q.isError?translate("results.resultPresentation_previous_result_current_confirm"):vm!.title}}/><ResultNextSteps value={vm!} caseId={caseId}/></div>
+ <div className={styles.overview}><ResultSummary action={<ResultRefresh caseId={caseId} data={q.data}/>} compare={false} value={{...vm!,title:q.isError?translate("results.resultPresentation_previous_result_current_confirm"):vm!.title}}/><ResultNextSteps value={vm!} caseId={caseId}/></div>
  <p className={styles.notice}><Info size={16} aria-hidden="true"/><span>{translate("results.resultScreen_difference_unpaid_wage_deduction")}</span></p>
  {q.data.freshness.overall==="FAILED"&&<p role="alert">{translate("results.resultScreen_result_update_failure_previous")}<button className={secondaryButton} onClick={()=>{void q.refetch();void status.refetch();}}>{translate("results.resultScreen_update_status_retry_confirm")}</button></p>}
- <ResultReasons caseId={caseId} data={q.data}/>
- <ResultRefresh key={`refresh-${caseId}`} caseId={caseId} data={q.data}/>
- <ResultPayments key={`payments-${caseId}`} caseId={caseId}/>
+ <Link className={secondaryButton} href={`/cases/${caseId}/conditions#deposit-connections`}>{translate("payments.connections")}</Link>
  <ResultExplorer key={caseId} data={q.data} compare={false} showDetailsInitially={false} freshnessUnverified={q.isError}/>
 <nav data-case-next aria-label={translate("results.resultScreen_result")}><div><h2>{translate("results.resultScreen_confirm_question")}</h2><p>{translate("results.resultScreen_insufficient_record_company_content")}</p></div><Link className={secondaryButton} href={`/cases/${caseId}/questions`}>{translate("results.resultScreen_confirm_question_consultation")}</Link></nav>
  </>}</div>;

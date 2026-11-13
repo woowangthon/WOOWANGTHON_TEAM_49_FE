@@ -252,7 +252,6 @@
   "replacementPanel_case_link_document_original": "Replace the existing link in this history with document #{value1}. Other history and shared sources are maintained.",
   "reviewConfirmation_document_all_review": "Review the entire document",
   "reviewConfirmation_document_confirm": "Shall we finalize the document verification?",
-  "reviewConfirmation_processing_link_document_review": "Process: {value1} · Review linked document: {value2}",
   "reviewConfirmation_confirm_field": "Checked fields {value1} / {value2}",
   "reviewConfirmation_item_confirm_expand": "There are {value1} unconfirmed values ​​in the detailed items. Please expand and take a look at ‘Check details’.",
   "reviewConfirmation_complete_item": "Incomplete items: {value1}",
@@ -275,8 +274,6 @@
   "reviewScreen_select": "· Selected",
   "reviewScreen_review_link_document_empty": "There are no linked documents to review",
   "reviewScreen_selected_document_release_record_empty_create_link": "The selected document has been released or does not yet contain any data. Please check the connection status on the data registration screen.",
-  "reviewScreen_document_processing": "Document processing:",
-  "reviewScreen_user_review": "User Reviews:",
   "reviewScreen_update_status_load": "Loading server update status...",
   "reviewScreen_input_change_result_update": "Server results are being updated according to input changes. Past results are maintained.",
   "reviewScreen_update_all_calculation_complete": "Server update: {value1}. Ending a task does not mean completion of all calculations.",
@@ -377,5 +374,11 @@
   "reviewPolicy_resolutionHelp": "This does not save a value or confirm it. It cannot be used for analysis.",
   "reviewPolicy_legacy": "Legacy server review status. The new required review policy is not verified.",
   "reviewPolicy_inputConfirmed": "Entered values are saved as user confirmed.",
-  "reviewPolicy_extractionReviewed": "Extraction complete (review recorded)"
+  "reviewPolicy_extractionReviewed": "Extraction complete (review recorded)",
+  "badgeExtracted": "Extraction complete",
+  "badgeProcessing": "Processing",
+  "badgeFailed": "Processing failed",
+  "badgeConfirmed": "Review complete",
+  "badgeReviewing": "In review",
+  "badgeNotStarted": "Not reviewed"
 }

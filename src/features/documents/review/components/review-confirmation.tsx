@@ -1,4 +1,5 @@
 "use client";
+import { ReviewStatusBadges } from "./review-status-badges";
 import {useMessageState} from '@/i18n/use-message-state';
 
 import {useLocalized} from '@/i18n/use-translation';
@@ -20,19 +21,19 @@ import { groupReviewFields } from "../field-groups";
 import styles from "./review-screen.module.css";
 export function ReviewConfirmation({context,version,fields,disabled,documentType="PAYSLIP"}:{context:ReviewContext;version:number;fields:ExtractedField[];disabled:boolean;documentType?:DocumentDto["documentType"]}){
 const {reviewError} = useLocalized(createLocalizedFeaturesDocumentsReviewViewModels);
-const {reviewLabels, statusLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
+const {reviewLabels} = useLocalized(createLocalizedFeaturesDocumentsViewModels);
 
  const {translate} = useTranslation();
 
   const latest=useCase(context.caseId);const [conflict,setConflict]=useState(false);const q=useReview(context.caseId,context.documentId);const mutation=useReviewAction(context);const [error,setError]=useMessageState("");
   if(q.isPending)return <QueryFeedback pending />;if(q.isError)return <QueryFeedback error={q.error} retry={()=>{void q.refetch();}} />;
   const data=q.data;
-  if(data.reviewStatus==="CONFIRMED")return <section className={`${cardStyle} ${styles.confirmation}`} aria-label={reviewLabels.CONFIRMED}><h2>{reviewLabels.CONFIRMED}</h2><p>{translate("documents.reviewConfirmation_processing_link_document_review", { value1: ["READ_READY","REVIEW_REQUIRED"].includes(data.processingStatus)?translate("documents.reviewPolicy_extractionReviewed"):statusLabels[data.processingStatus], value2: reviewLabels[data.reviewStatus] })}</p></section>;
+  if(data.reviewStatus==="CONFIRMED")return <section className={`${cardStyle} ${styles.confirmation}`} aria-label={reviewLabels.CONFIRMED}><h2>{reviewLabels.CONFIRMED}</h2><ReviewStatusBadges processing={data.processingStatus} review={data.reviewStatus}/></section>;
   const groups=groupReviewFields(fields,documentType);
   const pending=data.pendingRequiredFieldIds??(data.canCompleteReview===true?[]:data.unconfirmedFieldIds);
   const remainingDetails=groups.details.filter(field=>data.unconfirmedFieldIds?.includes(field.fieldId)).length;
   return <section className={`${cardStyle} ${styles.confirmation}`} aria-label={translate("documents.reviewConfirmation_document_all_review")}><div className={styles.confirmationCopy}><h2>{translate("documents.reviewConfirmation_document_confirm")}</h2>
-    <p className="text-body">{translate("documents.reviewConfirmation_processing_link_document_review", { value1: statusLabels[data.processingStatus], value2: reviewLabels[data.reviewStatus] })}</p>
+    <ReviewStatusBadges processing={data.processingStatus} review={data.reviewStatus}/>
     {data.totalFieldCount!==undefined&&data.confirmedFieldCount!==undefined&&<p>{translate("documents.reviewConfirmation_confirm_field", { value1: data.confirmedFieldCount, value2: data.totalFieldCount })}</p>}
     {data.canCompleteReview===undefined&&remainingDetails>0&&<p className="text-body">{translate("documents.reviewConfirmation_item_confirm_expand", { value1: remainingDetails })}</p>}
     {pending&&pending.length>0&&<p className="break-words">{translate("documents.reviewConfirmation_complete_item", { value1: pending.map(id=>fields.find(f=>f.fieldId===id)?.label??translate("documents.reviewConfirmation_field", { value1: id })).join(", ") })}</p>}

@@ -31,7 +31,7 @@ describe("result evidence and screen",()=>{
   server.use(http.get(`${testApiUrl}/cases/15/results`,()=>apiResponse({...result,comparison:{...result.comparison,items:result.comparison!.items.map(item=>({...item,sources:[source]}))}})));
   s.mount(<ResultScreen caseId={15}/>);
   await screen.findByRole("heading",{name:"결과 요약 · 최신"});
-  expect(screen.getAllByText("미확정·확정 불가").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("미확정").length).toBeGreaterThan(0);
   expect(screen.getAllByText(/전체 임금 아님/).length).toBeGreaterThan(0);
   expect(screen.queryByRole("region",{name:"결과 탐색"})).not.toBeInTheDocument();
   expect(screen.queryByRole("heading",{name:"가상_급여명세서.pdf"})).not.toBeInTheDocument();
@@ -64,6 +64,6 @@ it("keeps real evidence and additional information without a debug disclosure",a
  const s=await setup();const {container}=s.mount(<ResultDetail caseId={15} groupId="validation" onClose={()=>{}} card={{id:"test",title:"Evidence",status:"INSUFFICIENT_INFORMATION",data:{itemSum:null,statedTotal:100,sources:[source],reasonCode:"EXTRACTION_INCOMPLETE"},version:{snapshotId:1,version:1,inputVersion:7,createdAt:null,freshness:"CURRENT"}}}/>);
  await screen.findByRole("link",{name:/.*pdf/});
  expect(container.querySelector("[data-result-detail] > details")).toBeNull();
- expect(screen.getByText("EXTRACTION_INCOMPLETE")).toBeVisible();
+ expect(screen.queryByText("EXTRACTION_INCOMPLETE")).not.toBeInTheDocument();
  expect(screen.getByText(source.text,{exact:false})).toBeVisible();
 });

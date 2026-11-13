@@ -37,7 +37,7 @@ const {displayScalar, statusLabels} = useLocalized(createLocalizedFeaturesResult
   const basis = record(card.data.comparisonBasis) ?? card.period;
   const mismatched = basis?.semanticMatch === false;
   const sources = Array.isArray(card.data.sources) ? card.data.sources : [];
-  const displayed = new Set([...columns.flat().map(v => v.key), ...metadataKeys, "difference", "formula", "comparisonBasis", "sources", "status", "type", "label", "title", "currency", "periodStart", "periodEnd", "nextAction"]);
+  const displayed = new Set([...columns.flat().map(v => v.key), ...metadataKeys, "difference", "formula", "comparisonBasis", "sources", "status", "type", "label", "title", "currency", "periodStart", "periodEnd", "nextAction", "reasonCode", "reasonCodes"]);
   const remaining = Object.fromEntries(Object.entries(card.data).filter(([key]) => !displayed.has(key)));
   const tone = card.status;
   return <article data-result-detail tabIndex={-1} aria-label={translate("results.resultDetail_detail", { value1: card.title })} className={styles.detail}>

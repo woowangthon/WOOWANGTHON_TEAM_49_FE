@@ -252,7 +252,6 @@
   "replacementPanel_case_link_document_original": "Thay thế kết nối hiện có trong lịch sử này bằng tài liệu #{value1}. Lịch sử khác và các nguồn chia sẻ được duy trì.",
   "reviewConfirmation_document_all_review": "Xem lại toàn bộ tài liệu",
   "reviewConfirmation_document_confirm": "Chúng ta có nên hoàn tất việc xác minh tài liệu không?",
-  "reviewConfirmation_processing_link_document_review": "Đang xử lý: {value1} · Xem lại tài liệu được liên kết: {value2}",
   "reviewConfirmation_confirm_field": "Các trường đã chọn {value1} / {value2}",
   "reviewConfirmation_item_confirm_expand": "Có các giá trị {value1} chưa được xác nhận trong các mục chi tiết. Vui lòng mở rộng và xem phần 'Kiểm tra chi tiết'.",
   "reviewConfirmation_complete_item": "Mục chưa hoàn chỉnh: {value1}",
@@ -275,8 +274,6 @@
   "reviewScreen_select": "· Đã chọn",
   "reviewScreen_review_link_document_empty": "Không có tài liệu liên kết nào để xem xét",
   "reviewScreen_selected_document_release_record_empty_create_link": "Tài liệu được chọn đã được phát hành hoặc chưa chứa bất kỳ dữ liệu nào. Vui lòng kiểm tra trạng thái kết nối trên màn hình đăng ký dữ liệu.",
-  "reviewScreen_document_processing": "Xử lý tài liệu:",
-  "reviewScreen_user_review": "Đánh giá của người dùng:",
   "reviewScreen_update_status_load": "Đang tải trạng thái cập nhật máy chủ...",
   "reviewScreen_input_change_result_update": "Kết quả máy chủ đang được cập nhật theo những thay đổi đầu vào. Kết quả trong quá khứ được duy trì.",
   "reviewScreen_update_all_calculation_complete": "Cập nhật máy chủ: {value1}. Kết thúc một nhiệm vụ không có nghĩa là mọi tính toán đã hoàn tất.",
@@ -377,5 +374,11 @@
   "reviewPolicy_resolutionHelp": "Không lưu hoặc xác nhận giá trị. Không thể dùng để phân tích.",
   "reviewPolicy_legacy": "Máy chủ cũ. Chưa xác minh chính sách mới.",
   "reviewPolicy_inputConfirmed": "Giá trị nhập được lưu với xác nhận của người dùng.",
-  "reviewPolicy_extractionReviewed": "Đã trích xuất · Đã ghi nhận kiểm tra"
+  "reviewPolicy_extractionReviewed": "Đã trích xuất · Đã ghi nhận kiểm tra",
+  "badgeExtracted": "Đã trích xuất",
+  "badgeProcessing": "Đang xử lý",
+  "badgeFailed": "Xử lý thất bại",
+  "badgeConfirmed": "Đã xem xét",
+  "badgeReviewing": "Đang xem xét",
+  "badgeNotStarted": "Chưa xem xét"
 }

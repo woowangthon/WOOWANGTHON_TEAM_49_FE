@@ -66,5 +66,16 @@
   "paymentScreen_delete_cancel": "Cancel Delete",
   "paymentScreen_impact_confirm_all_delete": "Impact confirmed, full removal",
   "paymentScreen_delete_request_impact_confirm": "Deletion request/Check server impact",
-  "duplicateCandidates_cash": "Cash"
+  "duplicateCandidates_cash": "Cash",
+  "connections": "Connect payments",
+  "importCandidates": "Import from deposit records",
+  "noCandidates": "No deposit candidates.",
+  "registerCandidate": "Register transaction (unconfirmed)",
+  "reuseCandidate": "Load existing transaction",
+  "unavailableCandidate": "Required information or provenance needs review.",
+  "candidateRegistered": "Transaction registered. Verify the transaction below, then save the Case allocation.",
+  "confirmTransaction": "Confirm actual transaction",
+  "linkedCount": "{count} connected transactions",
+  "sourceDocument": "Source document #{id}",
+  "optionalConnections": "Payment connections are optional. Transactions are shared within the workplace; allocations belong to each Case."
 }

@@ -66,5 +66,16 @@
   "paymentScreen_delete_cancel": "삭제 취소",
   "paymentScreen_impact_confirm_all_delete": "영향을 확인했으며 전체 삭제",
   "paymentScreen_delete_request_impact_confirm": "삭제 요청·서버 영향 확인",
-  "duplicateCandidates_cash": "현금"
+  "duplicateCandidates_cash": "현금",
+  "connections": "입금 내역 연결",
+  "importCandidates": "입금 기록에서 가져오기",
+  "noCandidates": "가져올 입금 후보가 없습니다.",
+  "registerCandidate": "거래 등록 (미확인)",
+  "reuseCandidate": "기존 거래 불러오기",
+  "unavailableCandidate": "필수 정보 또는 출처를 확인해야 가져올 수 있습니다.",
+  "candidateRegistered": "거래 등록 완료. 아래에서 실제 거래를 확인하고 Case 배분 금액을 저장하세요.",
+  "confirmTransaction": "실제 거래 내용 확인",
+  "linkedCount": "연결된 지급 거래 {count}건",
+  "sourceDocument": "원본 문서 #{id}",
+  "optionalConnections": "입금 연결은 선택 사항입니다. 원거래는 사업장에 공유되며 Case 배분은 별도로 관리합니다."
 }

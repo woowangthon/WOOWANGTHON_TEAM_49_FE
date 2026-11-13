@@ -45,7 +45,7 @@ it("keeps valid server amounts and comparison details visible when another field
  expect(data.interpretation).toBe("interpretation-error");
  const summary = screen.getByRole("region", { name: "임금 결과 요약" });
  expect(within(summary).getByText("0 원")).toBeVisible();
- expect(within(summary).getByText("미확정·확정 불가")).toBeVisible();
+ expect(within(summary).getByText("미확정")).toBeVisible();
  expect(screen.queryByText("결과 표시 해석에 실패했습니다. 원본 데이터는 보존했습니다.")).not.toBeInTheDocument();
  expect(screen.getByText(/자료상 일치/)).toHaveTextContent("미제공개");
  expect(screen.queryByRole("region", { name: "결과 탐색" })).not.toBeInTheDocument();

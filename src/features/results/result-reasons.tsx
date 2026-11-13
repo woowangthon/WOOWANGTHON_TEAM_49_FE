@@ -21,12 +21,12 @@ export function ResultReasons({caseId, data}: {caseId: number; data: unknown}) {
   const mapping = {
     ITEM_SCOPE_INCOMPLETE: ["results.reasonItemScope", "review"],
     PAYMENT_SCOPE_UNCONFIRMED: ["results.reasonPaymentScope", "review"],
-    DUPLICATE_TRANSACTION: ["results.reasonDuplicate", "result#payment-management"],
+    DUPLICATE_TRANSACTION: ["results.reasonDuplicate", "conditions#deposit-connections"],
     SOURCE_PERIOD_MISMATCH: ["results.reasonPeriod", "review"],
     FIELD_MISSING: ["results.reasonField", "conditions"],
   } as const;
   return codes.length ? <ul className="space-y-2 break-words">{codes.map(code => {
     const known = Object.hasOwn(mapping, code) ? mapping[code as keyof typeof mapping] : undefined;
-    return <li key={code}><span>{known ? <Link className="underline" href={`/cases/${caseId}/${known[1]}`}>{translate(known[0])}</Link> : translate("results.reasonFallback")}</span> <span>({code})</span></li>;
+    return <li key={code}><span>{known ? <Link className="underline" href={`/cases/${caseId}/${known[1]}`}>{translate(known[0])}</Link> : translate("results.reasonFallback")}</span></li>;
   })}</ul> : null;
 }
