@@ -2,7 +2,7 @@
 .catalog { display: grid; gap: 22px; min-width: 0; }
 .catalogHeading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
 .catalogHeading h2 { margin-top: 12px; font-size: 1.6rem; font-weight: 800; letter-spacing: -.045em; }
-.catalogHeading > p, .catalogHelp { color: var(--muted); font-size: .84rem; line-height: 1.75; }
+.catalogHelp { color: var(--muted); font-size: .84rem; line-height: 1.75; }
 .groupFilters { display: flex; flex-wrap: wrap; gap: 8px; }
 .groupFilters button { min-height: 44px; padding: 10px 17px; border: 1px solid #dce3eb; border-radius: 100px; color: #526174; background: white; font-size: .86rem; font-weight: 700; }
 .groupFilters button[aria-pressed="true"] { border-color: #2468eb; color: #fff; background: #2468eb; }
@@ -25,7 +25,6 @@
 .agencyDetails .detailList { margin-top: 16px; }
 .agencyDetails dd a { display: block; padding-block: 4px; color: #2468eb; text-decoration: underline; }
 .accessNotes { margin-block: 18px; color: #57677c; font-size: .82rem; line-height: 1.8; }
-.checked { margin-top: auto; color: #768396; font-size: .73rem; }
 .catalogNotice { display: flex; align-items: flex-start; gap: 14px; padding: 23px; border-radius: 20px; color: #52667f; background: #edf2f8; }
 .catalogNotice > svg { flex: none; margin-top: 3px; }
 .catalogNotice h3 { margin-bottom: 8px; font-weight: 750; }
@@ -51,15 +50,6 @@
 .supportNav :global(nav.case-task-navigation) > a[aria-current="page"] { color: var(--ink); background: transparent; font-weight: 800; }
 .supportNav :global(nav.case-task-navigation) > a[aria-current="page"]::after { position: absolute; right: 0; bottom: 0; left: 0; height: 3px; border-radius: 3px; background: var(--ink); content: ""; }
 .supportNav :global(nav.case-task-navigation) > a:hover { color: var(--blue); background: transparent; }
-.filters { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 20px 16px; min-width: 0; padding: 30px; border-radius: 25px; background: white; box-shadow: 0 3px 20px rgb(29 50 80 / 4%); }
-.filters h2 { display: flex; grid-column: 1 / -1; align-items: center; gap: 10px; margin-bottom: 2px; font-size: 1.2rem; font-weight: 800; letter-spacing: -.04em; line-height: 1.5; word-break: keep-all; }
-.filters h2 svg { flex: none; color: var(--blue); }
-.filters label { display: grid; align-content: start; gap: 9px; min-width: 0; color: #4c5b6e; font-size: .84rem; font-weight: 650; }
-.filters :global(.ui-control) { min-height: 54px; min-width: 0; border: 1px solid transparent; border-radius: 14px; background: #f3f5f8; font-size: .94rem; }
-.filters :global(.ui-control):focus { border-color: var(--blue); background: white; }
-.searchButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; padding: 14px 22px; border: 0; border-radius: 14px; color: white; background: var(--blue); font-size: .9rem; font-weight: 750; }
-.searchButton:hover:not(:disabled) { background: #1758d1; }
-.searchButton:disabled { cursor: wait; opacity: .58; }
 .fallback { padding: 16px 20px; border-radius: 15px; color: #39618d; background: #e9f1fc; font-size: .85rem; font-weight: 650; line-height: 1.7; }
 .empty { padding: 30px; border-radius: 24px; color: var(--muted); background: white; }
 .results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 20px; min-width: 0; }
@@ -90,8 +80,6 @@
 .page :where(a, button, input, select):focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 @container (max-width: 48rem) {
   .results { grid-template-columns: 1fr; }
-  .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .searchButton { grid-column: 1 / -1; }
   .hero { grid-template-columns: minmax(0, 1fr) 145px; gap: 6px; }
   .heroArt { width: 145px; transform: scale(.7); transform-origin: center; }
 }
@@ -102,10 +90,7 @@
   .heroArt { width: 215px; height: 118px; margin-top: 8px; justify-self: center; transform: scale(.55); transform-origin: center 0; }
   .supportNav :global(nav.case-task-navigation) { gap: 22px; }
   .supportNav :global(nav.case-task-navigation) > a { font-size: .84rem; }
-  .filters { grid-template-columns: 1fr; padding: 24px; gap: 20px; }
-  .filters h2 { align-items: flex-start; font-size: 1.1rem; }
-  .filters h2 svg { margin-top: 2px; }
   .card { padding: 24px; }
   .detailList > div { grid-template-columns: 92px minmax(0, 1fr); }
 }
-@media (prefers-reduced-motion: no-preference) { .searchButton, .contact { transition: background-color .18s ease; } }
+@media (prefers-reduced-motion: no-preference) { .contact { transition: background-color .18s ease; } }

@@ -52,7 +52,6 @@
   "caseDetailScreen_wage_wagePeriod_information": "管理工资类型、计算周期等基本信息。",
   "caseDetailScreen_case_edit": "编辑历史记录",
   "caseFocusNavigation_navigate": "{value1} 移动",
-  "caseFocusNavigation_ariaLabel_div": "{value1} 位置",
   "caseForm_workplace_select_information_confirm": "请选择您的工作地点并查看信息。",
   "caseForm_wageCase_input": "输入薪资详细信息",
   "caseForm_workplace_select": "请先选择您的工作地点。",

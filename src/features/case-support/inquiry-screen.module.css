@@ -51,9 +51,7 @@
 .editor textarea { min-height: 260px; }
 .original > h2 { font-size: 1.25rem; font-weight: 750; }
 .original > .draftText { width: 100%; padding: 21px; border-radius: 16px; color: #344a67; background: #f4f7fc; font-size: .91rem; line-height: 1.9; white-space: pre-wrap; }
-.original > p, .original details { color: var(--muted); font-size: .85rem; line-height: 1.8; }
-.original summary { min-height: 44px; cursor: pointer; font-weight: 650; }
-.original details > p { margin-top: 12px; }
+.original > p { color: var(--muted); font-size: .85rem; line-height: 1.8; }
 .page :where(a, button, input, textarea, summary):focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 @container (max-width: 47rem) { .resultList { grid-template-columns: 1fr; max-height: 610px; } .heroIcon { width: 72px; height: 72px; border-radius: 23px; } }
 @container (max-width: 32rem) { .hero { align-items: flex-start; gap: 12px; } .hero h1 { font-size: 1.8rem; } .hero > div > p:last-child { font-size: .86rem; } .heroIcon { width: 45px; height: 45px; border-radius: 15px; } .heroIcon svg { width: 27px; } .sectionHeading h2 { font-size: 1.15rem; } .resultCard { padding: 19px; } .resultTop { align-items: flex-start; } .values { gap: 8px; } .values dd { font-size: .79rem; } .generation { padding: 24px; } .generateButton { width: 100%; } .toolbar > div { gap: 6px; } .toolbar button { padding-inline: 9px; } }

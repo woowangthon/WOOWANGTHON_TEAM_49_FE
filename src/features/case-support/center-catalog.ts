@@ -13,15 +13,11 @@ const remote: Record<string, CenterReach> = {
   'hrdk-foreign-worker-counseling': 'PHONE', gabjil119: 'ONLINE',
 };
 export const centerCatalog = research.institutions;
-export const catalogCheckedAt = research.metadata.checkedAt;
 export const centerGroup = (center: ResearchedCenter): CenterGroup => groups[center.researchId] ?? 'PUBLIC';
 export const centerReach = (center: ResearchedCenter): CenterReach => remote[center.researchId] ?? 'OFFICE';
 
-export function filterCatalog(region: string, group: CenterGroup | '') {
-  const term = region.normalize('NFKC').replace(/\s/g, '').toLocaleLowerCase();
-  return centerCatalog.filter(center => (!group || centerGroup(center) === group) &&
-    (!term || centerReach(center) !== 'OFFICE' ||
-      center.officeRegion?.normalize('NFKC').replace(/\s/g, '').toLocaleLowerCase().includes(term)));
+export function filterCatalog(group: CenterGroup | '') {
+  return centerCatalog.filter(center => !group || centerGroup(center) === group);
 }
 
 export function safeEmail(value?: string | null) {

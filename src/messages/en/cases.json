@@ -52,7 +52,6 @@
   "caseDetailScreen_wage_wagePeriod_information": "Manage basic information such as salary type and calculation period.",
   "caseDetailScreen_case_edit": "Edit history",
   "caseFocusNavigation_navigate": "{value1} Move",
-  "caseFocusNavigation_ariaLabel_div": "{value1} location",
   "caseForm_workplace_select_information_confirm": "Please select your work location and check the information.",
   "caseForm_wageCase_input": "Enter salary details",
   "caseForm_workplace_select": "Please select your work location first.",

@@ -11,7 +11,7 @@ import { supportApi } from "./api";
 import type { Report } from "./schemas";
 import { MessageError } from "@/i18n/message-error";
 
-export type CenterFilters = { region: string; category: string; page: number };
+export type CenterFilters = { category: string; page: number };
 
 const reportKeys = {
   root: (generation: number, caseId: number) => [...businessKeys.case(generation, caseId), "reports"],
@@ -83,7 +83,7 @@ export function useRegisteredCenters(filters: CenterFilters) {
   return useQuery({
     queryKey: [...businessKeys.root(scope.generation), "consultation-centers", filters],
     enabled: scope.enabled,
-    queryFn: ({ signal }) => supportApi(scope.api).centers(filters.region, filters.category, filters.page, signal),
+    queryFn: ({ signal }) => supportApi(scope.api).centers("", filters.category, filters.page, signal),
   });
 }
 

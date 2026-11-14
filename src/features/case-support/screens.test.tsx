@@ -130,7 +130,7 @@ it("shows the server original separately and never overwrites an in-flight edit"
  server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,async({request})=>{count++;expect(await request.json()).toEqual({resultItemIds:["hourly"],tone:"POLITE",basedOnResultVersions:{calculation:2,comparison:2,payslipValidation:2}});await pending;return apiResponse({text:"서버 원문 0원 · 미확인 금액은 null",requiresUserReview:true,basedOnResultVersions:{comparison:3}})}));
  mount(<InquiryScreen caseId={15}/>);await chooseInquiryResult();fireEvent.click(screen.getByRole("button",{name:"선택한 분석으로 초안 생성"}));
  fireEvent.change(screen.getByRole("textbox"),{target:{value:"요청 중 편집"}});finish();
- expect(await screen.findByRole("region",{name:"생성된 초안"})).toBeVisible();expect(screen.getByRole("textbox")).toHaveValue("요청 중 편집");fireEvent.click(screen.getByText("초안 원문과 분석 기준"));expect(screen.getByText("사용자 검토 필수")).toBeVisible();expect(count).toBe(1);
+ expect(await screen.findByRole("region",{name:"생성된 초안"})).toBeVisible();expect(screen.getByRole("textbox")).toHaveValue("요청 중 편집");expect(screen.queryByText("초안 원문과 분석 기준")).toBeNull();expect(screen.queryByText(/참조 결과 버전:/)).toBeNull();expect(screen.getByText("사용자 검토 필수")).toBeVisible();expect(count).toBe(1);
  fireEvent.click(screen.getByRole("button",{name:"선택한 분석으로 다시 생성"}));expect(screen.getByRole("dialog")).toHaveTextContent("작성 중인 문장은 유지");fireEvent.click(screen.getByRole("button",{name:"취소"}));expect(count).toBe(1);
 });
 it("submits selected analysis IDs and exact versions while preserving null and zero",async()=>{
@@ -237,15 +237,16 @@ it("allows direct edits and copies while generation fails",async()=>{
 });
 it("handles stale generation and keeps the editor available",async()=>{server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,()=>apiResponse({errorCode:"REPORT_SOURCE_STALE"},409)));mount(<InquiryScreen caseId={15}/>);await chooseInquiryResult();fireEvent.click(screen.getByRole("button",{name:"선택한 분석으로 초안 생성"}));expect(await screen.findByText(/결과가 최신 상태가 아닙니다/)).toBeVisible();expect(screen.getByRole("textbox")).toBeEnabled()});
 it("clears the editor on session generation changes",async()=>{mount(<InquiryScreen caseId={15}/>);fireEvent.change(screen.getByRole("textbox"),{target:{value:"개인 문장"}});act(()=>services.session.start("other-user-token"));expect(screen.getByRole("textbox")).toHaveValue("")});
-it("uses supported server filters and removes local name search",async()=>{
+it("keeps the topic filter without region search or source dates",async()=>{
  const urls:string[]=[];server.use(http.get(`${testApiUrl}/consultation-centers`,({request})=>{urls.push(request.url);return apiResponse({items:[{centerId:1,name:"예시 기관",region:"전국",categories:["임금"],phone:"javascript:bad",website:"javascript:bad",businessHours:null,languages:null,visitInformation:null,notes:"example",sourceUrl:"https://example.org/source",verifiedAt:"2026-11-10",dataSource:"MOCK",isNationwide:true}],page:1,size:20,total:1,nationwideFallbackUsed:true,dataStatus:"NATIONWIDE_ONLY"})}));
- mount(<CentersScreen/>);fireEvent.click(screen.getByText('추가 상담기관 안내'));expect(await screen.findByText("예시 기관")).toBeVisible();expect(screen.getByText("지역 대신 전국 단위 대안을 표시합니다.")).toBeVisible();expect(screen.getByText(/개발용 예시 데이터/)).toBeVisible();expect(screen.getByRole("link",{name:"https://example.org/source"})).toHaveAttribute("rel","noopener noreferrer");expect(screen.getByText("검증일: 2026-11-10")).toBeVisible();expect(document.querySelector('a[href^="javascript:"]')).toBeNull();
- fireEvent.change(screen.getByLabelText("지역"),{target:{value:"청주시"}});fireEvent.change(screen.getByLabelText("상담 분야"),{target:{value:"WAGE"}});fireEvent.click(screen.getByRole("button",{name:"기관 조회"}));await waitFor(()=>expect(urls.at(-1)).toContain("category=WAGE"));expect(urls.at(-1)).toContain("region=");
- expect(screen.getAllByRole("textbox")).toHaveLength(1);
- expect(screen.getByRole('heading',{name:'상담기관 4곳'})).toBeVisible();
+ mount(<CentersScreen/>);fireEvent.click(screen.getByText('추가 상담기관 안내'));expect(await screen.findByText("예시 기관")).toBeVisible();expect(screen.getByText("지역 대신 전국 단위 대안을 표시합니다.")).toBeVisible();expect(screen.getByText(/개발용 예시 데이터/)).toBeVisible();expect(screen.getByRole("link",{name:"https://example.org/source"})).toHaveAttribute("rel","noopener noreferrer");expect(screen.queryByText(/출처 확인일|검증일:/)).toBeNull();expect(document.querySelector('a[href^="javascript:"]')).toBeNull();
+ fireEvent.change(screen.getByLabelText("상담 분야"),{target:{value:"WAGE"}});await waitFor(()=>expect(urls.at(-1)).toContain("category=WAGE"));
+ expect(screen.queryAllByRole("textbox")).toHaveLength(0);
+ expect(screen.queryByRole('button',{name:'기관 조회'})).toBeNull();
+ expect(screen.getByRole('heading',{name:'상담기관 12곳'})).toBeVisible();
  expect(screen.queryByText("현재 전국 단위 상담기관 정보만 제공됩니다.")).toBeNull();
  expect(screen.queryByText("이 페이지에서 기관명 찾기")).toBeNull();
- expect(urls.every(u=>!u.includes("search="))).toBe(true);
+ expect(urls.every(u=>!u.includes("search=")&&!u.includes("region="))).toBe(true);
 });
 it("retries center errors without inventing contact data",async()=>{let failed=true;server.use(http.get(`${testApiUrl}/consultation-centers`,()=>failed?apiResponse({errorCode:"UPSTREAM_UNAVAILABLE"},503):apiResponse({items:[],page:1,size:20,total:0,nationwideFallbackUsed:false,dataStatus:"AVAILABLE"})));mount(<CentersScreen/>);fireEvent.click(screen.getByText('추가 상담기관 안내'));const retry=await screen.findByRole("button",{name:/다시/});expect(screen.getByRole('link',{name:'1350'})).toHaveAttribute('href','tel:1350');failed=false;fireEvent.click(retry);expect(await screen.findByText(/표시할 상담기관이 없습니다/)).toBeVisible()});
 it("allows only safe phone and website schemes",()=>{expect(safeWebsite("javascript:alert(1)")).toBeUndefined();expect(safeWebsite("https://user:secret@example.org")).toBeUndefined();expect(safeWebsite("https://example.org")).toBe("https://example.org/");expect(safePhone("010-1234-5678")).toBe("tel:01012345678");expect(safePhone("123;ext=456")).toBeUndefined()});
@@ -260,7 +261,7 @@ it("shows only supplied center contact and visit details",async()=>{
  expect(screen.getByText('방문 전 전화')).toBeVisible();
  expect(within(screen.getByRole('heading',{name:'지역 상담소'}).closest('article')!).queryByRole('link',{name:/지도|길찾기|주소 검색/})).not.toBeInTheDocument();
 });
-it('shows researched channels and costs, separates office search from remote alternatives and resets empty filters',async()=>{
+it('shows researched channels and costs with provider type filters',()=>{
  server.use(http.get(`${testApiUrl}/consultation-centers`,()=>apiResponse({items:[],page:1,size:20,total:0,nationwideFallbackUsed:false,dataStatus:'AVAILABLE'})));
  mount(<CentersScreen/>);
  expect(screen.getByRole('heading',{name:'상담기관 12곳'})).toBeVisible();
@@ -274,11 +275,8 @@ it('shows researched channels and costs, separates office search from remote alt
  fireEvent.click(screen.getByRole('button',{name:'사설 노무법인'}));
  expect(screen.getByRole('heading',{name:'상담기관 3곳'})).toBeVisible();
  expect(screen.getByText(/노동법률상담 30분 55,000원/)).toBeVisible();
- fireEvent.change(screen.getByLabelText('지역'),{target:{value:'제주'}});
- await waitFor(()=>expect(screen.getByRole('button',{name:'기관 조회'})).toBeEnabled());
- fireEvent.click(screen.getByRole('button',{name:'기관 조회'}));
- expect(screen.getByRole('heading',{name:'상담기관 0곳'})).toBeVisible();
- fireEvent.click(screen.getByRole('button',{name:'필터 초기화'}));
+ expect(screen.queryByText(/출처 확인일/)).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'전체'}));
  expect(screen.getByRole('heading',{name:'상담기관 12곳'})).toBeVisible();
 });
 it("shows pre-consultation reasons and supplement links without claiming completion",async()=>{
@@ -350,7 +348,7 @@ it('keeps selected originals and the idempotency key when retrying report creati
 it("confirms replacing only the local draft, preserves cancel without another API call",async()=>{
  let calls=0;server.use(http.post(`${testApiUrl}/cases/15/company-inquiry`,()=>{calls++;return apiResponse({text:"서버 새 원문",requiresUserReview:true})}));
  mount(<InquiryScreen caseId={15}/>);await chooseInquiryResult();fireEvent.click(screen.getByRole('button',{name:'선택한 분석으로 초안 생성'}));await screen.findByText('서버 새 원문');
- fireEvent.click(screen.getByText('초안 원문과 분석 기준'));fireEvent.change(screen.getByRole('textbox'),{target:{value:'보존할 작성본'}});const trigger=screen.getByRole('button',{name:'작성본 교체 확인'});trigger.focus();fireEvent.click(trigger);
+ fireEvent.change(screen.getByRole('textbox'),{target:{value:'보존할 작성본'}});const trigger=screen.getByRole('button',{name:'작성본 교체 확인'});trigger.focus();fireEvent.click(trigger);
  expect(screen.getByRole('dialog')).toHaveTextContent('기존 작성 내용은 사라집니다');fireEvent.click(screen.getByRole('button',{name:'취소'}));expect(screen.getByRole('textbox')).toHaveValue('보존할 작성본');
  fireEvent.click(trigger);fireEvent.click(screen.getByRole('button',{name:'작성본 교체'}));expect(screen.getByRole('textbox')).toHaveValue('서버 새 원문');expect(calls).toBe(1);expect(screen.queryByRole('dialog')).toBeNull();
 });

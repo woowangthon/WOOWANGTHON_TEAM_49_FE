@@ -1,13 +1,13 @@
 "use client";
 import { useTranslation } from '@/i18n/use-translation';
-import { ArrowUpRight, Building2, Clock3, Languages, Mail, MapPin, Navigation, Phone, Search } from "lucide-react";
+import { ArrowUpRight, Building2, Clock3, Languages, Mail, MapPin, Navigation, Phone } from "lucide-react";
 import { SupportLinks } from "./support-navigation";
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useState } from "react";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { secondaryButton } from "@/components/ui/styles";
 import styles from "./centers-screen.module.css";
 import { useRegisteredCenters, type CenterFilters } from "./queries";
-import { addressSearch, catalogCheckedAt, centerCatalog, centerGroup, centerReach, filterCatalog, safeEmail, safePhone, safeWebsite, type CenterGroup, type ResearchedCenter } from './center-catalog';
+import { addressSearch, centerCatalog, centerGroup, centerReach, filterCatalog, safeEmail, safePhone, safeWebsite, type CenterGroup, type ResearchedCenter } from './center-catalog';
 
 function readableDetail(value: unknown) {
   if (typeof value === "string") return value.trim() || undefined;
@@ -17,35 +17,28 @@ function readableDetail(value: unknown) {
 
 export function CentersScreen() {
   const {translate} = useTranslation();
-  const [region, setRegion] = useState("");
   const [group, setGroup] = useState<CenterGroup | ''>('');
-  const [filters, setFilters] = useState<CenterFilters>({ region: "", category: "", page: 1 });
-  const catalog = filterCatalog(filters.region, group);
+  const catalog = filterCatalog(group);
   return <div className={styles.page}>
     <header className={styles.hero}><div><p className={styles.eyebrow}>{translate("caseSupport.centersScreen_consultationCenter")}</p><h1>{translate("caseSupport.centersScreen_heroTitle")}<span>{translate("caseSupport.centersScreen_heroEmphasis")}</span></h1><p className={styles.description}>{translate("caseSupport.centersScreen_consultation_count_information_confirm")}</p></div><div className={styles.heroArt} aria-hidden="true"><span className={styles.mapLayer}/><span className={styles.mapLayer}/><span className={styles.pin}><MapPin size={65} strokeWidth={2.5}/></span></div></header>
     <div className={styles.supportNav}><SupportLinks/></div>
-    <form className={styles.filters} onSubmit={e => { e.preventDefault(); setFilters(v => ({ ...v, region, page: 1 })); }}>
-      <h2><Search size={21} aria-hidden="true"/>{translate("caseSupport.centersScreen_searchTitle")}</h2>
-      <label>{translate("caseSupport.centersScreen_region")}<input className="ui-control" placeholder={translate("caseSupport.centersScreen_placeholder_label")} value={region} onChange={e => setRegion(e.target.value)}/></label>
-      <button className={styles.searchButton}><Search size={18} aria-hidden="true"/>{translate("caseSupport.centersScreen_form")}</button>
-    </form>
     <section className={styles.catalog} aria-labelledby="catalog-title">
-      <div className={styles.catalogHeading}><div><p className={styles.eyebrow}>{translate('caseSupport.directory_publicSources')}</p><h2 id="catalog-title">{translate('caseSupport.directory_count', {count:catalog.length})}</h2></div><p>{translate('caseSupport.directory_checked', {date:catalogCheckedAt})}</p></div>
+      <div className={styles.catalogHeading}><div><p className={styles.eyebrow}>{translate('caseSupport.directory_publicSources')}</p><h2 id="catalog-title">{translate('caseSupport.directory_count', {count:catalog.length})}</h2></div></div>
       <p className={styles.catalogHelp}>{translate('caseSupport.directory_scope', {count:centerCatalog.length})}</p>
       <div className={styles.groupFilters} role="group" aria-label={translate('caseSupport.directory_kind')}>
         {(['', 'PUBLIC', 'COMMUNITY', 'PRIVATE'] as const).map(value => <button type="button" aria-pressed={group===value} key={value} onClick={()=>setGroup(value)}>{translate(value===''?'caseSupport.directory_all':value==='PUBLIC'?'caseSupport.directory_public':value==='COMMUNITY'?'caseSupport.directory_community':'caseSupport.directory_private')}</button>)}
       </div>
-      {filters.region && <p className={styles.fallback} role="status">{translate('caseSupport.directory_regionHelp')}</p>}
-      {!catalog.length && <div className={styles.empty}><p>{translate('caseSupport.directory_empty')}</p><button type="button" className={secondaryButton} onClick={()=>{setGroup('');setRegion('');setFilters({region:'',category:'',page:1})}}>{translate('caseSupport.directory_reset')}</button></div>}
+      {!catalog.length && <div className={styles.empty}><p>{translate('caseSupport.directory_empty')}</p><button type="button" className={secondaryButton} onClick={()=>setGroup('')}>{translate('caseSupport.directory_reset')}</button></div>}
       <div className={styles.results}>{catalog.map(center=><CatalogCard key={center.researchId} center={center}/>)}</div>
       <aside className={styles.catalogNotice}><Building2 size={22} aria-hidden="true"/><div><h3>{translate('caseSupport.directory_beforeContact')}</h3><p>{translate('caseSupport.directory_disclaimer')}</p></div></aside>
     </section>
-    <RegisteredCenters filters={filters} setFilters={setFilters}/>
+    <RegisteredCenters/>
   </div>;
 }
 
-function RegisteredCenters({filters,setFilters}:{filters:CenterFilters;setFilters:Dispatch<SetStateAction<CenterFilters>>}) {
+function RegisteredCenters() {
   const {translate,translateContent}=useTranslation();
+  const [filters,setFilters]=useState<CenterFilters>({category:"",page:1});
   const q=useRegisteredCenters(filters);
   const items=q.data?.items;
   return (
@@ -69,7 +62,6 @@ function RegisteredCenters({filters,setFilters}:{filters:CenterFilters;setFilter
         <div className={styles.meta}>
           <p>{translateContent("caseSupport.centersScreen_website", { value1: safeWebsite(c.website) ? <a href={safeWebsite(c.website)} target="_blank" rel="noopener noreferrer">{c.website}</a> : translate("caseSupport.centersScreen_confirm_website_none") })}</p>
           <p>{translateContent("caseSupport.centersScreen_source", { value1: safeWebsite(c.sourceUrl) ? <a href={safeWebsite(c.sourceUrl)} target="_blank" rel="noopener noreferrer">{c.sourceUrl}</a> : translate("caseSupport.centersScreen_confirm") })}</p>
-          <p>{translate("caseSupport.centersScreen_article6", { value1: c.verifiedAt ?? translate("caseSupport.centersScreen_confirm") })}</p>
         </div>
       </article>)}</div>
       <nav aria-label={translate("caseSupport.centersScreen_consultationCenter_page")} className={styles.pagination}><button className={secondaryButton} disabled={filters.page === 1 || q.isFetching} onClick={() => setFilters(v => ({ ...v, page: v.page - 1 }))}>{translate("caseSupport.centersScreen_previous_page")}</button><span>{translate("caseSupport.centersScreen_page_all", { value1: q.data.page, value2: q.data.total })}</span><button className={secondaryButton} disabled={q.isFetching || q.data.page * q.data.size >= q.data.total} onClick={() => setFilters(v => ({ ...v, page: v.page + 1 }))}>{translate("caseSupport.centersScreen_next_page")}</button></nav>
@@ -107,6 +99,5 @@ function CatalogCard({center:c}:{center:ResearchedCenter}) {
       <p className={styles.accessNotes}>{c.accessNotes}</p>
       <div className={styles.meta}>{c.sources.map((source,i)=>safeWebsite(source.url)&&<p key={source.url}><a href={safeWebsite(source.url)} target="_blank" rel="noopener noreferrer">{translate('caseSupport.directory_source', {number:i+1})}</a><span> · {source.supports.join(' · ')}</span></p>)}</div>
     </details>
-    <p className={styles.checked}>{translate('caseSupport.directory_checked', {date:c.checkedAt})}</p>
   </article>;
 }

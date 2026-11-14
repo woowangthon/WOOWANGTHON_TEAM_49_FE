@@ -52,7 +52,6 @@
   "caseDetailScreen_wage_wagePeriod_information": "급여 형태와 산정기간 등 기본 정보를 관리해요.",
   "caseDetailScreen_case_edit": "내역 수정",
   "caseFocusNavigation_navigate": "{value1} 이동",
-  "caseFocusNavigation_ariaLabel_div": "{value1} 위치",
   "caseForm_workplace_select_information_confirm": "근무지를 선택하고 정보를 확인해 주세요.",
   "caseForm_wageCase_input": "급여 내역 입력",
   "caseForm_workplace_select": "먼저 근무지를 선택해 주세요.",

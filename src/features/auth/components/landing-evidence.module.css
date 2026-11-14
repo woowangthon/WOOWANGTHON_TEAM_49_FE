@@ -1,0 +1,130 @@
+.section {
+  scroll-margin-top: 68px;
+  background: radial-gradient(ellipse at 80% 60%, #142b56 0%, transparent 54%), #0c1629;
+  color: #f7faff;
+  padding: clamp(72px, 7.5vw, 128px) 0;
+}
+.inner {
+  width: min(1192px, 88%);
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1.04fr 1fr;
+  gap: clamp(40px, 5vw, 84px);
+  align-items: center;
+}
+.story, .chart { min-width: 0; }
+.section .kicker {
+  color: #96c5ff;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+.section .title {
+  color: #fff;
+  font-weight: 780;
+  font-size: clamp(38px, 3.75vw, 60px);
+  line-height: 1.23;
+  letter-spacing: -.055em;
+}
+.title span { color: #a1caff; }
+.section .scope {
+  margin: 34px 0 6px;
+  font-size: 16px;
+  font-weight: 650;
+  color: #d4dfef;
+}
+.findings { margin: 0; }
+.findings > div {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(120px, .92fr) minmax(0, 1fr);
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #ffffff26;
+}
+.findings dd {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: clamp(29px, 2.6vw, 40px);
+  font-weight: 750;
+  letter-spacing: -.045em;
+  line-height: 1.18;
+}
+.findings dt { grid-column: 2; color: #c5d1e3; font-size: 15px; line-height: 1.55; }
+.details { margin: 14px 0 4px; font-size: 14px; }
+.details summary { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; color: #d7e9ff; font-weight: 650; }
+.details summary::-webkit-details-marker { display: none; }
+.details[open] summary svg { transform: rotate(180deg); }
+.details dl { margin: 12px 0; max-width: 400px; }
+.details dl div { display: flex; justify-content: space-between; gap: 12px; color: #c5d1e3; padding: 4px 0; }
+.details dd { margin: 0; font-variant-numeric: tabular-nums; }
+.section .source {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: #bccce3;
+  padding: 5px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  text-underline-offset: 4px;
+}
+.section .source:hover { color: #fff; text-decoration: underline; }
+.section :is(summary, a):focus-visible { outline: 3px solid #91c6ff; outline-offset: 4px; }
+.chart {
+  margin: 0;
+  padding: clamp(24px, 2.6vw, 42px);
+  border-radius: 28px;
+  border: 1px solid #b0d1ff38;
+  background: radial-gradient(ellipse at 90% 90%, #214790 0%, transparent 65%), linear-gradient(130deg, #1a2a46, #132342);
+  box-shadow: 0 20px 65px #020b1c3b;
+}
+.chart figcaption { font-size: 18px; color: #ebf3ff; font-weight: 650; }
+.growth { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 10px; margin: 4px 0 38px; }
+.growth strong {
+  color: #91caff;
+  font-size: clamp(54px, 5.4vw, 80px);
+  letter-spacing: -.065em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.growth strong span { font-size: .6em; }
+.growth > span { font-size: 14px; color: #c8d8ee; }
+.plot {
+  margin: 0 0 40px;
+  height: clamp(126px, 11vw, 166px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: repeating-linear-gradient(to top, #dbeaff17 0 1px, transparent 1px 25%);
+  border-bottom: 1px solid #afbfd6a8;
+}
+.column { height: 100%; min-width: 0; position: relative; display: flex; align-items: flex-end; justify-content: center; }
+.measure { width: 62%; height: var(--height); position: relative; }
+.measure strong {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  width: max-content;
+  max-width: 160%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #fff;
+  font-size: clamp(14px, 1.35vw, 21px);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+.bar { height: 100%; border-radius: 9px 9px 0 0; transform-origin: bottom; background: linear-gradient(#9aafca, #476082); }
+.column:last-child .bar { background: linear-gradient(160deg, #abebff, #58a7ff 42%, #3c69f2); box-shadow: 0 0 32px #5da5ff40; }
+.year { position: absolute; top: calc(100% + 4px); font-size: 14px; color: #d8e6fa; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) {
+  .chart[data-entered] .bar { animation: rise 850ms cubic-bezier(.2,.8,.2,1) both; }
+  .chart[data-entered] .column:last-child .bar { animation-delay: 130ms; }
+  .chart[data-entered] .measure strong { animation: show-value 450ms 500ms both; }
+  @keyframes rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes show-value { from { opacity: 0; translate: 0 5px; } to { opacity: 1; translate: 0; } }
+}
+@media (max-width: 850px) {
+  .inner { grid-template-columns: 1fr; width: min(590px, 88%); }
+  .section .title { font-size: clamp(32px, 6vw, 48px); }
+  .plot { height: 142px; }
+}

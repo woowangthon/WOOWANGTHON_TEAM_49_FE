@@ -2,16 +2,15 @@
 import {useMessageState} from '@/i18n/use-message-state';
 import {message as describeMessage} from '@/i18n/message';
 
-import {useLocalized} from '@/i18n/use-translation';
+import {useLocalized, useTranslation} from '@/i18n/use-translation';
 import type {Translation} from '@/i18n/translate';
-
-import { useTranslation } from '@/i18n/use-translation';
 
 import Link from 'next/link';
 import { BrandLink } from '@/components/layout/brand-link';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowUpRight, ArrowRight, ArrowDown, Check, CheckCheck, FileText, Files, Clock3, Calculator, CircleHelp, Link2, ScanLine, Wallet, FolderOpen, Plus, ShieldCheck, Copy, CheckCircle2, Menu, X, Building2, Download, MessageCircle, MoveRight } from 'lucide-react';
 import styles from './landing.module.css';
+import { LandingEvidence } from './landing-evidence';
 import { LanguageSelector } from '@/i18n/language-selector';
 function classes(names: string) {
     return names.split(/\s+/).filter(Boolean).map(name => styles[name]).join(' ');
@@ -181,6 +180,8 @@ const {features, inquiry} = useLocalized(createPresentation);
         </div>
         <a className={classes("scroll-cue")} href="#features">{translate("auth.landing_monthlyWage_confirm_2")}<ArrowDown aria-hidden="true" size={17}/></a>
       </section>
+
+      <LandingEvidence />
 
       <div id="features" className={classes("feature-intro section-wrap")} data-reveal><p className={classes("section-label")}>{translate("auth.landing_monthlyWage_count")}</p><h2>{translate("auth.landing_monthlyWage_confirm_3")}<br />{translate("auth.landing_link_2")}</h2></div>
 

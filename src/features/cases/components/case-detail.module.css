@@ -9,10 +9,6 @@
   color: var(--color-foreground);
   container-type: inline-size;
 }
-.otherTasks { padding: 12px 22px; border: 1px solid var(--color-border); border-radius: 20px; background: var(--color-surface); }
-.otherTasks > summary { min-height: 44px; padding-block: 10px; cursor: pointer; font-size: 15px; font-weight: 700; }
-.otherTasks[open] > summary { margin-bottom: 16px; }
-.otherTasks .comparison > section { padding: 0; border: 0; }
 
 .breadcrumb {
   display: flex;
@@ -108,8 +104,6 @@
 .primaryAction { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; margin-top: 22px; padding: 12px 16px; border-radius: 12px; background: var(--color-primary); color: white; font-size: 14px; font-weight: 700; }
 .primaryAction svg { flex-shrink: 0; transition: transform 180ms ease; }
 
-.taskTabs { min-width: 0; }
-
 .sectionHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 14px; }
 .sectionHead h2, .management h2 { font-size: 20px; font-weight: 750; letter-spacing: -.5px; }
 .sectionHead p { color: var(--color-review-foreground); font-size: 12px; }
@@ -133,10 +127,6 @@
 .actionIcon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 15px; color: var(--detail-brand); background: var(--color-nav-active); }
 .actionIcon[data-tone="lavender"] { color: #6552a7; background: #f0edfb; }
 .actionIcon[data-tone="neutral"] { color: var(--color-review-foreground); background: var(--color-neutral-soft); }
-.actionCopy { display: grid; gap: 5px; min-width: 0; word-break: keep-all; overflow-wrap: anywhere; }
-.actionCopy strong { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
-.actionCopy > span { color: var(--color-review-foreground); font-size: 12px; line-height: 1.65; }
-.actionArrow { color: var(--color-review-foreground); }
 
 .comparison { min-width: 0; }
 .comparison > section, .payments, .management, .panel { min-width: 0; padding: 24px; border: 1px solid var(--color-border); border-radius: 22px; background: var(--color-surface); box-shadow: none; }
@@ -153,11 +143,6 @@
 
 .payments { scroll-margin-top: 24px; }
 .payments > summary { min-height: 44px; padding-block: 8px; cursor: pointer; color: var(--color-foreground); font-size: 16px; font-weight: 700; }
-.disclosureTitle { display: inline-flex; align-items: center; gap: 9px; vertical-align: middle; }
-.disclosureTitle svg { color: var(--detail-brand); flex-shrink: 0; }
-.paymentDescription { margin-top: 12px; color: var(--color-review-foreground); font-size: 12px; line-height: 1.7; }
-.paymentContent { min-width: 0; margin-top: 20px; }
-.paymentContent :global(.ui-card) { box-shadow: none; }
 .managementRow { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
 .managementRow h2 { font-size: 17px; }
 .managementRow p { margin-top: 5px; color: var(--color-review-foreground); font-size: 12px; line-height: 1.7; }
@@ -180,11 +165,8 @@
   .fact dd { font-size: 18px; }
   .actionCard { grid-template-columns: 40px minmax(0, 1fr) 16px; gap: 10px; padding: 17px; }
   .actionIcon { width: 40px; height: 40px; border-radius: 13px; }
-  .actionCopy strong { font-size: 14px; }
   .comparison > section, .payments, .management { padding: 18px; }
-  .disclosureTitle { gap: 6px; font-size: 14px; }
   .comparison dl > div { padding: 12px; }
-  .paymentContent form { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {

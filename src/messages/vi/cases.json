@@ -52,7 +52,6 @@
   "caseDetailScreen_wage_wagePeriod_information": "Quản lý các thông tin cơ bản như loại lương, thời gian tính lương.",
   "caseDetailScreen_case_edit": "Chỉnh sửa lịch sử",
   "caseFocusNavigation_navigate": "Di chuyển {value1}",
-  "caseFocusNavigation_ariaLabel_div": "Vị trí {value1}",
   "caseForm_workplace_select_information_confirm": "Vui lòng chọn địa điểm làm việc của bạn và kiểm tra thông tin.",
   "caseForm_wageCase_input": "Nhập chi tiết mức lương",
   "caseForm_workplace_select": "Vui lòng chọn địa điểm làm việc của bạn trước tiên.",

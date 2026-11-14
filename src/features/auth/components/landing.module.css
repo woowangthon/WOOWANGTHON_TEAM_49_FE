@@ -1,6 +1,5 @@
 .landing {
   --brand: var(--color-accent);
-  --brand-50: #eaf0ff;
   --brand-100: #dbe5ff;
   --brand-700: #5d7fe1;
   --brand-800: #4665bb;
@@ -11,20 +10,17 @@
   --border: var(--color-border);
   --white: var(--color-surface);
   --ease: cubic-bezier(.22,1,.36,1);
-}
-.landing * {
-  box-sizing: border-box;
-}
-.landing {
   scroll-behavior: smooth;
   scroll-padding-top: 100px;
-}
-.landing {
+  min-width: 0;
   margin: 0;
   background: var(--white);
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+.landing * {
+  box-sizing: border-box;
 }
 .landing button,.landing a,.landing input,.landing summary {
   -webkit-tap-highlight-color: transparent;
@@ -72,19 +68,6 @@
   clip: rect(0,0,0,0);
   white-space: nowrap;
   border: 0;
-}
-.landing .skip-link {
-  position: fixed;
-  left: 20px;
-  top: -100px;
-  z-index: 100;
-  background: var(--ink);
-  color: white;
-  padding: 14px 20px;
-  border-radius: 8px;
-}
-.landing .skip-link:focus {
-  top: 12px;
 }
 .landing .section-wrap {
   width: min(1120px,calc(100% - 96px));
@@ -2349,7 +2332,6 @@
 }
 
 /* Preserve the established blue and violet identity in the imported layout. */
-.landing { background: var(--white); color: var(--ink); min-width: 0; }
 .landing :is(section, [id]) { scroll-margin-top: 100px; }
 .landing .logo-symbol, .landing .button-primary, .landing .final-cta {
   background: linear-gradient(135deg, #5d7fe1, #7f67da); color: white;

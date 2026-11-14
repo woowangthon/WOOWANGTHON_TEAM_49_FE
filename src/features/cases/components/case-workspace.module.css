@@ -6,12 +6,6 @@
   color: var(--color-foreground);
   container-type: inline-size;
 }
-.content [data-case-focus-navigation] { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding-block: 16px; border-top: 1px solid var(--color-border); }
-.content [data-case-focus-navigation] > div:first-child { flex: 1; min-width: 100px; max-width: 240px; }
-.content [data-case-focus-navigation] p { margin-bottom: 6px; font-size: 12px; font-weight: 700; color: var(--color-nav-foreground); }
-.content [data-case-focus-navigation] progress { display: block; width: 100%; height: 5px; overflow: hidden; border: 0; border-radius: 8px; accent-color: var(--color-accent); }
-.content [data-case-focus-navigation] progress::-webkit-progress-bar { background: var(--color-nav-active); }
-.content [data-case-focus-navigation] progress::-webkit-progress-value { background: var(--color-accent); border-radius: 8px; }
 .content [data-case-focus-hint] { color: var(--color-review-foreground); font-size: 13px; }
 .content [data-case-next] { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 20px 24px; border-radius: 18px; background: var(--color-nav-active); }
 .content [data-case-next] h2 { font-size: 16px; }

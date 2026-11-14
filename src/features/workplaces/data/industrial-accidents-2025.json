@@ -1,0 +1,3405 @@
+{
+  "publicationYear": 2025,
+  "publishedAt": "2026-01-29",
+  "noticeNumber": "2026-60",
+  "sourcePageCount": 28,
+  "sourceUrl": "https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=18907",
+  "annexUrl": "https://www.moel.go.kr/common/downloadFile.do?bbs_id=12&bbs_seq=18907&file_ext=pdf&file_seq=20260101830",
+  "sourceSha256": "0df4bdd804979c6ab70c86efab9b06c86241a03128bf30e40b4a3c970c5108c3",
+  "pressSha256": "93343ce2c1f5761de6501a51af24f04598ea3366d894183ad099fd08c6ed3274",
+  "categoryCounts": {
+    "FATALITIES": 11,
+    "FATALITY_RATE": 329,
+    "MAJOR_ACCIDENT": 7,
+    "CONCEALMENT": 2,
+    "NON_REPORTING": 9,
+    "CONTRACTOR_COMBINED": 2,
+    "LEGACY_MAJOR_ACCIDENT": 16
+  },
+  "records": [
+    {
+      "id": "p2-t1-r1",
+      "category": "FATALITIES",
+      "name": "바론건설㈜(구, 기성건설주식회사)(원청)\n㈜대신이엔씨(하청)\n(안성아양지구폴리프라자신축공사)",
+      "address": "경기 안성시 옥산동 593번지,\n593-1번지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 2
+    },
+    {
+      "id": "p2-t1-r2",
+      "category": "FATALITIES",
+      "name": "농업회사법인땅심유한회사",
+      "address": "전남 순천시 별량면 녹색로 459-1",
+      "industry": "식료품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 2
+    },
+    {
+      "id": "p2-t1-r3",
+      "category": "FATALITIES",
+      "name": "㈜건우구조엔지니어링\n(오류고등학교급식실증축및내진보강공사)",
+      "address": "서울 구로구 오리로21길 2 (궁동)\n오류고등학교",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 2
+    },
+    {
+      "id": "p2-t1-r4",
+      "category": "FATALITIES",
+      "name": "미래E비젼",
+      "address": "인천 서구 건지로97번길 33 (석남동)",
+      "industry": "시설관리및사업지원\n서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 2
+    },
+    {
+      "id": "p2-t2-r1",
+      "category": "FATALITIES",
+      "name": "에스지씨이테크건설㈜(원청)\n삼마건설㈜(하청)\n(KY로지스안성저온물류창고신축공사)",
+      "address": "경기 안성시 원곡면 외가천리 17-11번지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 2
+    },
+    {
+      "id": "p2-t2-r2",
+      "category": "FATALITIES",
+      "name": "㈜건양산업\n(만덕그린코아아파트균열보수및도장공사)",
+      "address": "부산 북구 덕천로234번길 47 (만덕동,\n그린코아)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 2
+    },
+    {
+      "id": "p2-t2-r3",
+      "category": "FATALITIES",
+      "name": "㈜대건건설\n(우정읍원안길163근생[제조업소]증축\n건축공사)",
+      "address": "경기 화성시 우정읍 원안길 163",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 2
+    },
+    {
+      "id": "p3-t1-r1",
+      "category": "FATALITIES",
+      "name": "㈜준경타워(원청)\n한강T/C(하청)\n(남양주진접3지구공동주택신축공사)",
+      "address": "경기 남양주시 진접읍 광릉내로57번길 10",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 3
+    },
+    {
+      "id": "p3-t1-r2",
+      "category": "FATALITIES",
+      "name": "개인사업주 홍승표(하청)\n(인테리어공사)",
+      "address": "서울 강서구 양천로30길 98",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 3
+    },
+    {
+      "id": "p3-t2-r1",
+      "category": "FATALITIES",
+      "name": "㈜영동건설(원청)\n태광건설㈜(하청)\n(춘천소양로1가오피스텔신축사업)",
+      "address": "강원 춘천시 소양로 190-2\n(소양로1가) 94-6번지 일원",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 3
+    },
+    {
+      "id": "p3-t3-r1",
+      "category": "FATALITIES",
+      "name": "한신공영㈜(원청)\n중현테크㈜(하청)\n(부산일광지구공동주택신축공사)",
+      "address": "부산 기장군 일광면 일광지구 내\n8,9블럭",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 3
+    },
+    {
+      "id": "p3-t4-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜두손건설(원청)\n해봉산업건설㈜(하청)\n(서초동1593-15외6필지오피스텔신축공사)",
+      "address": "서울 서초구 효령로53길 39 (서초동)\n외6필지",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 3
+    },
+    {
+      "id": "p3-t4-r2",
+      "category": "FATALITY_RATE",
+      "name": "가나이엔지\n(***신축공사(기초바닥공사제외))",
+      "address": "충북 진천군 이월면 진광로 835-1",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 3
+    },
+    {
+      "id": "p3-t4-r3",
+      "category": "FATALITY_RATE",
+      "name": "가야천막기업\n(한성엔지니어링창고지붕천막교체공사)",
+      "address": "충남 천안시 동남구 풍서1길 11",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 3
+    },
+    {
+      "id": "p3-t4-r4",
+      "category": "FATALITY_RATE",
+      "name": "금호건축\n(논공덕진섬유지붕개량공사)",
+      "address": "대구 달성군 논공읍 논공중앙로 404",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 3
+    },
+    {
+      "id": "p3-t4-r5",
+      "category": "FATALITY_RATE",
+      "name": "동국하우징\n(***신축공사)",
+      "address": "경북 포항시 남구 오천읍 기림로\n1263",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 3
+    },
+    {
+      "id": "p4-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 동성조경건설\n(구라리1308-3번지일원볼라드및\n우레탄교체외3개소긴급보)",
+      "address": "대구 달성군 화원읍 화암로\n10 구라리 1308-3번지 일원",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "밀양토건㈜(원청)\n미성건설(하청)\n([주민지원]수입1리마을회관보수공사)",
+      "address": "경기 양평군 서종면 북한강로 1261\n수입1리 마을회관",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "부강기업\n(기계설비)",
+      "address": "경기 안성시 죽산면 용설로 607-52",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "삼부토건주식회사\n(서북구입장면홍천리산13-4패해방지\n시설공사)",
+      "address": "충남 천안시 서북구 입장면 도림길\n9-3 천안시서북구입장면 홍천리 산\n13-3",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 서운학\n(한림항야적지폐트레일러해체공사)",
+      "address": "제주 서귀포시 대정읍 영락사독로\n11-13",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜성전\n(건천이형선공장세선장지붕우레탄폼\n도장공사)",
+      "address": "경북 경주시 건천읍 용명공단길\n173-91 고려제강(주) 건천공장",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "세현건설주식회사\n(내천리69번지일원배수로정비공사)",
+      "address": "경기 평택시 서탄면 내천리 69번지\n일원",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "영남이엔지\n(공장판넬지붕공사)",
+      "address": "대구 북구 노원로1길 163-3 (노원동3가)",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "영재건축\n(호산테크㈜지붕누수공사)",
+      "address": "충북 옥천군 옥천농공길 53-4\n호산테크(주)",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "우림아트\n(***우사지붕교체공사)",
+      "address": "전북 부안군 계화면 간재로 896-50\n(계화면 계화리 1928-2)",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 토리랜드\n(오션힐스포항CCt소나무이식)",
+      "address": "경북 포항시 북구 송라면 대전길 7\n오션힐스포항cc",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "㈜현대조경\n(실외조경수전정및방제작업)",
+      "address": "경북 경주시 엑스포로 45 (신평동)\n더케이호텔",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "형제인테리어\n(연천농협신서지점자재부지붕보수공사)",
+      "address": "경기 연천군 신서면 연신로 1053\n(연천농협신서자재부)",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "마무리기업이사",
+      "address": "경기 의왕시 왕림길 10 (왕곡동) 1층 1호",
+      "industry": "철도·항공·\n창고·운수\n관련서비스업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "옹중창고",
+      "address": "전북 부안군 부안읍 옹정로 207",
+      "industry": "철도·항공·\n창고·운수관련\n서비스업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "송계농장",
+      "address": "경남 통영시 도산일주로 2133-14",
+      "industry": "농업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r17",
+      "category": "FATALITY_RATE",
+      "name": "재수농장",
+      "address": "전북 임실군 오암1길 105-72",
+      "industry": "농업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p4-t1-r18",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 해냄광고",
+      "address": "인천 부평구 동수로 152 (부개동)\n가동 8-9호",
+      "industry": "전문·보건·\n교육·여가\n관련서비스업",
+      "incidentYear": 2024,
+      "sourcePage": 4
+    },
+    {
+      "id": "p5-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "아림인테리어",
+      "address": "경남 거창군 거창읍 거열로 177-1",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "우성자원",
+      "address": "대구 북구 대불로 5-1 (산격동)",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "한길포장",
+      "address": "인천 서구 반월로81번길 33-1 (오류동)",
+      "industry": "목재 및\n종이제품\n제조업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "가진아이디주식회사(원청)\n개인사업주 노태훈(하청)\n(제주대학교교수회관2층회의실내부\n보수공사)",
+      "address": "제주 제주시 제주대학로 102\n(아라일동) 교수회관 2층",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "(유한)상신설비(원청)\n(유한)백제로닥트(하청)\n(전주효자엘르디움에듀파크아파트\n신축소방설비공사)",
+      "address": "전북 전주시 완산구 쑥고개로\n363-21 (효자동2가) 1117-146번지 외",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "쎈에너지\n(***개인주택태양광패널설치공사)",
+      "address": "강원 영월군 가마동길 42-611층",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "차기욱단감농장",
+      "address": "경남 진주시 제곡길98번길 23-37",
+      "industry": "농업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "문청무역",
+      "address": "경기 화성시 장안면 수정로 178",
+      "industry": "화학 및\n고무제품\n제조업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜인동종합상사",
+      "address": "인천 서구 길무로 236 (오류동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "천공엔지니어링㈜\n(서산태안축산농협지유장원유저장\n탱크로리제작납품설치)",
+      "address": "충남 서산시 음암면 중앙로 678",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 한국그린전력(원청)\n엑스와이에너지(하청)\n(초계1,2,3태양광발전소)",
+      "address": "경기 포천시 일동면 사직리 588-2\n외 10필지",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "태평운수",
+      "address": "부산 서구 구덕로165번길 7 (아미동\n1가)",
+      "industry": "철도·항공·\n창고·운수\n관련서비스업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "붕화임엄\n(벌목,양구군동면팔랑리산118번지외\n2필지)",
+      "address": "강원 양구군 양구읍 양록길23번길\n6-3",
+      "industry": "임업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 가야안전공사",
+      "address": "울산 북구 진장9길 18 (진장동)",
+      "industry": "기타의 각종\n사업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "삼일가구산업",
+      "address": "경기 남양주시 진건읍 진관리 606-5\n번지",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p5-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "농업회사법인(주)코리아피트",
+      "address": "충남 아산시 도고면 도고산로 104",
+      "industry": "화학 및\n고무제품\n제조업",
+      "incidentYear": 2024,
+      "sourcePage": 5
+    },
+    {
+      "id": "p6-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "유한회사 청운건설\n(무장동헌긴급보수공사)",
+      "address": "전북 고창군 무장면 성내리 153",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "대남농산",
+      "address": "경남 창녕군 성지골길 63-12",
+      "industry": "농업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "정암육묘장",
+      "address": "경남 함안군 정암3길 26(군북면\n월촌리)",
+      "industry": "농업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 건일이엔지\n(대경중화장실환경개선기계설비공사)",
+      "address": "경기 포천시 소흘읍 봉솔로 23\n대경중학교",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "제일석재",
+      "address": "경기 광주시 포은대로 745 (장지동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜진형건설(원청)\n신도종합건설㈜(하청)\n(황강취약시설물보강공사)",
+      "address": "경남 합천군 쌍책면, 청덕면, 용주면,\n율곡면 일원",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜부일\n(화성시향남읍증거리268-1번지공장\n신축공사중)",
+      "address": "경기 화성시 향남읍 증거리 268-1",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "㈜아이앤큐이엔지\n(㈜해성푸드원식품공장신축공사중전기,\n통신공사)",
+      "address": "충남 서천군 장항읍 옥남리 1034번지",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "인우종합건설주식회사\n(서교동근린생활시설신축공사)",
+      "address": "서울 마포구 서교동 395-190",
+      "industry": "건설업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 베델로지스틱스",
+      "address": "인천 중구 서해대로271번길3\n(항동7가)",
+      "industry": "철도·항공·\n창고·운수\n관련서비스업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜브로텍",
+      "address": "경기 화성시 팔탄면 버들로1362번길\n53-31 (팔탄면)",
+      "industry": "화학 및\n고무제품\n제조업",
+      "incidentYear": 2024,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t2-r1",
+      "category": "FATALITY_RATE",
+      "name": "바론건설㈜(구, 기성건설주식회사)(원청)\n㈜대신이엔씨(하청)\n(안성아양지구폴리프라자신축공사)",
+      "address": "경기 안성시 옥산동 593번지, 593-1\n번지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 6
+    },
+    {
+      "id": "p6-t2-r2",
+      "category": "FATALITY_RATE",
+      "name": "농업회사법인땅심유한회사",
+      "address": "전남 순천시 별량면 녹색로 459-1",
+      "industry": "식료품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 6
+    },
+    {
+      "id": "p7-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜건우구조엔지니어링\n(오류고등학교급식실증축및내진보강\n공사)",
+      "address": "서울 구로구 오리로21길 2 (궁동)\n오류고등학교",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "미래E비젼",
+      "address": "인천 서구 건지로97번길 33\n(석남동)",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "㈜티엔지건설(원청)\n거성(하청)\n(경상북도구미시하이테크밸리5-2블럭\n1로트공장신축)",
+      "address": "경북 구미시 산동읍 도중리 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "㈜한영피엔에스",
+      "address": "광주 광산구 하남산단4번로 26\n(장덕동)",
+      "industry": "전기기계기구·\n정밀기구·\n전자제품\n제조업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "㈜수명건설(하청)\n(이천이황리물류센터신축공사중건축\n공사)",
+      "address": "경기 이천시 장호원읍 서동대로\n8829번길 53-11 장호원읍 이황리\n375번지 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜영진",
+      "address": "경북 영천시 영천산단로 53\n(채신동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "환영철강공업㈜ 당진공장",
+      "address": "충남 당진시 석문면 보덕포로 587",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "에스와이㈜ 인주지점",
+      "address": "충남 아산시 인주면 인주산단로\n23-120",
+      "industry": "수제품 및\n기타제품\n제조업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜에스티케미칼",
+      "address": "경기 포천시 가산면 정금로 120-43",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "신일정공㈜(원청)\n와이에스테크(하청)",
+      "address": "경기 안산시 단원구 별망로 416\n(목내동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 거산조경\n(북면도시계획도로(소로3-34호선)\n긴급복구마무리공사)",
+      "address": "경북 울진군 북면 (소로3-34호선)\n지내",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 권용안\n(예성자동차정비주식회사건물외부\n차양막설치공사)",
+      "address": "경기 포천시 설운동 392-4번지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "금강건영㈜\n(2023년도로유지관리연간단가공사\n(1구역))",
+      "address": "경기 김포시 고촌읍 풍무동 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p7-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 김문식\n(고추건조기전기증설공사)",
+      "address": "전남 완도군 고금면 농상리 162-2",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 7
+    },
+    {
+      "id": "p8-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 김종선\n(천년풍천장어A설비공사/단원구신길동\n1200-9)",
+      "address": "경기 안산시 단원구 옴뱅이길 19-1\n(신길동, 주건축물제1동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 김진완\n(김진완신축공사(은포리산19-4외1필지))",
+      "address": "충남 보령시 주교면 은포리 19-4번지\n외 1필지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "김천종합중기\n(개인주택철거공사)",
+      "address": "경북 구미시 구미중앙로1길 25-1\n(원평동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "다담건설㈜\n(외서도신마을농촌생활환경정비사업)",
+      "address": "전남 순천시 외서면 금성길 10 산36\n번지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "다모아팜(하청)\n(파레트렉해체작업)",
+      "address": "충남 금산군 금산읍 인삼로 220",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "다인인력\n(비닐하우스철거공사)",
+      "address": "경남 밀양시 하남읍 수산리 973번지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜더원건설\n(2023년포항시슬레이트해체ㆍ처리공사\n5권역)",
+      "address": "경북 포항시 북구 기북면 기계면\n신광면 죽장면",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "(유)도건환경개발\n(월산5동1021-1피트니스클럽외부\n철거공사)",
+      "address": "광주 남구 수박등로18번길 2\n(월산동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "동양샷시\n(***저온저장고신축공사)",
+      "address": "강원 정선군 임계면 마상길 22",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "로프천국\n(정관동원로얄듀크2차)",
+      "address": "부산 기장군 정관읍 정관5로 12\n(정관2차동원로얄듀크)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "합자회사 명신건설(원청)\n주식회사 우영이엔지(하청)\n(2022년대도하이젠(주)부산동삼동\n수소충전소신축공사중)",
+      "address": "부산 남구 자성로 152\n(문현동)714호",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "모아스카이간판(하청)\n(워크런병원현수막설치)",
+      "address": "대전 유성구 온천동로 43 (봉명동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 반딧불이전력\n(송도고등학교전기차충전시설설치전기\n공사)",
+      "address": "인천 연수구 독배로 91 (옥련동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "서귀포삼화페인트\n(비스타케이월드컵호텔)",
+      "address": "제주 서귀포시 김정문화로41번길\n10-6 (법환동, 비스타케이호텔)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "세종건축\n(어린스튜디오철거공사)",
+      "address": "경기 용인시 수지구 이종무로 184\n(고기동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "소호목장\n(***소호목장지붕보수공사)",
+      "address": "경기 안성시 고삼면 윗갈미길 64-1",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r17",
+      "category": "FATALITY_RATE",
+      "name": "㈜아성큐브스\n(2023년골목길스마트보안등설치공사)",
+      "address": "서울 중구 명동길 43 (명동1가)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p8-t1-r18",
+      "category": "FATALITY_RATE",
+      "name": "㈜영광이에프씨\n(1동수직동선증축공사계약(소방))",
+      "address": "경기 성남시 분당구 구미로173번길\n82 (구미동, 분당서울대학교병원)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 8
+    },
+    {
+      "id": "p9-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "영남지붕개량공사\n(건물외벽파랏펫공사)",
+      "address": "경남 창원시 마산합포구 남성로 32\n(서성동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜오성건설\n(삼진정공㈜내공장뒤편케높이방수\n공사/성남면대흥1)",
+      "address": "충남 천안시 동남구 성남면 대흥1길\n68 (삼진정공(주))",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 오행은\n(삼성동30-21도색작업)",
+      "address": "서울 강남구 봉은사로61길 43\n(삼성동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "옥산건설㈜\n(단항마을외1개소맨홀복구공사)",
+      "address": "경남 남해군 창선면 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "㈜우성건설\n(망정동상수도시설개선공사)",
+      "address": "경북 영천시 망정동 534-3",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "제이티건설㈜(원청)\n㈜하나건설(하청)\n(소노벨B,C동현관케노피유리돔누수\n보완공사)",
+      "address": "강원 홍천군 서면 한치골길 262\n소노벨 B, C동",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "철거클럽\n(구미중앙로15길22,상가내부철거공사)",
+      "address": "경북 구미시 구미중앙로15길 22\n(원평동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "㈜해동건설\n(칠곡군수규모하수시설정비공사)",
+      "address": "경북 칠곡군 석적읍 포남2길 62 0",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "명인이사",
+      "address": "경기 남양주시 평내로 146 (평내동,\n평내마을중흥S클래스) 2007동 801호",
+      "industry": "철도·항공·\n창고·운수\n관련서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "사과나무익스프레스",
+      "address": "경남 창원시 진해구 조천북로 147\n(경화동, 신우까치빌라)",
+      "industry": "철도·항공·\n창고·운수\n관련서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 제이비엘로지스틱스\n목포영암사업소",
+      "address": "전남 영암군 삼호읍 대불역로 193\n(삼호읍)",
+      "industry": "육상및수상\n운수업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "농업회사법인 우촌주식회사",
+      "address": "충남 당진시 송악읍 당고개로\n237-23",
+      "industry": "농업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "한진산업\n(감천중앙부두2물량장네프리토비선박)",
+      "address": "부산 사하구 감천항로 45(감천동,\n감천항중앙부두)",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "원일정화(유한)",
+      "address": "광주 동구 남문로701번길 21 2층\n(학동)",
+      "industry": "시설관리및\n사업지원\n서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "부경금속",
+      "address": "경북 고령군 다산면 나선로 254-17",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p9-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "유진산업",
+      "address": "경북 영천시 화남면 신선로 360-19\n(화남면)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 9
+    },
+    {
+      "id": "p10-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 태산종합건설-오창공장",
+      "address": "충북 청주시 청원구 오창읍\n호죽성재로 508",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "한부피에스엠",
+      "address": "경남 김해시 진영읍 본산로212번길\n10",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "해동유압산기",
+      "address": "부산 강서구 대저중앙로348번길\n24-12 (대저1동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "㈜대득건설(원청)\n개인사업주 김영로(하청)\n(두원공조울산공장증축공사)",
+      "address": "울산 북구 효문동 697-9번지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "더원엘앤씨주식회사\n(팔탄해창리해창천제방보수공사)",
+      "address": "경기 화성시 팔탄면 264번지 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜레인보우테크\n(단대동낙원아파트내,외부균열보수및\n재도장공사)",
+      "address": "경기 성남시 수정구 수정로466번길\n24 (단대동, 낙원아파트)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "이음디자인주식회사\n(신당동346-422수선공사)",
+      "address": "서울 중구 다산로14길 23 (신당동\n346-422)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 태림에프앤씨\n(영등포3가1-6번지외1필지업무시설\n신축공사중소방설비공사)",
+      "address": "서울 영등포구 경인로 885 (영등포\n동3가)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "토온건설㈜\n(***직영공사)",
+      "address": "부산 해운대구 중동 1425-12번지\n외 2필지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "도솔로지스 주식회사",
+      "address": "전남 광양시 항만7로 71-56",
+      "industry": "육상 및 수상\n운수업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "승완스틸ENG",
+      "address": "경기 안산시 상록구 사사안골길 2-1\n(사사동)",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "엠텍메디칼",
+      "address": "서울 영등포구 신길로 200-16\n(신길동) 지하층",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "해안주유소\n(박정하)",
+      "address": "경남 창원시 진해구 가락대로259\n(가주동)",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "광성산업개발\n(삼공사10동3층구조변경공사)",
+      "address": "부산 강서구 녹산산단17로 135\n(송정동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "충주산림조합(원청)\n주식회사 산사랑(하청)\n(2023년통합숲가꾸기사업(신니3지구))",
+      "address": "충북 충주시 신니면 충주시 신니면\n마수리 산55-11 외 2필지",
+      "industry": "임업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p10-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "㈜펜콕",
+      "address": "인천 서구 두밀로 45-6 (대곡동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 10
+    },
+    {
+      "id": "p11-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜비디엘",
+      "address": "경기 양주시 은현면 운하로101번길\n26",
+      "industry": "전기기계기구·\n정밀기구·\n전자제품\n제조업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "옥산미장합판",
+      "address": "경기 포천시 해룡로 109-50\n(설운동)",
+      "industry": "수제품 및\n기타제품\n제조업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 승리씨앤지\n(정비기반시설공사(도로등))",
+      "address": "인천 미추홀구 주안동 1344-1번지\n외 5필지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "이온건축\n(고암동601-4상가및다가구주택신축\n공사)",
+      "address": "경기 양주시 고암동 601-4",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 김진갑\n(김진갑-벌목(사북리산77))",
+      "address": "강원 정선군 사북읍 사북리 산 77번지",
+      "industry": "임업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "(유한)대한개발",
+      "address": "전남 목포시 대양산단로97번길 9\n(대양동)",
+      "industry": "기타의각종\n사업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "제이 원 테크(J．ONE）",
+      "address": "경기 김포시 대곶면 대곶서로234번길\n56",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "㈜극동이씨티(원청)\n주식회사 메트로플랜트(하청)\n(㈜메라톤내스크러버교체공사)",
+      "address": "인천 서구 건지로109번길 8-1\n(석남동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜동진스틸",
+      "address": "충북 진천군 문백면 문진로 66",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 미래에스티",
+      "address": "경남 김해시 상동면 상동로 263-89",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜두원종합건설(원청)\n태화건설㈜(하청)\n(신수처리구역(자등5리)하수관로정비\n사업(토목,기계))",
+      "address": "강원 철원군 서면 자등로 492 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "산림조합중앙회\n(2023년산불진화임도시설사업\n(소내골_우))",
+      "address": "강원 삼척시 하장면 숙암리 산11-1",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "㈜삼현건설(구, ㈜선경건설)\n(봉현창고스레트철거및지붕공사)",
+      "address": "경북 영주시 봉현면 신재로 892\n진해농산",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "신안군산림조합\n(한반도평화의숲하귤식재공사(1차))",
+      "address": "전남 신안군 하의면 전남 신안군\n하의면 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "신진건설㈜(원청)\n한백건설㈜(하청)\n(모산-소현간도로확포장공사)",
+      "address": "경기 안성시 대덕면 소현리 300번지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p11-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "세탁백화점하이얀마을(하청)",
+      "address": "서울특별시 구로구 부일로 951\n(궁동)",
+      "industry": "기타의 사업",
+      "incidentYear": 2023,
+      "sourcePage": 11
+    },
+    {
+      "id": "p12-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜영서철강",
+      "address": "강원 원주시 우산로 265-3 B L\n(우산동)",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "삼남엔지니어링㈜(원청)\n㈜화성산업개발(하청)",
+      "address": "충남 당진시 신평면 신평로 646\n(에이동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "㈜토금비에스금속",
+      "address": "경남 김해시 진례면 고모로216번길\n155 (진례면)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "㈜강남(원청)\n소망메탈㈜(하청)",
+      "address": "부산 사하구 구평로16번길 71, 1층\n(구평동)",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "넥스트종합건설주식회사\n(2023년동춘고가교방음터널보수공사)",
+      "address": "인천 연수구 앵고개로 165 (동춘동)\n일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜대지\n(지방도415호선닭목령지구긴급제동\n시설설치공사)",
+      "address": "강원 강릉시 왕산면 산2번지 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "숨맑은집인테리어\n(숨맑은집호계점인테리어공사(카페))",
+      "address": "경기 안양시 동안구 경수대로 536\n(호계동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 안용군\n(금곡리1121-12루시드포레단독주택\n신축공사)",
+      "address": "경기 남양주시 진접읍 금곡리\n1121-12",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "오름버섯농장",
+      "address": "전남 함평군 해보면 신해로 700",
+      "industry": "농업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "한진원목(원청)\n대통원목(원청)",
+      "address": "경북 울진군 북면 덕구리 산 118-1",
+      "industry": "임업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜나라물산(원청)\n㈜동아스트(하청)\n(마산어시장아케이드개폐기보수관급\n자재-막구조물(설치)",
+      "address": "경남 창원시 마산합포구 어시장7길\n103 (남성동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "㈜승주건설(원청)\n케이엔건설주식회사(하청)\n(광주국토관리사무소관내무안제설분소\n개설공사)",
+      "address": "전남 무안군 일로읍 갈산길 10-19 1",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "태성인테리어\n(퍼피힐애견카페인테리어)",
+      "address": "경기 파주시 탄현면 헤이리로\n289-31",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "현대환경개발㈜",
+      "address": "경기 김포시 통진읍 옹정로17번길\n115 (통진읍)",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "통큰솥뚜껑닭볶음탕장안구청점\n(구, 방배동할매쭈꾸미수원조원점)",
+      "address": "경기 수원시 장안구 경수대로 886\n(조원동)",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p12-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 대진바이오워터(원청)\n주식회사 엔이티(NET)(하청)\n(철원가나안농장가축분뇨정화방류\n시설공사(가축분뇨정)",
+      "address": "강원 철원군 갈말읍 호국로 5714-73",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 12
+    },
+    {
+      "id": "p13-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "양지섬유",
+      "address": "경기 양주시 화합로1745번길 5\n(회암동)",
+      "industry": "섬유및섬유\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜통영산업건설\n(용당현대아이파크균열보수및재도장\n공사)",
+      "address": "부산 남구 동명로 26 (용당동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "파워코리아㈜(원청)\n개인사업주 이진성(하청)\n(고양장항A-4BL아파트전기디젤발전기)",
+      "address": "경기 고양시 일산동구 장항동\n664-39번지 LH 아파트 공사현장\n지하 발전기실",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "한국주강㈜(원청)",
+      "address": "경남 함안군 법수면 장백로 585\n(법수면, 한국주강(주))",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "삼창FRP조선소",
+      "address": "전남 여수시 신월로 438 (신월동)",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "유현정공\n(열처리로분해운송공사)",
+      "address": "전북 익산시 삼기면 산단오룡길 27\n(주식회사 레오포즈)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜중앙종합토건\n(남해화전도서관증축(어린이도서관건립)\n건축공사(긴급))",
+      "address": "경남 남해군 남해읍 망운로30번길 9\n(아산리, 평생학습관·화전도서관)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "노선자농업인력",
+      "address": "전남 목포시 평화로20번길 11 (상동,\n우미파크빌) 501동 205호",
+      "industry": "농업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "태영산업주식회사",
+      "address": "경북 경산시 공단12로 130",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "㈜고려엔지니어링종합건설\n(덕천도서관증축및리모델링건축공사)",
+      "address": "부산 북구 의성로47번길 45-4\n(덕천동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜우진종합조경\n(반여휴여가녹지조성사업)",
+      "address": "부산 해운대구 반여동 산 4-10 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "동대구가스",
+      "address": "대구 수성구 국채보상로 913\n(만촌동)",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "수도철강㈜",
+      "address": "부산 사상구 낙동대로 852",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "군산조선해양기술사업협동조합",
+      "address": "전북 군산시 자유무역로 243\n(오식도동, ㈜JMC중공업)",
+      "industry": "기계기구·금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "대현주식회사\n(진천지점)",
+      "address": "충북 진천군 이월면 수청길 196\n(대현콘크리트(주)진천)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 대상종합건설\n(모산영신지구59블럭6로트다가구주택\n신축공사)",
+      "address": "경기 평택시 지제동삭1로 220\n(동삭동 416-7)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p13-t1-r17",
+      "category": "FATALITY_RATE",
+      "name": "씨에이치종합건설㈜\n(삼성디지털프라자상봉점리뉴얼공사)",
+      "address": "서울 중랑구 상봉동 100-15호",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 13
+    },
+    {
+      "id": "p14-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "파크건설\n(21-공-관제대병사식당시설공사)",
+      "address": "경기 파주시 법원읍 웅담리 452 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 테시코리아",
+      "address": "충북 청주시 서원구 남이면\n청남로 1042 (남이면)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "㈜신흥강판(원청)\n성보시스템(하청)\n(2022년고품질쌀유통활성화사업가공\n시설현대화기계설비)",
+      "address": "충남 태안군 태안읍 송암로 30-24\n태안RPC",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "㈜대성메탈",
+      "address": "경북 경주시 강동면 천북산단로\n191-16",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "㈜태화정밀",
+      "address": "경기 포천시 소흘읍 소흘로 123\n(소흘읍)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "농업회사법인주식회사 휴먼인섹트",
+      "address": "경기 여주시 명성로 114-146",
+      "industry": "전문·보건·\n교육·여가\n관련서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜서호에코탑",
+      "address": "경기 평택시 청북읍 청북중앙로 424",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "㈜이노소재",
+      "address": "경북 구미시 장천면 장천상림3길\n77-10 (장천면)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜영일환경",
+      "address": "경북 포항시 북구 흥해읍 덕장길\n152 (흥해읍)",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 굿페이퍼지점",
+      "address": "경기 포천시 호국로929번길 54\n(선단동)",
+      "industry": "목재 및 종이\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜가화건설(원청)\n사람엔건설㈜(하청)\n(태종대짚와이어설치공사)",
+      "address": "부산 영도구 전망로 24 (동삼동)\n태종대 일원",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "온터이앤씨 주식회사(원청)\n㈜황소(하청)\n(강릉캠퍼스정문개선공사)",
+      "address": "강원 강릉시 죽헌길 7 (지변동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "에그타운",
+      "address": "경남 의령군 유곡면 마장로 134-18\n(계분장(발효))",
+      "industry": "농업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p14-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 세창",
+      "address": "경북 경산시 와촌면 대동공단길\n32-5",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 14
+    },
+    {
+      "id": "p15-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 대림전력이앤지(원청)\n주식회사 더원에너지(하청)\n(승환1.2.3호태양광발전소건설)",
+      "address": "전남 함평군 월야면 해삼로 723-78\n정산리 1004-1",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜동호",
+      "address": "경북 경산시 자인면 설총로 813",
+      "industry": "섬유 및 섬유\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 아이티엠이앤씨(원청)\n경인테리어(하청)\n(서울시강동구성내동383도시재생\n활성화사업)",
+      "address": "서울 강동구 천호대로170길 27\n(성내동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "㈜대성쏠라(원청)\n하나조명(하청)\n(삼녹1호태양광발전소656Kw설치공사)",
+      "address": "경남 거제시 연초면 오비4길 54",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 부성테크니컬",
+      "address": "경기 화성시 우정읍 포승향남로\n1411-24 (우정읍)",
+      "industry": "전문·보건·\n교육·여가\n관련서비스업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "영창중공업㈜ 신안공장(원청)\n개인사업주 김우현(하청)",
+      "address": "전남 신안군 지도읍 두류산길\n377-111",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 세이(원청)\n플래닝스톤(하청)\n(인계동1030-4근생및오피스텔신축공사)",
+      "address": "경기 수원시 팔달구 인계동 1030-4",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "㈜승리종합건설(원청)\n㈜대아공영(하청)\n(구미제2휴폐업공장리모델링사업\n건축공사)",
+      "address": "경북 구미시 산호대로 32 (공단동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜신명종합건설(원청)\n아트산업(하청)\n(강진골프연습장신축공사)",
+      "address": "전남 강진군 군동면 호계리 1107-2\n외6번지",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 제이디씨에스\n(구, ㈜정도토건)\n(국대도3호선부용방음터널등2개소\n정비공사)",
+      "address": "경기 의정부시 산 98-13 일원\n(민락동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 진흥(원청)\n㈜평화건설산업(하청)\n((긴급)문화고등학교강당보수\n및화장실개선공사(건축))",
+      "address": "경북 경주시 충현로 98 (충효동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "파란테크㈜",
+      "address": "대구 달서구 성서로24길 15\n(월암동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "㈜신화테크(원청)\n㈜부림인텍(하청)",
+      "address": "경북 포항시 남구 오천읍 송덕로212\n번길 58",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p15-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "㈜한주산업(원청)\n㈜승일산업(하청)\n(㈜움트리공장증축공사)",
+      "address": "경기 포천시 창수면 전영로 1206",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 15
+    },
+    {
+      "id": "p16-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "인지이엔티주식회사",
+      "address": "경북 경주시 건천읍 하늘마루길\n18-31",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜태화물산",
+      "address": "인천 서구 검단로188번길 18-3\n(오류동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "㈜국보디자인(원청)\n㈜대성티엔에스(하청)\n(동양생명인재개발원리모델링공사\n(식당제외))",
+      "address": "경기 고양시 일산동구 성현로268\n번길 68-7 (성석동)",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 대영중기(하청)",
+      "address": "울산 남구 용잠로 65 (부곡동) 2층",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "㈜동원유지",
+      "address": "세종 장군면 산학리길 139",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜우성케미칼 제2공장",
+      "address": "경북 영천시 대창면 금박로 1020-36",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 대호종합건설(원청)\n쿨시스템(하청)\n(부평동203-39오피스텔및근생신축공사)",
+      "address": "인천 부평구 부평동 203-39",
+      "industry": "건설업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "문화직물㈜",
+      "address": "충남 예산군 삽교읍 산단2길 149",
+      "industry": "섬유 및 섬유\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 영남염직",
+      "address": "대구 서구 염색공단로11길 1\n(비산동)",
+      "industry": "섬유 및 섬유\n제품제조업",
+      "incidentYear": 2023,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t2-r1",
+      "category": "FATALITY_RATE",
+      "name": "에스지씨이테크건설㈜(원청)\n삼마건설㈜(하청)\n(KY로지스안성저온물류창고신축공사)",
+      "address": "경기 안성시 원곡면 외가천리 17-11\n번지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t2-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜대건건설\n(우정읍원안길163근생[제조업소]증축\n건축공사)",
+      "address": "경기 화성시 우정읍 원안길 163",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t2-r3",
+      "category": "FATALITY_RATE",
+      "name": "㈜건양산업\n(만덕그린코아아파트균열보수및도장\n공사)",
+      "address": "부산 북구 덕천로234번길 47\n(만덕동, 그린코아)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 16
+    },
+    {
+      "id": "p16-t2-r4",
+      "category": "FATALITY_RATE",
+      "name": "현대건설㈜(원청)\n(힐스테이트송도더스카이신축공사)",
+      "address": "인천광역시 연수구 송도동 30-2번지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 16
+    },
+    {
+      "id": "p17-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜리젠시빌주택(원청)\n유현건설㈜(하청)\n(화성남양뉴타운C-2BL리젠시빌란트\n신축공사)",
+      "address": "경기 화성시 남양읍 남양리 2310",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜광신판지",
+      "address": "경기 안산시 단원구 산단로 270\n(원시동)",
+      "industry": "목재 및 종이\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "동원산자",
+      "address": "대구 달성군 논공읍 비슬로373길 1",
+      "industry": "섬유 및 섬유\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "대륭종합건설㈜\n(휴로스(주)공장신축공사)",
+      "address": "경기 화성시 우정읍 화산리\n839,798-14,798-16,838-2,839-5\n총 5필지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "태강크레인(하청)\n(배곧신도시해안도로확충공사)",
+      "address": "경기 시흥시 해송십리로 472-11\n(배곧동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "정안철강㈜",
+      "address": "대구 달성군 논공읍 논공중앙로45길\n16",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜엘디에스산업개발(원청)\n㈜아이에스중공업(하청)\n(성림첨단산업(주)현풍공장신축공사)",
+      "address": "대구 달성군 유가읍 금리 1132-6",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "㈜태화건설(원청)\n㈜천지이앤씨(하청)\n(수원시권선구호매실동와이제이프라자\n신축공사)",
+      "address": "경기 수원시 권선구 호매실로104번길\n24-44 호매실동 1402-1번지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜더프레임종합건설\n(청운동89-109근생주택신축공사)",
+      "address": "서울 종로구 청운동 89-109",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "명민기업주식회사\n(성산면위촌리302-4긴급급수관로공사)",
+      "address": "강원 강릉시 성산면 위촌리 302-4",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "명일건설㈜\n(2022년예산읍산성1리지방상수도\n신설사업)",
+      "address": "충남 예산군 예산읍 산성1리일원",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "㈜산토끼건설중기\n(울산울주군궁근정리710-1축사철거\n공사)",
+      "address": "울산 울주군 상북면 우만길 19-21",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "세종지하수개발\n(원산도카페중형관정지하수개발공사)",
+      "address": "충남 보령시 오천면 원산도5길 102\n원산도 카페",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "와이디자인\n(오창리단독주택신축공사)",
+      "address": "충북 괴산군 감물면 유창2길 11",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "유니언건설㈜\n(화성시향남읍증거리산77-1번지일원\n부지조성토목공사)",
+      "address": "경기 화성시 향남읍 증거리 산 77-1\n번지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 유영기\n(평죽농장지붕공사(황전면평촌리760))",
+      "address": "전남 순천시 황전면 평촌리 760",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p17-t1-r17",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 이연화\n(수학교습소인테리어공사)",
+      "address": "경기 성남시 분당구 수내로 181 201호\n(분당동, 우방근린상가)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 17
+    },
+    {
+      "id": "p18-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "자인건축(원청)\n(시흥시능곡동478-7단독주택신축공사)",
+      "address": "경기 시흥시 능곡중앙로 123-56\n(능곡동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 정춘선\n(빌딩4층실리콘코킹공사)",
+      "address": "인천 부평구 경인로 953",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "지민인테리어",
+      "address": "경기 김포시 김포한강11로438\n번길 200-5 1층 110호(운양동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "㈜차영종합건설(원청)\n㈜청암이앤씨(하청)\n(㈜디자인파크개발공장사무동1층\n창호설치공사)",
+      "address": "경기 김포시 양촌읍 대포리 261-2번지\n대포산업단지 A9-2",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "㈜청우토공\n(풍세면용정리114-3번지동식물관련\n시설신축공사중)",
+      "address": "충남 천안시 동남구 풍세면 용정리\n114-3",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "농업회사법인유한회사 태연\n(축분사지붕보수공사)",
+      "address": "충남 공주시 계룡면 내흥리 91-2번지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜태영전기(원청)\n(고도화학수전설비)",
+      "address": "울산 울주군 온산읍 회학3길 56-5\n고도화학",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "와이엠티주식회사\n(주식회사휴먼웰-와이엠티주식회사)",
+      "address": "인천 남동구 청능대로 337 (고잔동)",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "신풍상사",
+      "address": "경기 하남시 서하남로 13 (감북동)",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "우성알미늄",
+      "address": "경기 김포시 양촌읍 삼도로48번길\n26",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜우진플라임(원청)\n우림ENG(하청)",
+      "address": "충북 보은군 장안면 우진플라임로\n100",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "㈜천명\n(덕산도립공원주민생활환경정비사업)",
+      "address": "충남 예산군 덕산면 수덕사안길\n33-5 덕산도립공원 일원",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 태연\n(구, ㈜삼희이엔씨)(하청)\n(기기보온외주작업(포항-선강지역))",
+      "address": "경북 포항시 남구 동해안로 6133 포\n항제철소 내 (동촌동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "현대종합물류㈜",
+      "address": "경남 산청군 생초면 생초로 17",
+      "industry": "육상 및 수상\n운수업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "재단법인도원문화재연구원\n(화성시구포리단독주택및근린생활\n시설내유적문화재시굴조사)",
+      "address": "경기 화성시 비봉면 일묵동길 83",
+      "industry": "전문·보건·\n교육·여가\n관련서비스업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "농업회사법인주식회사 청도코리아",
+      "address": "경북 청도군 화양읍 학산토평길 276\n(화양읍)",
+      "industry": "식료품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p18-t1-r17",
+      "category": "FATALITY_RATE",
+      "name": "명진산업",
+      "address": "경북 경산시 남천면 대명길1길 67\n(대명리 400-2)",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 18
+    },
+    {
+      "id": "p19-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 벤드라인(원청)\n주식회사 화인산업(하청)\n(㈜벤드라인충주공장)",
+      "address": "충북 충주시 신니면 덕고개로 209\n(신니면)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜동빈이앤씨(원청)\n대산건축(하청)\n(수능리산72택지개발및단독신축(4개동))",
+      "address": "경기 양평군 서종면 수능리 산 72번지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "㈜케이앤씨종합건설\n(하남시감북동113-1번지다세대주택\n신축공사)",
+      "address": "경기 하남시 감북동 113-1",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "미래",
+      "address": "서울 마포구 연희로 25 (동교동)",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "지앤비쏠라㈜(원청)\n다온건설쏠라(하청)\n(수호태양광발전소98.02kw급시설\n설치공사)",
+      "address": "경북 상주시 모동면 용호4길 139-29\n(용호리 208-2)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜진연건설(하청)\n(반곡초등학교특별교실증축공사)",
+      "address": "충남 논산시 양촌면 황산벌로1126\n번길 13 반곡초등학교",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜홍성건설(원청)\n신우건설㈜(하청)\n(성주군급수구역확장사업(가천면)중\n배수관로공사)",
+      "address": "경북 성주군 성주읍 성주고교길 56",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "㈜영광(원청)\n주식회사 서원산업(하청)",
+      "address": "울산 울주군 온산읍 산암로 448\n(주식회사 영광 작업장)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "씨티이엔씨㈜\n(이천동양파라곤아파트내외벽및지하\n주차장균열보수)",
+      "address": "경기 이천시 증신로291번길 128\n(송정동, 송정동 동양파라곤)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 휘경건설(원청)\n익성플랜트㈜(하청)\n((우림에프앤티***)양주방성리528-2\n근생신축공사)",
+      "address": "경기 양주시 백석읍 중앙로 223번길\n14",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜포커스라이트미디어",
+      "address": "경기 시흥시 서울대학로 59-21\n(정왕동, 배곧로얄팰리스 테크노1차)\n710호",
+      "industry": "도소매·음식·\n숙박업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "㈜뉴보텍",
+      "address": "강원 원주시 문막읍 동화큰골길\n12-1 (문막읍)",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "㈜유기농기계(원청)\n농후퇴비(하청)",
+      "address": "충남 천안시 서북구 직산읍 군수1길\n112-16 (직산읍)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p19-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 권혁준\n(***(2021-양건-신신-2966)단독신축)",
+      "address": "경기 양평군 서종면 문호리 724-23\n번지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 19
+    },
+    {
+      "id": "p20-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜자오건설\n(에듀하임1309오피스텔단지건물외벽\n재도장공사및)",
+      "address": "경기 수원시 영통구 에듀타운로 101\n(이의동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜신원티엠씨\n(보평마을삼정그린뷰아파트)",
+      "address": "경기 용인시 처인구 금어로 76 (고림동,\n보평마을삼정그린뷰아파트)",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "건영이앤씨주식회사\n(외벽균열보수및재도장공사)",
+      "address": "경기 평택시 평택5로 271 (비전동,\n비전롯데캐슬아파트)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 비에스해양개발",
+      "address": "강원 강릉시 사천면 미노길 103",
+      "industry": "전문·보건·\n교육·여가\n관련서비스업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "두리환경산업\n(차돌로103태평양건강랜드건축물\n철거공사)",
+      "address": "충남 천안시 동남구 차돌로 103\n(봉명동, 태평양건강랜드)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜에스종합건설(원청)\n개인사업주 이동선(하청)\n(남원시인월면서무리688-7다가구\n주택2단지신축)",
+      "address": "전북 남원시 인월면 서무리 688-7",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "삼강에스앤씨㈜(원청)\n㈜지와이엔지니어링(하청)",
+      "address": "경남 고성군 동해면 조선특구로 740\n삼강에스앤씨(주)",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 에이엘엘종합건설(원청)\n세진건설㈜(하청)\n(서초동1550-4근린생활시설신축공사)",
+      "address": "서울 서초구 반포대로26길 5\n(서초동) 1550-4",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜에스케이엠",
+      "address": "충북 음성군 원남면 (원남면) 하노리\n644-5",
+      "industry": "출판·인쇄·\n제본업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 천일에너지평택팩토리\n(구, ㈜우성그린산업)",
+      "address": "경기 평택시 포승읍 도대1로 70 1층",
+      "industry": "목재 및 종이\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "엠테스㈜(원청)\n동은산업(하청)",
+      "address": "경기 안산시 단원구 별망로 459번길\n116-16 388-3",
+      "industry": "전기기계기구·\n정밀기구·전자\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "㈜한원건설그룹\n(육군제1군단부대시설공사(20-2500-43))",
+      "address": "서울 은평구 진관동 일원",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "㈜엘케이샘물\n(산청지점)",
+      "address": "경남 산청군 삼장면 친환경로\n462-30",
+      "industry": "식료품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "㈜신양종합건설(원청)\n㈜보광건설(하청)\n(안양호암초다목적체육관증축공사)",
+      "address": "경기 안양시 만안구 예술공원로103\n번길 73 (석수동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "지씨테크㈜ 경산공장",
+      "address": "경북 경산시 남산면 서원천로40길\n8-21",
+      "industry": "목재 및 종이\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p20-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "㈜일진특수금속",
+      "address": "경기 화성시 양감면 사격장길 106-6\n(나동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 20
+    },
+    {
+      "id": "p21-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜부영씨엔씨(원청)\n마카테크(하청)\n(송도롯데캐슬아파트입주자대표회의)",
+      "address": "인천 연수구 송도과학로27번길\n70 (송도동) 롯데캐슬",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "㈜하룡",
+      "address": "충남 당진시 원구룡길 56 (구룡동,\n(주)하룡)",
+      "industry": "석회석·금속·\n비금속광업\n및 기타광업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 동광종합건설(원청)\n㈜삼승이앤씨(하청)\n(고산동315-1자동차관련시설신축공사)",
+      "address": "경기 의정부시 고산로 230 (고산동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "㈜선진건설(원청)\n한산엠엔지㈜(하청)\n(논현동211-6번지외3필지싸이칸타워\n증축공사)",
+      "address": "서울 강남구 학동로38길 21-1\n(논현동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "세준종합건설㈜(구, 우원건설㈜)(원청)\n㈜중부스카이이엔지(하청)\n(만인산농협농산물산지유통센터(APC)\n증축공사(건축,토목))",
+      "address": "충남 금산군 추부면 서대산로 400-6\n외 6필지",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "금강비겐드주식회사\n(구, ㈜엠디엘이앤씨건축사사무소)(원청)\n㈜지디조은종합건설(하청)\n(고려산업창녕사료공장증축공사(1동))",
+      "address": "경남 창녕군 대합면 수장퇴산로 35\n고려산업 창녕공장",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "아스포건설㈜\n(평택시합정동911-4근린생활시설\n신축공사)",
+      "address": "경기 평택시 911-4 (합정동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "태정건설㈜(원청)\n(신리초등학교교실증축및기타공사)",
+      "address": "충남 아산시 모종로 73-13 (모종동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "정주포장건설주식회사",
+      "address": "충북 충주시 직동길 61 (직동)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "사천시청\n(녹지공원과(산림병해충예찰방제단))",
+      "address": "경남 사천시 용현면 시청로 77",
+      "industry": "국가 및 지방\n자치단체의\n사업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "리더종합건설㈜(원청)\n㈜세웅건설(하청)\n(계양2동실내체육시설신축공사(건축,\n토목))",
+      "address": "인천 계양구 박촌로 10",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "거룡종합건설㈜(원청)\n성연산업(하청)\n(회명워터젠(주)순천공장공장동신축\n공사)",
+      "address": "전남 순천시 해룡면 해룡산단4로 27\n회명워터젠(주')",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "삼진프라스틱공업㈜",
+      "address": "경기 포천시 가산면 시우동길 184",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r14",
+      "category": "FATALITY_RATE",
+      "name": "㈜고려엔지니어링종합건설(원청)\n㈜이음강건(하청)\n(기장군장안읍기룡리1154-9창고시설\n신축공사)",
+      "address": "부산 기장군 장안읍 에코산단2로 59\n(장안읍 기룡리 1154-9)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r15",
+      "category": "FATALITY_RATE",
+      "name": "㈜다움종합건설(원청)\n㈜대한이앤씨(하청)\n(㈜천안물류창고신축공사)",
+      "address": "충남 천안시 서북구 성거읍 석문길\n47-1 성거읍 요방리 269-13",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p21-t1-r16",
+      "category": "FATALITY_RATE",
+      "name": "㈜부영씨엔씨\n(DMC래미안e편한세상재도장)",
+      "address": "서울 서대문구 수색로 100\n(북가좌동, DMC 래미안 e편한세상)",
+      "industry": "건설업",
+      "incidentYear": 2022,
+      "sourcePage": 21
+    },
+    {
+      "id": "p22-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜준경타워(원청)\n한강T/C(하청)\n(남양주진접3지구공동주택신축공사)",
+      "address": "경기 남양주시 진접읍 광릉내로57\n번길 10",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 홍승표(하청)\n(인테리어공사)",
+      "address": "서울 강서구 양천로30길 98",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "신동아건설㈜(원청)\n정문이엔씨㈜(하청)\n(000-N사업시설공사(20-1247))",
+      "address": "충북 충주시 신니면 화안리 425-1일원",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "서울특별시서부공원여가센터",
+      "address": "서울 마포구 월드컵로 243-60",
+      "industry": "국가 및 지방\n자치단체의\n사업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "㈜토담건설(원청)\n㈜창우종합건설(원청)\n㈜거북상사(하청)\n(과학기술인복지콤플렉스건립건축공사)",
+      "address": "서울 강남구 테헤란로7길 22",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "대보건설㈜(원청)\n우경건설㈜(원청)\n심산건설㈜(하청)\n(화성병점A-1BL행복주택건설공사1공구)",
+      "address": "경기 화성시 병점동 749번지",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "대덕기업(하청)",
+      "address": "경남 거제시 장평3로 80",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "성오타워(하청)\n(전주서부신시가지오피스텔신축공사)",
+      "address": "전북 전주시 완산구 효자동3가\n1544-3",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "효성중공업㈜(원청)\n㈜성한건설(하청)\n(동탄물류센터신축공사)",
+      "address": "경기 화성시 장지동 210-5번지 외\n9필지 (화성시 경기동로 236)",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 정성창(원청)\n개인사업주 정덕균(하청)\n(***우사신축공사)",
+      "address": "전남 함평군 해보면 해보리 943-10\n번지",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜화성전력(하청)\n(21년경기본부여주지사고압B공사\n(북내면,강천면,여주시일부(오금동,\n오학동,현암동제외한지역))",
+      "address": "경기 여주시 북내면 북내면, 강천면,\n여주시일부(오금동, 오학동, 현암동\n제외한 지역)",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "샛별마을입주자대표회의",
+      "address": "경남 창원시 진해구 동진로177",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p22-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "한국농어촌공사 경주지사(원청)\n㈜서현토건(하청)\n(보문지구(수원공)수리시설개보수\n사업토목공사)",
+      "address": "경북 경주시 보문로 424-33",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 22
+    },
+    {
+      "id": "p23-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "현대익스프레스",
+      "address": "경기 용인시 처인구 경안천로358번길\n30-8 (고림동)",
+      "industry": "철도·항공·\n창고·운수\n관련서비스업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 강일현(원청)\n개인사업주 신광호(하청)\n강일현(반포면공암리393-4단독주택\n신축,2021-신축-75)",
+      "address": "충남 공주시 반포면 공암장터길 30",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "한솔산림(하청)\n(2021년 미세먼지 저감 공익숲가꾸기\n사업(개그늘지구))",
+      "address": "경북 문경시 문경읍 평천리 산71-1",
+      "industry": "임업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "주식회사 음성콘크리트(구, 이엘피씨\n주식회사)",
+      "address": "충북 음성군 원남면 보덕로 355",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "대진개발㈜(하청)",
+      "address": "경기 평택시 청북읍 오금길 14-4",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "더본종합건설㈜(원청)\n동신이앤씨㈜(하청)\n(이천백사면엠큐물류센터신축공사중\n판넬공사)",
+      "address": "경기 이천시 백사면 송말리 94-1번지",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜휴먼터치(원청)\n㈜에치티앤디(하청)\n(㈜휴먼터치수원지점)",
+      "address": "경기 수원시 팔달구 향교로3번길 10",
+      "industry": "시설관리 및\n사업지원\n서비스업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "에이치엘디앤아이한라주식회사\n(구, ㈜한라)(원청)\n㈜청도건설(원청)\n윤성건설㈜(하청)\n(경의선성산천교외1개소교량개량\n기타공사",
+      "address": "서울 서대문구 수색로 48",
+      "industry": "건설업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜새한수지",
+      "address": "경기 용인시 기흥구 지삼로201번길\n64",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "타코마테크놀러지㈜ 논산지점",
+      "address": "충남 논산시 노성면 논산평야로\n1168",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "㈜가람기술안전이앤씨",
+      "address": "충북 보은군 보은읍 보청대로 1885",
+      "industry": "전문·보건·\n교육·여가\n관련서비스업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r12",
+      "category": "FATALITY_RATE",
+      "name": "㈜에이디켐테크",
+      "address": "경기 안산시 단원구 별망로 493",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p23-t1-r13",
+      "category": "FATALITY_RATE",
+      "name": "㈜건화(원청)\n대일도장(하청)",
+      "address": "경남 창원시 마산합포구 진북면 산단\n1길 129",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2021,
+      "sourcePage": 23
+    },
+    {
+      "id": "p24-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "㈜영동건설(원청)\n태광건설㈜(하청)\n(춘천소양로1가오피스텔\n신축사업)",
+      "address": "강원 춘천시 소양로 190-2\n(소양로1가) 94-6번지 일원",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "한국타이어앤테크놀로지㈜\n대전공장",
+      "address": "대전 대덕구 대덕대로1447\n번길 40 (목상동)",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "에이치디현대중공업㈜\n(구, 현대중공업㈜)(원청)\n㈜디에이치마린(하청)",
+      "address": "울산 동구 방어진순환도로\n1000 (전하동)",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "개인사업주 배금봉\n(배금봉축사지붕보수공사)",
+      "address": "전남 구례군 구례읍 양정2길\n83-7",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "은혜중기(하청)\n공성실업(하청)\n주식회사 지제이건설\n(구, ㈜광지건설)(하청)\n(서울수서역세권A1BL및서울\n금천행복주택건설공사)",
+      "address": "서울 금천구 가산로 9길 35",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "㈜후레씨네코리아(하청)\n(목동교보수공사)",
+      "address": "서울 양천구 목동 409-379",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r7",
+      "category": "FATALITY_RATE",
+      "name": "㈜조양산업\n(경남아너스빌아파트하자\n보수공사)",
+      "address": "대전 유성구 용산2로 30 (용산동,\n경남아너스빌 1단지 아파트)",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r8",
+      "category": "FATALITY_RATE",
+      "name": "에이치디현대중공업㈜\n(구, 현대중공업㈜)(원청)\n진오기업(하청)",
+      "address": "울산 동구 방어진순환도로\n1000 (전하동)",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r9",
+      "category": "FATALITY_RATE",
+      "name": "㈜오션엔지니어링(원청)\n창흥건설㈜(하청)\n(세종시3-1근린생활시설신축\n공사)",
+      "address": "세종 대평로 87 (대평동) C5-3\n블럭",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r10",
+      "category": "FATALITY_RATE",
+      "name": "지에스건설㈜(원청)\n금풍건설이엔씨㈜(하청)\n(제2외곽순환(이천~오산)\n고속도로민간투자사업(4공구))",
+      "address": "경기 광주시 도척면 고녹길 38",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p24-t1-r11",
+      "category": "FATALITY_RATE",
+      "name": "신화엘리베이터㈜(하청)\n(의왕테크노파크물류센터\n승강기유지관리)",
+      "address": "경기 수원시 장안구 서부로\n2385 (이목동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2020,
+      "sourcePage": 24
+    },
+    {
+      "id": "p25-t1-r1",
+      "category": "FATALITY_RATE",
+      "name": "한신공영㈜(원청)\n중현테크㈜(하청)\n(부산일광지구공동주택\n신축공사)",
+      "address": "부산 기장군 일광면 일광지구\n내 8,9블럭",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 25
+    },
+    {
+      "id": "p25-t1-r2",
+      "category": "FATALITY_RATE",
+      "name": "한국철도공사 부산경남본부",
+      "address": "부산 동구 중앙대로 206 한국\n철도공사부산지역본부",
+      "industry": "철도ㆍ궤도ㆍ\n삭도ㆍ항공\n운수업",
+      "incidentYear": 2019,
+      "sourcePage": 25
+    },
+    {
+      "id": "p25-t1-r3",
+      "category": "FATALITY_RATE",
+      "name": "㈜장원토건\n(00부대소방공사(18-2039))",
+      "address": "대전 유성구 자운로 90 (장동)\n의무학교 숭의관내",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 25
+    },
+    {
+      "id": "p25-t1-r4",
+      "category": "FATALITY_RATE",
+      "name": "한국종합기계기술㈜(하청)\n(대산공장회전기계상주\n단가계약(HDO))",
+      "address": "충남 서산시 대산읍 평신2로\n182 현대오일뱅크(주) 대산공장 등",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 25
+    },
+    {
+      "id": "p25-t1-r5",
+      "category": "FATALITY_RATE",
+      "name": "구보종합건설주식회사(원청)\n주식회사 호반산업(원청)\n산동건설㈜(하청)\n(외삼~유성복합터미널BRT\n연결도로건설공사)",
+      "address": "대전 유성구 구암동 일원",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 25
+    },
+    {
+      "id": "p25-t1-r6",
+      "category": "FATALITY_RATE",
+      "name": "에이치디현대중공업㈜\n(구, 현대중공업㈜)(원청)\n㈜원양(하청)\n(㈜원양플랜트현장)",
+      "address": "울산 동구 방어진순환도로\n1000 (전하동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2019,
+      "sourcePage": 25
+    },
+    {
+      "id": "p25-t2-r2",
+      "category": "MAJOR_ACCIDENT",
+      "name": "㈜웨이스트에너지솔루션\n곡성공장",
+      "address": "전남 곡성군 연반농공길\n72",
+      "industry": null,
+      "incidentYear": 2024,
+      "sourcePage": 25
+    },
+    {
+      "id": "p25-t2-r3",
+      "category": "MAJOR_ACCIDENT",
+      "name": "㈜코스모텍 2공장",
+      "address": "세종 전의면 산단길\n21-40",
+      "industry": null,
+      "incidentYear": 2024,
+      "sourcePage": 25
+    },
+    {
+      "id": "p25-t2-r4",
+      "category": "MAJOR_ACCIDENT",
+      "name": "에스티팜㈜ 시화공장",
+      "address": "경기 시흥시 협력로\n231 시화공단1나 802호",
+      "industry": null,
+      "incidentYear": 2024,
+      "sourcePage": 25
+    },
+    {
+      "id": "p26-t1-r2",
+      "category": "MAJOR_ACCIDENT",
+      "name": "에쓰-오일㈜ 울산공장\n(원청)\n유한티유㈜(하청)",
+      "address": "울산 울주군 온산읍\n온산로68 360번지",
+      "industry": null,
+      "incidentYear": 2023,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t1-r3",
+      "category": "MAJOR_ACCIDENT",
+      "name": "라이온켐텍㈜",
+      "address": "대전 대덕구 대덕대로\n1277번길 36",
+      "industry": null,
+      "incidentYear": 2023,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t1-r4",
+      "category": "MAJOR_ACCIDENT",
+      "name": "씨엠디엘㈜",
+      "address": "충남 천안시 동남구\n성남면 5산단2로 107",
+      "industry": null,
+      "incidentYear": 2023,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t1-r5",
+      "category": "MAJOR_ACCIDENT",
+      "name": "에스케이피아이씨\n글로벌㈜(원청)\n동일산업㈜(하청)",
+      "address": "울산 남구 용잠로 255\n(고사동)",
+      "industry": null,
+      "incidentYear": 2023,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t2-r1",
+      "category": "CONCEALMENT",
+      "name": "㈜포스플레이트",
+      "address": "전남 광양시 폭포사랑길\n20-26(금호동, 광양제철소)",
+      "industry": "금속제련업",
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t2-r2",
+      "category": "CONCEALMENT",
+      "name": "창영산업㈜",
+      "address": "전남 광양시 제철로\n1655-426(금호동)",
+      "industry": "시설관리및사업지원서비스업",
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r1",
+      "category": "NON_REPORTING",
+      "name": "영빈건설㈜ 대구지사\n(㈜서희건설-내당3지구서희스타힐스지역주택조합주거\n복합신축공사)",
+      "address": "대구 서구 서대구로6길 8 (내당동 225-1번지 외 88필지)",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r2",
+      "category": "NON_REPORTING",
+      "name": "주식회사 은성",
+      "address": "경상남도 거제시 연초면 연하해안로 473-7 (연초면)",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r3",
+      "category": "NON_REPORTING",
+      "name": "경인정비",
+      "address": "인천 서구 원당대로 228-8 (오류동)",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r4",
+      "category": "NON_REPORTING",
+      "name": "두송건설㈜\n(경남창원시대원1구역재건축공사현장)",
+      "address": "경남 창원시 의창구 대원동 37-1번지 일원",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r5",
+      "category": "NON_REPORTING",
+      "name": "유한회사 미래로조선",
+      "address": "전남 목포시 삼학로158번길 31 2층 (산정동)",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r6",
+      "category": "NON_REPORTING",
+      "name": "제주경주마육성목장",
+      "address": "제주 제주시 조천읍 남조로 1660",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r7",
+      "category": "NON_REPORTING",
+      "name": "㈜진하",
+      "address": "경상남도 고성군 조선특구로 740",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r8",
+      "category": "NON_REPORTING",
+      "name": "한농화성㈜",
+      "address": "전북 군산시 외항1길 24 (소룡동)",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p26-t3-r9",
+      "category": "NON_REPORTING",
+      "name": "㈜한솔전기",
+      "address": "부산 사상구 낙동대로1048번길 22 (감전동)",
+      "industry": null,
+      "incidentYear": null,
+      "sourcePage": 26
+    },
+    {
+      "id": "p27-t1-r2",
+      "category": "CONTRACTOR_COMBINED",
+      "name": "에이치디현대\n중공업㈜\n(구, 현대중공업\n㈜)",
+      "address": "울산광역시\n동구\n방어진순환\n도로 1000",
+      "industry": "선박건조및\n수리업",
+      "incidentYear": 2019,
+      "sourcePage": 27
+    },
+    {
+      "id": "p27-t1-r3",
+      "category": "CONTRACTOR_COMBINED",
+      "name": "에이치디현대\n중공업㈜\n(구, 현대중공업\n㈜)",
+      "address": "울산광역시\n동구\n방어진순환\n도로 1000",
+      "industry": "선박건조및\n수리업",
+      "incidentYear": 2020,
+      "sourcePage": 27
+    },
+    {
+      "id": "p27-t2-r1",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "㈜영동건설(원청)\n태광건설㈜(하청)\n(춘천소양로1가오피스텔신축사업)",
+      "address": "강원 춘천시 소양로 190-2\n(소양로1가) 94-6번지 일원",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 27
+    },
+    {
+      "id": "p27-t2-r2",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "한국타이어앤테크놀로지㈜\n대전공장",
+      "address": "대전 대덕구 대덕대로1447번길\n40 (목상동)",
+      "industry": "화학 및 고무\n제품제조업",
+      "incidentYear": 2020,
+      "sourcePage": 27
+    },
+    {
+      "id": "p27-t2-r3",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "에이치디현대중공업㈜\n(구, 현대중공업㈜)(원청)\n㈜디에이치마린(하청)",
+      "address": "울산 동구 방어진순환도로1000\n(전하동)",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2020,
+      "sourcePage": 27
+    },
+    {
+      "id": "p27-t2-r4",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "지에스건설㈜(원청)\n금풍건설이엔씨㈜(하청)\n(제2외곽순환(이천~오산)고속도로\n민간투자사업(4공구))",
+      "address": "경기 광주시 도척면 고녹길 38",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 27
+    },
+    {
+      "id": "p27-t2-r5",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "㈜오션엔지니어링(원청)\n창흥건설㈜(하청)\n(세종시3-1근린생활시설신축공사)",
+      "address": "세종 대평로 87 (대평동) C5-3블럭",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 27
+    },
+    {
+      "id": "p27-t2-r6",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "신화엘리베이터㈜(하청)\n(의왕테크노파크물류센터승강기\n유지관리)",
+      "address": "경기 수원시 장안구 서부로\n2385 (이목동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2020,
+      "sourcePage": 27
+    },
+    {
+      "id": "p28-t1-r1",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "개인사업주 배금봉\n(배금봉축사지붕보수공사)",
+      "address": "전남 구례군 구례읍 양정2길\n83-7",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t1-r2",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "은혜중기(하청)\n공성실업(하청)\n주식회사 지제이건설\n(구, ㈜광지건설)(하청)\n(서울수서역세권A1BL및서울금천\n행복주택건설공사)",
+      "address": "서울 금천구 가산로 9길 35",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t1-r3",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "㈜후레씨네코리아(하청)\n(목동교보수공사)",
+      "address": "서울 양천구 목동 409-379",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t1-r4",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "(주)조양산업\n(경남아너스빌아파트하자보수공사)",
+      "address": "대전 유성구 용산2로 30 (용산동,\n경남아너스빌 1단지 아파트)",
+      "industry": "건설업",
+      "incidentYear": 2020,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t1-r5",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "에이치디현대중공업㈜\n(구, 현대중공업㈜)(원청)\n진오기업(하청)",
+      "address": "울산 동구 방어진순환도로 1000\n(전하동)",
+      "industry": "선박건조 및\n수리업",
+      "incidentYear": 2020,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t2-r1",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "한신공영㈜(원청)\n중현테크㈜(하청)\n(부산일광지구공동주택신축공사)",
+      "address": "부산 기장군 일광면 일광지구 내 8,9\n블럭",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t2-r2",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "㈜장원토건\n(00부대소방공사(18-2039))",
+      "address": "대전 유성구 자운로 90 (장동) 의무\n학교 숭의관내",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t2-r3",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "한국종합기계기술㈜(하청)\n(대산공장회전기계상주단가계약\n(HDO))",
+      "address": "충남 서산시 대산읍 평신2로 182\n현대오일뱅크(주) 대산공장 등",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t2-r4",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "구보종합건설주식회사(원청)\n주식회사 호반산업(원청)\n산동건설㈜(하청)\n(외삼~유성복합터미널BRT연결도로\n건설공사)",
+      "address": "대전 유성구 구암동 일원",
+      "industry": "건설업",
+      "incidentYear": 2019,
+      "sourcePage": 28
+    },
+    {
+      "id": "p28-t2-r5",
+      "category": "LEGACY_MAJOR_ACCIDENT",
+      "name": "에이치디현대중공업㈜\n(구, 현대중공업㈜)(원청)\n㈜원양(하청)\n(㈜원양플랜트현장)",
+      "address": "울산 동구 방어진순환도로 1000\n(전하동)",
+      "industry": "기계기구·\n금속·\n비금속광물\n제품제조업",
+      "incidentYear": 2019,
+      "sourcePage": 28
+    }
+  ]
+}
