@@ -3,7 +3,7 @@ import { useTranslation } from '@/i18n/use-translation';
 
 import { useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
-export default function PdfCanvas({url,page,pageCount,rotation,onRendered}:{url:string;page:number;pageCount:number|null;rotation:number|null;onRendered:(page:number,rotation:number)=>void}){
+export default function PdfCanvas({url,page,pageCount,rotation,onRendered,onDocumentLoaded}:{url:string;page:number;pageCount:number|null;rotation:number|null;onRendered:(page:number,rotation:number)=>void;onDocumentLoaded?:(pages:number)=>void}){
  const {translate} = useTranslation();
 
   const canvas=useRef<HTMLCanvasElement>(null);
@@ -18,10 +18,10 @@ export default function PdfCanvas({url,page,pageCount,rotation,onRendered}:{url:
       pdfjs.GlobalWorkerOptions.workerSrc=new URL("pdfjs-dist/build/pdf.worker.min.mjs",import.meta.url).toString();
       const task=pdfjs.getDocument({url,enableXfa:false});
       destroy=()=>{void task.destroy();};
-      return task.promise.then(pdf=>{if(!disposed){if(pageCount!==null&&pdf.numPages!==pageCount){setError(true);return;}setLoaded({url,pdf});}});
+      return task.promise.then(pdf=>{if(!disposed){if(pageCount!==null&&pdf.numPages!==pageCount){setError(true);return;}setLoaded({url,pdf});onDocumentLoaded?.(pdf.numPages);}});
     }).catch(()=>{if(!disposed)setError(true);});
     return()=>{disposed=true;destroy?.();};
-  },[url,pageCount]);
+  },[url,pageCount,onDocumentLoaded]);
   useEffect(()=>{
     if(!loaded||loaded.url!==url)return;
     let disposed=false;let task:RenderTask|undefined;

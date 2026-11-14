@@ -7,7 +7,6 @@ import { createApiClient } from "@/lib/api/client";
 import { createMemorySession } from "@/features/auth/session";
 import { supportApi } from "./api";
 import { reportSchema } from "./schemas";
-import { mkdirSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 let setup:ReturnType<typeof make>;
 function make() {
@@ -23,6 +22,18 @@ beforeEach(()=>{setup=make()});
 async function ready(c:number,id:number){let r;for(let i=0;i<3;i++)r=await setup.api.report(c,id);return r!;}
 const headers=(scenario:string)=>({"X-Wageitda-Mock-Scenario":scenario});
 it("generates a minimal inquiry and preserves reference versions",async()=>{const value=await setup.api.inquiry(15);expect(value.text).toContain("개발용");expect(value.requiresUserReview).toBe(true);expect(value.basedOnResultVersions?.calculation).toBeGreaterThan(0)});
+it("generates an inquiry from the chosen analysis items and versions",async()=>{
+ const result=setup.inputs.getResult(15)!;
+ const versions=Object.fromEntries(Object.entries(result.versions).filter(([,v])=>v.version!==null).map(([k,v])=>[k,v.version!]));
+ const value=await setup.api.inquiry(15,{resultItemIds:[result.items[0].id],tone:'POLITE',basedOnResultVersions:versions});
+ expect(value.text).toContain(result.items[0].title);
+ expect(value.text).not.toContain(result.items[1].title);
+ expect(value.basedOnResultVersions).toMatchObject(versions);
+});
+it("rejects unknown analysis items and outdated reference versions",async()=>{
+ await expect(setup.api.inquiry(15,{resultItemIds:['unknown-result-item'],tone:'POLITE'})).rejects.toMatchObject({status:422});
+ await expect(setup.api.inquiry(15,{resultItemIds:[],basedOnResultVersions:{calculation:-1}})).rejects.toMatchObject({status:409,errorCode:'REPORT_SOURCE_STALE'});
+});
 it.each([["inquiry-409",409,"REPORT_SOURCE_STALE"],["inquiry-503",503,"UPSTREAM_UNAVAILABLE"]])("handles %s without extra request fields",async(s,status,errorCode)=>{await expect(setup.client.requestJson("/cases/15/company-inquiry",v=>v,{method:"POST",body:{},headers:headers(String(s))})).rejects.toMatchObject({status,errorCode})});
 it("filters regions and field, returns explicit nationwide fallback and empty results",async()=>{expect((await setup.api.centers("청주시","WAGE",1)).items[0].isNationwide).toBe(false);expect((await setup.api.centers("다른지역","WAGE",1)).nationwideFallbackUsed).toBe(true);expect((await setup.api.centers("정보없음","",1)).items).toEqual([])});
 it("surfaces center failures",async()=>{await expect(setup.client.requestJson("/consultation-centers",v=>v,{headers:headers("centers-error")})).rejects.toMatchObject({status:503})});
@@ -34,8 +45,21 @@ it("freezes selected originals, input and references; ZIP CRC and extraction mat
  setup.changeBytes();setup.management.getCases().find(c=>c.caseId===15)!.inputVersion++;
  const after=await setup.api.report(15,receipt.reportId);expect(after.isCurrent).toBe(false);expect(after.referencedSnapshots).toEqual(receipt.referencedSnapshots);expect(after.selectedDocumentIds).toEqual([101]);
  const again=await setup.client.requestDownload(`/cases/15/reports/${receipt.reportId}/originals`,"application/zip","fallback.zip");expect(await again.blob.arrayBuffer()).toEqual(await before.blob.arrayBuffer());expect(before.filename).toContain("상담 자료");
- mkdirSync("test-results",{recursive:true});writeFileSync("test-results/selected-originals.zip",new Uint8Array(await before.blob.arrayBuffer()));
- const result=execFileSync("python",["-c","import zipfile,json; z=zipfile.ZipFile('test-results/selected-originals.zip'); assert z.testzip() is None; assert len(z.namelist())==2; n=next(n for n in z.namelist() if n.startswith('originals/')); assert n.startswith('originals/101-'); assert z.read(n)==b'ORIGINAL CONTENT AT ACCEPTANCE'; assert json.loads(z.read('result-snapshot.json'))['selectedDocumentIds']==[101]; print('CRC and extraction OK')"],{encoding:"utf8"});expect(result).toContain("CRC and extraction OK");
+ const verifyZip = [
+  "import io,json,sys,zipfile",
+  "z=zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read()))",
+  "assert z.testzip() is None",
+  "assert len(z.namelist())==2",
+  "n=next(n for n in z.namelist() if n.startswith('originals/'))",
+  "assert n.startswith('originals/101-')",
+  "assert z.read(n)==b'ORIGINAL CONTENT AT ACCEPTANCE'",
+  "assert json.loads(z.read('result-snapshot.json'))['selectedDocumentIds']==[101]",
+  "print('CRC and extraction OK')",
+ ].join("\n");
+ const result=execFileSync("python",["-c",verifyZip],{
+  input:Buffer.from(await before.blob.arrayBuffer()),encoding:"utf8",
+ });
+ expect(result).toContain("CRC and extraction OK");
 });
 it("rejects unlinked selections and cross-Case reports",async()=>{await expect(setup.api.create(16,[100],"invalid")).rejects.toMatchObject({status:422});const r=await setup.api.create(15,[101],"isolated");await expect(setup.api.report(16,r.reportId)).rejects.toMatchObject({status:404});await expect(setup.api.inquiry(999)).rejects.toMatchObject({status:404})});
 it("rechecks source access on historic downloads and handles deleted Case",async()=>{const r=await setup.api.create(15,[101],"deleted");await ready(15,r.reportId);setup.revoke();await expect(setup.client.requestDownload(`/cases/15/reports/${r.reportId}/pdf`,"application/pdf","report.pdf")).rejects.toMatchObject({status:404});setup.management.getCases().splice(0,1);await expect(setup.api.report(15,r.reportId)).rejects.toMatchObject({status:404})});

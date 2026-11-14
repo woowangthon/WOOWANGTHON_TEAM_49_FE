@@ -400,7 +400,7 @@ it("requires an explicit consultation case and links all existing support featur
   await user.click(screen.getAllByRole("radio")[0]);
   const links = screen.getByRole("navigation", {name:"상담 준비 메뉴"});
   const selected = Number((screen.getAllByRole("radio")[0] as HTMLInputElement).value);
-  expect(within(links).getByRole("link", {name:"확인 질문"})).toHaveAttribute("href", `/cases/${selected}/questions`);
+  expect(within(links).getByRole("link", {name:"상담 전에 확인할 내용"})).toHaveAttribute("href", `/cases/${selected}/questions`);
   expect(within(links).getByRole("link", {name:"회사 문의 초안"})).toHaveAttribute("href", `/cases/${selected}/company-inquiry`);
   expect(within(links).getByRole("link", {name:"상담 자료 묶음"})).toHaveAttribute("href", `/cases/${selected}/reports`);
 });

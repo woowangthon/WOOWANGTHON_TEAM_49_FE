@@ -1,7 +1,7 @@
 import { reportPdf, snapshotZip, type MockOriginal } from "./report-files";
 import { http, HttpResponse } from "msw";
 import { apiResponse } from "./response";
-import type { Report } from "@/features/case-support/schemas";
+import { inquiryInputSchema, type Report } from "@/features/case-support/schemas";
 import type { Results } from "@/features/results/schemas";
 
 // Only MSW consumes this scenario header; never a real API parameter.
@@ -15,7 +15,7 @@ export function supportMocks(base: string, getResult: (c: number) => Results | u
   const fail = (code: string, status: number) => apiResponse({ errorCode: code }, status);
   const missing = () => fail("RESOURCE_NOT_FOUND", 404);
   const view = (c: number, r: Report) => ({ ...r, isCurrent: r.basedOnInputVersion === getResult(c)?.currentInputVersion });
-  const stale = (r: Results) => !Object.values(r.versions).some(v => v?.snapshotId) || Object.values(r.versions).some(v => v && ["UPDATING", "STALE"].includes(v.freshness));
+  const stale = (r: Results) => !Object.values(r.versions).some(v => v?.snapshotId != null) || Object.values(r.versions).some(v => v && ["UPDATING", "STALE"].includes(v.freshness));
   return [
     http.get(`${base}/consultation-centers`, ({ request }) => {
       if (scenario(request) === "centers-error") return fail("UPSTREAM_UNAVAILABLE", 503);
@@ -32,11 +32,22 @@ export function supportMocks(base: string, getResult: (c: number) => Results | u
       const result = getResult(Number(params.c)); if (!result) return missing();
       if (scenario(request) === "inquiry-503") return fail("UPSTREAM_UNAVAILABLE", 503);
       if (scenario(request) === "inquiry-409" || stale(result)) return fail("REPORT_SOURCE_STALE", 409);
-      const body = await request.json();
-      if (!body || typeof body !== "object" || Object.keys(body).length) return fail("VALIDATION_ERROR", 422);
-      return apiResponse({ text: "[개발용 서버 초안 예시] 급여 산정에 사용된 조건과 자료를 확인 부탁드립니다. 표시된 차이는 확정된 미지급임금이 아니며 관련 근거를 함께 검토하고 싶습니다.", basedOnResultVersions: Object.fromEntries(Object.entries(result.versions).map(([k,v]) => [k,v?.version ?? null])), requiresUserReview: true });
+      const parsed = inquiryInputSchema.safeParse(await request.json().catch(() => null));
+      if (!parsed.success) return fail("VALIDATION_ERROR", 422);
+      const body = parsed.data;
+      const ids = body.resultItemIds;
+      if (ids?.some(id => !result.items.some(item => item.id === id))) return fail("VALIDATION_ERROR", 422);
+      if (body.basedOnResultVersions && Object.entries(body.basedOnResultVersions).some(([name, version]) => result.versions[name]?.version !== version)) return fail("REPORT_SOURCE_STALE", 409);
+      const selected = ids ? result.items.filter(item => ids.includes(item.id)) : [];
+      const topics = selected.map(item => `- ${item.title}: 해당 항목에 사용한 자료와 산정 기준을 확인 부탁드립니다.`).join("\n");
+      return apiResponse({ text: `[개발용 서버 초안 예시] 급여 산정에 사용된 조건과 자료를 확인 부탁드립니다.${topics ? `\n\n${topics}\n` : ""}\n표시된 차이는 확정된 미지급임금이 아니며 관련 근거를 함께 검토하고 싶습니다.`, basedOnResultVersions: Object.fromEntries(Object.entries(result.versions).map(([k,v]) => [k,v?.version ?? null])), requiresUserReview: true });
     }),
-    http.get(`${base}/cases/:c/questions`, ({ params }) => !getResult(Number(params.c)) ? missing() : apiResponse({ questions: Number(params.c) === 15 ? [{ questionId: 12, type: "MISSING_CONDITION", question: "계산 조건을 확인해 주세요.", reason: "개발용 예시 질문입니다.", relatedItemId: null }] : [] })),
+    http.get(`${base}/cases/:c/questions`, ({ params, request }) => {
+      if (!getResult(Number(params.c))) return missing();
+      if (scenario(request) === "questions-error") return fail("UPSTREAM_UNAVAILABLE", 503);
+      const questions = scenario(request) === "questions-empty" || Number(params.c) !== 15 ? [] : [{ questionId: 12, type: "MISSING_CONDITION", question: "급여 계산에 사용한 근무 조건을 확인해 주세요.", reason: "개발용 예시: 근무 조건이 명확한지 살펴보고, 실제 기록과 다른 부분이 있다면 보완해 주세요.", relatedItemId: null }];
+      return apiResponse({ questions });
+    }),
     http.get(`${base}/cases/:c/reports`, ({ params, request }) => {
       const c = Number(params.c), query = new URL(request.url).searchParams;
       const page = Math.max(1, Number(query.get("page")) || 1), size = Math.min(100, Math.max(1, Number(query.get("size")) || 20));

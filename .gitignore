@@ -70,6 +70,7 @@ lerna-debug.log*
 # ==========================================
 /coverage/
 /playwright-report/
+/.playwright-mcp/
 /test-results/
 /blob-report/
 /playwright/.cache/

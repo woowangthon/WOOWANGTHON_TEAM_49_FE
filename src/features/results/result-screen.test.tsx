@@ -28,9 +28,9 @@ it("removes the upper CTA and management cards while preserving the bottom navig
  for (const text of ["결과를 바탕으로 다음을 준비해요", "부족한 정보 보완하기", "입금 거래·배분 관리 및 별도 입금 대조 이력", "계산 상세·작업 상태·버전·이력·수동 실행"]) expect(screen.queryByText(text)).not.toBeInTheDocument();
  const next = screen.getByRole("navigation", { name: "결과 관련 화면" });
  expect(next).toHaveAttribute("data-case-next");
- expect(within(next).getByRole("heading", { name: "확인할 질문을 준비해 볼까요?" })).toBeVisible();
- expect(within(next).getByText("부족한 자료와 회사에 물어볼 내용을 정리해요.")).toBeVisible();
- expect(within(next).getByRole("link", { name: "확인 질문·상담 준비" })).toHaveAttribute("href", "/cases/15/questions");
+ expect(within(next).getByRole("heading", { name: "상담 전에 확인할 내용을 살펴보세요" })).toBeVisible();
+ expect(within(next).getByText("확인이 필요한 이유를 살펴보고 기록이나 자료를 보완해요.")).toBeVisible();
+ expect(within(next).getByRole("link", { name: "상담 전에 확인할 내용" })).toHaveAttribute("href", "/cases/15/questions");
  expect(container.querySelector("[data-result-summary]")!.compareDocumentPosition(screen.getByRole("heading", { name: "먼저 확인해 보세요" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
  expect(screen.getByRole("heading", { name: "항목별 대조표" }).compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });

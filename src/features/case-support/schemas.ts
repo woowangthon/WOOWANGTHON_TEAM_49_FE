@@ -5,7 +5,10 @@ export const questionsSchema=z.object({questions:z.array(z.object({questionId:z.
 export const reportSchema=z.object({reportId:z.number().int().positive(),version:z.number(),status:z.enum(["PROCESSING","READY","FAILED"]),basedOnInputVersion:z.number(),referencedSnapshots:z.record(z.string(),versionSchema),selectedDocumentIds:z.array(z.number()),createdAt:z.string(),isCurrent:z.boolean().optional(),ruleSetVersions:z.array(z.string()).optional(),errorCode:z.string().nullable().optional()});
 export const reportsSchema=z.object({items:z.array(reportSchema),total:z.number().int().nonnegative().optional()});
 export type Report=z.infer<typeof reportSchema>;
-// P0 omits these details; conditional P4 response adapters, not confirmed contracts.
+// P0 Inquiry request contract.
+export const inquiryInputSchema=z.strictObject({resultItemIds:z.array(z.string()).max(50).optional(),tone:z.literal("POLITE").optional(),basedOnResultVersions:z.record(z.string(),z.number().int()).nullable().optional()});
+export type InquiryInput=z.infer<typeof inquiryInputSchema>;
+// P0 omits these response details; conditional P4 adapter, not a confirmed DTO.
 export const inquirySchema=z.object({text:z.string(),basedOnResultVersions:z.record(z.string(),z.number().nullable()).optional(),requiresUserReview:z.boolean().optional()});
 // P0 Envelope.data is free JSON; inner DTO rules follow supplementary API_REFERENCE.html.
 export const centerSchema=z.object({centerId:z.number().int(),name:z.string(),region:z.string(),categories:z.array(z.string()),phone:z.string(),website:z.string(),businessHours:z.string().nullable(),languages:z.json(),visitInformation:z.json(),sourceUrl:z.string(),verifiedAt:z.iso.date(),isNationwide:z.boolean(),dataSource:z.string(),notes:z.string()});

@@ -1,13 +1,11 @@
 "use client";
-import {useLocalized} from '@/i18n/use-translation';
+import { useLocalized, useTranslation } from '@/i18n/use-translation';
 import {createLocalizedFeaturesCasesViewModels} from '@/features/cases/view-models';
-
-import { useTranslation } from '@/i18n/use-translation';
 
 import Link from "next/link";
 import { ArrowRight, Building2, Check, ChevronRight, FileArchive, FileQuestion, FileText, MapPin, MessageSquareText } from "lucide-react";
 import { useStore } from "zustand";
-import { useAppServices } from "@/hooks/use-app-services";
+import { useAppServices, useSessionGeneration } from "@/hooks/use-app-services";
 import { CaseCards } from "@/features/cases/components/case-cards";
 import styles from "./consultation-screen.module.css";
 import { useCase, useCases } from "@/features/cases/queries";
@@ -15,12 +13,7 @@ import { useCase, useCases } from "@/features/cases/queries";
 import { Pagination } from "@/components/ui/pagination";
 import { QueryFeedback } from "@/components/ui/query-feedback";
 import { SupportLinks } from "./support-navigation";
-import { useQuery } from "@tanstack/react-query";
-import { useSessionScope } from "@/hooks/use-session-scope";
-import { useSessionGeneration } from "@/hooks/use-app-services";
-import { businessKeys } from "@/lib/query/business-keys";
-import { supportApi } from "./api";
-import { useCaseRemoval } from "@/features/cases/queries";
+import { useQuestions, useReports } from "./queries";
 
 export function ConsultationScreen() {
  const generation=useSessionGeneration();
@@ -44,7 +37,7 @@ const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
         <h1>{translate("caseSupport.consultationHero_title")}<span>{translate("caseSupport.consultationHero_emphasis")}</span></h1>
         <p className={styles.heroDescription}>{translate("caseSupport.consultationScreen_consultation_wageCase_select_case_question_inquiry_draft")}</p>
         <a href="#consultation-case-selection" className={styles.heroAction}>{translate("caseSupport.consultationScreen_consultation_wageCase_select")}<ArrowRight size={18} aria-hidden="true" /></a>
-        <ol className={styles.journey}><li><span>1</span>{translate("caseSupport.inquiryScreen_confirm_question")}</li><li><span>2</span>{translate("caseSupport.screens_company_inquiry_draft")}</li><li><span>3</span>{translate("caseSupport.screens_consultation_record")}</li></ol>
+        <ol className={styles.journey}><li><span>1</span>{translate("caseSupport.screens_company_inquiry_draft")}</li><li><span>2</span>{translate("caseSupport.screens_consultation_record")}</li><li><span>3</span>{translate("caseSupport.inquiryScreen_consultationCenter")}</li></ol>
       </div>
       <div className={styles.heroArt} aria-hidden="true"><div className={styles.artHalo}/><div className={styles.artBack}/><div className={styles.artDocument}><FileText size={38} strokeWidth={1.7}/><span className={styles.artLine}/><span className={styles.artLineShort}/><div className={styles.artChecklist}><span><Check size={15}/><i/></span><span><Check size={15}/><i/></span><span><Check size={15}/><i/></span></div><span className={styles.artPdf}>PDF</span></div><span className={styles.artSeal}><Check size={42} strokeWidth={3}/></span><span className={styles.artMessage}><MessageSquareText size={30}/></span></div>
     </header>
@@ -73,26 +66,16 @@ const {caseCard} = useLocalized(createLocalizedFeaturesCasesViewModels);
 }
 
 function Preparation({caseId}:{caseId:number}) {
- const s=useSessionScope();const {translate}=useTranslation();const removal=useCaseRemoval(caseId);
- const enabled=s.enabled&&!removal.pending&&!removal.removed;
- const questions=useQuery({queryKey:[...businessKeys.case(s.generation,caseId),"questions"],enabled,queryFn:({signal})=>supportApi(s.api).questions(caseId,signal),staleTime:0});
- const reports=useQuery({queryKey:[...businessKeys.case(s.generation,caseId),"reports","list",1],enabled,queryFn:({signal})=>supportApi(s.api).reports(caseId,signal),staleTime:0,refetchInterval:q=>q.state.error?false:q.state.data?.items.some(r=>r.status==="PROCESSING")?2000:false});
+ const {translate}=useTranslation();
+ const questions=useQuestions(caseId);
+ const reports=useReports(caseId);
  return <div className={styles.preparationBody}>
+  {(questions.isPending || questions.isError) && <div className={styles.reviewFeedback}><QueryFeedback pending={questions.isPending} error={questions.isError ? questions.error : undefined} retry={() => void questions.refetch()}/></div>}
+  {questions.isSuccess && questions.data.questions.length > 0 && <aside className={styles.reviewNotice} aria-label={translate("caseSupport.inquiryScreen_confirm_question")}>
+   <span className={styles.reviewIcon}><FileQuestion size={24} aria-hidden="true"/></span><div><h3>{translate("caseSupport.inquiryScreen_confirm_question")}</h3><p>{translate("caseSupport.questionCount", { count: questions.data.questions.length })}</p><small>{translate("caseSupport.questionsPurpose")}</small></div><Link href={`/cases/${caseId}/questions`}>{translate("caseSupport.preCheck_view")}<ChevronRight size={18} aria-hidden="true"/></Link>
+  </aside>}
   <p className={styles.flow}>{translate("caseSupport.supportFlow")}</p>
   <div className={styles.actionGrid}>
-   <article className={styles.actionCard}>
-    <div className={styles.actionTop}><span className={styles.actionIcon}><FileQuestion size={27} aria-hidden="true" /></span><span className={styles.actionNumber}>01</span></div>
-    <h3>{translate("caseSupport.inquiryScreen_confirm_question")}</h3>
-    <p>{translate("caseSupport.questionsPurpose")}</p>
-    {questions.isPending?<QueryFeedback pending/>:questions.isError?<QueryFeedback error={questions.error} retry={()=>void questions.refetch()}/>:<strong className={styles.actionStatus} role="status">{translate("caseSupport.questionCount",{count:questions.data.questions.length})}</strong>}
-    <Link href={`/cases/${caseId}/questions`} className={styles.cardLink}>{translate("caseSupport.inquiryScreen_confirm_question")}<ChevronRight size={19} aria-hidden="true" /></Link>
-   </article>
-   <article className={styles.actionCard}>
-    <div className={styles.actionTop}><span className={`${styles.actionIcon} ${styles.messageIcon}`}><MessageSquareText size={27} aria-hidden="true" /></span><span className={styles.actionNumber}>02</span></div>
-    <h3>{translate("caseSupport.screens_company_inquiry_draft")}</h3>
-    <p>{translate("caseSupport.inquiryPurpose")}</p>
-    <Link href={`/cases/${caseId}/company-inquiry`} className={styles.cardLink}>{translate("caseSupport.screens_company_inquiry_draft")}<ChevronRight size={19} aria-hidden="true" /></Link>
-   </article>
    <article className={styles.reportCard}>
     <div className={styles.reportCopy}>
     <span className={styles.reportEyebrow}>{translate("caseSupport.screens_consultation_record")}</span>
@@ -106,6 +89,11 @@ function Preparation({caseId}:{caseId:number}) {
      <div><span className={styles.zipIcon}><FileArchive size={28} aria-hidden="true" /></span><span><strong>{translate("caseSupport.reportPresentation_select_original")}</strong><small>{translate("caseSupport.reportPresentation_original_download")}</small></span><span className={styles.fileType}>ZIP</span></div>
     </div>
     <p className={styles.reportNote}>{translate("caseSupport.screens_current_result_required_original_report_consultationCenter_automatic")}</p>
+   </article>
+   <article className={styles.actionCard}>
+    <span className={`${styles.actionIcon} ${styles.messageIcon}`}><MessageSquareText size={27} aria-hidden="true" /></span>
+    <div><h3>{translate("caseSupport.screens_company_inquiry_draft")}</h3><p>{translate("caseSupport.inquiryPurpose")}</p></div>
+    <Link href={`/cases/${caseId}/company-inquiry`} className={styles.cardLink}>{translate("caseSupport.screens_company_inquiry_draft")}<ChevronRight size={19} aria-hidden="true" /></Link>
    </article>
   </div>
  </div>;

@@ -1,4 +1,4 @@
 import { notFound } from "next/navigation";
 import { parseRouteId } from "@/lib/route-id";
-import { ReportsScreen } from "@/features/case-support/screens";
+import { ReportsScreen } from "@/features/case-support/reports-screen";
 export default async function Page({params}:{params:Promise<{caseId:string}>}){const id=parseRouteId((await params).caseId);if(id===null)notFound();return <ReportsScreen key={id} caseId={id}/>}
